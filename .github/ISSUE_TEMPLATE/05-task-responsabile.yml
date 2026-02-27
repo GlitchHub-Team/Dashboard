@@ -1,0 +1,19 @@
+name: Task Responsabile
+description: Crea una task generica per responsabile
+title: "Task"
+labels: ["task-responsabile"]
+projects: ["GlitchHub-Team/2"]
+type: task
+body:
+- type: textarea
+  id: description
+  attributes:
+    label: Descrizione della Task
+
+- type: checkboxes
+  id: create-branch
+  attributes:
+    label: Issue Branch
+    options:
+    - label: "**NON** creare branch per questa issue"
+      required: false
