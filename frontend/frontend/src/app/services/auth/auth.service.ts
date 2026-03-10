@@ -18,12 +18,15 @@ export class AuthService {
   private userSession = inject(UserSessionService);
   private router = inject(Router);
 
+  // TODO: Da rivedere per come utilizziamo il token che viene (forse) inviato dal backend
   public readonly isAuthenticated = computed(
     () => this.tokenStorage.isValid() && this.userSession.currentUser() !== null,
   );
 
   private _passwordChangeResult = signal<boolean | null>(null);
   readonly passwordChangeResult = this._passwordChangeResult.asReadonly();
+
+  // Anche il service deve ritornare un Observable, così da poter gestire errori e successi in modo più flessibile nei componenti che lo utilizzano
 
   public login(req: LoginRequest): Observable<AuthResponse> {
     return this.authApiClient.login(req).pipe(
@@ -44,6 +47,8 @@ export class AuthService {
   public requestPasswordReset(email: string): Observable<void> {
     return this.authApiClient.requestPasswordReset(email);
   }
+
+  // TODO: Validare i model creati confrontandosi con il backend
 
   public resetPassword(resetPasswordData: PasswordReset): Observable<void> {
     return this.authApiClient.resetPassword(resetPasswordData);

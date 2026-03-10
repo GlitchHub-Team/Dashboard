@@ -11,6 +11,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class AuthApiClientService {
+  // TODO: Double check dell'api url e delle routes rispetto al backend
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/auth`;
 

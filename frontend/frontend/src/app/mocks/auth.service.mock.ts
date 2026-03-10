@@ -57,6 +57,7 @@ export class AuthServiceMock {
   }
 
   resetPassword(data: PasswordReset): Observable<void> {
+    // Simulate expired token
     if (data.token === 'expired') {
       const error: ApiError = {
         status: 400,
@@ -64,6 +65,17 @@ export class AuthServiceMock {
       };
       return throwError(() => error).pipe(delay(800));
     }
+
+    // Simulate invalid token
+    if (data.token === 'invalid') {
+      const error: ApiError = {
+        status: 400,
+        message: 'Invalid reset link',
+      };
+      return throwError(() => error).pipe(delay(800));
+    }
+
+    // Any other token → success
     return of(undefined).pipe(delay(800));
   }
 
