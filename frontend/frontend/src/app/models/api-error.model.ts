@@ -1,7 +1,7 @@
 import { FieldError } from './field-error.model';
 
 export interface ApiError {
-  status: string;
+  status: number;
   message: string;
-  errors: FieldError[];
+  errors?: FieldError[];
 }
