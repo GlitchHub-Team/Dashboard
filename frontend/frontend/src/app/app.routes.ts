@@ -15,6 +15,9 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
+    // Usare entrambe le guards, altrimenti si entra in un circolo vizioso (da canAny() manda a dashboard, ma
+    // se non si è autenticati authGuard fallisce lo stesso). Se fallisce authGuard, non viene neanche valutato
+    // roleGuard, quindi non c'è rischio di errori strani
     canActivate: [authGuard, roleGuard],
     loadComponent: () => import('./pages/dashboard/dashboard.page').then((m) => m.DashboardPage),
     data: {
