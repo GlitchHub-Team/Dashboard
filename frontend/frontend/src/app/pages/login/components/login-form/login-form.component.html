@@ -1,0 +1,52 @@
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (generalError(); as error) {
+  <div class="error-banner">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+    <button mat-icon-button type="button" (click)="dismissError.emit()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+}
+
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" type="email" />
+    <mat-icon matSuffix>email</mat-icon>
+    @if (loginForm.controls.email; as ctrl) {
+      @if (ctrl.invalid && ctrl.touched) {
+        @if (ctrl.hasError('required')) {
+          <mat-error>Email is required</mat-error>
+        } @else if (ctrl.hasError('email')) {
+          <mat-error>Invalid email</mat-error>
+        }
+      }
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Password</mat-label>
+    <input matInput formControlName="password" type="password" />
+    <mat-icon matSuffix>lock</mat-icon>
+    @if (loginForm.controls.password; as ctrl) {
+      @if (ctrl.invalid && ctrl.touched) {
+        <mat-error>Password is required</mat-error>
+      }
+    }
+  </mat-form-field>
+
+  <button mat-flat-button color="primary" type="submit" class="full-width" [disabled]="loading()">
+    @if (loading()) {
+      <mat-icon class="spin">sync</mat-icon>
+    }
+    Login
+  </button>
+
+  <button mat-button type="button" (click)="forgotPassword.emit()" [disabled]="loading()">
+    Forgot Password?
+  </button>
+</form>

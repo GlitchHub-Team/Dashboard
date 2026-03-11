@@ -1,56 +1,35 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog } from '@angular/material/dialog';
 
 import { AuthSessionService } from '../../services/auth/auth-session.service';
-import { ApiError } from '../../models/api-error.model';
+import { LoginFormComponent } from './components/login-form/login-form.component';
 import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.dialog';
+import { LoginRequest } from '../../models/login-request.model';
+import { ApiError } from '../../models/api-error.model';
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
 
 @Component({
   selector: 'app-login.page',
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-  ],
+  standalone: true,
+  imports: [LoginFormComponent],
   templateUrl: './login.page.html',
   styleUrl: './login.page.css',
 })
 export class LoginPage {
-  private formBuilder = inject(FormBuilder);
-  private authSessionService = inject(AuthSessionService);
-  private authActionsService = inject(AuthActionsService);
-  private router = inject(Router);
-  private dialog = inject(MatDialog);
-
-  protected loginForm = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
-  });
+  private readonly authSessionService = inject(AuthSessionService);
+  private readonly authActionsService = inject(AuthActionsService);
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   protected loading = signal(false);
   protected generalError = signal('');
 
-  protected onSubmit(): void {
-    if (!this.loginForm.valid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
-
+  protected onLogin(req: LoginRequest): void {
     this.loading.set(true);
     this.generalError.set('');
 
-    this.authSessionService.login(this.loginForm.getRawValue()).subscribe({
+    this.authSessionService.login(req).subscribe({
       next: () => {
         this.loading.set(false);
         this.router.navigate(['/dashboard']);
@@ -84,7 +63,7 @@ export class LoginPage {
     });
   }
 
-  protected dismissError(): void {
+  protected onDismissError(): void {
     this.generalError.set('');
   }
 }
