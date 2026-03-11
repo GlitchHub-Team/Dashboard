@@ -2,8 +2,8 @@
   <h1>Login</h1>
 
   <app-login-form
-    [loading]="loading()"
-    [generalError]="generalError()"
+    [loading]="authSessionService.loading()"
+    [generalError]="authSessionService.error()"
     (submitLogin)="onLogin($event)"
     (forgotPassword)="onForgotPassword()"
     (dismissError)="onDismissError()"

@@ -31,9 +31,9 @@ import { ApiError } from '../../models/api-error.model';
   styleUrl: './reset-password.page.css',
 })
 export class ResetPasswordPage {
-  private authActionsService = inject(AuthActionsService);
-  private router = inject(Router);
-  private formBuilder = inject(FormBuilder);
+  private readonly authActionsService = inject(AuthActionsService);
+  private readonly router = inject(Router);
+  private readonly formBuilder = inject(FormBuilder);
 
   protected resetPasswordForm = this.formBuilder.nonNullable.group(
     {
@@ -43,6 +43,8 @@ export class ResetPasswordPage {
     { validators: this.passwordsMatchValidator },
   );
 
+  // TODO: refactor come fatto per forgot password dialog,
+  // con service che espone loading/error e gestione errori di campo
   protected loading = signal(false);
   protected generalError = signal('');
   protected success = signal(false);
