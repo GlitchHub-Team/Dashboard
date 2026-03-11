@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
-import { AuthService } from '../../services/auth/auth.service';
+import { AuthActionsService } from '../../services/auth/auth-actions.service';
 import { PasswordChange } from '../../models/password-change.model';
 import { ApiError } from '../../models/api-error.model';
 
@@ -31,8 +31,8 @@ import { ApiError } from '../../models/api-error.model';
   styleUrl: './reset-password.page.css',
 })
 export class ResetPasswordPage {
-  private authService = inject(AuthService);
-  private Router = inject(Router);
+  private authActionsService = inject(AuthActionsService);
+  private router = inject(Router);
   private formBuilder = inject(FormBuilder);
 
   protected resetPasswordForm = this.formBuilder.nonNullable.group(
@@ -63,7 +63,7 @@ export class ResetPasswordPage {
     this.generalError.set('');
 
     // TODO: Da dove prendiamo il token?
-    this.authService
+    this.authActionsService
       .confirmPasswordChange({
         newPassword: this.resetPasswordForm.get('newPassword')?.value,
         token: 'TODO',
@@ -82,7 +82,7 @@ export class ResetPasswordPage {
   }
 
   protected goToLogin(): void {
-    this.Router.navigate(['/login']);
+    this.router.navigate(['/login']);
   }
 
   protected dismissError(): void {

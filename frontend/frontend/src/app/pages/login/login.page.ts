@@ -8,9 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog } from '@angular/material/dialog';
 
-import { AuthService } from '../../services/auth/auth.service';
+import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { ApiError } from '../../models/api-error.model';
 import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.dialog';
+import { AuthActionsService } from '../../services/auth/auth-actions.service';
 
 @Component({
   selector: 'app-login.page',
@@ -27,7 +28,8 @@ import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.
 })
 export class LoginPage {
   private formBuilder = inject(FormBuilder);
-  private authService = inject(AuthService);
+  private authSessionService = inject(AuthSessionService);
+  private authActionsService = inject(AuthActionsService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
 
@@ -48,7 +50,7 @@ export class LoginPage {
     this.loading.set(true);
     this.generalError.set('');
 
-    this.authService.login(this.loginForm.getRawValue()).subscribe({
+    this.authSessionService.login(this.loginForm.getRawValue()).subscribe({
       next: () => {
         this.loading.set(false);
         this.router.navigate(['/dashboard']);
@@ -69,7 +71,7 @@ export class LoginPage {
     const instance = dialogRef.componentInstance as ForgotPasswordDialog;
 
     instance.save$.subscribe((email: string) => {
-      this.authService.forgotPassword(email).subscribe({
+      this.authActionsService.forgotPassword(email).subscribe({
         next: () => {
           instance.setLoading(false);
           dialogRef.close(true);
