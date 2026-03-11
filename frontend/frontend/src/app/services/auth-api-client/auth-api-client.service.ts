@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import { LoginRequest } from '../../models/login-request.model';
 import { AuthResponse } from '../../models/auth-response.model';
 import { Observable } from 'rxjs';
-import { PasswordReset } from '../../models/password-reset.model';
 import { PasswordChange } from '../../models/password-change.model';
 import { environment } from '../../../environments/environment';
 
@@ -19,19 +18,19 @@ export class AuthApiClientService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, req);
   }
 
-  public logout(): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/logout`, {});
+  public logout(userId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/logout`, { userId });
   }
 
-  public requestPasswordReset(email: string): Observable<void> {
+  public forgotPassword(email: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot-password`, { email });
   }
 
-  public resetPassword(resetPasswordData: PasswordReset): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/reset-password`, resetPasswordData);
+  public requestPasswordChange(userId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/request-password-change`, { userId });
   }
 
-  public changePassword(changePasswordData: PasswordChange): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/change-password`, changePasswordData);
+  public confirmPasswordChange(data: PasswordChange): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/confirm-password-change`, data);
   }
 }

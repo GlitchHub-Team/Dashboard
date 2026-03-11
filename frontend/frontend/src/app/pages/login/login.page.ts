@@ -69,7 +69,7 @@ export class LoginPage {
     const instance = dialogRef.componentInstance as ForgotPasswordDialog;
 
     instance.save$.subscribe((email: string) => {
-      this.authService.requestPasswordReset(email).subscribe({
+      this.authService.forgotPassword(email).subscribe({
         next: () => {
           instance.setLoading(false);
           dialogRef.close(true);

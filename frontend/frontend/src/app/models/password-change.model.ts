@@ -1,4 +1,4 @@
 export interface PasswordChange {
-  currentPassword: string;
+  token: string;
   newPassword: string;
 }

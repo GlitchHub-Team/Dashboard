@@ -14,7 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AuthService } from '../../services/auth/auth.service';
-import { PasswordReset } from '../../models/password-reset.model';
+import { PasswordChange } from '../../models/password-change.model';
 import { ApiError } from '../../models/api-error.model';
 
 @Component({
@@ -64,10 +64,10 @@ export class ResetPasswordPage {
 
     // TODO: Da dove prendiamo il token?
     this.authService
-      .resetPassword({
+      .confirmPasswordChange({
         newPassword: this.resetPasswordForm.get('newPassword')?.value,
         token: 'TODO',
-      } as PasswordReset)
+      } as PasswordChange)
       .subscribe({
         next: () => {
           this.loading.set(false);

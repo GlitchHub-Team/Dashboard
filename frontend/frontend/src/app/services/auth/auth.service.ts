@@ -4,10 +4,10 @@ import { UserSessionService } from '../user-session/user-session.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 import { LoginRequest } from '../../models/login-request.model';
-import { PasswordReset } from '../../models/password-reset.model';
 import { PasswordChange } from '../../models/password-change.model';
-import { tap, Observable } from 'rxjs';
+import { tap, Observable, throwError } from 'rxjs';
 import { AuthResponse } from '../../models/auth-response.model';
+import { ApiError } from '../../models/api-error.model';
 
 @Injectable({
   providedIn: 'root',
@@ -38,26 +38,44 @@ export class AuthService {
   }
 
   public logout(): void {
-    this.authApiClient.logout().subscribe({
-      next: () => this.clearAndRedirect(),
-      error: () => this.clearAndRedirect(),
-    });
+    const user = this.userSession.currentUser();
+
+    if (user?.id) {
+      this.authApiClient.logout(user.id).subscribe({
+        next: () => this.clearAndRedirect(),
+        error: () => this.clearAndRedirect(),
+      });
+    } else {
+      this.clearAndRedirect();
+    }
   }
 
-  public requestPasswordReset(email: string): Observable<void> {
-    return this.authApiClient.requestPasswordReset(email);
+  public forgotPassword(email: string): Observable<void> {
+    return this.authApiClient.forgotPassword(email);
   }
 
-  // TODO: Validare i model creati confrontandosi con il backend
+  public requestPasswordChange(): Observable<void> {
+    const user = this.userSession.currentUser();
 
-  public resetPassword(resetPasswordData: PasswordReset): Observable<void> {
-    return this.authApiClient.resetPassword(resetPasswordData);
+    if (!user?.id) {
+      return throwError(
+        () =>
+          ({
+            status: 401,
+            message: 'User not authenticated',
+          }) as ApiError,
+      );
+    }
+    return this.authApiClient.requestPasswordChange(user.id);
   }
 
-  public changePassword(changePasswordData: PasswordChange): Observable<void> {
-    return this.authApiClient
-      .changePassword(changePasswordData)
-      .pipe(tap(() => this._passwordChangeResult.set(true)));
+  public confirmPasswordChange(data: PasswordChange): Observable<void> {
+    return this.authApiClient.confirmPasswordChange(data).pipe(
+      tap({
+        next: () => this._passwordChangeResult.set(true),
+        error: () => this._passwordChangeResult.set(false),
+      }),
+    );
   }
 
   private clearAndRedirect(): void {

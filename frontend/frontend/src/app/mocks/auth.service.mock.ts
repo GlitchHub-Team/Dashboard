@@ -7,7 +7,6 @@ import { UserSessionService } from '../services/user-session/user-session.servic
 import { UserRole } from '../models/user-role.enum';
 import { LoginRequest } from '../models/login-request.model';
 import { AuthResponse } from '../models/auth-response.model';
-import { PasswordReset } from '../models/password-reset.model';
 import { PasswordChange } from '../models/password-change.model';
 import { ApiError } from '../models/api-error.model';
 
@@ -44,7 +43,7 @@ export class AuthServiceMock {
     return throwError(() => error).pipe(delay(800));
   }
 
-  requestPasswordReset(email: string): Observable<void> {
+  forgotPassword(email: string): Observable<void> {
     if (email === 'notfound@test.com') {
       const error: ApiError = {
         status: 404,
@@ -56,31 +55,30 @@ export class AuthServiceMock {
     return of(undefined).pipe(delay(800));
   }
 
-  resetPassword(data: PasswordReset): Observable<void> {
-    // Simulate expired token
-    if (data.token === 'expired') {
+  requestPasswordChange(): Observable<void> {
+    const user = this.userSession.currentUser();
+    if (!user) {
       const error: ApiError = {
-        status: 400,
-        message: 'Reset link has expired',
+        status: 401,
+        message: 'User not authenticated',
       };
       return throwError(() => error).pipe(delay(800));
     }
-
-    // Simulate invalid token
-    if (data.token === 'invalid') {
-      const error: ApiError = {
-        status: 400,
-        message: 'Invalid reset link',
-      };
-      return throwError(() => error).pipe(delay(800));
-    }
-
-    // Any other token → success
     return of(undefined).pipe(delay(800));
   }
 
-  changePassword(data: PasswordChange): Observable<void> {
-    return of(undefined).pipe(delay(800));
+  confirmPasswordChange(data: PasswordChange): Observable<void> {
+    if (data.token === 'valid-token') {
+      this._passwordChangeResult.set(true);
+      return of(undefined).pipe(delay(800));
+    } else {
+      const error: ApiError = {
+        status: 400,
+        message: 'Invalid or expired token',
+      };
+      this._passwordChangeResult.set(false);
+      return throwError(() => error).pipe(delay(800));
+    }
   }
 
   logout(): void {
