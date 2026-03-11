@@ -1,13 +1,11 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserSessionService } from '../user-session/user-session.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 import { LoginRequest } from '../../models/login-request.model';
-import { PasswordChange } from '../../models/password-change.model';
-import { tap, Observable, throwError } from 'rxjs';
+import { tap, Observable } from 'rxjs';
 import { AuthResponse } from '../../models/auth-response.model';
-import { ApiError } from '../../models/api-error.model';
 
 @Injectable({
   providedIn: 'root',
