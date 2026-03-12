@@ -38,7 +38,7 @@ export class AuthServiceMock {
 
     if (req.email === 'admin@test.com' && req.password === 'password') {
       const response: AuthResponse = {
-        user: { id: 1, name: 'Admin', email: req.email, role: UserRole.SUPER_ADMIN, tenantId: 1 },
+        user: { id: '1', email: req.email, role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
         token: this.fakeToken(req.email, UserRole.SUPER_ADMIN),
       };
 

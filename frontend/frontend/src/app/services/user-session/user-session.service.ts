@@ -1,4 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
+
 import { User } from '../../models/user.model';
 import { UserRole } from '../../models/user-role.enum';
 
@@ -10,6 +11,10 @@ export class UserSessionService {
 
   public readonly currentUser = this._currentUser.asReadonly();
   public readonly currentRole = computed<UserRole | null>(() => this.currentUser()?.role || null);
+  // TODO: Meglio far in modo che appaia il nome del Tenant
+  public readonly currentTenant = computed<string | null>(
+    () => this.currentUser()?.tenantId || null,
+  );
 
   public initSession(user: User): void {
     sessionStorage.setItem('currentUser', JSON.stringify(user));

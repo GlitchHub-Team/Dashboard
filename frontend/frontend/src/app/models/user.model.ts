@@ -1,9 +1,8 @@
 import { UserRole } from './user-role.enum';
 
 export interface User {
-  id: number;
-  name: string;
+  id: string;
   email: string;
   role: UserRole;
-  tenantId: number;
+  tenantId: string;
 }

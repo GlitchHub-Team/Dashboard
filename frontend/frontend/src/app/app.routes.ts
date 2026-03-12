@@ -19,7 +19,7 @@ export const routes: Routes = [
     // se non si è autenticati authGuard fallisce lo stesso). Se fallisce authGuard, non viene neanche valutato
     // roleGuard, quindi non c'è rischio di errori strani
     canActivate: [authGuard, roleGuard],
-    loadComponent: () => import('./pages/dashboard/dashboard.page').then((m) => m.DashboardPage),
+    loadComponent: () => import('./pages/app-shell/app-shell.page').then((m) => m.AppShellPage),
     data: {
       permissions: [Permission.DASHBOARD_ACCESS],
     },

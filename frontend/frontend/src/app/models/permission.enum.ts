@@ -1,10 +1,10 @@
 export enum Permission {
-  DASHBOARD_ACCESS = 'dashboard_access',
-  GATEWAY_MANAGEMENT = 'gateway_management',
-  SENSOR_MANAGEMENT = 'sensor_management',
-  GATEWAY_COMMANDS = 'gateway_commands',
-  TENANT_USER_MANAGEMENT = 'tenant_user_management',
-  TENANT_ADMIN_MANAGEMENT = 'tenant_admin_management',
-  TENANT_MANAGEMENT = 'tenant_management',
-  APIKEY_MANAGEMENT = 'apikey_management',
+  DASHBOARD_ACCESS = 'Dashboard Access',
+  GATEWAY_MANAGEMENT = 'Gateway Management',
+  SENSOR_MANAGEMENT = 'Sensor Management',
+  GATEWAY_COMMANDS = 'Gateway Commands',
+  TENANT_USER_MANAGEMENT = 'Tenant User Management',
+  TENANT_ADMIN_MANAGEMENT = 'Tenant Admin Management',
+  TENANT_MANAGEMENT = 'Tenant Management',
+  APIKEY_MANAGEMENT = 'Api Key Management',
 }

@@ -27,6 +27,10 @@ button[type='submit'] {
   margin-top: 16px;
 }
 
+button[type='button'] {
+  margin-top: 16px;
+}
+
 .spin {
   animation: spin 1s linear infinite;
 }
