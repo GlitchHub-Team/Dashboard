@@ -46,7 +46,13 @@
     Login
   </button>
 
-  <button mat-button type="button" (click)="forgotPassword.emit()" [disabled]="loading()">
+  <button
+    mat-button
+    type="button"
+    class="forgot-password"
+    (click)="forgotPassword.emit()"
+    [disabled]="loading()"
+  >
     Forgot Password?
   </button>
 </form>

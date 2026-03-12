@@ -1,4 +1,5 @@
-.full-width {
+.full-width,
+.forgot-password {
   width: 100%;
 }
 
@@ -27,7 +28,7 @@ button[type='submit'] {
   margin-top: 16px;
 }
 
-button[type='button'] {
+button.forgot-password {
   margin-top: 16px;
 }
 

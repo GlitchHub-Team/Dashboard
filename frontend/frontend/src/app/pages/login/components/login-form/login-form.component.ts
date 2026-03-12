@@ -1,4 +1,4 @@
-import { Component, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,7 +21,6 @@ import { LoginRequest } from '../../../../models/login-request.model';
   ],
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginFormComponent {
   private readonly formBuilder = inject(FormBuilder);
