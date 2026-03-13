@@ -18,6 +18,13 @@ type GatewayPostgreAdapter struct {
 	repository gatewayPostgreRepository
 }
 
+func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) *GatewayPostgreAdapter {
+	return &GatewayPostgreAdapter{
+		repository: repository,
+	}
+}
+
+
 func (adapter *GatewayPostgreAdapter) Save(g Gateway) error {
 	// ...
 	return nil
