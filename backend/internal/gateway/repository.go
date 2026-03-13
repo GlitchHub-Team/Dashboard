@@ -5,7 +5,9 @@ package gateway
 type DB any // TODO: solo per test
 
 type gatewayPostgreRepository struct {
-	db DB
+	// db DB
 }
+
+func newGatewayPostgreRepository() gatewayPostgreRepository { return gatewayPostgreRepository{} }
 
 type gatewayEntity struct {}
