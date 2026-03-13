@@ -15,7 +15,7 @@ var Module = fx.Module(
 		
 		// Use Cases (inbound ports)
 		common.FxAs[CreateGatewayUseCase](NewCreateGatewayService),
-		common.FxAs[DeleteGatewayUseCase](NewCreateGatewayService),
+		common.FxAs[DeleteGatewayUseCase](NewDeleteGatewayService),
 
 		// Outbound ports
 		common.FxAs[SaveGatewayPort](NewGatewayPostgreAdapter),
