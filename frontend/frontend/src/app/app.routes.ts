@@ -20,9 +20,15 @@ export const routes: Routes = [
     // roleGuard, quindi non c'è rischio di errori strani
     canActivate: [authGuard, roleGuard],
     loadComponent: () => import('./pages/app-shell/app-shell.page').then((m) => m.AppShellPage),
-    data: {
-      permissions: [Permission.DASHBOARD_ACCESS],
-    },
+    children: [
+      {
+        path: 'tenant-management',
+        canActivate: [roleGuard],
+        data: { permissions: [Permission.TENANT_MANAGEMENT] },
+        loadComponent: () =>
+          import('./pages/tenant/tenant-manager.page').then((m) => m.TenantManagerPage),
+      },
+    ],
   },
   {
     path: '',

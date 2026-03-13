@@ -1,0 +1,21 @@
+.tenant-manager-container {
+  padding: 1rem;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.header-section h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.header-section button {
+  white-space: nowrap;
+}

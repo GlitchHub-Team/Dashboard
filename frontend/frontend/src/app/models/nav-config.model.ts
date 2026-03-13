@@ -11,13 +11,13 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Gateway Management',
     icon: 'settings',
-    route: '/gateway-management',
+    route: '/dashboard/gateway-management',
     permission: Permission.GATEWAY_MANAGEMENT,
   },
   {
     label: 'Tenant User Management',
     icon: 'people',
-    route: '/user-management',
+    route: '/dashboard/user-management',
     permission: [Permission.TENANT_USER_MANAGEMENT],
   },
   {
@@ -29,13 +29,13 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Tenant Management',
     icon: 'business',
-    route: '/tenant-management',
+    route: '/dashboard/tenant-management',
     permission: Permission.TENANT_MANAGEMENT,
   },
   {
     label: 'API Key Management',
     icon: 'vpn_key',
-    route: '/apikey-management',
+    route: '/dashboard/apikey-management',
     permission: Permission.APIKEY_MANAGEMENT,
   },
 ];
