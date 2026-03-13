@@ -15,10 +15,16 @@ export const NAV_ITEMS: NavItem[] = [
     permission: Permission.GATEWAY_MANAGEMENT,
   },
   {
-    label: 'User Management',
+    label: 'Tenant User Management',
     icon: 'people',
     route: '/user-management',
-    permission: [Permission.TENANT_USER_MANAGEMENT, Permission.TENANT_ADMIN_MANAGEMENT],
+    permission: [Permission.TENANT_USER_MANAGEMENT],
+  },
+  {
+    label: 'Tenant Admin Management',
+    icon: 'people',
+    route: '/admin-management',
+    permission: [Permission.TENANT_ADMIN_MANAGEMENT],
   },
   {
     label: 'Tenant Management',
