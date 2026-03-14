@@ -9,9 +9,7 @@ type CreateGatewayUseCase interface {
 	CreateGateway(command CreateGatewayCommand) (Gateway, error) 
 }
 
-type DeleteGatewayUseCase interface {
-	DeleteGateway(command DeleteGatewayCommand) error
-}
+
 
 // CreateGatewayService ---------------------------------------------------------------------------
 type CreateGatewayService struct {
@@ -19,14 +17,14 @@ type CreateGatewayService struct {
 	saveGatewayPort SaveGatewayPort
 }
 
-func NewCreateGatewayService(log *zap.Logger, saveGatewayPort SaveGatewayPort) *CreateGatewayService {
+func NewCreateGatewayService(log *zap.Logger, saveGatewayPort SaveGatewayPort) CreateGatewayUseCase {
 	return &CreateGatewayService{
 		log: log,
 		saveGatewayPort: saveGatewayPort,
 	}
 }
 
-// CreateGatewayService ---------------------------------------------------------------------------
+
 func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
 	s.log.Info("Created gateway with name" + command.Name)
 
@@ -41,6 +39,28 @@ func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gate
 	return gateway, nil
 }
 
-func (s *CreateGatewayService) DeleteGateway(command DeleteGatewayCommand) error {
+// Compile-time checks
+var _ CreateGatewayUseCase = (*CreateGatewayService)(nil)
+
+// DeleteGatewayService ---------------------------------------------------------------------------
+type DeleteGatewayUseCase interface {
+	DeleteGateway(command DeleteGatewayCommand) error
+}
+
+type DeleteGatewayService struct {
+	removeGatewayPort RemoveGatewayPort
+}
+
+func NewDeleteGatewayService(removeGatewayPort RemoveGatewayPort) DeleteGatewayUseCase {
+	return &DeleteGatewayService{
+		removeGatewayPort: removeGatewayPort,
+	}
+}
+
+
+func (s *DeleteGatewayService) DeleteGateway(command DeleteGatewayCommand) error {
 	return nil
 }
+
+// Compile-time checks
+var _ DeleteGatewayUseCase = (*DeleteGatewayService)(nil)

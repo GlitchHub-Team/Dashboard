@@ -18,14 +18,37 @@ type GatewayPostgreAdapter struct {
 	repository gatewayPostgreRepository
 }
 
-func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) *GatewayPostgreAdapter {
-	return &GatewayPostgreAdapter{
+func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
+	adapter := &GatewayPostgreAdapter{
 		repository: repository,
 	}
+	return adapter, adapter, adapter
 }
-
 
 func (adapter *GatewayPostgreAdapter) Save(g Gateway) error {
 	// ...
 	return nil
 }
+
+func (adapter *GatewayPostgreAdapter) Remove(g Gateway) error {
+	// ...
+	return nil
+}
+
+func (a *GatewayPostgreAdapter) GetById() error {
+	return nil
+}
+func (a *GatewayPostgreAdapter) GetByTenantId() error {
+	return nil
+}
+func (a *GatewayPostgreAdapter) GetAll() error {
+	return nil
+}
+
+
+
+var (
+	_ SaveGatewayPort = (*GatewayPostgreAdapter)(nil)
+	_ RemoveGatewayPort = (*GatewayPostgreAdapter)(nil)
+	_ GetGatewayPort = (*GatewayPostgreAdapter)(nil)
+)
