@@ -9,12 +9,13 @@ var Module = fx.Module(
 
     // Metodi pubblici
     fx.Provide(
-        //..
+        NewConfirmAccountTokenPostgreAdapter,
     ),
 
     // Metodi privati
     fx.Provide(
         fx.Private,
-        // ...
+        newPasswordTokenPostgreRepository,
+        newConfirmTokenPostgreRepository,
    ),
 )
