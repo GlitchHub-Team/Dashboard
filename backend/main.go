@@ -1,11 +1,5 @@
 package main
 
-<<<<<<< HEAD
-
-func main() {
-	
-}
-=======
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -38,6 +32,7 @@ func NewGinEngine(
 	lc fx.Lifecycle,
 	log *zap.Logger,
 	gatewayController *gateway.GatewayController,
+	userController *user.Controller,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -45,12 +40,17 @@ func NewGinEngine(
 		OnStart: func(context.Context) error {
 			log.Info("Starting HTTP server!")
 			
-			public := router.Group("/")
+			public := router.Group("/api")
 
 			{
 				// TODO: questo è solo un test
 				public.POST("/gateway", gatewayController.CreateGateway)
 				public.DELETE("/gateway", gatewayController.DeleteGateway)
+
+				public.POST("/tenant_user", userController.CreateTenantUser)
+				public.POST("/tenant_admin", userController.CreateTenantAdmin)
+				public.POST("/super_admin", userController.CreateSuperAdmin)
+
 			}
 
 			go router.Run()
@@ -70,7 +70,6 @@ func NewGinEngine(
 func main() {
 
 	fx.New(
-		gateway.Module,
 		alert.Module,
 		api_key.Module,
 		auth.Module,
@@ -80,6 +79,7 @@ func main() {
 		sensor.Module,
 		tenant.Module,
 		user.Module,
+
 		fx.Provide(
 			NewGinEngine,
 			zap.NewExample,
@@ -88,4 +88,3 @@ func main() {
 		
 	).Run()
 }
->>>>>>> issue-14
