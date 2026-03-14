@@ -1,0 +1,10 @@
+<div class="sensor-row">
+  <span class="sensor-id">{{ sensor().id }}</span>
+
+  <button mat-icon-button matTooltip="Historic Chart" (click)="onViewChart(ChartType.HISTORIC)">
+    <mat-icon>timeline</mat-icon>
+  </button>
+  <button mat-icon-button matTooltip="Real-time Chart" (click)="onViewChart(ChartType.REALTIME)">
+    <mat-icon>show_chart</mat-icon>
+  </button>
+</div>

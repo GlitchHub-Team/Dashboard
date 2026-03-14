@@ -26,13 +26,13 @@ export class DashboardService {
     return this.permissionService.can(Permission.GATEWAY_COMMANDS);
   });
 
-  public readonly _gatewayList = this.gatewayService.gatewayList;
-  public readonly _sensorList = this.sensorService.sensorList;
+  public readonly gatewayList = this.gatewayService.gatewayList;
+  public readonly sensorList = this.sensorService.sensorList;
   // Alert list
-  public readonly _gatewayLoading = this.gatewayService.loading;
-  public readonly _gatewayError = this.gatewayService.error;
-  public readonly _sensorLoading = this.sensorService.loading;
-  public readonly _sensorError = this.sensorService.error;
+  public readonly gatewayLoading = this.gatewayService.loading;
+  public readonly gatewayError = this.gatewayService.error;
+  public readonly sensorLoading = this.sensorService.loading;
+  public readonly sensorError = this.sensorService.error;
   // Alert loading
   // Alert error
 

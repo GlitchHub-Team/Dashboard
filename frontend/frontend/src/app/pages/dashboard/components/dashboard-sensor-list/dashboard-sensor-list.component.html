@@ -1,0 +1,13 @@
+@if (loading()) {
+  <mat-spinner diameter="24"></mat-spinner>
+} @else if (sensors().length === 0) {
+  <div class="empty-state">
+    <mat-icon>sensors_off</mat-icon>
+    <p>No sensors found</p>
+  </div>
+} @else {
+  @for (sensor of sensors(); track sensor.id) {
+    <app-dashboard-sensor-row [sensor]="sensor" (chartRequested)="chartRequested.emit($event)">
+    </app-dashboard-sensor-row>
+  }
+}

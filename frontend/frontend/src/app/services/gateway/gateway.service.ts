@@ -37,6 +37,23 @@ export class GatewayService {
       .subscribe();
   }
 
+  public getGateways(): void {
+    this._loading.set(true);
+    this._error.set(null);
+
+    this.gatewayApi
+      .getGatewayList()
+      .pipe(
+        tap((list) => this._gatewayList.set(list)),
+        catchError((err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to load gateways');
+          throw err;
+        }),
+        finalize(() => this._loading.set(false)),
+      )
+      .subscribe();
+  }
+
   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
     this._loading.set(true);
     this._error.set(null);

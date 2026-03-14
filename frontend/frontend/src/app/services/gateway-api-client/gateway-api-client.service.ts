@@ -18,6 +18,10 @@ export class GatewayApiClientService {
     return this.http.get<Gateway[]>(`${this.apiUrl}/list/${tenantId}`);
   }
 
+  public getGatewayList(): Observable<Gateway[]> {
+    return this.http.get<Gateway[]>(`${this.apiUrl}/list`);
+  }
+
   // TODO: models per Gateway e GatewayConfig
   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
     return this.http.post<Gateway>(`${this.apiUrl}/add`, config);

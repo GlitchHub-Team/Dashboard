@@ -11,7 +11,7 @@ import { SideBarComponent } from './components/side-bar/side-bar.component';
 import { NAV_ITEMS } from '../../models/nav-config.model';
 
 @Component({
-  selector: 'app-app-shell.page',
+  selector: 'app-shell',
   imports: [RouterOutlet, SideBarComponent, HeaderComponent],
   templateUrl: './app-shell.page.html',
   styleUrl: './app-shell.page.css',

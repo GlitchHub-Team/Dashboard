@@ -1,1 +1,41 @@
-<p>dashboard.page works!</p>
+@if (error()) {
+  <div class="error-banner">
+    <mat-icon>error</mat-icon>
+    <span>{{ error() }}</span>
+  </div>
+}
+
+@if (canSendCommands()) {
+  <app-dashboard-gateway-table
+    [gateways]="gatewayList()"
+    [sensors]="sensorList()"
+    [expandedGateway]="expandedGateway()"
+    [canSendCommands]="canSendCommands()"
+    [gatewayLoading]="gatewayLoading()"
+    [sensorLoading]="sensorLoading()"
+    (commandRequested)="onCommandRequested($event)"
+    (chartRequested)="onChartOpen($event)"
+    (expandedGatewayChange)="onExpandedGatewayChange($event)"
+  >
+  </app-dashboard-gateway-table>
+} @else {
+  <!--
+    <app-sensor-list
+    [sensors]="sensorList()"
+    [loading]="sensorLoading()"
+    (chartRequested)="onChartRequested($event)"
+  >
+  </app-sensor-list>
+  -->
+}
+<!--
+<app-alert-table [alerts]="alerts()"> </app-alert-table>
+
+@if (selectedChart()) {
+  <app-chart-container
+    [chartRequest]="selectedChart()!"
+    (chartCloseRequested)="chartCloseRequested()"
+  >
+  </app-chart-container>
+}
+-->

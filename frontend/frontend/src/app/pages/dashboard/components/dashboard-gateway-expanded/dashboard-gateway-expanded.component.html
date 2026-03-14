@@ -1,0 +1,10 @@
+<div class="expanded-content">
+  <h3>Sensors for {{ gateway().id }}</h3>
+
+  <app-dashboard-sensor-list
+    [sensors]="sensors()"
+    [loading]="loading()"
+    (chartRequested)="chartRequested.emit($event)"
+  >
+  </app-dashboard-sensor-list>
+</div>
