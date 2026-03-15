@@ -8,6 +8,7 @@ import { PermissionService } from '../../services/permission/permission.service'
 import { ChangePasswordDialog } from './dialogs/change-password/change-password.dialog';
 import { HeaderComponent } from './components/header/header.component';
 import { SideBarComponent } from './components/side-bar/side-bar.component';
+
 import { NAV_ITEMS } from '../../models/nav-config.model';
 
 @Component({

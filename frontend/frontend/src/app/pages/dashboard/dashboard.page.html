@@ -19,14 +19,12 @@
   >
   </app-dashboard-gateway-table>
 } @else {
-  <!--
-    <app-sensor-list
+  <app-dashboard-sensor-list
     [sensors]="sensorList()"
     [loading]="sensorLoading()"
-    (chartRequested)="onChartRequested($event)"
+    (chartRequested)="onChartOpen($event)"
   >
-  </app-sensor-list>
-  -->
+  </app-dashboard-sensor-list>
 }
 <!--
 <app-alert-table [alerts]="alerts()"> </app-alert-table>
@@ -34,7 +32,7 @@
 @if (selectedChart()) {
   <app-chart-container
     [chartRequest]="selectedChart()!"
-    (chartCloseRequested)="chartCloseRequested()"
+    (chartCloseRequested)="onChartClosed()"
   >
   </app-chart-container>
 }

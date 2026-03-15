@@ -38,16 +38,23 @@ export class DashboardService {
 
   public loadDashboard(): void {
     // TODO: come passare il tenantId?
+    // TODO: testing con mock services, uso tenant hard-coded
     if (this.canSendCommands()) {
-      this.gatewayService.getGatewaysByTenant('current');
+      this.gatewayService.getGatewaysByTenant('tenant-01');
     } else {
-      this.sensorService.getSensorsByGateway('current');
+      this.sensorService.getSensorsByTenant('tenant-01');
     }
   }
 
   public toggleExpandedGateway(gateway: Gateway): void {
-    this._expandedGateway.update((current) => (current?.id === gateway.id ? null : gateway));
-    this.sensorService.getSensorsByGateway(gateway.id);
+    const current = this._expandedGateway();
+    if (current?.id === gateway.id) {
+      this._expandedGateway.set(null);
+      this.sensorService.clearSensors();
+    } else {
+      this._expandedGateway.set(gateway);
+      this.sensorService.getSensorsByGateway(gateway.id);
+    }
   }
 
   public openChart(request: ChartRequest): void {

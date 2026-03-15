@@ -6,7 +6,7 @@
     <p>No gateways available</p>
   </div>
 } @else {
-  <mat-table [dataSource]="gateways()">
+  <mat-table [dataSource]="gateways()" multiTemplateDataRows>
     <ng-container matColumnDef="id">
       <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
       <mat-cell *matCellDef="let gateway">{{ gateway.id }}</mat-cell>
@@ -37,22 +37,34 @@
       </mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="expandedDetail">
+      <mat-cell *matCellDef="let gateway" [attr.colspan]="displayedColumns().length">
+        @if (isExpanded(gateway)) {
+          <app-dashboard-gateway-expanded
+            [gateway]="gateway"
+            [sensors]="sensors()"
+            [loading]="sensorLoading()"
+            (chartRequested)="chartRequested.emit($event)"
+          >
+          </app-dashboard-gateway-expanded>
+        }
+      </mat-cell>
+    </ng-container>
+
     <mat-header-row *matHeaderRowDef="displayedColumns()"></mat-header-row>
+
     <mat-row
       *matRowDef="let row; columns: displayedColumns()"
       [class.expanded]="isExpanded(row)"
       (click)="expandedGatewayChange.emit(row)"
     >
     </mat-row>
-  </mat-table>
 
-  @if (expandedGateway()) {
-    <app-dashboard-gateway-expanded
-      [gateway]="expandedGateway()!"
-      [sensors]="sensors()"
-      [loading]="sensorLoading()"
-      (chartRequested)="chartRequested.emit($event)"
+    <mat-row
+      *matRowDef="let row; columns: ['expandedDetail']"
+      class="detail-row"
+      [class.visible]="isExpanded(row)"
     >
-    </app-dashboard-gateway-expanded>
-  }
+    </mat-row>
+  </mat-table>
 }

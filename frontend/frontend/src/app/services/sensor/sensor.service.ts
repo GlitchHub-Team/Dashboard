@@ -21,8 +21,7 @@ export class SensorService {
   public readonly error = this._error.asReadonly();
 
   public getSensorsByGateway(gatewayId: string): void {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setGettingSensorsState();
 
     this.sensorApi
       .getSensorListByGateway(gatewayId)
@@ -37,9 +36,8 @@ export class SensorService {
       .subscribe();
   }
 
-  public getTenantSensorsByTenant(tenantId: string): void {
-    this._loading.set(true);
-    this._error.set(null);
+  public getSensorsByTenant(tenantId: string): void {
+    this.setGettingSensorsState();
 
     this.sensorApi
       .getSensorListByTenant(tenantId)
@@ -55,8 +53,7 @@ export class SensorService {
   }
 
   public addNewSensor(config: SensorConfig): Observable<Sensor> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.sensorApi.addNewSensor(config).pipe(
       tap((newSensor) => {
@@ -71,8 +68,7 @@ export class SensorService {
   }
 
   public deleteSensor(id: string): Observable<void> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.sensorApi.deleteSensor(id).pipe(
       tap(() => {
@@ -84,5 +80,20 @@ export class SensorService {
       }),
       finalize(() => this._loading.set(false)),
     );
+  }
+
+  public clearSensors(): void {
+    this._sensorList.set([]);
+  }
+
+  private setGettingSensorsState(): void {
+    this._sensorList.set([]);
+    this._loading.set(true);
+    this._error.set(null);
+  }
+
+  private setLoadingState(): void {
+    this._loading.set(true);
+    this._error.set(null);
   }
 }

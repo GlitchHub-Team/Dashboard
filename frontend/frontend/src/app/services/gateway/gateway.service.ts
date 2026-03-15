@@ -21,8 +21,7 @@ export class GatewayService {
   public readonly error = this._error.asReadonly();
 
   public getGatewaysByTenant(tenantId: string): void {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setGettingGatewaysState();
 
     this.gatewayApi
       .getGatewayListByTenant(tenantId)
@@ -38,8 +37,7 @@ export class GatewayService {
   }
 
   public getGateways(): void {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setGettingGatewaysState();
 
     this.gatewayApi
       .getGatewayList()
@@ -55,8 +53,7 @@ export class GatewayService {
   }
 
   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.gatewayApi.addNewGateway(config).pipe(
       tap((newGateway) => {
@@ -71,8 +68,7 @@ export class GatewayService {
   }
 
   public deleteGateway(id: string): Observable<void> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.gatewayApi.deleteGateway(id).pipe(
       tap(() => {
@@ -84,5 +80,16 @@ export class GatewayService {
       }),
       finalize(() => this._loading.set(false)),
     );
+  }
+
+  private setGettingGatewaysState(): void {
+    this._gatewayList.set([]);
+    this._loading.set(true);
+    this._error.set(null);
+  }
+
+  private setLoadingState(): void {
+    this._loading.set(true);
+    this._error.set(null);
   }
 }

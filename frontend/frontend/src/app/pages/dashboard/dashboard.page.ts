@@ -5,12 +5,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
+import { DashboardSensorListComponent } from './components/dashboard-sensor-list/dashboard-sensor-list.component';
 import { Gateway } from '../../models/gateway.model';
 import { ChartRequest } from '../../models/chart-request.model';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DashboardGatewayTableComponent, MatIcon],
+  imports: [DashboardGatewayTableComponent, DashboardSensorListComponent, MatIcon],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -27,7 +28,7 @@ export class DashboardPage implements OnInit {
   protected readonly selectedChart = this.dashboardService.selectedChart;
   protected readonly canSendCommands = this.dashboardService.canSendCommands;
   protected readonly error = computed(
-    () => this.dashboardService.gatewayError ?? this.dashboardService.sensorError,
+    () => this.dashboardService.gatewayError() ?? this.dashboardService.sensorError(),
   );
 
   public ngOnInit(): void {
