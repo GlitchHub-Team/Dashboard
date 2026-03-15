@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { delay, Observable, of } from 'rxjs';
 
 import { Gateway } from '../models/gateway.model';
-//import { GatewayConfig } from '../models/gateway-config.model';
+import { GatewayStatus } from '../models/gateway-status.enum';
 
 @Injectable({
   providedIn: 'root',
@@ -12,26 +12,38 @@ export class GatewayServiceMock {
     'tenant-01': [
       {
         id: 'gateway-01',
+        name: 'Main Lobby Gateway',
+        status: GatewayStatus.ONLINE,
       },
       {
         id: 'gateway-02',
+        name: 'ICU Gateway',
+        status: GatewayStatus.ONLINE,
       },
       {
         id: 'gateway-03',
+        name: 'Ward B Gateway',
+        status: GatewayStatus.OFFLINE,
       },
     ],
     'tenant-02': [
       {
         id: 'gateway-04',
+        name: 'Emergency Room Gateway',
+        status: GatewayStatus.ONLINE,
       },
       {
         id: 'gateway-05',
+        name: 'Lab Gateway',
+        status: GatewayStatus.OFFLINE,
       },
     ],
     'tenant-03': [],
     'tenant-04': [
       {
         id: 'gateway-06',
+        name: 'Pharmacy Gateway',
+        status: GatewayStatus.ONLINE,
       },
     ],
     'tenant-05': [],
@@ -46,29 +58,4 @@ export class GatewayServiceMock {
     const gateways = this.mockGateways[tenantId] ?? [];
     return of(gateways).pipe(delay(800));
   }
-
-  /*   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
-    const newGateway: Gateway = {
-      id: config.name,
-    };
-    this.mockGateways.push(newGateway);
-    return of(newGateway).pipe(delay(500));
-  } */
-
-  /*   public deleteGateway(id: string): Observable<void> {
-    const index = this.mockGateways.findIndex((g) => g.id === id);
-    if (index !== -1) {
-      this.mockGateways.splice(index, 1);
-    }
-    return of(void 0).pipe(delay(500));
-  } */
-
-  /*  
-  public sendCommand(cmd: GatewayCommand): Observable<CommandResult> {
-    return of({
-      success: true,
-      message: `Command ${cmd.type} sent to ${cmd.gatewayId}`,
-    }).pipe(delay(1000));
-  } 
-  */
 }

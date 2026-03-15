@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-//import { SensorConfig } from '../models/sensor-config.model';
 import { Sensor } from '../models/sensor.model';
+import { SensorProfiles } from '../models/sensor-profiles.enum';
 
 @Injectable({
   providedIn: 'root',
@@ -13,26 +13,44 @@ export class SensorServiceMock {
     'gateway-01': [
       {
         id: 'sensor-01',
+        gatewayId: 'gateway-01',
+        name: 'Heart Rate Monitor A',
+        profile: SensorProfiles.HEART_RATE_SERVICE,
       },
       {
         id: 'sensor-02',
+        gatewayId: 'gateway-01',
+        name: 'Thermometer A',
+        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
       },
       {
         id: 'sensor-03',
+        gatewayId: 'gateway-01',
+        name: 'ECG Monitor A',
+        profile: SensorProfiles.CUSTOM_ECG_SERVICE,
       },
     ],
     'gateway-02': [
       {
         id: 'sensor-04',
+        gatewayId: 'gateway-02',
+        name: 'Pulse Oximeter A',
+        profile: SensorProfiles.PULSE_OXIMETER_SERVICE,
       },
       {
         id: 'sensor-05',
+        gatewayId: 'gateway-02',
+        name: 'Environment Sensor A',
+        profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
       },
     ],
     'gateway-03': [],
     'gateway-04': [
       {
         id: 'sensor-06',
+        gatewayId: 'gateway-04',
+        name: 'Heart Rate Monitor B',
+        profile: SensorProfiles.HEART_RATE_SERVICE,
       },
     ],
     'gateway-05': [],
@@ -42,26 +60,44 @@ export class SensorServiceMock {
     'tenant-01': [
       {
         id: 'sensor-01',
+        gatewayId: 'gateway-01',
+        name: 'Heart Rate Monitor A',
+        profile: SensorProfiles.HEART_RATE_SERVICE,
       },
       {
         id: 'sensor-02',
+        gatewayId: 'gateway-01',
+        name: 'Thermometer A',
+        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
       },
       {
         id: 'sensor-03',
+        gatewayId: 'gateway-01',
+        name: 'ECG Monitor A',
+        profile: SensorProfiles.CUSTOM_ECG_SERVICE,
       },
     ],
     'tenant-02': [
       {
         id: 'sensor-04',
+        gatewayId: 'gateway-02',
+        name: 'Pulse Oximeter A',
+        profile: SensorProfiles.PULSE_OXIMETER_SERVICE,
       },
       {
         id: 'sensor-05',
+        gatewayId: 'gateway-02',
+        name: 'Environment Sensor A',
+        profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
       },
     ],
     'tenant-03': [],
     'tenant-04': [
       {
         id: 'sensor-06',
+        gatewayId: 'gateway-04',
+        name: 'Heart Rate Monitor B',
+        profile: SensorProfiles.HEART_RATE_SERVICE,
       },
     ],
     'tenant-05': [],
@@ -76,16 +112,6 @@ export class SensorServiceMock {
     const sensors = this.tenantSensors[tenantId] ?? [];
     return of(sensors).pipe(delay(800));
   }
-
-  /*   public addNewSensor(config: SensorConfig): Observable<Sensor> {
-    const newSensor: Sensor = {
-      id: config.id,
-    };
-    const gatewaySensors = this.mockSensors[config.gatewayId] ?? [];
-    gatewaySensors.push(newSensor);
-    this.mockSensors[config.gatewayId] = gatewaySensors;
-    return of(newSensor).pipe(delay(500));
-  } */
 
   public removeSensor(id: string): Observable<void> {
     for (const gatewayId of Object.keys(this.mockSensors)) {

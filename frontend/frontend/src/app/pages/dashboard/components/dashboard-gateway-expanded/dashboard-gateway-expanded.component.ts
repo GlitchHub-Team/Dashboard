@@ -1,13 +1,13 @@
 import { Component, input, output } from '@angular/core';
 
-import { DashboardSensorListComponent } from '../dashboard-sensor-list/dashboard-sensor-list.component';
+import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
 import { Sensor } from '../../../../models/sensor.model';
 import { Gateway } from '../../../../models/gateway.model';
 import { ChartRequest } from '../../../../models/chart-request.model';
 
 @Component({
   selector: 'app-dashboard-gateway-expanded',
-  imports: [DashboardSensorListComponent],
+  imports: [DashboardSensorTableComponent],
   templateUrl: './dashboard-gateway-expanded.component.html',
   styleUrl: './dashboard-gateway-expanded.component.css',
 })

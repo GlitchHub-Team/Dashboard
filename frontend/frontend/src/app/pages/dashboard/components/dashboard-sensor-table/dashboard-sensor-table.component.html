@@ -1,0 +1,53 @@
+@if (loading()) {
+  <mat-spinner diameter="32"></mat-spinner>
+} @else if (sensors().length === 0) {
+  <div class="empty-state">
+    <mat-icon>router</mat-icon>
+    <p>No sensors available</p>
+  </div>
+} @else {
+  <mat-table [dataSource]="sensors()">
+    <ng-container matColumnDef="id">
+      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">{{ sensor.id }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="gatewayId">
+      <mat-header-cell *matHeaderCellDef>Gateway</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">{{ sensor.gatewayId }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">{{ sensor.name }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="profile">
+      <mat-header-cell *matHeaderCellDef>Profile</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">{{ sensor.profile | titlecase }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef>Charts</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">
+        <button
+          mat-icon-button
+          matTooltip="Historic Chart"
+          (click)="onViewChart(sensor, ChartType.HISTORIC)"
+        >
+          <mat-icon>query_stats</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          matTooltip="Real-time Chart"
+          (click)="onViewChart(sensor, ChartType.REALTIME)"
+        >
+          <mat-icon>ssid_chart</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+  </mat-table>
+}

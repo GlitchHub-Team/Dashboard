@@ -1,3 +1,34 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 0;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 8px;
+}
+
+mat-row {
+  cursor: pointer;
+}
+
+mat-row.expanded {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.online {
+  color: #4caf50;
+}
+
+.offline {
+  color: #f44336;
+}
+
 .detail-row {
   height: 0;
   min-height: 0;
@@ -15,6 +46,15 @@
 }
 
 .detail-row.visible .mat-mdc-cell {
-  padding: 16px;
+  padding: 16px 0;
   border-bottom-width: 1px;
+  width: 100%;
+}
+
+.detail-row.visible .mat-mdc-cell > * {
+  width: 100%;
+}
+
+.mat-column-commands {
+  justify-content: center;
 }

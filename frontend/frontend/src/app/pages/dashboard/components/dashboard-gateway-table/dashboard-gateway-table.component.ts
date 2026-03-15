@@ -24,8 +24,8 @@ import { ChartRequest } from '../../../../models/chart-request.model';
 export class DashboardGatewayTableComponent {
   public readonly gateways = input.required<Gateway[]>();
   public readonly sensors = input.required<Sensor[]>();
-  public readonly expandedGateway = input<Gateway | null>();
-  public readonly canSendCommands = input<boolean>();
+  public readonly expandedGateway = input<Gateway | null>(null);
+  public readonly canSendCommands = input<boolean>(false);
   public readonly gatewayLoading = input<boolean>();
   public readonly sensorLoading = input<boolean>();
 
@@ -33,7 +33,7 @@ export class DashboardGatewayTableComponent {
   public readonly chartRequested = output<ChartRequest>();
   public readonly expandedGatewayChange = output<Gateway>();
 
-  private readonly columns = ['id'];
+  private readonly columns = ['id', 'name', 'status'];
   protected readonly displayedColumns = computed(() =>
     this.columns.concat(this.canSendCommands() ? ['commands'] : []),
   );
