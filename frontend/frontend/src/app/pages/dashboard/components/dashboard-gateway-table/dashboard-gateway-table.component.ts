@@ -3,6 +3,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatIcon } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
+import { UpperCasePipe } from '@angular/common';
 
 import { DashboardGatewayExpandedComponent } from '../dashboard-gateway-expanded/dashboard-gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway.model';
@@ -16,6 +17,7 @@ import { ChartRequest } from '../../../../models/chart-request.model';
     MatIcon,
     MatTableModule,
     MatTooltip,
+    UpperCasePipe,
     DashboardGatewayExpandedComponent,
   ],
   templateUrl: './dashboard-gateway-table.component.html',

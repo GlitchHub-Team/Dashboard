@@ -20,7 +20,7 @@
     <ng-container matColumnDef="status">
       <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
       <mat-cell *matCellDef="let gateway">
-        <span [class]="gateway.status">{{ gateway.status }}</span>
+        <span [class]="gateway.status">{{ gateway.status | uppercase }}</span>
       </mat-cell>
     </ng-container>
 
