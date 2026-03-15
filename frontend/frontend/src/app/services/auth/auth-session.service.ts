@@ -29,8 +29,7 @@ export class AuthSessionService {
   );
 
   public login(req: LoginRequest): Observable<AuthResponse> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.authApiClient.login(req).pipe(
       tap((response) => {
@@ -59,6 +58,11 @@ export class AuthSessionService {
   }
 
   public clearError(): void {
+    this._error.set(null);
+  }
+
+  private setLoadingState(): void {
+    this._loading.set(true);
     this._error.set(null);
   }
 

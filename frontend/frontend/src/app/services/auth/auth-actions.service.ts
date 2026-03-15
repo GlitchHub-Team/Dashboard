@@ -22,8 +22,7 @@ export class AuthActionsService {
   public readonly passwordChangeResult = this._passwordChangeResult.asReadonly();
 
   public forgotPassword(email: string): Observable<void> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.authApiClient.forgotPassword(email).pipe(
       catchError((err: ApiError) => {
@@ -49,8 +48,7 @@ export class AuthActionsService {
       );
     }
 
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
 
     return this.authApiClient.requestPasswordChange(user.id).pipe(
       catchError((err: ApiError) => {
@@ -62,8 +60,7 @@ export class AuthActionsService {
   }
 
   public confirmPasswordChange(data: PasswordChange): Observable<void> {
-    this._loading.set(true);
-    this._error.set(null);
+    this.setLoadingState();
     this._passwordChangeResult.set(null);
 
     return this.authApiClient.confirmPasswordChange(data).pipe(
@@ -80,5 +77,10 @@ export class AuthActionsService {
   public clearMessages(): void {
     this._error.set(null);
     this._passwordChangeResult.set(null);
+  }
+
+  private setLoadingState(): void {
+    this._loading.set(true);
+    this._error.set(null);
   }
 }
