@@ -1,156 +1,68 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, of, delay, throwError, tap, finalize, timer, switchMap } from 'rxjs';
-import { inject } from '@angular/core';
-import { TokenStorageService } from '../services/token-storage/token-storage.service';
-import { UserSessionService } from '../services/user-session/user-session.service';
-import { UserRole } from '../models/user-role.enum';
+import { Injectable } from '@angular/core';
+import { Observable, of, delay, throwError, timer, switchMap } from 'rxjs';
+
 import { LoginRequest } from '../models/login-request.model';
 import { AuthResponse } from '../models/auth-response.model';
 import { PasswordChange } from '../models/password-change.model';
 import { ApiError } from '../models/api-error.model';
+import { UserRole } from '../models/user-role.enum';
+
+const MOCK_DELAY = 800;
+
+const MOCK_USERS: Record<string, { password: string; user: AuthResponse['user'] }> = {
+  'admin@test.com': {
+    password: 'password',
+    user: { id: '1', email: 'admin@test.com', role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
+  },
+  'user@test.com': {
+    password: 'password',
+    user: { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
+  },
+};
 
 @Injectable({ providedIn: 'root' })
 export class AuthServiceMock {
-  private readonly tokenStorage = inject(TokenStorageService);
-  private readonly userSession = inject(UserSessionService);
-  private readonly router = inject(Router);
+  login(req: LoginRequest): Observable<AuthResponse> {
+    const entry = MOCK_USERS[req.email];
 
-  // ---- State ----
-  private readonly _loading = signal(false);
-  private readonly _error = signal<string | null>(null);
-  private readonly _passwordChangeResult = signal<boolean | null>(null);
-
-  // ---- Selectors ----
-  public readonly loading = this._loading.asReadonly();
-  public readonly error = this._error.asReadonly();
-  public readonly passwordChangeResult = this._passwordChangeResult.asReadonly();
-
-  public readonly isAuthenticated = computed<boolean>(
-    () => this.tokenStorage.isValid() && this.userSession.currentUser() !== null,
-  );
-
-  // ---- AuthSessionService methods ----
-
-  public login(req: LoginRequest): Observable<AuthResponse> {
-    this._loading.set(true);
-    this._error.set(null);
-
-    if (req.email === 'admin@test.com' && req.password === 'password') {
+    if (entry && entry.password === req.password) {
       const response: AuthResponse = {
-        user: { id: '1', email: req.email, role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
-        token: this.fakeToken(req.email, UserRole.SUPER_ADMIN),
+        user: entry.user,
+        token: this.fakeToken(entry.user.email, entry.user.role),
       };
-
-      return of(response).pipe(
-        delay(800),
-        tap((res) => {
-          this.tokenStorage.saveToken(res.token);
-          this.userSession.initSession(res.user);
-        }),
-        finalize(() => this._loading.set(false)),
-      );
+      return of(response).pipe(delay(MOCK_DELAY));
     }
 
-    const error: ApiError = {
-      status: 401,
-      message: 'Invalid email or password',
-    };
-
-    // timer() ensures the delay actually works for errors
-    return timer(800).pipe(
-      switchMap(() => {
-        this._error.set(error.message);
-        return throwError(() => error);
-      }),
-      finalize(() => this._loading.set(false)),
-    );
+    return this.delayedError({ status: 401, message: 'Invalid email or password' });
   }
 
-  public logout(): void {
-    this.tokenStorage.clearToken();
-    this.userSession.clearSession();
-    this._passwordChangeResult.set(null);
-    this.router.navigate(['/login']);
+  logout(_userId: string): Observable<void> {
+    return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  public clearError(): void {
-    this._error.set(null);
-  }
-
-  // ---- AuthActionsService methods ----
-
-  public forgotPassword(email: string): Observable<void> {
-    this._loading.set(true);
-    this._error.set(null);
-
-    if (email === 'notfound@test.com') {
-      const error: ApiError = {
-        status: 404,
-        message: 'Email not found',
-        errors: [{ field: 'email', message: 'No account with this email' }],
-      };
-
-      return timer(800).pipe(
-        switchMap(() => throwError(() => error)),
-        finalize(() => this._loading.set(false)),
-      );
+  forgotPassword(email: string): Observable<void> {
+    if (!MOCK_USERS[email]) {
+      return this.delayedError({ status: 404, message: 'Email not found' });
     }
-
-    return of(undefined).pipe(
-      delay(800),
-      finalize(() => this._loading.set(false)),
-    );
+    return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  public requestPasswordChange(): Observable<void> {
-    const user = this.userSession.currentUser();
+  requestPasswordChange(_userId: string): Observable<void> {
+    return of(undefined).pipe(delay(MOCK_DELAY));
+  }
 
-    if (!user) {
-      const error: ApiError = {
-        status: 401,
-        message: 'User not authenticated',
-      };
-
-      return timer(800).pipe(switchMap(() => throwError(() => error)));
+  confirmPasswordChange(data: PasswordChange): Observable<void> {
+    if (!data.token || data.token === 'expired-token') {
+      return this.delayedError({ status: 400, message: 'Invalid or expired token' });
     }
-
-    this._loading.set(true);
-    return of(undefined).pipe(
-      delay(800),
-      finalize(() => this._loading.set(false)),
-    );
+    return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  public confirmPasswordChange(data: PasswordChange): Observable<void> {
-    this._loading.set(true);
-    this._error.set(null);
+  // ── Helpers ──────────────────────────────────────────
 
-    if (data.token === 'valid-token') {
-      this._passwordChangeResult.set(true);
-      return of(undefined).pipe(
-        delay(800),
-        finalize(() => this._loading.set(false)),
-      );
-    }
-
-    const error: ApiError = {
-      status: 400,
-      message: 'Invalid or expired token',
-    };
-    this._passwordChangeResult.set(false);
-
-    return timer(800).pipe(
-      switchMap(() => throwError(() => error)),
-      finalize(() => this._loading.set(false)),
-    );
+  private delayedError(error: ApiError): Observable<never> {
+    return timer(MOCK_DELAY).pipe(switchMap(() => throwError(() => error)));
   }
-
-  public clearMessages(): void {
-    this._error.set(null);
-  }
-
-  // ---- Helper ----
 
   private fakeToken(email: string, role: UserRole): string {
     const header = btoa(JSON.stringify({ alg: 'none' }));

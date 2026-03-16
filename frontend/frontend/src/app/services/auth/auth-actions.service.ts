@@ -26,9 +26,7 @@ export class AuthActionsService {
 
     return this.authApiClient.forgotPassword(email).pipe(
       catchError((err: ApiError) => {
-        if (!err.errors?.length) {
-          this._error.set(err.message ?? 'Failed to send reset email');
-        }
+        this._error.set(err.message ?? 'Failed to send reset email');
         throw err;
       }),
       finalize(() => this._loading.set(false)),
