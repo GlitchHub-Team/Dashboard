@@ -1,8 +1,7 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { Signal } from '@angular/core';
 
 export interface ConfirmDeleteDialogData {
   title?: string;
@@ -14,21 +13,19 @@ export interface ConfirmDeleteDialogData {
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule],
   template: `
-    <h2 mat-dialog-title>{{ data?.title || 'Confirm Delete' }}</h2>
+    <h2 mat-dialog-title>{{ data?.title || 'Conferma Eliminazione' }}</h2>
     <mat-dialog-content>
-      <p>{{ data?.message || 'Are you sure?' }}</p>
+      <p>{{ data?.message || 'Sei sicuro di voler procedere?' }}</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="warn" (click)="onConfirm()">Delete</button>
+      <button mat-button (click)="onCancel()">Annulla</button>
+      <button mat-raised-button color="warn" (click)="onConfirm()">Elimina</button>
     </mat-dialog-actions>
   `,
 })
 export class ConfirmDeleteDialog {
-  constructor(
-    public dialogRef: MatDialogRef<ConfirmDeleteDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: ConfirmDeleteDialogData | null
-  ) {}
+  public dialogRef = inject(MatDialogRef<ConfirmDeleteDialog>);
+  public data = inject<ConfirmDeleteDialogData | null>(MAT_DIALOG_DATA);
 
   onConfirm(): void {
     this.dialogRef.close(true);

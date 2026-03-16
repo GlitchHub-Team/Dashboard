@@ -1,24 +1,34 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Tenant } from '../../models/tenant.model';
 import { RawTenantConfig } from '../../models/raw-tenant-config.model';
 import { environment } from '../../../environments/environment';
+import { TenantDataAdapter } from './tenant-data.adapter';
+
+export interface TenantConfig {
+  name: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TenantApiClientService {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/tenants`;
+  private readonly http = inject(HttpClient);
+  private readonly tenantAdapter = inject(TenantDataAdapter);
+  private readonly apiUrl = `${environment.apiUrl}/tenants`;
 
-  getTenant(): Observable<Tenant[]> {
-    return this.http.get<Tenant[]>(this.apiUrl);
+  public getTenant(): Observable<Tenant[]> {
+    return this.http.get<RawTenantConfig[]>(this.apiUrl).pipe(
+      map(data => this.tenantAdapter.adaptArray(data))
+    );
   }
 
-  createTenant(config: RawTenantConfig): Observable<Tenant> {
-    return this.http.post<Tenant>(this.apiUrl, config);
+  public createTenant(config: TenantConfig): Observable<Tenant> {
+    return this.http.post<RawTenantConfig>(this.apiUrl, config).pipe(
+      map(data => this.tenantAdapter.adapt(data))
+    );
   }
 
-  deleteTenant(id: string): Observable<void> {
+  public deleteTenant(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

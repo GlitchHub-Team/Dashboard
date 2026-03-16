@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject, Signal, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -7,7 +7,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { TenantService } from '../../../services/tenant/tenant.service';
 import { RawTenantConfig } from '../../../models/raw-tenant-config.model';
-import { Signal, signal } from '@angular/core';
 
 @Component({
   selector: 'app-tenant-form-dialog',
@@ -21,27 +20,29 @@ import { Signal, signal } from '@angular/core';
     MatButtonModule,
   ],
   template: `
-    <h2 mat-dialog-title>Add Tenant</h2>
+    <h2 mat-dialog-title>Aggiungi Tenant</h2>
     <mat-dialog-content>
       <form [formGroup]="formBuilder">
         <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Name</mat-label>
+          <mat-label>Nome</mat-label>
           <input matInput formControlName="name" required />
         </mat-form-field>
-        <div *ngIf="generalError()" class="error-text">
-          {{ generalError() }}
-        </div>
+        @if (generalError()) {
+          <div class="error-text">
+            {{ generalError() }}
+          </div>
+        }
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
+      <button mat-button (click)="onCancel()">Annulla</button>
       <button
         mat-raised-button
         color="primary"
         (click)="onSave()"
         [disabled]="formBuilder.invalid || loading()"
       >
-        Save
+        Salva
       </button>
     </mat-dialog-actions>
   `,
@@ -59,23 +60,24 @@ import { Signal, signal } from '@angular/core';
   ],  
   providers: [TenantService],
 })
-export class TenantFormDialog {
-  formBuilder: FormGroup;
-  loading: Signal<boolean>;
-  generalError: Signal<string | null>;
 
-  constructor(
-    private fb: FormBuilder,
-    private tenantService: TenantService,
-    private dialogRef: MatDialogRef<TenantFormDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: RawTenantConfig | null
-  ) {
+export class TenantFormDialog {
+  private readonly fb = inject(FormBuilder);
+  private readonly tenantService = inject(TenantService);
+  private readonly dialogRef = inject(MatDialogRef<TenantFormDialog>);
+  public data = inject<RawTenantConfig | null>(MAT_DIALOG_DATA);
+
+  public formBuilder: FormGroup;
+  public loading: Signal<boolean>;
+  public generalError: Signal<string | null>;
+
+  constructor() {
     this.formBuilder = this.fb.group({
       name: ['', [Validators.required]],
     });
 
-    if (data) {
-      this.formBuilder.patchValue(data);
+    if (this.data) {
+      this.formBuilder.patchValue(this.data);
     }
 
     this.loading = signal(false);
@@ -89,11 +91,11 @@ export class TenantFormDialog {
     const config: RawTenantConfig = this.formBuilder.value;
 
     this.tenantService.addNewTenant(config).subscribe({
-      next: (tenant: any) => {
+      next: (tenant: unknown) => {
         this.loading = signal(false);
         this.dialogRef.close(tenant);
       },
-      error: (err: any) => {
+      error: (err: Error) => {
         this.loading = signal(false);
         this.generalError = signal(err.message || 'Failed to save tenant');
       },

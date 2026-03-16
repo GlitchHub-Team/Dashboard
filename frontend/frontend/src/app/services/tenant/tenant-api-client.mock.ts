@@ -11,17 +11,17 @@ export class TenantApiClientMockService {
     { name: 'Tenant 3' },
   ];
 
-  getTenant(): Observable<Tenant[]> {
+  public getTenant(): Observable<Tenant[]> {
     return of([...this.mockTenants]).pipe(delay(500));
   }
 
-  createTenant(config: RawTenantConfig): Observable<Tenant> {
+  public createTenant(config: RawTenantConfig): Observable<Tenant> {
     const newTenant: Tenant = { name: config.name };
     this.mockTenants.push(newTenant);
     return of(newTenant).pipe(delay(500));
   }
 
-  deleteTenant(name: string): Observable<void> {
+  public deleteTenant(name: string): Observable<void> {
     this.mockTenants = this.mockTenants.filter((t) => t.name !== name);
     return of(void 0).pipe(delay(500));
   }

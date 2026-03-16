@@ -11,6 +11,8 @@ import { AuthActionsService } from './services/auth/auth-actions.service';
 import { AuthServiceMock } from './mocks/auth.service.mock';
 import { TenantApiClientService } from './services/tenant/tenant-api-client.service';
 import { TenantApiClientMockService } from './services/tenant/tenant-api-client.mock';
+import { UserApiClientService } from './services/user/user-api-client.service';
+import { UserApiClientMockService } from './services/user/user-api-client.mock';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,6 +25,7 @@ export const appConfig: ApplicationConfig = {
     { provide: AuthActionsService, useClass: AuthServiceMock },
     // Mock Tenant API fino a quando il backend non è pronto
     { provide: TenantApiClientService, useClass: TenantApiClientMockService },
-
+    // Mock User API
+    { provide: UserApiClientService, useClass: UserApiClientMockService },
   ],
 };

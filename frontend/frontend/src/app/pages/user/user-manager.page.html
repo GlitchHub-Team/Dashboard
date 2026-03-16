@@ -1,0 +1,16 @@
+<div class="manager-container">
+  <div class="manager-header">
+    <h1>{{ context.title }}</h1>
+    <button mat-raised-button color="primary" (click)="onCreateUser()" [disabled]="loading()">
+      + Aggiungi Utente
+    </button>
+  </div>
+
+  <div class="manager-content">
+    <app-user-table
+      [users]="users()"
+      [loading]="loading()"
+      (deleteRequested)="onDeleteUser($event)">
+    </app-user-table>
+  </div>
+</div>

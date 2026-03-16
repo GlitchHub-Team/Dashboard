@@ -40,13 +40,13 @@ export class TenantManagerPage implements OnInit {
         width: '400px',
         data: {
           title: 'Delete Tenant',
-          message: `Are you sure you want to delete "${tenant.name}"?`,
+          message: `Sei sicuro di voler eliminare il tenant "${tenant.name}"?`,
         },
       })
     .afterClosed()
     .subscribe((confirmed) => {
       if (confirmed) {
-        this.tenantService.retrieveTenant();
+        this.tenantService.removeTenant(tenant.name).subscribe();
       }
     });
   }

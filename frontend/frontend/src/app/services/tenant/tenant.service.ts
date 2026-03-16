@@ -6,11 +6,11 @@ import { TenantApiClientService } from './tenant-api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class TenantService {
-  private tenantApiClient = inject(TenantApiClientService);
+  private readonly tenantApiClient = inject(TenantApiClientService);
 
-  loading = signal<boolean>(false);
-  error = signal<string | null>(null);
-  tenantList = signal<Tenant[]>([]);
+  public readonly loading = signal<boolean>(false);
+  public readonly error = signal<string | null>(null);
+  public readonly tenantList = signal<Tenant[]>([]);
 
   retrieveTenant(): void {
     this.loading.set(true);
@@ -21,7 +21,7 @@ export class TenantService {
         this.tenantList.set(tenants);
         this.loading.set(false);
       },
-      error: (err: any) => {
+      error: (err: Error) => {
         this.error.set(err.message || 'Failed to fetch tenants');
         this.loading.set(false);
       },
@@ -40,7 +40,7 @@ export class TenantService {
           observer.next(tenant);
           observer.complete();
         },
-        error: (err: any) => {
+        error: (err: Error) => {
           this.error.set(err.message || 'Failed to create tenant');
           this.loading.set(false);
           observer.error(err);
@@ -63,7 +63,7 @@ export class TenantService {
           observer.next();
           observer.complete();
         },
-        error: (err: any) => {
+        error: (err: Error) => {
           this.error.set(err.message || 'Failed to delete tenant');
           this.loading.set(false);
           observer.error(err);

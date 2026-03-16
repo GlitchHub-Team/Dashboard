@@ -1,20 +1,31 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Tenant } from './../../../models/tenant.model';
+import { User } from '../../../models/user.model';
 
 @Component({
-  selector: 'app-tenant-table',
+  selector: 'app-user-table',
   standalone: true,
   imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
   template: `
-    <table mat-table [dataSource]="tenants" class="tenant-table">
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Nome</th>
-        <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+    <table mat-table [dataSource]="users()" class="user-table">
+      
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>Id</th>
+        <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Ruolo</th>
+        <td mat-cell *matCellDef="let element">{{ element.role }}</td>
       </ng-container>
 
       <ng-container matColumnDef="actions">
@@ -25,6 +36,7 @@ import { Tenant } from './../../../models/tenant.model';
             (click)="onDelete(element)"
             matTooltip="Elimina"
             color="warn"
+            [disabled]="loading()"
           >
             <mat-icon>delete</mat-icon>
           </button>
@@ -37,10 +49,10 @@ import { Tenant } from './../../../models/tenant.model';
   `,
   styles: [
     `
-      .tenant-table {
+      .user-table {
         width: 100%;
       }
-      
+    
       ::ng-deep tr.mat-header-row,
       ::ng-deep tr.mat-mdc-header-row {
         background-color: #dedcdcff !important;
@@ -64,14 +76,15 @@ import { Tenant } from './../../../models/tenant.model';
     `,
   ],
 })
-export class TenantTableComponent {
-  @Input() tenants: Tenant[] = [];
-  @Input() loading = false;
-  @Output() deleteRequested = new EventEmitter<Tenant>();
+export class UserTableComponent {
+  users = input.required<User[]>();
+  loading = input<boolean>(false);
 
-  displayedColumns: string[] = ['name', 'actions'];
+  displayedColumns: string[] = ['id', 'email', 'role', 'actions'];
 
-  onDelete(tenant: Tenant): void {
-    this.deleteRequested.emit(tenant);
+  deleteRequested = output<User>();
+
+  onDelete(user: User): void {
+    this.deleteRequested.emit(user);
   }
 }

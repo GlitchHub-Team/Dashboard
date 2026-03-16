@@ -17,13 +17,13 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Tenant User Management',
     icon: 'people',
-    route: '/dashboard/user-management',
+    route: '/dashboard/user-management/tenant-users',
     permission: [Permission.TENANT_USER_MANAGEMENT],
   },
   {
     label: 'Tenant Admin Management',
     icon: 'people',
-    route: '/admin-management',
+    route: '/dashboard/user-management/tenant-admins',
     permission: [Permission.TENANT_ADMIN_MANAGEMENT],
   },
   {

@@ -2,13 +2,16 @@
   <div class="header-section">
     <h1>Tenant Management</h1>
     <button mat-raised-button color="primary" (click)="onCreateTenant()">
-      + Add Tenant
+      + Aggiungi Tenant
     </button>
   </div>
 
-  <app-tenant-table
-    [tenants]="tenants()"
-    [loading]="(loading() || false)"
-    (deleteRequested)="onDeleteTenant($event)"
-  ></app-tenant-table>
+  <div class="user-content">
+    <app-tenant-table
+      [tenants]="tenants()"
+      [loading]="(loading() || false)"
+      (deleteRequested)="onDeleteTenant($event)"
+    ></app-tenant-table>
+  </div>
+
 </div>
