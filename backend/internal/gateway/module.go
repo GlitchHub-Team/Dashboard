@@ -1,8 +1,6 @@
 package gateway
 
 import (
-	"backend/internal/common"
-
 	"go.uber.org/fx"
 )
 
@@ -11,15 +9,20 @@ var Module = fx.Module(
 
 	// Metodi pubblici
 	fx.Provide(
-		NewGatewayController,
-		
+
 		// Use Cases (inbound ports)
+<<<<<<< HEAD
 		common.FxAs[CreateGatewayUseCase](NewCreateGatewayService),
 		common.FxAs[DeleteGatewayUseCase](NewDeleteGatewayService),
+=======
+		NewGatewayController,
+
+		NewCreateGatewayService,
+		NewDeleteGatewayService,
+>>>>>>> origin/issue-17
 
 		// Outbound ports
-		common.FxAs[SaveGatewayPort](NewGatewayPostgreAdapter),
-
+		NewGatewayPostgreAdapter,
 	),
 
 	// Metodi privati

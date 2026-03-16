@@ -7,14 +7,23 @@ import (
 var Module = fx.Module(
 	"user",
 
-    // Metodi pubblici
-    fx.Provide(
-        //..
-    ),
+	// Metodi pubblici
+	fx.Provide(
+		// Controller
+		NewUserController,
 
-    // Metodi privati
-    fx.Provide(
-        fx.Private,
-        // ...
-   ),
+		// Use Cases
+		NewCreateUserService,
+		NewDeleteUserService,
+		NewGetUserService,
+
+		// Outbound ports
+		NewUserPostgreAdapter,
+	),
+
+	// Metodi privati
+	fx.Provide(
+		fx.Private,
+		newUserPostgreRepository,
+	),
 )
