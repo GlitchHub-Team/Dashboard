@@ -8,7 +8,6 @@ export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
       const apiError: ApiError = {
         status: response.status,
         message: response.error?.message ?? fallbackMessage(response.status),
-        errors: response.error?.errors ?? [],
       };
 
       return throwError(() => apiError);

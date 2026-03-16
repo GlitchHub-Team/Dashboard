@@ -15,7 +15,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
-import { ApiError } from '../../../../models/api-error.model';
 import { PasswordChange } from '../../../../models/password-change.model';
 import { TokenStorageService } from '../../../../services/token-storage/token-storage.service';
 
@@ -53,8 +52,6 @@ export class ChangePasswordDialog {
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;
 
-  private serverErrors = new Map<string, string>();
-
   constructor() {
     this.setupAutoClear();
   }
@@ -64,8 +61,6 @@ export class ChangePasswordDialog {
       this.form.markAllAsTouched();
       return;
     }
-
-    this.serverErrors.clear();
 
     const data: PasswordChange = {
       token: this.tokenStorageService.getToken() ?? '',
@@ -77,7 +72,6 @@ export class ChangePasswordDialog {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.dialogRef.close(true),
-        error: (err: ApiError) => this.handleServerErrors(err),
       });
   }
 
@@ -94,28 +88,11 @@ export class ChangePasswordDialog {
     const control = this.form.get(field);
     if (!control?.errors) return '';
 
-    if (control.hasError('serverError')) {
-      return this.serverErrors.get(field) ?? '';
-    }
-
     if (control.hasError('required')) {
       return `${label} is required.`;
     }
 
     return 'Invalid value';
-  }
-
-  private handleServerErrors(error: ApiError): void {
-    if (!error.errors?.length) return;
-
-    for (const fieldError of error.errors) {
-      const control = this.form.get(fieldError.field);
-      if (control) {
-        control.setErrors({ serverError: true });
-        control.markAsTouched();
-        this.serverErrors.set(fieldError.field, fieldError.message);
-      }
-    }
   }
 
   private setupAutoClear(): void {
@@ -124,9 +101,6 @@ export class ChangePasswordDialog {
         .get(key)!
         .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => {
-          if (this.serverErrors.has(key)) {
-            this.serverErrors.delete(key);
-          }
           if (this.generalError()) {
             this.authActionsService.clearMessages();
           }

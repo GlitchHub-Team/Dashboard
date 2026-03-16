@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, throwError, tap, catchError, finalize } from 'rxjs';
+import { Observable, throwError, tap, catchError, finalize, EMPTY } from 'rxjs';
 
 import { ApiError } from '../../models/api-error.model';
 import { PasswordChange } from '../../models/password-change.model';
@@ -26,10 +26,8 @@ export class AuthActionsService {
 
     return this.authApiClient.forgotPassword(email).pipe(
       catchError((err: ApiError) => {
-        if (!err.errors?.length) {
-          this._error.set(err.message ?? 'Failed to send reset email');
-        }
-        throw err;
+        this._error.set(err.message ?? 'Failed to send reset email');
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );
@@ -53,7 +51,7 @@ export class AuthActionsService {
     return this.authApiClient.requestPasswordChange(user.id).pipe(
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to request password change');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );
@@ -68,7 +66,7 @@ export class AuthActionsService {
       catchError((err: ApiError) => {
         this._passwordChangeResult.set(false);
         this._error.set(err.message ?? 'Failed to change password');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );

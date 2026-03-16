@@ -9,7 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
-import { ApiError } from '../../../../models/api-error.model';
 
 @Component({
   selector: 'app-forgot-password.dialog',
@@ -39,8 +38,6 @@ export class ForgotPasswordDialog {
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;
 
-  private serverErrors = new Map<string, string>();
-
   constructor() {
     this.setupAutoClear();
   }
@@ -51,14 +48,11 @@ export class ForgotPasswordDialog {
       return;
     }
 
-    this.serverErrors.clear();
-
     this.authActionsService
       .forgotPassword(this.forgotPasswordForm.controls.email.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.dialogRef.close(true),
-        error: (err: ApiError) => this.handleServerErrors(err),
       });
   }
 
@@ -75,10 +69,6 @@ export class ForgotPasswordDialog {
     const control = this.forgotPasswordForm.get(field);
     if (!control?.errors) return '';
 
-    if (control.hasError('serverError')) {
-      return this.serverErrors.get(field) ?? '';
-    }
-
     if (control.hasError('required')) {
       return `${label} is required.`;
     }
@@ -90,29 +80,13 @@ export class ForgotPasswordDialog {
     return 'Invalid value';
   }
 
-  private handleServerErrors(error: ApiError): void {
-    if (!error.errors?.length) return;
-
-    for (const fieldError of error.errors) {
-      const control = this.forgotPasswordForm.get(fieldError.field);
-
-      if (control) {
-        control.setErrors({ serverError: true });
-        control.markAsTouched();
-        this.serverErrors.set(fieldError.field, fieldError.message);
-      }
-    }
-  }
-
+  // Clear general error when user starts typing
   private setupAutoClear(): void {
     for (const key of Object.keys(this.forgotPasswordForm.controls)) {
       this.forgotPasswordForm
         .get(key)!
         .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => {
-          if (this.serverErrors.has(key)) {
-            this.serverErrors.delete(key);
-          }
           if (this.generalError()) {
             this.authActionsService.clearMessages();
           }

@@ -3,7 +3,7 @@
 
   <div class="main-content">
     <app-header
-      [username]="currentUser()!.email"
+      [username]="currentUser()?.email ?? null"
       [currentTenant]="currentTenant()"
       [currentUserRole]="currentUserRole()"
       (logoutRequested)="onLogout()"
