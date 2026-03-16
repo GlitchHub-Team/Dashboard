@@ -7,8 +7,8 @@
   </div>
 
   <app-tenant-table
-    [tenants]="(tenants$ | async) || []"
-    [loading]="(loading$ | async) || false"
+    [tenants]="tenants()"
+    [loading]="(loading() || false)"
     (deleteRequested)="onDeleteTenant($event)"
   ></app-tenant-table>
 </div>

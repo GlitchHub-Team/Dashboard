@@ -12,16 +12,14 @@ import { Tenant } from './../../../models/tenant.model';
   imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
   template: `
     <table mat-table [dataSource]="tenants" class="tenant-table">
-      <!-- Name Column -->
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>Name</th>
         <td mat-cell *matCellDef="let element">{{ element.name }}</td>
       </ng-container>
 
-      <!-- Actions Column -->
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let element">
+        <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+        <td mat-cell *matCellDef="let element" class="actions-cell">
           <button
             mat-icon-button
             (click)="onDelete(element)"

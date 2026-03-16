@@ -16,11 +16,11 @@ import { Tenant } from '../../models/tenant.model';
   styleUrl: './tenant-manager.page.css',
 })
 export class TenantManagerPage implements OnInit {
-  private tenantService = inject(TenantService);
-  private dialog = inject(MatDialog);
+  private readonly tenantService = inject(TenantService);
+  private readonly dialog = inject(MatDialog);
 
-  tenants$ = this.tenantService.tenantList$;
-  loading$ = this.tenantService.loading$;
+  tenants = this.tenantService.tenantList;
+  loading = this.tenantService.loading;
 
   ngOnInit(): void {
     this.tenantService.retrieveTenant();
@@ -36,23 +36,18 @@ export class TenantManagerPage implements OnInit {
   }
 
   onDeleteTenant(tenant: Tenant): void {
-    this.dialog
-      .open(ConfirmDeleteDialog, {
+    this.dialog.open(ConfirmDeleteDialog, {
         width: '400px',
         data: {
           title: 'Delete Tenant',
           message: `Are you sure you want to delete "${tenant.name}"?`,
         },
       })
-      .afterClosed()
-      .subscribe((confirmed) => {
-        if (confirmed) {
-          this.tenantService.removeTenant(tenant.name).subscribe({
-            next: () => {
-              this.tenantService.retrieveTenant();
-            },
-          });
-        }
-      });
+    .afterClosed()
+    .subscribe((confirmed) => {
+      if (confirmed) {
+        this.tenantService.retrieveTenant();
+      }
+    });
   }
 }
