@@ -23,18 +23,8 @@ import { User } from '../../../models/user.model';
     <mat-dialog-content>
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Id</mat-label>
-          <input matInput formControlName="id" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="w-100">
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" required />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Ruolo</mat-label>
-          <input matInput formControlName="role" required />
         </mat-form-field>
 
         @if (generalError()) {
@@ -84,7 +74,6 @@ export class UserFormDialogComponent {
     this.form = this.formBuilder.group({
       id: [this.data?.id || ''],
       email: [this.data?.email || '', [Validators.required, Validators.email]],
-      role: [this.data?.role || '', [Validators.required]],
     });
   }
 

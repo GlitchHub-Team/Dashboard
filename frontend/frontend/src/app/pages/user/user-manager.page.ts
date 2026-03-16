@@ -46,7 +46,7 @@ export class UserManagerPage implements OnInit {
       data: null,
     }).afterClosed().subscribe((result: User) => {
       if (result) {
-        const userConfig = { email: result.email, role: result.role };
+        const userConfig = { email: result.email, role: this.context.role };
         this.userService.addNewUser(userConfig).subscribe(() => {
           this.userService.retrieveUser(this.context.role);
         });

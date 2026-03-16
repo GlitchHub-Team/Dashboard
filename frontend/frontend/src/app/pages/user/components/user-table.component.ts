@@ -55,12 +55,12 @@ import { User } from '../../../models/user.model';
     
       ::ng-deep tr.mat-header-row,
       ::ng-deep tr.mat-mdc-header-row {
-        background-color: #dedcdcff !important;
+        background-color: #d0d0d0 !important;
       }
 
       ::ng-deep th.mat-header-cell,
       ::ng-deep th.mat-mdc-header-cell {
-        border-bottom: 2px solid #000000 !important;
+        border-bottom: 2px solid #3f51b5 !important;
         font-weight: bold !important;
       }
 
