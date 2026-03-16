@@ -1,8 +1,6 @@
 package user
 
 import (
-	"fmt"
-
 	"backend/internal/auth"
 	"backend/internal/email"
 	"backend/internal/tenant"
@@ -89,7 +87,6 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
 	if err != nil {
 		// 6) Elimina account se invio mail fallisce
-		// TODO: Gestire eliminazione dell'account se invio di email fallisce
 		_, deletionErr := service.deleteUserPort.DeleteTenantUser(*user.TenantId, user.Id)
 		if deletionErr != nil {
 			return User{}, deletionErr
@@ -102,7 +99,7 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 }
 
 func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand) (User, error) {
-	// Controlla tenant
+	// 1) Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
 		return User{}, err
@@ -111,17 +108,17 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// Controlla user
+	// 2) Controlla user
 	user, err := service.getUserPort.GetTenantAdminByEmail(cmd.TenantId, cmd.Email)
 	if err != nil {
-		return User{}, fmt.Errorf("error obtaining tenant user %v @%v: %v", cmd.Email, cmd.TenantId, err)
+		return User{}, err
 	}
 	if !user.IsZero() {
 		return User{}, ErrUserAlreadyExists
 	}
 
-	// Crea user
-	newUser, err := service.createUserPort.CreateUser(User{
+	// 3) Crea user
+	user, err = service.createUserPort.CreateUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
 		Role:      ROLE_TENANT_ADMIN,
@@ -132,24 +129,29 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 		return User{}, err
 	}
 
-	// Crea token di conferma
-	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(newUser.Id)
+	// 4) Crea token di conferma
+	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user.Id)
 	if err != nil {
 		return User{}, err
 	}
 
-	// Invia email per token di conferma
-	err = service.sendEmailPort.SendConfirmAccountEmail(newUser.Email, confirmAccountToken)
+	// 5) Invia email per token di conferma
+	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
 	if err != nil {
-		// TODO: Come gestisco errore di invio email? Cancello account?
+		// 6) Elimina account se invio mail fallisce
+		_, deletionErr := service.deleteUserPort.DeleteTenantAdmin(*user.TenantId, user.Id)
+		if deletionErr != nil {
+			return User{}, deletionErr
+		}
+		return User{}, ErrCannotSendEmail
 	}
 
 	// Ritorna user
-	return newUser, nil
+	return user, nil
 }
 
 func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) (User, error) {
-	// Controlla user
+	// 1) Controlla user
 	user, err := service.getUserPort.GetSuperAdminByEmail(cmd.Email)
 	if err != nil {
 		return User{}, err
@@ -158,7 +160,7 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 		return User{}, ErrUserAlreadyExists
 	}
 
-	// Crea user
+	// 2) Crea user
 	newUser, err := service.createUserPort.CreateUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
@@ -170,17 +172,21 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 		return User{}, err
 	}
 
-	// Crea token di conferma
+	// 3) Crea token di conferma
 	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(newUser.Id)
 	if err != nil {
 		return User{}, err
 	}
 
-	// Invia token di conferma
+	// 4) Invia token di conferma
 	err = service.sendEmailPort.SendConfirmAccountEmail(newUser.Email, confirmAccountToken)
 	if err != nil {
-		// TODO: Come gestisco errore di invio email? Cancello account?
-		return User{}, err
+		// 5) Elimina account se invio mail fallisce
+		_, deletionErr := service.deleteUserPort.DeleteSuperAdmin(user.Id)
+		if deletionErr != nil {
+			return User{}, deletionErr
+		}
+		return User{}, ErrCannotSendEmail
 	}
 
 	// Ritorna user
