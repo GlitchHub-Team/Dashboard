@@ -9,6 +9,7 @@ import { DashboardSensorTableComponent } from './components/dashboard-sensor-tab
 import { Gateway } from '../../models/gateway.model';
 import { ChartRequest } from '../../models/chart-request.model';
 
+// TODO: Super Admin cosa dovrebbe visualizzare? Una lista di tutti i gateway e sensori? E relativi grafici quando li apre?
 @Component({
   selector: 'app-dashboard',
   imports: [DashboardGatewayTableComponent, DashboardSensorTableComponent, MatIcon],
@@ -40,7 +41,6 @@ export class DashboardPage implements OnInit {
   }
 
   // TODO: command request
-
   protected onCommandRequested(gateway: Gateway): void {
     this.snackBar.open(gateway.id, 'Close', { duration: 2000 });
   }

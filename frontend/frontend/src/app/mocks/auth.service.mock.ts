@@ -10,9 +10,13 @@ import { UserRole } from '../models/user-role.enum';
 const MOCK_DELAY = 800;
 
 const MOCK_USERS: Record<string, { password: string; user: AuthResponse['user'] }> = {
+  'super@test.com': {
+    password: 'password',
+    user: { id: '1', email: 'super@test.com', role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
+  },
   'admin@test.com': {
     password: 'password',
-    user: { id: '1', email: 'admin@test.com', role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
+    user: { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
   },
   'user@test.com': {
     password: 'password',
@@ -57,8 +61,6 @@ export class AuthServiceMock {
     }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
-
-  // ── Helpers ──────────────────────────────────────────
 
   private delayedError(error: ApiError): Observable<never> {
     return timer(MOCK_DELAY).pipe(switchMap(() => throwError(() => error)));
