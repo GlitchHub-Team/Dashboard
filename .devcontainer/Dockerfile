@@ -48,4 +48,4 @@ USER vscode
 RUN CGO_ENABLED=0 go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
     && CGO_ENABLED=0 go install golang.org/x/tools/gopls@${GOPLS_VERSION} \
     && CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@${DLV_VERSION} \
-    && CGO_ENABLED=0 go install github.com/go.uber.org/mock/mockgen@${GOMOCKGEN_VERSION} \
+    && CGO_ENABLED=0 go install go.uber.org/mock/mockgen@${GOMOCKGEN_VERSION}
