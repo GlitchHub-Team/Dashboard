@@ -4,6 +4,8 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=../../tests/email/mocks/ports.go -package=mocks . SendEmailPort
+
 type SendEmailPort interface {
 	SendConfirmAccountEmail(toAddr string, token string,) error
 	SendChangePasswordEmail(toAddr string, token string,) error
@@ -30,11 +32,11 @@ var _ SendEmailPort = (*SendEmailMailtrapAdapter)(nil)
 
 // ------------------------------------------------------------------------------------------------------
 type SendEmailTerminalAdapter struct {
-	log zap.Logger
+	log *zap.Logger
 }
 
-func NewSendEmailTerminalAdapter() *SendEmailTerminalAdapter {
-	return &SendEmailTerminalAdapter{}
+func NewSendEmailTerminalAdapter(log *zap.Logger) *SendEmailTerminalAdapter {
+	return &SendEmailTerminalAdapter{log: log}
 }
 
 func (adapter *SendEmailTerminalAdapter) SendConfirmAccountEmail(toAddr string, token string,) error {
