@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Create =============================================================================================
 type CreateTenantUserCommand struct {
 	Email    string
 	Username string
@@ -21,12 +22,36 @@ type CreateSuperAdminCommand struct {
 	Username string
 }
 
-type DeleteUserCommand struct {
-	UserId int
+// Delete =============================================================================================
+type DeleteTenantUserCommand struct {
+	TenantId uuid.UUID
+	UserId uint
+}
+type DeleteTenantAdminCommand struct {
+	TenantId uuid.UUID
+	UserId uint
+}
+type DeleteSuperAdminCommand struct {
+	UserId uint
+}
+
+// Get =============================================================================================
+type GetTenantUserCommand struct {
+	TenantId uuid.UUID
+	UserId   uint
+}
+
+type GetTenantAdminCommand struct {
+	TenantId uuid.UUID
+	UserId   uint
+}
+
+type GetSuperAdminCommand struct {
+	UserId uint
 }
 
 type GetUserByIdCommand struct {
-	UserId int
+	UserId uint
 }
 
 type GetUsersCommand struct {

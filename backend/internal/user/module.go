@@ -9,7 +9,9 @@ var Module = fx.Module(
 
 	// Metodi pubblici
 	fx.Provide(
+		// Controller
 		NewUserController,
+
 		// Use Cases
 		NewCreateUserService,
 		NewDeleteUserService,
