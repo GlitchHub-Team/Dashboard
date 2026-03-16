@@ -1,10 +1,12 @@
 package auth
 
+//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ConfirmTokenPort,ChangePasswordTokenPort
+
 // ConfirmToken ============================================================================
 type ConfirmTokenPort interface {
-	NewConfirmAccountToken(userId int) (string, error)
+	NewConfirmAccountToken(userId uint) (string, error)
 	DeleteConfirmAccountToken(tokenId int) error
-	GetConfirmAccountTokenByUserId(userId int) (*ConfirmToken, error)
+	GetConfirmAccountTokenByUserId(userId uint) (*ConfirmToken, error)
 }
 
 type ConfirmTokenPostgreAdapter struct {
@@ -19,7 +21,7 @@ func NewConfirmAccountTokenPostgreAdapter(
 	}
 }
 
-func (adapter *ConfirmTokenPostgreAdapter) NewConfirmAccountToken(userId int) (string, error) {
+func (adapter *ConfirmTokenPostgreAdapter) NewConfirmAccountToken(userId uint) (string, error) {
 	return "", nil
 }
 
@@ -27,7 +29,7 @@ func (adapter *ConfirmTokenPostgreAdapter) DeleteConfirmAccountToken(tokenId int
 	return nil
 }
 
-func (adapter *ConfirmTokenPostgreAdapter) GetConfirmAccountTokenByUserId(userId int) (*ConfirmToken, error) {
+func (adapter *ConfirmTokenPostgreAdapter) GetConfirmAccountTokenByUserId(userId uint) (*ConfirmToken, error) {
 	return nil, nil
 }
 
@@ -38,7 +40,7 @@ var _ ConfirmTokenPort = (*ConfirmTokenPostgreAdapter)(nil)
 type ChangePasswordTokenPort interface {
 	SaveChangePasswordToken(token ChangePasswordToken) (*ChangePasswordToken, error)
 	DeleteChangePasswordToken(tokenId int) error
-	GetChangePasswordTokenByUserId(userId int) (*ChangePasswordToken, error)
+	GetChangePasswordTokenByUserId(userId uint) (*ChangePasswordToken, error)
 }
 
 type ChangePasswordTokenPostgreAdapter struct {
@@ -53,7 +55,7 @@ func (adapter *ChangePasswordTokenPostgreAdapter) DeleteChangePasswordToken(toke
 	return nil
 }
 
-func (adapter *ChangePasswordTokenPostgreAdapter) GetChangePasswordTokenByUserId(userId int) (*ChangePasswordToken, error) {
+func (adapter *ChangePasswordTokenPostgreAdapter) GetChangePasswordTokenByUserId(userId uint) (*ChangePasswordToken, error) {
 	return nil, nil
 }
 
