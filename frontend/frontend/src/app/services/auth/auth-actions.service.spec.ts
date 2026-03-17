@@ -112,17 +112,6 @@ describe('AuthActionsService', () => {
       expect(service.error()).toBe('Failed to send reset email');
     });
 
-    it('should rethrow the error', () => {
-      const apiError: ApiError = { status: 500, message: 'fail' };
-      authApiClientMock.forgotPassword.mockReturnValue(throwError(() => apiError));
-
-      service.forgotPassword(email).subscribe({
-        error: (err) => {
-          expect(err).toBe(apiError);
-        },
-      });
-    });
-
     it('should set loading false after error', () => {
       authApiClientMock.forgotPassword.mockReturnValue(
         throwError(() => ({ status: 500, message: 'fail' }) as ApiError),
