@@ -1,6 +1,31 @@
 package user
 
+import (
+	"backend/internal/identity"
+	"backend/internal/tenant"
+)
 
+type GetUserService struct {
+	getUserPort   GetUserPort
+	getTenantPort tenant.GetTenantPort
+}
+
+func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPort) (
+	GetTenantUserUseCase,
+	GetTenantAdminUseCase,
+	GetSuperAdminUseCase,
+	GetTenantUsersByTenantUseCase,
+	GetTenantAdminsByTenantUseCase,
+	GetSuperAdminListUseCase,
+) {
+	service := &GetUserService{
+		getUserPort:   getUserPort,
+		getTenantPort: getTenantPort,
+	}
+	return service, service, service, service, service, service
+}
+
+// Get single -----------------------------------------------------------------------------------------
 type GetTenantUserUseCase interface {
 	GetTenantUser(cmd GetTenantUserCommand) (User, error)
 }
@@ -13,63 +38,175 @@ type GetSuperAdminUseCase interface {
 	GetSuperAdmin(cmd GetSuperAdminCommand) (User, error)
 }
 
-type GetUsersUseCase interface {
-	GetUsers(cmd GetUsersCommand) (users []User, total int, err error)
-}
-
-type GetUsersByTenantIdUseCase interface {
-	GetUsersByTenantId(cmd GetUsersByTenantIdCommand) (users []User, total int, err error)
-}
-
-
-type GetUserService struct {
-	getUserPort GetUserPort
-}
-
-func NewGetUserService(getUserPort GetUserPort) (
-	GetTenantUserUseCase,
-	GetTenantAdminUseCase,
-	GetSuperAdminUseCase,
-	GetUsersUseCase,
-	GetUsersByTenantIdUseCase,
-) {
-	service := &GetUserService{
-		getUserPort: getUserPort,
-	}
-	return service, service, service, service, service
-}
-
-
 func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, error) {
+	// 1) Controlla tenant
+	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
+	if err != nil {
+		return User{}, err
+	}
+	if tenantFound.IsZero() {
+		return User{}, tenant.ErrTenantNotFound
+	}
+
+	// 2) Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 3) Get tenant user
 	user, err := service.getUserPort.GetTenantUser(cmd.TenantId, cmd.UserId)
-	return user, err
+	if err != nil {
+		return User{}, err
+	}
+	if user.IsZero() {
+		return User{}, ErrUserNotFound
+	}
+
+	return user, nil
 }
 
 func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, error) {
+	// 1) Controlla tenant
+	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
+	if err != nil {
+		return User{}, err
+	}
+	if tenantFound.IsZero() {
+		return User{}, tenant.ErrTenantNotFound
+	}
+
+	// 2) Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 3) Get tenant admin
 	user, err := service.getUserPort.GetTenantAdmin(cmd.TenantId, cmd.UserId)
-	return user, err
+	if err != nil {
+		return User{}, err
+	}
+	if user.IsZero() {
+		return User{}, ErrUserNotFound
+	}
+	return user, nil
 }
 
 func (service *GetUserService) GetSuperAdmin(cmd GetSuperAdminCommand) (User, error) {
+	// 1) Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.IsSuperAdmin() { //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 2) Get super admin
 	user, err := service.getUserPort.GetSuperAdmin(cmd.UserId)
-	return user, err
+	if err != nil {
+		return User{}, err
+	}
+	if user.IsZero() {
+		return User{}, ErrUserNotFound
+	}
+	return user, nil
 }
 
-func (service *GetUserService) GetUsers(cmd GetUsersCommand) ([]User, int, error) {
-	user, total, err := service.getUserPort.GetUsers(cmd.Page, cmd.Limit)
-	return user, total, err
+// Get multiple ---------------------------------------------------------------------------------------
+type GetTenantUsersByTenantUseCase interface {
+	GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
+		tenantUsers []User, total uint, err error,
+	)
 }
 
-func (service *GetUserService) GetUsersByTenantId(cmd GetUsersByTenantIdCommand) ([]User, int, error) {
-	user, total, err := service.getUserPort.GetUsersByTenantId(cmd.TenantId)
-	return user, total, err
+type GetTenantAdminsByTenantUseCase interface {
+	GetTenantAdminsByTenant(cmd GetTenantAdminsByTenantCommand) (
+		tenantAdmins []User, total uint, err error,
+	)
+}
+
+type GetSuperAdminListUseCase interface {
+	GetSuperAdminList(cmd GetSuperAdminListCommand) (
+		superAdmins []User, total uint, err error,
+	)
+}
+
+func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
+	tenantUsers []User, total uint, err error,
+) {
+	// 1) Controlla tenant
+	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
+	if err != nil {
+		return nil, 0, err
+	}
+	if tenantFound.IsZero() {
+		return nil, 0, tenant.ErrTenantNotFound
+	}
+
+	// 2) Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+		return nil, 0, identity.ErrUnauthorizedAccess
+	}
+
+	// 3) Get tenant users
+	tenantUsers, total, err = service.getUserPort.GetTenantUsersByTenant(cmd.TenantId, cmd.Page, cmd.Limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return tenantUsers, total, nil
+}
+
+func (service *GetUserService) GetTenantAdminsByTenant(cmd GetTenantAdminsByTenantCommand) (
+	tenantUsers []User, total uint, err error,
+) {
+	// 1) Controlla tenant
+	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
+	if err != nil {
+		return nil, 0, err
+	}
+	if tenantFound.IsZero() {
+		return nil, 0, tenant.ErrTenantNotFound
+	}
+
+	// 2) Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+		return nil, 0, identity.ErrUnauthorizedAccess
+	}
+
+	// 3) Get tenant users
+	tenantUsers, total, err = service.getUserPort.GetTenantAdminsByTenant(cmd.TenantId, cmd.Page, cmd.Limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return tenantUsers, total, nil
+}
+
+func (service *GetUserService) GetSuperAdminList(cmd GetSuperAdminListCommand) (
+	superAdmins []User, total uint, err error,
+) {
+	// 1) Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.IsSuperAdmin() { //nolint:staticcheck
+		return nil, 0, identity.ErrUnauthorizedAccess
+	}
+
+	// 2) Get super admin
+	superAdmins, total, err = service.getUserPort.GetSuperAdminList(cmd.Page, cmd.Limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	return superAdmins, total, nil
 }
 
 // Compile-time checks
 var (
-	_ GetTenantUserUseCase      = (*GetUserService)(nil)
-	_ GetTenantAdminUseCase     = (*GetUserService)(nil)
-	_ GetSuperAdminUseCase      = (*GetUserService)(nil)
-	_ GetUsersUseCase           = (*GetUserService)(nil)
-	_ GetUsersByTenantIdUseCase = (*GetUserService)(nil)
+	_ GetTenantUserUseCase           = (*GetUserService)(nil)
+	_ GetTenantAdminUseCase          = (*GetUserService)(nil)
+	_ GetSuperAdminUseCase           = (*GetUserService)(nil)
+	_ GetTenantUsersByTenantUseCase  = (*GetUserService)(nil)
+	_ GetTenantAdminsByTenantUseCase = (*GetUserService)(nil)
+	_ GetSuperAdminListUseCase       = (*GetUserService)(nil)
 )

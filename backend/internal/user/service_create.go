@@ -3,6 +3,7 @@ package user
 import (
 	"backend/internal/auth"
 	"backend/internal/email"
+	"backend/internal/identity"
 	"backend/internal/tenant"
 )
 
@@ -47,7 +48,7 @@ func NewCreateUserService(
 }
 
 func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) (User, error) {
-	// 1) Controlla tenant
+	// 1. Controlla esistenza tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
 		return User{}, err
@@ -56,7 +57,13 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// 2) Controlla user
+	// 2. Controlla autorizzazione tenant
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {  //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 3. Controlla user
 	user, err := service.getUserPort.GetTenantUserByEmail(cmd.TenantId, cmd.Email)
 	if err != nil {
 		return User{}, err
@@ -65,11 +72,11 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 		return User{}, ErrUserAlreadyExists
 	}
 
-	// 3) Crea user
+	// 4. Crea user
 	user, err = service.createUserPort.CreateUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
-		Role:      ROLE_TENANT_USER,
+		Role:      identity.ROLE_TENANT_USER,
 		TenantId:  &cmd.TenantId,
 		Confirmed: false,
 	})
@@ -77,16 +84,16 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 		return User{}, err
 	}
 
-	// 4) Crea token di conferma
+	// 5. Crea token di conferma
 	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user.Id)
 	if err != nil {
 		return User{}, err
 	}
 
-	// 5) Invia email per token di conferma
+	// 6. Invia email per token di conferma
 	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
 	if err != nil {
-		// 6) Elimina account se invio mail fallisce
+		// 7. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteTenantUser(*user.TenantId, user.Id)
 		if deletionErr != nil {
 			return User{}, deletionErr
@@ -98,8 +105,8 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 	return user, nil
 }
 
-func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand) (User, error) {
-	// 1) Controlla tenant
+func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand) (User, error) {	
+	// 1. Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
 		return User{}, err
@@ -108,7 +115,13 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// 2) Controlla user
+	// 2. Controlla autorizzazione tenant
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) {  //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 3. Controlla user
 	user, err := service.getUserPort.GetTenantAdminByEmail(cmd.TenantId, cmd.Email)
 	if err != nil {
 		return User{}, err
@@ -117,11 +130,11 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 		return User{}, ErrUserAlreadyExists
 	}
 
-	// 3) Crea user
+	// 4. Crea user
 	user, err = service.createUserPort.CreateUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
-		Role:      ROLE_TENANT_ADMIN,
+		Role:      identity.ROLE_TENANT_ADMIN,
 		TenantId:  &cmd.TenantId,
 		Confirmed: false,
 	})
@@ -129,16 +142,16 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 		return User{}, err
 	}
 
-	// 4) Crea token di conferma
+	// 5. Crea token di conferma
 	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user.Id)
 	if err != nil {
 		return User{}, err
 	}
 
-	// 5) Invia email per token di conferma
+	// 6. Invia email per token di conferma
 	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
 	if err != nil {
-		// 6) Elimina account se invio mail fallisce
+		// 7. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteTenantAdmin(*user.TenantId, user.Id)
 		if deletionErr != nil {
 			return User{}, deletionErr
@@ -151,7 +164,14 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 }
 
 func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) (User, error) {
-	// 1) Controlla user
+	
+	// 1. Controlla autorizzazione tenant
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.IsSuperAdmin() { 		//nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 2. Controlla user
 	user, err := service.getUserPort.GetSuperAdminByEmail(cmd.Email)
 	if err != nil {
 		return User{}, err
@@ -159,12 +179,12 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 	if !user.IsZero() {
 		return User{}, ErrUserAlreadyExists
 	}
-
-	// 2) Crea user
-	newUser, err := service.createUserPort.CreateUser(User{
+	
+	// 3. Crea user
+	user, err = service.createUserPort.CreateUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
-		Role:      ROLE_SUPER_ADMIN,
+		Role:      identity.ROLE_SUPER_ADMIN,
 		TenantId:  nil,
 		Confirmed: false,
 	})
@@ -172,16 +192,16 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 		return User{}, err
 	}
 
-	// 3) Crea token di conferma
-	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(newUser.Id)
+	// 4. Crea token di conferma
+	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user.Id)
 	if err != nil {
 		return User{}, err
 	}
 
-	// 4) Invia token di conferma
-	err = service.sendEmailPort.SendConfirmAccountEmail(newUser.Email, confirmAccountToken)
+	// 5. Invia token di conferma
+	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
 	if err != nil {
-		// 5) Elimina account se invio mail fallisce
+		// 6. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteSuperAdmin(user.Id)
 		if deletionErr != nil {
 			return User{}, deletionErr
@@ -190,7 +210,7 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 	}
 
 	// Ritorna user
-	return newUser, err
+	return user, nil
 }
 
 // Compile-time checks

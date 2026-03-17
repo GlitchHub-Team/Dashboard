@@ -1,6 +1,7 @@
 package user
 
 import (
+	"backend/internal/identity"
 	"backend/internal/tenant"
 )
 
@@ -37,7 +38,7 @@ func NewDeleteUserService(
 }
 
 func (service *DeleteUserService) DeleteTenantUser(cmd DeleteTenantUserCommand) (User, error) {
-	// Controlla tenant
+	// 1. Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
 		return User{}, err
@@ -46,7 +47,13 @@ func (service *DeleteUserService) DeleteTenantUser(cmd DeleteTenantUserCommand) 
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// Controlla user
+	// 2. Controlla autorizzazione tenant
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {  //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 3. Controlla user
 	user, err := service.getUserPort.GetTenantUser(cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
@@ -55,13 +62,13 @@ func (service *DeleteUserService) DeleteTenantUser(cmd DeleteTenantUserCommand) 
 		return User{}, ErrUserNotFound
 	}
 
-	// Elimina user
+	// 4. Elimina user
 	oldUser, err := service.deleteUserPort.DeleteTenantUser(cmd.TenantId, cmd.UserId)
 	return oldUser, err
 }
 
 func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand) (User, error) {
-	// Controlla tenant
+	// 1. Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
 		return User{}, err
@@ -70,7 +77,13 @@ func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// Controlla user
+	// 2. Controlla autorizzazione tenant
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {  //nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 3. Controlla user
 	user, err := service.getUserPort.GetTenantAdmin(cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
@@ -79,13 +92,19 @@ func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand
 		return User{}, ErrUserNotFound
 	}
 
-	// Elimina user
+	// 4. Elimina user
 	oldUser, err := service.deleteUserPort.DeleteTenantAdmin(cmd.TenantId, cmd.UserId)
 	return oldUser, err
 }
 
 func (service *DeleteUserService) DeleteSuperAdmin(cmd DeleteSuperAdminCommand) (User, error) {
-	// Controlla user
+	// 1. Controlla autorizzazione
+	// NOTA: rimosso static check per chiarezza
+	if !cmd.Requester.IsSuperAdmin() { 		//nolint:staticcheck
+		return User{}, identity.ErrUnauthorizedAccess
+	}
+
+	// 2. Controlla user
 	user, err := service.getUserPort.GetSuperAdmin(cmd.UserId)
 	if err != nil {
 		return User{}, err
@@ -94,7 +113,7 @@ func (service *DeleteUserService) DeleteSuperAdmin(cmd DeleteSuperAdminCommand) 
 		return User{}, ErrUserNotFound
 	}
 
-	// Elimina user
+	// 3. Elimina user
 	oldUser, err := service.deleteUserPort.DeleteSuperAdmin(cmd.UserId)
 	return oldUser, err
 }
