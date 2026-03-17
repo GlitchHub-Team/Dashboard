@@ -14,3 +14,9 @@ func RequestError(ctx *gin.Context, err error) {
 func RequestOk(ctx *gin.Context, obj any) {
 	ctx.JSON(http.StatusOK, obj)
 }
+
+func RequestUnauthorized(ctx *gin.Context, err error) {
+	ctx.JSON(http.StatusUnauthorized, gin.H{
+		"error": err.Error(),
+	})
+}
