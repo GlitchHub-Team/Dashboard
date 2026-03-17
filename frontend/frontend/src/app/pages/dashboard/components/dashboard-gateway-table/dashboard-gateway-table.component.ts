@@ -35,7 +35,7 @@ export class DashboardGatewayTableComponent {
   public readonly chartRequested = output<ChartRequest>();
   public readonly expandedGatewayChange = output<Gateway>();
 
-  private readonly columns = ['id', 'name', 'status'];
+  private readonly columns = ['id', 'tenantId', 'name', 'status'];
   protected readonly displayedColumns = computed(() =>
     this.columns.concat(this.canSendCommands() ? ['commands'] : []),
   );

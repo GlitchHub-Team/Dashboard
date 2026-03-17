@@ -19,6 +19,7 @@ describe('DashboardGatewayExpandedComponent', () => {
   // Adjust to match your actual models
   const mockGateway: Gateway = {
     id: 'gw-1',
+    tenantId: 'tenant-1',
     name: 'Gateway Alpha',
     status: GatewayStatus.ONLINE,
   };

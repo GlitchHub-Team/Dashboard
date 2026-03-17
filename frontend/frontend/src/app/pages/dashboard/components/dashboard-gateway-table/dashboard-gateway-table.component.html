@@ -12,6 +12,11 @@
       <mat-cell *matCellDef="let gateway">{{ gateway.id }}</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="tenantId">
+      <mat-header-cell *matHeaderCellDef>Tenant ID</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">{{ gateway.tenantId }}</mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
       <mat-cell *matCellDef="let gateway">{{ gateway.name }}</mat-cell>
