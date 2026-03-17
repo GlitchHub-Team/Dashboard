@@ -30,7 +30,7 @@ export class ResetPasswordPage {
     this.authActionsService
       .confirmPasswordChange(data)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({});
+      .subscribe();
   }
 
   protected onGoToLogin(): void {
