@@ -28,9 +28,7 @@ export const appConfig: ApplicationConfig = {
     // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
     { provide: AuthSessionService, useClass: AuthServiceMock },
     { provide: AuthActionsService, useClass: AuthServiceMock },
-    // Mock Tenant API fino a quando il backend non è pronto
     { provide: TenantApiClientService, useClass: TenantApiClientMockService },
-    // Mock User API
     { provide: UserApiClientService, useClass: UserApiClientMockService },
     { provide: SensorApiClientService, useClass: SensorServiceMock },
     { provide: GatewayApiClientService, useClass: GatewayServiceMock },

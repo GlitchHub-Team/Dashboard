@@ -15,6 +15,7 @@ export const routes: Routes = [
       import('./pages/reset-password/reset-password.page').then((m) => m.ResetPasswordPage),
   },
   {
+    path: "",
     // Usare entrambe le guards, altrimenti si entra in un circolo vizioso (da canAny() manda a dashboard, ma
     // se non si è autenticati authGuard fallisce lo stesso). Se fallisce authGuard, non viene neanche valutato
     // roleGuard, quindi non c'è rischio di errori strani
@@ -42,13 +43,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),
       },
-    ],
-  },
-  {
-    path: '',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/app-shell/app-shell.page').then((m) => m.AppShellPage),
-    children: [
       {
         path: 'dashboard',
         canActivate: [roleGuard],
@@ -60,7 +54,7 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',
-      },
+      }
     ],
   },
   {
