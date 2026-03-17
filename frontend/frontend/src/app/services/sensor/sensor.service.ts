@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, catchError, finalize } from 'rxjs';
+import { Observable, tap, catchError, EMPTY, finalize } from 'rxjs';
 
 import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
 import { Sensor } from '../../models/sensor.model';
@@ -29,7 +29,7 @@ export class SensorService {
         tap((list) => this._sensorList.set(list)),
         catchError((err: ApiError) => {
           this._error.set(err.message ?? 'Failed to load sensors');
-          throw err;
+          return EMPTY;
         }),
         finalize(() => this._loading.set(false)),
       )
@@ -45,7 +45,7 @@ export class SensorService {
         tap((list) => this._sensorList.set(list)),
         catchError((err: ApiError) => {
           this._error.set(err.message ?? 'Failed to load sensors');
-          throw err;
+          return EMPTY;
         }),
         finalize(() => this._loading.set(false)),
       )
@@ -61,7 +61,7 @@ export class SensorService {
       }),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to add sensor');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );
@@ -76,7 +76,7 @@ export class SensorService {
       }),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete sensor');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );

@@ -13,21 +13,18 @@ export class GatewayApiClientService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/gateway`;
 
-  // TODO: models per Gateway e GatewayConfig
   public getGatewayListByTenant(tenantId: string): Observable<Gateway[]> {
-    return this.http.get<Gateway[]>(`${this.apiUrl}/list/${tenantId}`);
+    return this.http.get<Gateway[]>(`${this.apiUrl}/list/`, { params: { tenantId } });
   }
 
   public getGatewayList(): Observable<Gateway[]> {
     return this.http.get<Gateway[]>(`${this.apiUrl}/list`);
   }
 
-  // TODO: models per Gateway e GatewayConfig
   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
     return this.http.post<Gateway>(`${this.apiUrl}/add`, config);
   }
 
-  // TODO: models per Gateway e GatewayConfig
   public deleteGateway(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
   }
