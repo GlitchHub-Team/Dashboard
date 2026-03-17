@@ -38,8 +38,24 @@ export class AuthServiceMock {
 
     if (req.email === 'admin@test.com' && req.password === 'password') {
       const response: AuthResponse = {
-        user: { id: '1', email: req.email, role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
+        user: { id: '1', email: req.email, role: UserRole.SUPER_ADMIN, tenantId: 'tenant-01' },
         token: this.fakeToken(req.email, UserRole.SUPER_ADMIN),
+      };
+
+      return of(response).pipe(
+        delay(800),
+        tap((res) => {
+          this.tokenStorage.saveToken(res.token);
+          this.userSession.initSession(res.user);
+        }),
+        finalize(() => this._loading.set(false)),
+      );
+    }
+
+    if (req.email === 'user@test.com' && req.password === 'password') {
+      const response: AuthResponse = {
+        user: { id: '2', email: req.email, role: UserRole.TENANT_USER, tenantId: 'tenant-01' },
+        token: this.fakeToken(req.email, UserRole.TENANT_USER),
       };
 
       return of(response).pipe(
