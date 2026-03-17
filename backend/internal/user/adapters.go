@@ -3,6 +3,9 @@ package user
 import (
 	"fmt"
 
+	"backend/internal/common"
+	"backend/internal/identity"
+
 	"github.com/google/uuid"
 )
 
@@ -30,7 +33,7 @@ type CreateUserPort interface {
 
 func (adapter *UserPostgreAdapter) CreateUser(user User) (User, error) {
 	switch user.Role {
-	case ROLE_TENANT_USER, ROLE_TENANT_ADMIN:
+	case identity.ROLE_TENANT_USER, identity.ROLE_TENANT_ADMIN:
 
 		tenantMember := &TenantMemberEntity{}
 		tenantMember.fromUser(user)
@@ -42,7 +45,7 @@ func (adapter *UserPostgreAdapter) CreateUser(user User) (User, error) {
 		user, err := tenantMember.toUser()
 		return user, err
 
-	case ROLE_SUPER_ADMIN:
+	case identity.ROLE_SUPER_ADMIN:
 		superAdmin := (&SuperAdminEntity{}).fromUser(user)
 		err := adapter.repo.SaveSuperAdmin(superAdmin)
 		if err != nil {
@@ -122,9 +125,15 @@ type GetUserPort interface {
 	GetTenantAdminByEmail(tenantId uuid.UUID, email string) (User, error)
 	GetSuperAdminByEmail(email string) (User, error)
 
-	GetUsers(page, limit int) ([]User, int, error)
-	GetUsersByRole(role UserRole, page, limit int) ([]User, int, error)
-	GetUsersByTenantId(tenantId uuid.UUID) ([]User, int, error)
+	GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int) (
+		tenantUsers []User, total uint, err error,
+	)
+	GetTenantAdminsByTenant(tenantId uuid.UUID, page, limit int) (
+		tenantAdmins []User, total uint, err error,
+	)
+	GetSuperAdminList(page, limit int) (
+		superAdmins []User, total uint, err error,
+	)
 }
 
 func (adapter *UserPostgreAdapter) GetTenantUser(tenantId uuid.UUID, userId uint) (User, error) {
@@ -208,17 +217,74 @@ func (adapter *UserPostgreAdapter) GetSuperAdminByEmail(email string) (User, err
 	return user, err
 }
 
-func (adapter *UserPostgreAdapter) GetUsers(page, limit int) ([]User, int, error) {
-	return nil, 0, nil
+func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(
+	tenantId uuid.UUID, page, limit int,
+) (tenantUsers []User, total uint, err error) {
+	offset, err := common.PageLimitToOffset(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	entities, total, err := adapter.repo.GetTenantUsers(tenantId.String(), offset, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, entity := range entities {
+		tenantUser, err := entity.toUser()
+		if err != nil {
+			return nil, 0, err
+		}
+		tenantUsers = append(tenantUsers, tenantUser)
+	}
+
+	return tenantUsers, total, nil
 }
 
-func (adapter *UserPostgreAdapter) GetUsersByRole(role UserRole, page, limit int) ([]User, int, error) {
-	return nil, 0, nil
+func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(
+	tenantId uuid.UUID, page, limit int,
+) (tenantAdmins []User, total uint, err error) {
+	offset, err := common.PageLimitToOffset(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	entities, total, err := adapter.repo.GetTenantAdmins(tenantId.String(), offset, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, entity := range entities {
+		tenantUser, err := entity.toUser()
+		if err != nil {
+			return nil, 0, err
+		}
+		tenantAdmins = append(tenantAdmins, tenantUser)
+	}
+
+	return tenantAdmins, total, nil
 }
 
-func (adapter *UserPostgreAdapter) GetUsersByTenantId(tenantId uuid.UUID) ([]User, int, error) {
-	return nil, 0, nil
+func (adapter *UserPostgreAdapter) GetSuperAdminList(page, limit int) (
+	superAdmins []User, total uint, err error,
+) {
+	offset, err := common.PageLimitToOffset(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	entities, total, err := adapter.repo.GetSuperAdmins(offset, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, entity := range entities {
+		tenantUser := entity.toUser()
+		superAdmins = append(superAdmins, tenantUser)
+	}
+	return superAdmins, total, nil
 }
+
 
 // Compile-time checks
 var (
