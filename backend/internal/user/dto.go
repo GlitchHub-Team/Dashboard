@@ -6,7 +6,7 @@ import (
 
 // Request DTO ========================================================================================
 
-// Create --------------------------------------------------------------------------
+// Create ---------------------------------------------------------------------------------------------
 type CreateTenantUserDTO struct {
 	dto.EmailField
 	dto.UsernameField
@@ -24,7 +24,7 @@ type CreateSuperAdminDTO struct {
 	dto.UsernameField
 }
 
-// Delete --------------------------------------------------------------------------
+// Delete ---------------------------------------------------------------------------------------------
 
 type DeleteTenantUserDTO struct {
 	dto.TenantIdField
@@ -40,11 +40,7 @@ type DeleteSuperAdminDTO struct {
 	dto.UserIdField
 }
 
-// Get ------------------------------------------------------------------------------
-type GetUserByIdDTO struct {
-	dto.UserIdField
-}
-
+// Get single ---------------------------------------------------------------------------------------------
 type GetTenantUserDTO struct {
 	dto.TenantIdField
 	dto.UserIdField
@@ -59,15 +55,24 @@ type GetSuperAdminDTO struct {
 	dto.UserIdField
 }
 
-type GetUsersDTO struct {
-	dto.Pagination
-	dto.UserRoleField
-}
-
-type GetUsersByTenantIdDTO struct {
+// Get multiple ---------------------------------------------------------------------------------------
+type GetTenantUsersByTenantDTO struct {
 	dto.Pagination
 	dto.TenantIdField
+	dto.UserIdField
 }
+
+type GetTenantAdminsByTenantDTO struct {
+	dto.Pagination
+	dto.TenantIdField
+	dto.UserIdField
+}
+
+type GetSuperAdminListDTO struct {
+	dto.Pagination
+	dto.UserIdField
+}
+
 
 // Response DTO
 type UserResponseDTO struct {
@@ -89,7 +94,7 @@ type UserListResponseDTO struct{
 	dto.ListInfo
 	Users []UserResponseDTO
 }
-func NewUserListResponseDTO(userList []User, total int) UserListResponseDTO {
+func NewUserListResponseDTO(userList []User, total uint) UserListResponseDTO {
 	var userDtos []UserResponseDTO
 
 	for _, user := range userList {
@@ -99,7 +104,7 @@ func NewUserListResponseDTO(userList []User, total int) UserListResponseDTO {
 	return UserListResponseDTO{
 		Users: userDtos,
 		ListInfo: dto.ListInfo{
-			Count: len(userList),
+			Count: uint(len(userList)),
 			Total: total,
 		},
 	}
