@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"backend/internal/common"
+	"backend/internal/common/dto"
+	// "backend/internal/identity"
+	transportHttp "backend/internal/transport/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,17 +17,22 @@ import (
 type Controller struct {
 	log *zap.Logger
 
-	createTenantUserUseCase   CreateTenantUserUseCase
-	createTenantAdminUseCase  CreateTenantAdminUseCase
-	createSuperAdminUseCase   CreateSuperAdminUseCase
-	deleteTenantUserUseCase   DeleteTenantUserUseCase
-	deleteTenantAdminUseCase  DeleteTenantAdminUseCase
-	deleteSuperAdminUseCase   DeleteSuperAdminUseCase
-	getTenantUserUseCase      GetTenantUserUseCase
-	getTenantAdminUseCase     GetTenantAdminUseCase
-	getSuperAdminUseCase      GetSuperAdminUseCase
-	getUsersByTenantIdUseCase GetUsersByTenantIdUseCase
-	getUsersUseCase           GetUsersUseCase
+	createTenantUserUseCase  CreateTenantUserUseCase
+	createTenantAdminUseCase CreateTenantAdminUseCase
+	createSuperAdminUseCase  CreateSuperAdminUseCase
+
+	deleteTenantUserUseCase  DeleteTenantUserUseCase
+	deleteTenantAdminUseCase DeleteTenantAdminUseCase
+	deleteSuperAdminUseCase  DeleteSuperAdminUseCase
+
+	getTenantUserUseCase  GetTenantUserUseCase
+	getTenantAdminUseCase GetTenantAdminUseCase
+	getSuperAdminUseCase  GetSuperAdminUseCase
+
+	getTenantUsersByTenantUseCase  GetTenantUsersByTenantUseCase
+	getTenantAdminsByTenantUseCase GetTenantAdminsByTenantUseCase
+	getSuperAdminListUseCase       GetSuperAdminListUseCase
+	// getUsersUseCase           GetUsersUseCase
 }
 
 func NewUserController(
@@ -32,14 +40,19 @@ func NewUserController(
 	createTenantUserUseCase CreateTenantUserUseCase,
 	createTenantAdminUseCase CreateTenantAdminUseCase,
 	createSuperAdminUseCase CreateSuperAdminUseCase,
+
 	deleteTenantUserUseCase DeleteTenantUserUseCase,
 	deleteTenantAdminCase DeleteTenantAdminUseCase,
 	deleteSuperAdminCase DeleteSuperAdminUseCase,
+
 	getTenantUserUseCase GetTenantUserUseCase,
 	getTenantAdminUseCase GetTenantAdminUseCase,
 	getSuperAdminUseCase GetSuperAdminUseCase,
-	getUsersByTenantIdUseCase GetUsersByTenantIdUseCase,
-	getUsersUseCase GetUsersUseCase,
+
+	getTenantUsersByTenantUseCase GetTenantUsersByTenantUseCase,
+	getTenantAdminsByTenantUseCase GetTenantAdminsByTenantUseCase,
+	getSuperAdminListUseCase GetSuperAdminListUseCase,
+	// getUsersUseCase GetUsersUseCase,
 ) *Controller {
 	return &Controller{
 		log: log,
@@ -52,34 +65,42 @@ func NewUserController(
 		deleteTenantAdminUseCase: deleteTenantAdminCase,
 		deleteSuperAdminUseCase:  deleteSuperAdminCase,
 
-		getTenantUserUseCase:      getTenantUserUseCase,
-		getTenantAdminUseCase:     getTenantAdminUseCase,
-		getSuperAdminUseCase:      getSuperAdminUseCase,
-		getUsersByTenantIdUseCase: getUsersByTenantIdUseCase,
-		getUsersUseCase:           getUsersUseCase,
+		getTenantUserUseCase:  getTenantUserUseCase,
+		getTenantAdminUseCase: getTenantAdminUseCase,
+		getSuperAdminUseCase:  getSuperAdminUseCase,
+
+		getTenantUsersByTenantUseCase:  getTenantUsersByTenantUseCase,
+		getTenantAdminsByTenantUseCase: getTenantAdminsByTenantUseCase,
+		getSuperAdminListUseCase:       getSuperAdminListUseCase,
+		// getUsersUseCase:           getUsersUseCase,
 	}
 }
 
-// Create =============================================================================
-func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
-	// Binding e validazione input
-	var requestDto CreateTenantUserDTO
+// Create =============================================================================================
 
+func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
+	var requestDto CreateTenantUserDTO
+	
+	// 2. Binding JSON
 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
-		common.RequestError(ctx, fmt.Errorf("error parsing tenant_id: %v", err))
-		return
-	}
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 3. Esecuzione comando
 	cmd := CreateTenantUserCommand{
+		Requester: requester,
 		Email:    requestDto.Email,
 		Username: requestDto.Username,
 		TenantId: tenantId,
@@ -91,50 +112,67 @@ func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 4. Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) CreateTenantAdmin(ctx *gin.Context) {
-	// Binding e validazione input
-	var requestDto CreateTenantAdminDTO
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
 
+	var requestDto CreateTenantAdminDTO
+	
+	// 2. Binding URI
+	if err := ctx.ShouldBindUri(&requestDto); err != nil {
+		common.RequestError(ctx, err)
+		return
+	}
+
+	// 3. Binding JSON
 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 4. Esecuzione comando
 	cmd := CreateTenantAdminCommand{
+		Requester: requester,
 		Email:    requestDto.Email,
 		Username: requestDto.Username,
 		TenantId: tenantId,
 	}
 
 	user, err := controller.createTenantAdminUseCase.CreateTenantAdmin(cmd)
-	if err != nil {
+	if err != nil { 
 		common.RequestError(ctx, err)
 		return
 	}
 
-	// Risposta
+	// 5. Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
-	// Binding e validazione input
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+	
 	var requestDto CreateSuperAdminDTO
-
+	
+	// 2. Binding JSON
 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
@@ -142,8 +180,9 @@ func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 3. Esecuzione comando
 	cmd := CreateSuperAdminCommand{
+		Requester: requester,
 		Email:    requestDto.Email,
 		Username: requestDto.Username,
 	}
@@ -154,58 +193,43 @@ func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 4. Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-// func (controller *Controller) DeleteUser(ctx *gin.Context) {
-// 	// Binding e validazione input
-// 	var requestDto DeleteUserDTO
-
-// 	// TODO: Leggere parametri da input string invece che da body POST
-// 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-// 		common.RequestError(ctx, err)
-// 		return
-// 	}
-
-// 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-// 	// Esecuzione comando
-// 	cmd := DeleteUserCommand{
-// 		UserId: requestDto.UserId,
-// 	}
-
-// 	oldUser, err := controller.deleteUserUseCase.DeleteUser(cmd)
-// 	if err != nil {
-// 		common.RequestError(ctx, err)
-// 		return
-// 	}
-
-// 	// Risposta
-// 	responseDto := NewUserResponseDTO(oldUser)
-// 	ctx.JSON(http.StatusOK, responseDto)
-// }
+// Delete =============================================================================================
 
 func (controller *Controller) DeleteTenantUser(ctx *gin.Context) {
-	// Binding e validazione input
-	var requestDto DeleteTenantUserDTO
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
 
+	var requestDto DeleteTenantUserDTO
+	
+	// 2. Binding URI
 	if err := ctx.ShouldBindUri(&requestDto); err != nil {
+		common.RequestError(ctx, err)
+		return
+	}
+
+	// 3. Binding JSON
+	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
 
-	// Esecuzione comando
+
+	// 4. Esecuzione comando
 	cmd := DeleteTenantUserCommand{
+		Requester: requester,
 		TenantId: tenantId,
 		UserId:   requestDto.UserId,
 	}
@@ -216,16 +240,29 @@ func (controller *Controller) DeleteTenantUser(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 5. Invio risposta
 	responseDto := NewUserResponseDTO(oldUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
-	// Binding e validazione input
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
 	var requestDto DeleteTenantAdminDTO
 
+	// 2. Binding URI
 	if err := ctx.ShouldBindUri(&requestDto); err != nil {
+		common.RequestError(ctx, err)
+		return
+	}
+
+	// 3. Binding JSON
+	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
@@ -238,8 +275,9 @@ func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
 		return
 	}
 
-	// Esecuzione comando
+	// 4. Esecuzione comando
 	cmd := DeleteTenantAdminCommand{
+		Requester: requester,
 		TenantId: tenantId,
 		UserId:   requestDto.UserId,
 	}
@@ -250,15 +288,22 @@ func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 5. Invio risposta
 	responseDto := NewUserResponseDTO(oldUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
-	// Binding e validazione input
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+	
 	var requestDto DeleteSuperAdminDTO
 
+	// 2. Binding URI
 	if err := ctx.ShouldBindUri(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
@@ -266,8 +311,9 @@ func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 3. Esecuzione comando
 	cmd := DeleteSuperAdminCommand{
+		Requester: requester,
 		UserId: requestDto.UserId,
 	}
 
@@ -277,58 +323,36 @@ func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 4. Invio risposta
 	responseDto := NewUserResponseDTO(oldUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-// func (controller *Controller) GetUserById(ctx *gin.Context) {
-// 	// Binding e validazione input
-// 	var requestDto GetUserByIdDTO
-
-// 	// TODO: Leggere parametri da input string invece che da body POST
-// 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-// 		common.RequestError(ctx, err)
-// 		return
-// 	}
-
-// 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-// 	// Esecuzione comando
-// 	cmd := GetUserByIdCommand{
-// 		UserId: requestDto.UserId,
-// 	}
-
-// 	user, err := controller.getUserByIdUseCase.GetUserById(cmd)
-// 	if err != nil {
-// 		common.RequestError(ctx, err)
-// 		return
-// 	}
-
-// 	// Risposta
-// 	responseDto := NewUserResponseDTO(user)
-// 	ctx.JSON(http.StatusOK, responseDto)
-// }
+// Get single =========================================================================================
 
 func (controller *Controller) GetTenantUser(ctx *gin.Context) {
-	// Binding e validazione input
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
 	var requestDto GetTenantUserDTO
 
+	// 2. Binding URI
 	if err := ctx.ShouldBindUri(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 3. Esecuzione comando
 	cmd := GetTenantUserCommand{
+		Requester: requester,
 		TenantId: tenantId,
 		UserId:   requestDto.UserId,
 	}
@@ -339,41 +363,34 @@ func (controller *Controller) GetTenantUser(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: remove debug
-	if user.IsZero() {
-		// common.RequestError(ctx, errUserCreationFailed)
-		ctx.JSON(200, gin.H{
-			"tenant_id": cmd.TenantId,
-			"user_id":   cmd.UserId,
-		})
-		return
-	}
-
-	// Risposta
+	// 4. Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) GetTenantAdmin(ctx *gin.Context) {
-	// Binding e validazione input
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
 	var requestDto GetTenantAdminDTO
 
-	// TODO: Leggere parametri da input string invece che da body POST
+	// 2. Binding URI
 	if err := ctx.ShouldBindUri(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 3. Esecuzione comando
 	cmd := GetTenantAdminCommand{
+		Requester: requester,
 		TenantId: tenantId,
 		UserId:   requestDto.UserId,
 	}
@@ -384,16 +401,22 @@ func (controller *Controller) GetTenantAdmin(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 4. Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	common.RequestOk(ctx, responseDto)
 }
 
 func (controller *Controller) GetSuperAdmin(ctx *gin.Context) {
-	// Binding e validazione input
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
 	var requestDto GetSuperAdminDTO
 
-	// TODO: Leggere parametri da input string invece che da body POST
+	// 2. Binding URI
 	if err := ctx.ShouldBindUri(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
@@ -401,8 +424,9 @@ func (controller *Controller) GetSuperAdmin(ctx *gin.Context) {
 
 	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
 
-	// Esecuzione comando
+	// 3. Esecuzione comando
 	cmd := GetSuperAdminCommand{
+		Requester: requester,
 		UserId: requestDto.UserId,
 	}
 
@@ -412,72 +436,151 @@ func (controller *Controller) GetSuperAdmin(ctx *gin.Context) {
 		return
 	}
 
-	// Risposta
+	// 4. Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	common.RequestOk(ctx, responseDto)
 }
 
-func (controller *Controller) GetUsers(ctx *gin.Context) {
-	// Binding e validazione input
-	var requestDto GetUsersDTO
 
-	// TODO: Leggere parametri da input string invece che da body POST
-	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
+// Get multiple =======================================================================================
+
+func (controller *Controller) GetTenantUsers(ctx *gin.Context) {	
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
+	requestDto := GetTenantUsersByTenantDTO{
+		Pagination: dto.DEFAULT_PAGINATION,
+	}
+
+	// 2. Binding URI
+	if err := ctx.ShouldBindUri(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// Esecuzione comando
-	cmd := GetUsersCommand{
-		Page:  requestDto.Page,
-		Limit: requestDto.Limit,
-		Role:  (UserRole)(requestDto.UserRole),
+	// 3. Binding Query
+	if err := ctx.ShouldBindQuery(&requestDto); err != nil {
+		common.RequestError(ctx, err)
+		return
 	}
 
-	users, total, err := controller.getUsersUseCase.GetUsers(cmd)
+	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta! Da fare nel servizio!!!
+
+	// 4. Esecuzione comando
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
+
+	cmd := GetTenantUsersByTenantCommand{
+		Requester: requester,
+		Page:  requestDto.Page,
+		Limit: requestDto.Limit,
+		TenantId: tenantId,
+	}
+
+	users, total, err := controller.getTenantUsersByTenantUseCase.GetTenantUsersByTenant(cmd)
 	if err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	// Risposta
+	// 5. Invio risposta
 	responseDto := NewUserListResponseDTO(users, total)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-func (controller *Controller) GetUsersByTenantId(ctx *gin.Context) {
-	// Binding e validazione input
-	var requestDto GetUsersByTenantIdDTO
 
-	// TODO: Leggere parametri da input string invece che da body POST
-	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
+func (controller *Controller) GetTenantAdmins(ctx *gin.Context) {	
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
+	requestDto := GetTenantAdminsByTenantDTO{
+		Pagination: dto.DEFAULT_PAGINATION,
+	}
+
+	// 2. Binding URI
+	if err := ctx.ShouldBindUri(&requestDto); err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
+	// 3. Binding Query
+	if err := ctx.ShouldBindQuery(&requestDto); err != nil {
 		common.RequestError(ctx, err)
+		return
 	}
 
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
+	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta! Da fare nel servizio!!!
 
-	// Esecuzione comando
-	cmd := GetUsersByTenantIdCommand{
-		Page:     requestDto.Page,
-		Limit:    requestDto.Limit,
+	// 4. Esecuzione comando
+	tenantId, _ := uuid.Parse(requestDto.TenantId)
+
+	cmd := GetTenantAdminsByTenantCommand{
+		Requester: requester,
+		Page:  requestDto.Page,
+		Limit: requestDto.Limit,
 		TenantId: tenantId,
 	}
 
-	users, total, err := controller.getUsersByTenantIdUseCase.GetUsersByTenantId(cmd)
+	users, total, err := controller.getTenantAdminsByTenantUseCase.GetTenantAdminsByTenant(cmd)
 	if err != nil {
 		common.RequestError(ctx, err)
 		return
 	}
 
-	// Risposta
+	// 5. Invio risposta
+	responseDto := NewUserListResponseDTO(users, total)
+	ctx.JSON(http.StatusOK, responseDto)
+}
+
+
+func (controller *Controller) GetSuperAdmins(ctx *gin.Context) {
+	// 1. Autorizza utente
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		common.RequestUnauthorized(ctx, err)
+		return
+	}
+
+	requestDto := GetTenantUsersByTenantDTO{
+		Pagination: dto.DEFAULT_PAGINATION,
+	}
+
+	// 2. Binding URI
+	if err := ctx.ShouldBindUri(&requestDto); err != nil {
+		common.RequestError(ctx, err)
+		return
+	}
+
+	// 3. Binding Query
+	if err := ctx.ShouldBindQuery(&requestDto); err != nil {
+		common.RequestError(ctx, err)
+		return
+	}
+
+	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta! Da fare nel servizio!!!
+
+	// 4. Esecuzione comando
+
+	cmd := GetSuperAdminListCommand{
+		Requester: requester,
+		Page:  requestDto.Page,
+		Limit: requestDto.Limit,
+	}
+
+	users, total, err := controller.getSuperAdminListUseCase.GetSuperAdminList(cmd)
+	if err != nil {
+		common.RequestError(ctx, err)
+		return
+	}
+
+	// 5. Invio risposta
 	responseDto := NewUserListResponseDTO(users, total)
 	ctx.JSON(http.StatusOK, responseDto)
 }
