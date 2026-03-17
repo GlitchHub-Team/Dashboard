@@ -1,21 +1,18 @@
 package user
 
-import "github.com/google/uuid"
-
-type UserRole string
-
-const (
-	ROLE_TENANT_USER  UserRole = "tenant_user"
-	ROLE_TENANT_ADMIN UserRole = "tenant_admin"
-	ROLE_SUPER_ADMIN  UserRole = "super_admin"
+import (
+	"github.com/google/uuid"
+	"backend/internal/identity"
 )
+
+
 
 type User struct {
 	Id           uint
 	Name         string
 	Email        string
 	PasswordHash *string
-	Role         UserRole
+	Role         identity.UserRole
 	TenantId     *uuid.UUID
 	Confirmed    bool
 }
