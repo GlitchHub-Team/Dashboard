@@ -60,8 +60,8 @@ func NewGinEngine(
 				public.POST("/gateway", gatewayController.CreateGateway)
 				public.DELETE("/gateway/:id", gatewayController.DeleteGateway)
 
-				public.POST("/tenant_user", userController.CreateTenantUser)
-				public.POST("/tenant_admin", userController.CreateTenantAdmin)
+				public.POST("/tenant/:tenant_id/tenant_user", userController.CreateTenantUser)
+				public.POST("/tenant/:tenant_id/tenant_admin", userController.CreateTenantAdmin)
 				public.POST("/super_admin", userController.CreateSuperAdmin)
 
 				public.DELETE("/tenant/:tenant_id/tenant_user/:user_id", userController.DeleteTenantUser)
@@ -71,8 +71,10 @@ func NewGinEngine(
 				public.GET("/tenant/:tenant_id/tenant_user/:user_id", userController.GetTenantUser)
 				public.GET("/tenant/:tenant_id/tenant_admin/:user_id", userController.GetTenantAdmin)
 				public.GET("/super_admin/:user_id", userController.GetSuperAdmin)
-				public.POST("/users", userController.GetUsers)
-				public.GET("/tenant/:tenant_id/users", userController.GetUsersByTenantId)
+				
+				public.GET("/tenant/:tenant_id/tenant_users", userController.GetTenantUsers)
+				public.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
+				public.GET("/super_admins", userController.GetSuperAdmins)
 			}
 
 			go router.Run()
