@@ -8,6 +8,8 @@ import (
 	// "backend/internal/tenant"
 	db_conn "backend/internal/common/db_connection"
 
+	"backend/internal/identity"
+
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -66,7 +68,7 @@ func (entity *TenantMemberEntity) toUser() (User, error) {
 		Name:         entity.Name,
 		Email:        entity.Email,
 		PasswordHash: entity.Password,
-		Role:         (UserRole)(entity.Role),
+		Role:         (identity.UserRole)(entity.Role),
 		TenantId:     tenantIdPointer,
 		Confirmed:    entity.Confirmed,
 	}, err
@@ -143,27 +145,11 @@ func (repo *userPostgreRepository) DeleteTenantMember(tenantMember *TenantMember
 	return err
 }
 
-func (repo *userPostgreRepository) GetTenantMembers(tenantId string, page, limit int) ([]TenantMemberEntity, error) {
-	var tenantMembers []TenantMemberEntity
-	err := repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
-		Order("name ASC").
-		Limit(limit).
-		Offset(page * limit).
-		Find(&tenantMembers).
-		Error
-		
-	for i := range tenantMembers {
-		tenantMembers[i].TenantId = tenantId
-	}
-
-	return tenantMembers, err
-}
-
 type userRepositoryGetUserBy struct {
 	Email  *string
 	userId *uint
 }
+
 func (by *userRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
 	if by == (&userRepositoryGetUserBy{}) {
 		return "", nil, errors.New("cannot get user without specifying parameters")
@@ -187,9 +173,8 @@ func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userReposit
 	var tenantMember *TenantMemberEntity
 	where, params, err := by.getWhere()
 	if err != nil {
-		return nil, err
+		return &TenantMemberEntity{}, err
 	}
-
 
 	err = repo.db.
 		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
@@ -201,11 +186,38 @@ func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userReposit
 	return tenantMember, err
 }
 
+func (repo *userPostgreRepository) GetTenantUsers(tenantId string, offset, limit int) ([]TenantMemberEntity, uint, error) {
+	var tenantUsers []TenantMemberEntity
+	var count int64
+	var err error
+
+	baseQuery := repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Where("role = ?", "tenant_user")
+
+	// Get count
+	if err := baseQuery.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Get tenant users
+	err = baseQuery.Order("name ASC").Limit(limit).Offset(offset).Find(&tenantUsers).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range tenantUsers {
+		tenantUsers[i].TenantId = tenantId
+	}
+
+	return tenantUsers, uint(count), nil
+}
+
 func (repo *userPostgreRepository) GetTenantAdmin(tenantId string, by userRepositoryGetUserBy) (*TenantMemberEntity, error) {
 	var tenantMember *TenantMemberEntity
 	where, params, err := by.getWhere()
 	if err != nil {
-		return nil, err
+		return &TenantMemberEntity{}, err
 	}
 
 	err = repo.db.
@@ -216,6 +228,34 @@ func (repo *userPostgreRepository) GetTenantAdmin(tenantId string, by userReposi
 		Error
 	tenantMember.TenantId = tenantId
 	return tenantMember, err
+}
+
+func (repo *userPostgreRepository) GetTenantAdmins(tenantId string, offset, limit int) ([]TenantMemberEntity, uint, error) {
+	var tenantAdmins []TenantMemberEntity
+	var count int64
+	var err error
+
+	baseQuery := repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Where("role = ?", "tenant_admin")
+
+	// Ottieni count
+	if err := baseQuery.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Ottieni tenant admins
+	err = baseQuery.Order("name ASC").Limit(limit).Offset(offset).Find(&tenantAdmins).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Assegna tenantId
+	for i := range tenantAdmins {
+		tenantAdmins[i].TenantId = tenantId
+	}
+
+	return tenantAdmins, uint(count), nil
 }
 
 func (repo *userPostgreRepository) SaveSuperAdmin(tenantMember *SuperAdminEntity) error {
@@ -238,7 +278,7 @@ func (repo *userPostgreRepository) GetSuperAdmin(by userRepositoryGetUserBy) (*S
 	var tenantMember *SuperAdminEntity
 	where, params, err := by.getWhere()
 	if err != nil {
-		return nil, err
+		return &SuperAdminEntity{}, err
 	}
 
 	err = repo.db.
@@ -246,4 +286,27 @@ func (repo *userPostgreRepository) GetSuperAdmin(by userRepositoryGetUserBy) (*S
 		Find(&tenantMember).
 		Error
 	return tenantMember, err
+}
+
+func (repo *userPostgreRepository) GetSuperAdmins(offset, limit int) ([]SuperAdminEntity, uint, error) {
+	var superAdmins []SuperAdminEntity
+	var count int64
+	var err error
+
+	baseQuery := repo.db.
+		Model(&SuperAdminEntity{}).
+		Where("role = ?", "tenant_user")
+
+	// Ottieni count
+	if err := baseQuery.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Ottieni super admin
+	err = baseQuery.Order("name ASC").Limit(limit).Offset(offset).Find(&superAdmins).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return superAdmins, uint(count), nil
 }
