@@ -121,10 +121,10 @@ func TestDeleteTenantUser(t *testing.T) {
 			// Execute the mock setup specific to this test case
 			tc.setupMocks(mockDeletePort, mockGetPort, mockTenantPort)
 
-			// Initialize service
+			// Crea servizio con porte mock
 			deleteTenantUserUseCase, _, _ := user.NewDeleteUserService(mockDeletePort, mockGetPort, mockTenantPort)
 
-			// Execute function
+			// Esegui funzione in oggetto
 			deletedUser, err := deleteTenantUserUseCase.DeleteTenantUser(user.DeleteTenantUserCommand{
 				TenantId: tc.tenantId,
 				UserId:   tc.userId,
@@ -250,10 +250,10 @@ func TestDeleteTenantAdmin(t *testing.T) {
 			// Execute the mock setup specific to this test case
 			tc.setupMocks(mockDeletePort, mockGetPort, mockTenantPort)
 
-			// Initialize service
+			// Crea servizio con porte mock
 			_, deleteTenantAdminUseCase, _ := user.NewDeleteUserService(mockDeletePort, mockGetPort, mockTenantPort)
 
-			// Execute function
+			// Esegui funzione in oggetto
 			deletedUser, err := deleteTenantAdminUseCase.DeleteTenantAdmin(user.DeleteTenantAdminCommand{
 				TenantId: tc.tenantId,
 				UserId:   tc.userId,
@@ -344,10 +344,10 @@ func TestDeleteSuperAdmin(t *testing.T) {
 			// Execute the mock setup specific to this test case
 			tc.setupMocks(mockDeletePort, mockGetPort)
 
-			// Initialize service
+			// Crea servizio con porte mock
 			_, _, deleteSuperAdminUseCase := user.NewDeleteUserService(mockDeletePort, mockGetPort, nil)
 
-			// Execute function
+			// Esegui funzione in oggetto
 			deletedUser, err := deleteSuperAdminUseCase.DeleteSuperAdmin(user.DeleteSuperAdminCommand{
 				UserId: tc.userId,
 			})
