@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { of, EMPTY } from 'rxjs';
@@ -14,6 +15,8 @@ import { UserRole } from '../../models/user-role.enum';
 describe('LoginPage', () => {
   let component: LoginPage;
   let fixture: ComponentFixture<LoginPage>;
+  // ESLint whining
+  let loginFormDebug: any;
 
   const authSessionServiceMock = {
     login: vi.fn(),
@@ -41,16 +44,32 @@ describe('LoginPage', () => {
         { provide: Router, useValue: routerMock },
         { provide: MatDialog, useValue: dialogMock },
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
+
+    loginFormDebug = fixture.debugElement.query(By.css('app-login-form'));
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render the login container', () => {
+    const container = fixture.debugElement.query(By.css('.login-container'));
+    expect(container).toBeTruthy();
+  });
+
+  it('should render the heading', () => {
+    const heading = fixture.debugElement.query(By.css('h1'));
+    expect(heading.nativeElement.textContent).toContain('Login');
+  });
+
+  it('should render the login form', () => {
+    expect(loginFormDebug).toBeTruthy();
   });
 
   describe('onLogin', () => {
@@ -72,7 +91,8 @@ describe('LoginPage', () => {
     it('should call authSessionService.login with the request', () => {
       authSessionServiceMock.login.mockReturnValue(of(mockResponse));
 
-      component['onLogin'](mockRequest);
+      loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
+      fixture.detectChanges();
 
       expect(authSessionServiceMock.login).toHaveBeenCalledWith(mockRequest);
     });
@@ -80,16 +100,17 @@ describe('LoginPage', () => {
     it('should navigate to /dashboard on success', () => {
       authSessionServiceMock.login.mockReturnValue(of(mockResponse));
 
-      component['onLogin'](mockRequest);
+      loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
+      fixture.detectChanges();
 
       expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
     it('should not navigate on error', () => {
-      // The real service catches the error and returns EMPTY
       authSessionServiceMock.login.mockReturnValue(EMPTY);
 
-      component['onLogin'](mockRequest);
+      loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
+      fixture.detectChanges();
 
       expect(routerMock.navigate).not.toHaveBeenCalled();
     });
@@ -97,7 +118,8 @@ describe('LoginPage', () => {
     it('should call login even if it errors', () => {
       authSessionServiceMock.login.mockReturnValue(EMPTY);
 
-      component['onLogin'](mockRequest);
+      loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
+      fixture.detectChanges();
 
       expect(authSessionServiceMock.login).toHaveBeenCalledWith(mockRequest);
     });
@@ -105,7 +127,8 @@ describe('LoginPage', () => {
 
   describe('onForgotPassword', () => {
     it('should open ForgotPasswordDialog', () => {
-      component['onForgotPassword']();
+      loginFormDebug.triggerEventHandler('forgotPassword');
+      fixture.detectChanges();
 
       expect(dialogMock.open).toHaveBeenCalledWith(ForgotPasswordDialog, {
         width: '800px',
@@ -116,7 +139,8 @@ describe('LoginPage', () => {
 
   describe('onDismissError', () => {
     it('should call clearError', () => {
-      component['onDismissError']();
+      loginFormDebug.triggerEventHandler('dismissError');
+      fixture.detectChanges();
 
       expect(authSessionServiceMock.clearError).toHaveBeenCalled();
     });
