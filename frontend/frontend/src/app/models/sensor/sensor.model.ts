@@ -5,4 +5,5 @@ export interface Sensor {
   gatewayId: string;
   name: string;
   profile: SensorProfiles;
+  dataInterval?: number;
 }

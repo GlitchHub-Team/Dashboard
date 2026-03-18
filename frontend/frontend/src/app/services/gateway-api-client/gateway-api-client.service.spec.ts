@@ -4,9 +4,9 @@ import { provideHttpClient } from '@angular/common/http';
 
 import { GatewayApiClientService } from './gateway-api-client.service';
 import { environment } from '../../../environments/environment';
-import { Gateway } from '../../models/gateway.model';
-import { GatewayConfig } from '../../models/gateway-config.model';
-import { GatewayStatus } from '../../models/gateway-status.enum';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { GatewayConfig } from '../../models/gateway/gateway-config.model';
+import { GatewayStatus } from '../../models/gateway/gateway-status.enum';
 
 describe('GatewayApiClientService', () => {
   let service: GatewayApiClientService;

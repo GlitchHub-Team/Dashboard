@@ -6,12 +6,12 @@ import { By } from '@angular/platform-browser';
 
 import { DashboardPage } from './dashboard.page';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
-import { Gateway } from '../../models/gateway.model';
-import { GatewayStatus } from '../../models/gateway-status.enum';
-import { Sensor } from '../../models/sensor.model';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { GatewayStatus } from '../../models/gateway/gateway-status.enum';
+import { Sensor } from '../../models/sensor/sensor.model';
 import { ChartRequest } from '../../models/chart-request.model';
 import { ChartType } from '../../models/chart-type.enum';
-import { SensorProfiles } from '../../models/sensor-profiles.enum';
+import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 
 describe('DashboardPage', () => {
   let component: DashboardPage;

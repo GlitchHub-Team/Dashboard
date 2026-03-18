@@ -4,8 +4,8 @@ import { MatTableModule } from '@angular/material/table';
 import { By } from '@angular/platform-browser';
 
 import { DashboardSensorTableComponent } from './dashboard-sensor-table.component';
-import { Sensor } from '../../../../models/sensor.model';
-import { SensorProfiles } from '../../../../models/sensor-profiles.enum';
+import { Sensor } from '../../../../models/sensor/sensor.model';
+import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../../../models/chart-type.enum';
 import { ChartRequest } from '../../../../models/chart-request.model';
 

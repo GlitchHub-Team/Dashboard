@@ -5,10 +5,10 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { DashboardGatewayExpandedComponent } from './dashboard-gateway-expanded.component';
 import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
-import { Gateway } from '../../../../models/gateway.model';
-import { GatewayStatus } from '../../../../models/gateway-status.enum';
-import { Sensor } from '../../../../models/sensor.model';
-import { SensorProfiles } from '../../../../models/sensor-profiles.enum';
+import { Gateway } from '../../../../models/gateway/gateway.model';
+import { GatewayStatus } from '../../../../models/gateway/gateway-status.enum';
+import { Sensor } from '../../../../models/sensor/sensor.model';
+import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart-request.model';
 import { ChartType } from '../../../../models/chart-type.enum';
 

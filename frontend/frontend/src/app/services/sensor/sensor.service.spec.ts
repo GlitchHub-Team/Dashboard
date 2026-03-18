@@ -3,9 +3,9 @@ import { of, throwError } from 'rxjs';
 
 import { SensorService } from './sensor.service';
 import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
-import { Sensor } from '../../models/sensor.model';
-import { SensorConfig } from '../../models/sensor-config.model';
-import { SensorProfiles } from '../../models/sensor-profiles.enum';
+import { Sensor } from '../../models/sensor/sensor.model';
+import { SensorConfig } from '../../models/sensor/sensor-config.model';
+import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { ApiError } from '../../models/api-error.model';
 
 describe('SensorService', () => {

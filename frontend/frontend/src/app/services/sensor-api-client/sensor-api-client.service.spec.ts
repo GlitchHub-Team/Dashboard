@@ -4,9 +4,9 @@ import { provideHttpClient } from '@angular/common/http';
 
 import { SensorApiClientService } from './sensor-api-client.service';
 import { environment } from '../../../environments/environment';
-import { Sensor } from '../../models/sensor.model';
-import { SensorConfig } from '../../models/sensor-config.model';
-import { SensorProfiles } from '../../models/sensor-profiles.enum';
+import { Sensor } from '../../models/sensor/sensor.model';
+import { SensorConfig } from '../../models/sensor/sensor-config.model';
+import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 
 describe('SensorApiClientService', () => {
   let service: SensorApiClientService;

@@ -3,9 +3,9 @@ import { of, throwError } from 'rxjs';
 
 import { GatewayService } from './gateway.service';
 import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { Gateway } from '../../models/gateway.model';
-import { GatewayConfig } from '../../models/gateway-config.model';
-import { GatewayStatus } from '../../models/gateway-status.enum';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { GatewayConfig } from '../../models/gateway/gateway-config.model';
+import { GatewayStatus } from '../../models/gateway/gateway-status.enum';
 import { ApiError } from '../../models/api-error.model';
 
 describe('GatewayService', () => {

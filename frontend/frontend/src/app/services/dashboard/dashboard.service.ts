@@ -4,7 +4,7 @@ import { GatewayService } from '../gateway/gateway.service';
 import { SensorService } from '../sensor/sensor.service';
 import { PermissionService } from '../permission/permission.service';
 import { Permission } from '../../models/permission.enum';
-import { Gateway } from '../../models/gateway.model';
+import { Gateway } from '../../models/gateway/gateway.model';
 import { ChartRequest } from '../../models/chart-request.model';
 
 @Injectable({
@@ -13,7 +13,6 @@ import { ChartRequest } from '../../models/chart-request.model';
 export class DashboardService {
   private readonly gatewayService = inject(GatewayService);
   private readonly sensorService = inject(SensorService);
-  // Alert service
   private readonly permissionService = inject(PermissionService);
 
   private readonly _expandedGateway = signal<Gateway | null>(null);
@@ -21,39 +20,48 @@ export class DashboardService {
 
   public readonly expandedGateway = this._expandedGateway.asReadonly();
   public readonly selectedChart = this._selectedChart.asReadonly();
-  public readonly canSendCommands = computed(() => {
-    // Se può mandare comandi, può vedere i gateway
-    return this.permissionService.can(Permission.GATEWAY_COMMANDS);
-  });
+  public readonly canSendCommands = computed(() =>
+    this.permissionService.can(Permission.GATEWAY_COMMANDS),
+  );
 
   public readonly gatewayList = this.gatewayService.gatewayList;
-  public readonly sensorList = this.sensorService.sensorList;
-  // Alert list
+  public readonly gatewayTotal = this.gatewayService.total;
+  public readonly gatewayPageIndex = this.gatewayService.pageIndex;
+  public readonly gatewayLimit = this.gatewayService.limit;
   public readonly gatewayLoading = this.gatewayService.loading;
   public readonly gatewayError = this.gatewayService.error;
+
+  public readonly sensorList = this.sensorService.sensorList;
+  public readonly sensorTotal = this.sensorService.total;
+  public readonly sensorPageIndex = this.sensorService.pageIndex;
+  public readonly sensorLimit = this.sensorService.limit;
   public readonly sensorLoading = this.sensorService.loading;
   public readonly sensorError = this.sensorService.error;
-  // Alert loading
-  // Alert error
 
   public loadDashboard(): void {
-    // TODO: come passare il tenantId?
-    // TODO: testing con mock services, uso tenant hard-coded
     if (this.canSendCommands()) {
-      this.gatewayService.getGatewaysByTenant('tenant-01');
+      this.gatewayService.getGatewaysByTenant('tenant-01', 0, 10);
     } else {
-      this.sensorService.getSensorsByTenant('tenant-01');
+      this.sensorService.getSensorsByTenant('tenant-01', 0, 10);
     }
+  }
+
+  public changeGatewayPage(pageIndex: number, limit: number): void {
+    this.collapseGateway();
+    this.gatewayService.changePage(pageIndex, limit);
+  }
+
+  public changeSensorPage(pageIndex: number, limit: number): void {
+    this.sensorService.changePage(pageIndex, limit);
   }
 
   public toggleExpandedGateway(gateway: Gateway): void {
     const current = this._expandedGateway();
     if (current?.id === gateway.id) {
-      this._expandedGateway.set(null);
-      this.sensorService.clearSensors();
+      this.collapseGateway();
     } else {
       this._expandedGateway.set(gateway);
-      this.sensorService.getSensorsByGateway(gateway.id);
+      this.sensorService.getSensorsByGateway(gateway.id, 0, 10);
     }
   }
 
@@ -63,5 +71,10 @@ export class DashboardService {
 
   public closeChart(): void {
     this._selectedChart.set(null);
+  }
+
+  private collapseGateway(): void {
+    this._expandedGateway.set(null);
+    this.sensorService.clearSensors();
   }
 }

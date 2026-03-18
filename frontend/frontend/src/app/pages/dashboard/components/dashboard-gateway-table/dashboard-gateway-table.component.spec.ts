@@ -4,10 +4,10 @@ import { MatTableModule } from '@angular/material/table';
 import { By } from '@angular/platform-browser';
 
 import { DashboardGatewayTableComponent } from './dashboard-gateway-table.component';
-import { Gateway } from '../../../../models/gateway.model';
-import { GatewayStatus } from '../../../../models/gateway-status.enum';
-import { Sensor } from '../../../../models/sensor.model';
-import { SensorProfiles } from '../../../../models/sensor-profiles.enum';
+import { Gateway } from '../../../../models/gateway/gateway.model';
+import { GatewayStatus } from '../../../../models/gateway/gateway-status.enum';
+import { Sensor } from '../../../../models/sensor/sensor.model';
+import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart-request.model';
 import { ChartType } from '../../../../models/chart-type.enum';
 
