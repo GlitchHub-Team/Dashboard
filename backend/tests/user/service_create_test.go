@@ -107,6 +107,7 @@ func TestCreateTenantUser(t *testing.T) {
 	errMockStep1 := errors.New("unexpected error in step 1")
 	step1TenantError := newStepTenantError_CreateUserService(targetTenantId, errMockStep1)
 
+	// Step 2: Get user
 	step2GetUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -143,6 +144,7 @@ func TestCreateTenantUser(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 3: create user
 	step3CreateUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -162,6 +164,7 @@ func TestCreateTenantUser(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 4: create token
 	step4CreateTokenOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -181,6 +184,7 @@ func TestCreateTenantUser(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 5: Send email
 	step5SendEmailOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -200,6 +204,7 @@ func TestCreateTenantUser(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 6: rollback user 
 	step6DeleteUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -209,13 +214,13 @@ func TestCreateTenantUser(t *testing.T) {
 			Times(1)
 	}
 
-	errMockStep7 := errors.New("unexpected error in step 6")
+	errMockStep6 := errors.New("unexpected error in step 6")
 	step6DeleteUserError := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantUser(targetTenantId, targetUserId).
-			Return(user.User{}, errMockStep7).
+			Return(user.User{}, errMockStep6).
 			Times(1)
 	}
 
@@ -239,8 +244,8 @@ func TestCreateTenantUser(t *testing.T) {
 
 	tenantUserRequester := identity.Requester{
 		RequesterUserId:   uint(1),
-		RequesterTenantId: &otherTenantId,
-		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+		RequesterTenantId: &targetTenantId,
+		RequesterRole:     identity.ROLE_TENANT_USER,
 	}
 
 	baseInput := user.CreateTenantUserCommand{
@@ -342,7 +347,7 @@ func TestCreateTenantUser(t *testing.T) {
 		// NOTA: Da qui in poi, non importa se il requester è tenant admin o super admin impersonante,
 		// usiamo tenant admin
 		{
-			name:  "Fail (step 2): user already exists",
+			name:  "Fail (step 2): unexpected error",
 			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantOk_CanImpersonate,
@@ -352,7 +357,7 @@ func TestCreateTenantUser(t *testing.T) {
 			expectedUser:  user.User{},
 		},
 		{
-			name:  "Fail (step 2): unexpected error",
+			name:  "Fail (step 2): user already exists",
 			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantOk_CanImpersonate,
@@ -365,7 +370,7 @@ func TestCreateTenantUser(t *testing.T) {
 		// Step 3: test create user
 		{
 			name:  "Fail (step 3): unexpected error",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
@@ -378,7 +383,7 @@ func TestCreateTenantUser(t *testing.T) {
 		// Step 4: test create token
 		{
 			name:  "Fail (step 4): unexpected error",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
@@ -391,7 +396,7 @@ func TestCreateTenantUser(t *testing.T) {
 
 		{
 			name:  "Fail (step 5): unexpected error -> Success (step 6): rolled back user",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
@@ -405,7 +410,7 @@ func TestCreateTenantUser(t *testing.T) {
 		},
 		{
 			name:  "Fail (step 5): unexpected error -> Fail (step 6): cannot roll back user",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
@@ -414,11 +419,12 @@ func TestCreateTenantUser(t *testing.T) {
 				step5SendEmailError,
 				step6DeleteUserError,
 			},
-			expectedError: errMockStep7,
+			expectedError: errMockStep6,
 			expectedUser:  user.User{},
 		},
 	}
 
+	
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			// NOTA: il controller di gomock va inizializzato qua dentro!
@@ -469,7 +475,8 @@ func TestCreateTenantUser(t *testing.T) {
 func TestCreateTenantAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
-	targetUserId := uint(1)
+	otherTenantId := uuid.New()
+	targetUserId := uint(100)
 	targetUserEmail := "test@example.com"
 	targetUserName := "Test"
 	targetConfirmed := false
@@ -493,14 +500,6 @@ func TestCreateTenantAdmin(t *testing.T) {
 	}
 	expectedToken := "token"
 
-	// type mockSetupFunc func(
-	// 	createUserPort *mocks.MockCreateUserPort,
-	// 	deleteUserPort *mocks.MockDeleteUserPort,
-	// 	getUserPort *mocks.MockGetUserPort,
-	// 	getTenantPort *tenantMocks.MockGetTenantPort,
-	// 	confirmAccountTokenPort *authMocks.MockConfirmTokenPort,
-	// 	sendEmailPort *emailMocks.MockSendEmailPort,
-	// ) *gomock.Call
 	type testCase struct {
 		name          string
 		input         user.CreateTenantAdminCommand
@@ -509,14 +508,16 @@ func TestCreateTenantAdmin(t *testing.T) {
 		expectedError error
 	}
 
-	// Step 1: Cercare tenant
-	step1TenantOk := newStepTenantOk_CreateUserService(targetTenantId, true)
+	// Step 1: get tenant
+	step1TenantOk_CanImpersonate := newStepTenantOk_CreateUserService(targetTenantId, true)
+	step1TenantOk_CannotImpersonate := newStepTenantOk_CreateUserService(targetTenantId, false)
 
-	step1TenantFail := newStepTenantNotFound_CreateUserService(targetTenantId)
+	step1TenantNotFound := newStepTenantNotFound_CreateUserService(targetTenantId)
 
 	errMockStep1 := errors.New("unexpected error in step 1")
 	step1TenantError := newStepTenantError_CreateUserService(targetTenantId, errMockStep1)
 
+	// Step 2: get user
 	step2GetUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -526,13 +527,21 @@ func TestCreateTenantAdmin(t *testing.T) {
 			Times(1)
 	}
 
-	step2GetExistingUserFail := func(
+	step2UserExistsFail := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdminByEmail(targetTenantId, targetUserEmail).
 			Return(expectedUser, nil).
 			Times(1)
+	}
+
+	step2NeverCalled := func(
+		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+	) *gomock.Call {
+		return getUserPort.EXPECT().
+			GetTenantAdminByEmail(gomock.Any(), gomock.Any()).
+			Times(0)
 	}
 
 	errMockStep2 := errors.New("unexpected error in step 2")
@@ -545,6 +554,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 3: create user
 	step3CreateUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -564,6 +574,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 4: create token
 	step4CreateTokenOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -583,6 +594,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 5: send email
 	step5SendEmailOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -602,6 +614,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 6: rollback user
 	step6DeleteUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -621,17 +634,52 @@ func TestCreateTenantAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Requesters
+	superAdminRequester := identity.Requester{
+		RequesterUserId: uint(1),
+		RequesterRole:   identity.ROLE_SUPER_ADMIN,
+	}
+
+	authorizedTenantAdminRequester := identity.Requester{
+		RequesterUserId:   uint(1),
+		RequesterTenantId: &targetTenantId,
+		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	}
+
+	unauthorizedTenantAdminRequester := identity.Requester{
+		RequesterUserId:   uint(1),
+		RequesterTenantId: &otherTenantId,
+		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	}
+
+	tenantUserRequester := identity.Requester{
+		RequesterUserId:   uint(1),
+		RequesterTenantId: &targetTenantId,
+		RequesterRole:     identity.ROLE_TENANT_USER,
+	}
+
 	baseInput := user.CreateTenantAdminCommand{
 		Email:    targetUserEmail,
 		Username: targetUserName,
 		TenantId: targetTenantId,
 	}
+
+	inputWith := func(requester identity.Requester) user.CreateTenantAdminCommand {
+		return user.CreateTenantAdminCommand{
+			Requester: requester,
+			Email:     baseInput.Email,
+			Username:  baseInput.Username,
+			TenantId:  baseInput.TenantId,
+		}
+	}
+
 	cases := []testCase{
+		// Successo
 		{
-			name:  "Success: tenant user created successfully",
-			input: baseInput,
+			name:  "(Super Admin) Success: impersonation OK",
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
+				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
 				step3CreateUserOk,
 				step4CreateTokenOk,
@@ -641,59 +689,113 @@ func TestCreateTenantAdmin(t *testing.T) {
 			expectedUser:  expectedUser,
 		},
 		{
-			name:  "Fail (step 1): tenant not found",
-			input: baseInput,
+			name:  "(Tenant Admin) Success: authorized, OK",
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantFail,
+				step1TenantOk_CanImpersonate, // NOTA: impersonazione qui irrilevante
+				step2GetUserOk,
+				step3CreateUserOk,
+				step4CreateTokenOk,
+				step5SendEmailOk,
+			},
+			expectedError: nil,
+			expectedUser:  expectedUser,
+		},
+		// Step 1: test get tenant (non importa il requester)
+		{
+			name:  "Fail (step 1): tenant not found",
+			input: inputWith(authorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1TenantNotFound,
 			},
 			expectedError: tenant.ErrTenantNotFound,
 			expectedUser:  user.User{},
 		},
 		{
 			name:  "Fail (step 1): unexpected error",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1TenantError,
 			},
 			expectedError: errMockStep1,
 			expectedUser:  user.User{},
 		},
+
+		// Step 1: test autorizzazione
 		{
-			name:  "Fail (step 2): user already exists",
-			input: baseInput,
+			name:  "(Super Admin) Fail (step 1): impersonation fail",
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
+				step1TenantOk_CannotImpersonate,
+				step2NeverCalled,
+			},
+			expectedError: identity.ErrUnauthorizedAccess,
+			expectedUser:  user.User{},
+		},
+		{
+			name:  "(Tenant Admin) Fail (step 1): unauthorized access",
+			input: inputWith(unauthorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1TenantOk_CanImpersonate, // NOTA: impersonazione qui irrilevante
+				step2NeverCalled,
+			},
+			expectedError: identity.ErrUnauthorizedAccess,
+			expectedUser:  user.User{},
+		},
+		{
+			name:  "(Tenant User) Fail (step 1): unauthorized access",
+			input: inputWith(tenantUserRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1TenantOk_CanImpersonate, // NOTA: impersonazione qui irrilevante
+				step2NeverCalled,
+			},
+			expectedError: identity.ErrUnauthorizedAccess,
+			expectedUser:  user.User{},
+		},
+
+		// Step 2: test get user
+		// NOTA: Da qui in poi, non importa se il requester è tenant admin o super admin impersonante,
+		// usiamo tenant admin
+		{
+			name:  "Fail (step 2): unexpected error",
+			input: inputWith(authorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1TenantOk_CanImpersonate,
 				step2GetUserError,
 			},
 			expectedError: errMockStep2,
 			expectedUser:  user.User{},
 		},
 		{
-			name:  "Fail (step 2): unexpected error",
-			input: baseInput,
+			name:  "Fail (step 2): user already exists",
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
-				step2GetExistingUserFail,
+				step1TenantOk_CanImpersonate,
+				step2UserExistsFail,
 			},
 			expectedError: user.ErrUserAlreadyExists,
 			expectedUser:  user.User{},
 		},
+
+		// Step 3: test create user
 		{
 			name:  "Fail (step 3): unexpected error",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
+				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
 				step3CreateUserError,
 			},
 			expectedError: errMockStep3,
 			expectedUser:  user.User{},
 		},
+
+		// Step 4: test create token
 		{
 			name:  "Fail (step 4): unexpected error",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
+				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
 				step3CreateUserOk,
 				step4CreateTokenError,
@@ -704,9 +806,9 @@ func TestCreateTenantAdmin(t *testing.T) {
 
 		{
 			name:  "Fail (step 5): unexpected error -> Success (step 6): rolled back user",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
+				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
 				step3CreateUserOk,
 				step4CreateTokenOk,
@@ -718,9 +820,9 @@ func TestCreateTenantAdmin(t *testing.T) {
 		},
 		{
 			name:  "Fail (step 5): unexpected error -> Fail (step 6): cannot roll back user",
-			input: baseInput,
+			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk,
+				step1TenantOk_CanImpersonate,
 				step2GetUserOk,
 				step3CreateUserOk,
 				step4CreateTokenOk,
@@ -759,6 +861,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 			if len(expectedCalls) > 0 {
 				gomock.InOrder(expectedCalls...)
 			}
+
 			// Crea servizio con porte mock
 			_, createTenantAdminUseCase, _ := user.NewCreateUserService(
 				mockCreatePort, mockDeletePort, mockGetPort, mockTenantPort, mockConfirmTokenPort, mockSendEmailPort,
@@ -777,6 +880,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 		})
 	}
 }
+
 
 func TestCreateSuperAdmin(t *testing.T) {
 	// Dati test
@@ -813,6 +917,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 		expectedError error
 	}
 
+	// Step 1: get user
 	step1GetUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -841,6 +946,15 @@ func TestCreateSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	step1NeverCalled := func(
+		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+	) *gomock.Call {
+		return getUserPort.EXPECT().
+			GetSuperAdminByEmail(gomock.Any()).
+			Times(0)
+	}
+
+	// step 2: create user
 	step2CreateUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -860,6 +974,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 3: create token
 	step3CreateTokenOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -879,6 +994,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 4: send email
 	step4SendEmailOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -898,6 +1014,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
+	// Step 5: rollback user
 	step5DeleteUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -917,14 +1034,43 @@ func TestCreateSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
-	baseInput := user.CreateSuperAdminCommand{
+	// Requesters
+
+	superAdminRequester := identity.Requester{
+		RequesterUserId: uint(1),
+		RequesterRole:   identity.ROLE_SUPER_ADMIN,
+	}
+
+	exampleTenantId := uuid.New()
+	tenantAdminRequester := identity.Requester{
+		RequesterUserId:   uint(1),
+		RequesterTenantId: &exampleTenantId,
+		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	}
+
+	tenantUserRequester := identity.Requester{
+		RequesterUserId:   uint(1),
+		RequesterTenantId: &exampleTenantId,
+		RequesterRole:     identity.ROLE_TENANT_USER,
+	}
+
+	baseInput := user.CreateTenantAdminCommand{
 		Email:    targetUserEmail,
 		Username: targetUserName,
 	}
+
+	inputWith := func(requester identity.Requester) user.CreateSuperAdminCommand {
+		return user.CreateSuperAdminCommand{
+			Requester: requester,
+			Email:     baseInput.Email,
+			Username:  baseInput.Username,
+		}
+	}
+
 	cases := []testCase{
 		{
-			name:  "Success: tenant user created successfully",
-			input: baseInput,
+			name:  "Success",
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetUserOk,
 				step2CreateUserOk,
@@ -934,9 +1080,30 @@ func TestCreateSuperAdmin(t *testing.T) {
 			expectedError: nil,
 			expectedUser:  expectedUser,
 		},
+		// Test autorizzazione
 		{
-			name:  "Fail (step 1): user already exists",
-			input: baseInput,
+			name:  "(Tenant Admin) Fail: unauthorized access",
+			input: inputWith(tenantAdminRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1NeverCalled,
+			},
+			expectedError: identity.ErrUnauthorizedAccess,
+			expectedUser:  user.User{},
+		},
+		{
+			name:  "(Tenant User) Fail: unauthorized access",
+			input: inputWith(tenantUserRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1NeverCalled,
+			},
+			expectedError: identity.ErrUnauthorizedAccess,
+			expectedUser:  user.User{},
+		},
+	
+		// Test 1
+		{
+			name:  "Fail (step 1): unexpected error",
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetUserError,
 			},
@@ -944,8 +1111,8 @@ func TestCreateSuperAdmin(t *testing.T) {
 			expectedUser:  user.User{},
 		},
 		{
-			name:  "Fail (step 1): unexpected error",
-			input: baseInput,
+			name:  "Fail (step 1): user already exists",
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetExistingUserFail,
 			},
@@ -954,7 +1121,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 		},
 		{
 			name:  "Fail (step 2): unexpected error",
-			input: baseInput,
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetUserOk,
 				step2CreateUserError,
@@ -964,7 +1131,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 		},
 		{
 			name:  "Fail (step 3): unexpected error",
-			input: baseInput,
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetUserOk,
 				step2CreateUserOk,
@@ -976,7 +1143,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 
 		{
 			name:  "Fail (step 4): unexpected error -> Success (step 5): rolled back user",
-			input: baseInput,
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetUserOk,
 				step2CreateUserOk,
@@ -989,7 +1156,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 		},
 		{
 			name:  "Fail (step 4): unexpected error -> Fail (step 5): cannot roll back user",
-			input: baseInput,
+			input: inputWith(superAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
 				step1GetUserOk,
 				step2CreateUserOk,

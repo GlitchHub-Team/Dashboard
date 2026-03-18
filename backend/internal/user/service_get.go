@@ -39,6 +39,8 @@ type GetSuperAdminUseCase interface {
 }
 
 func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, error) {
+	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
+
 	// 1) Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
@@ -48,13 +50,16 @@ func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, er
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// 2) Controlla autorizzazione
+	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
+	tenantUserAccess := cmd.Requester.CanTenantUserAccess(cmd.TenantId) && cmd.RequesterUserId == cmd.UserId
+	if !superAdminAccess && !tenantAdminAccess && !tenantUserAccess { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 
-	// 3) Get tenant user
+	// 2) Get tenant user
 	user, err := service.getUserPort.GetTenantUser(cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
@@ -67,6 +72,8 @@ func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, er
 }
 
 func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, error) {
+	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
+
 	// 1) Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
@@ -76,13 +83,14 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// 2) Controlla autorizzazione
+	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
+	if !superAdminAccess && !tenantAdminAccess  { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
-
-	// 3) Get tenant admin
+	// 2) Get tenant admin
 	user, err := service.getUserPort.GetTenantAdmin(cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
@@ -94,13 +102,13 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 }
 
 func (service *GetUserService) GetSuperAdmin(cmd GetSuperAdminCommand) (User, error) {
-	// 1) Controlla autorizzazione
+	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
 	if !cmd.Requester.IsSuperAdmin() { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 
-	// 2) Get super admin
+	// 1) Get super admin
 	user, err := service.getUserPort.GetSuperAdmin(cmd.UserId)
 	if err != nil {
 		return User{}, err
@@ -133,6 +141,8 @@ type GetSuperAdminListUseCase interface {
 func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
 	tenantUsers []User, total uint, err error,
 ) {
+	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
+
 	// 1) Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
@@ -142,13 +152,15 @@ func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenant
 		return nil, 0, tenant.ErrTenantNotFound
 	}
 
-	// 2) Controlla autorizzazione
+	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
+	if !superAdminAccess && !tenantAdminAccess { //nolint:staticcheck
 		return nil, 0, identity.ErrUnauthorizedAccess
 	}
 
-	// 3) Get tenant users
+	// 2) Get tenant users
 	tenantUsers, total, err = service.getUserPort.GetTenantUsersByTenant(cmd.TenantId, cmd.Page, cmd.Limit)
 	if err != nil {
 		return nil, 0, err
@@ -160,6 +172,7 @@ func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenant
 func (service *GetUserService) GetTenantAdminsByTenant(cmd GetTenantAdminsByTenantCommand) (
 	tenantUsers []User, total uint, err error,
 ) {
+	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
 	// 1) Controlla tenant
 	tenantFound, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
@@ -171,7 +184,9 @@ func (service *GetUserService) GetTenantAdminsByTenant(cmd GetTenantAdminsByTena
 
 	// 2) Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	if !cmd.Requester.CanSuperAdminAccess(tenantFound) && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
+	if !superAdminAccess && !tenantAdminAccess { //nolint:staticcheck
 		return nil, 0, identity.ErrUnauthorizedAccess
 	}
 
