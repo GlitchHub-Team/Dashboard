@@ -29,6 +29,12 @@ describe('DashboardGatewayTableComponent', () => {
     },
   ];
 
+  const mockChartRequest: ChartRequest = {
+    sensor: mockSensors[0],
+    chartType: ChartType.HISTORIC,
+    timeInterval: null!,
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardGatewayTableComponent, MatTableModule],
@@ -40,140 +46,105 @@ describe('DashboardGatewayTableComponent', () => {
 
     fixture.componentRef.setInput('gateways', mockGateways);
     fixture.componentRef.setInput('sensors', mockSensors);
+    fixture.componentRef.setInput('gatewayTotal', mockGateways.length);
+    fixture.componentRef.setInput('sensorTotal', mockSensors.length);
     fixture.detectChanges();
   });
 
   describe('initial state', () => {
-    it('should create', () => {
+    it('should create with correct defaults', () => {
       expect(component).toBeTruthy();
-    });
-
-    it('should default expandedGateway to null', () => {
       expect(component.expandedGateway()).toBeNull();
-    });
-
-    it('should default canSendCommands to false', () => {
       expect(component.canSendCommands()).toBe(false);
+      expect(component.gatewayPageIndex()).toBe(0);
+      expect(component.gatewayLimit()).toBe(10);
+      expect(component.sensorPageIndex()).toBe(0);
+      expect(component.sensorLimit()).toBe(10);
     });
   });
 
   describe('loading state', () => {
-    it('should render spinner when loading', () => {
+    beforeEach(() => {
       fixture.componentRef.setInput('gatewayLoading', true);
       fixture.detectChanges();
-
-      const spinner = fixture.debugElement.query(By.css('mat-spinner'));
-      expect(spinner).toBeTruthy();
     });
 
-    it('should not render table when loading', () => {
-      fixture.componentRef.setInput('gatewayLoading', true);
-      fixture.detectChanges();
-
-      const table = fixture.debugElement.query(By.css('mat-table'));
-      expect(table).toBeFalsy();
-    });
-
-    it('should not render empty state when loading', () => {
-      fixture.componentRef.setInput('gatewayLoading', true);
-      fixture.detectChanges();
-
-      const emptyState = fixture.debugElement.query(By.css('.empty-state'));
-      expect(emptyState).toBeFalsy();
+    it('should render only spinner when loading', () => {
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeFalsy();
     });
   });
 
   describe('empty state', () => {
     beforeEach(() => {
       fixture.componentRef.setInput('gateways', []);
+      fixture.componentRef.setInput('gatewayTotal', 0);
       fixture.componentRef.setInput('gatewayLoading', false);
       fixture.detectChanges();
     });
 
-    it('should render empty state', () => {
+    it('should render only empty state', () => {
       const emptyState = fixture.debugElement.query(By.css('.empty-state'));
       expect(emptyState).toBeTruthy();
-    });
-
-    it('should display no gateways message', () => {
-      const message = fixture.debugElement.query(By.css('.empty-state p'));
-      expect(message.nativeElement.textContent).toContain('No gateways available');
-    });
-
-    it('should render router icon', () => {
-      const icon = fixture.debugElement.query(By.css('.empty-state mat-icon'));
-      expect(icon.nativeElement.textContent).toContain('router');
-    });
-
-    it('should not render table', () => {
-      const table = fixture.debugElement.query(By.css('mat-table'));
-      expect(table).toBeFalsy();
-    });
-
-    it('should not render spinner', () => {
-      const spinner = fixture.debugElement.query(By.css('mat-spinner'));
-      expect(spinner).toBeFalsy();
+      expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain(
+        'No gateways available',
+      );
+      expect(emptyState.query(By.css('mat-icon')).nativeElement.textContent).toContain('router');
+      expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeFalsy();
     });
   });
 
   describe('table with data', () => {
-    it('should render the table', () => {
-      const table = fixture.debugElement.query(By.css('mat-table'));
-      expect(table).toBeTruthy();
+    it('should render table, paginator, and no spinner or empty state', () => {
+      expect(fixture.debugElement.query(By.css('mat-table'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('mat-header-row'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
     });
 
-    it('should not render spinner', () => {
-      const spinner = fixture.debugElement.query(By.css('mat-spinner'));
-      expect(spinner).toBeFalsy();
+    it('should render gateway data in cells', () => {
+      const cellTexts = fixture.debugElement
+        .queryAll(By.css('mat-cell'))
+        .map((cell) => cell.nativeElement.textContent.trim());
+
+      expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['Gateway Alpha', 'Gateway Beta']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['ONLINE', 'OFFLINE']));
+    });
+  });
+
+  describe('gateway pagination', () => {
+    it('should accept pagination inputs', () => {
+      fixture.componentRef.setInput('gatewayTotal', 83);
+      fixture.componentRef.setInput('gatewayPageIndex', 2);
+      fixture.componentRef.setInput('gatewayLimit', 25);
+      fixture.detectChanges();
+
+      expect(component.gatewayTotal()).toBe(83);
+      expect(component.gatewayPageIndex()).toBe(2);
+      expect(component.gatewayLimit()).toBe(25);
     });
 
-    it('should not render empty state', () => {
-      const emptyState = fixture.debugElement.query(By.css('.empty-state'));
-      expect(emptyState).toBeFalsy();
-    });
+    it('should emit gatewayPageChange when paginator emits page event', () => {
+      const spy = vi.fn();
+      component.gatewayPageChange.subscribe(spy);
 
-    it('should render header row', () => {
-      const headerRow = fixture.debugElement.query(By.css('mat-header-row'));
-      expect(headerRow).toBeTruthy();
-    });
+      const pageEvent = { pageIndex: 2, pageSize: 10, length: 83 };
+      fixture.debugElement.query(By.css('mat-paginator')).triggerEventHandler('page', pageEvent);
 
-    it('should render gateway ids', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const idCells = cells.filter(
-        (cell) =>
-          cell.nativeElement.textContent.trim() === 'gw-1' ||
-          cell.nativeElement.textContent.trim() === 'gw-2',
-      );
-      expect(idCells.length).toBe(2);
-    });
-
-    it('should render gateway names', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const nameCells = cells.filter(
-        (cell) =>
-          cell.nativeElement.textContent.includes('Gateway Alpha') ||
-          cell.nativeElement.textContent.includes('Gateway Beta'),
-      );
-      expect(nameCells.length).toBe(2);
-    });
-
-    it('should render gateway status in uppercase', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const statusCells = cells.filter(
-        (cell) =>
-          cell.nativeElement.textContent.includes('ONLINE') ||
-          cell.nativeElement.textContent.includes('OFFLINE'),
-      );
-      expect(statusCells.length).toBe(2);
+      expect(spy).toHaveBeenCalledWith(pageEvent);
     });
   });
 
   describe('displayedColumns', () => {
-    it('should not include commands column when canSendCommands is false', () => {
+    it('should exclude commands column by default and include it when canSendCommands is true', () => {
       expect(component['displayedColumns']()).toEqual(['id', 'tenantId', 'name', 'status']);
-    });
 
-    it('should include commands column when canSendCommands is true', () => {
       fixture.componentRef.setInput('canSendCommands', true);
       fixture.detectChanges();
 
@@ -193,11 +164,10 @@ describe('DashboardGatewayTableComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should render command buttons when canSendCommands is true', () => {
-      const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
-      const commandButtons = buttons.filter((btn) =>
-        btn.nativeElement.textContent.includes('terminal'),
-      );
+    it('should render command buttons for each gateway', () => {
+      const commandButtons = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .filter((btn) => btn.nativeElement.textContent.includes('terminal'));
       expect(commandButtons.length).toBe(2);
     });
 
@@ -205,64 +175,63 @@ describe('DashboardGatewayTableComponent', () => {
       const spy = vi.fn();
       component.commandRequested.subscribe(spy);
 
-      const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
-      const commandButton = buttons.find((btn) =>
-        btn.nativeElement.textContent.includes('terminal'),
-      );
+      const commandButton = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('terminal'));
       commandButton!.triggerEventHandler('click', { stopPropagation: vi.fn() });
-      fixture.detectChanges();
 
       expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
   });
 
-  describe('row interactions', () => {
+  describe('row expansion', () => {
     it('should emit expandedGatewayChange when row is clicked', () => {
       const spy = vi.fn();
       component.expandedGatewayChange.subscribe(spy);
 
-      const rows = fixture.debugElement.queryAll(By.css('mat-row'));
-      const dataRow = rows.find((row) => !row.nativeElement.classList.contains('detail-row'));
+      const dataRow = fixture.debugElement
+        .queryAll(By.css('mat-row'))
+        .find((row) => !row.nativeElement.classList.contains('detail-row'));
       dataRow!.triggerEventHandler('click');
-      fixture.detectChanges();
 
       expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
-  });
 
-  describe('expanded row', () => {
-    it('should not render expanded component when no gateway is expanded', () => {
-      const expanded = fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'));
-      expect(expanded).toBeFalsy();
-    });
+    it('should hide expanded component by default and show it when a gateway is expanded', () => {
+      expect(fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'))).toBeFalsy();
 
-    it('should render expanded component when gateway is expanded', () => {
       fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
-      const expanded = fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'));
-      expect(expanded).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'))).toBeTruthy();
     });
 
-    it('should add expanded class to expanded row', () => {
+    it('should apply correct CSS classes when expanded', () => {
       fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
-      const rows = fixture.debugElement.queryAll(By.css('mat-row'));
-      const dataRows = rows.filter((row) => !row.nativeElement.classList.contains('detail-row'));
+      const dataRows = fixture.debugElement
+        .queryAll(By.css('mat-row'))
+        .filter((row) => !row.nativeElement.classList.contains('detail-row'));
       expect(dataRows[0].nativeElement.classList.contains('expanded')).toBe(true);
       expect(dataRows[1].nativeElement.classList.contains('expanded')).toBe(false);
+
+      const visibleDetailRows = fixture.debugElement.queryAll(By.css('mat-row.detail-row.visible'));
+      expect(visibleDetailRows.length).toBe(1);
     });
 
-    it('should add visible class to detail row when expanded', () => {
+    it('should emit sensorPageChange from expanded component', () => {
       fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
-      const detailRows = fixture.debugElement.queryAll(By.css('mat-row.detail-row'));
-      const visibleRows = detailRows.filter((row) =>
-        row.nativeElement.classList.contains('visible'),
-      );
-      expect(visibleRows.length).toBe(1);
+      const spy = vi.fn();
+      component.sensorPageChange.subscribe(spy);
+
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-expanded'))
+        .triggerEventHandler('sensorPageChange', { pageIndex: 1, pageSize: 10, length: 42 });
+
+      expect(spy).toHaveBeenCalledWith({ pageIndex: 1, pageSize: 10, length: 42 });
     });
 
     it('should emit chartRequested from expanded component', () => {
@@ -272,79 +241,52 @@ describe('DashboardGatewayTableComponent', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
 
-      const expanded = fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'));
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-expanded'))
+        .triggerEventHandler('chartRequested', mockChartRequest);
 
-      const request: ChartRequest = {
-        sensor: mockSensors[0],
-        chartType: ChartType.HISTORIC,
-        timeInterval: null!,
-      };
-
-      expanded.triggerEventHandler('chartRequested', request);
-      fixture.detectChanges();
-
-      expect(spy).toHaveBeenCalledWith(request);
+      expect(spy).toHaveBeenCalledWith(mockChartRequest);
     });
   });
 
   describe('isExpanded', () => {
-    it('should return true when gateway matches expandedGateway', () => {
+    it('should return true only for the matching gateway and false otherwise', () => {
+      expect(component['isExpanded'](mockGateways[0])).toBe(false);
+
       fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
       expect(component['isExpanded'](mockGateways[0])).toBe(true);
-    });
-
-    it('should return false when gateway does not match', () => {
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
-      fixture.detectChanges();
-
       expect(component['isExpanded'](mockGateways[1])).toBe(false);
-    });
-
-    it('should return false when expandedGateway is null', () => {
-      fixture.componentRef.setInput('expandedGateway', null);
-      fixture.detectChanges();
-
-      expect(component['isExpanded'](mockGateways[0])).toBe(false);
     });
   });
 
   describe('inputs', () => {
-    it('should accept gateways', () => {
-      expect(component.gateways()).toEqual(mockGateways);
-    });
-
-    it('should accept sensors', () => {
-      expect(component.sensors()).toEqual(mockSensors);
-    });
-
-    it('should accept expandedGateway', () => {
+    it('should accept all inputs', () => {
       fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
-      fixture.detectChanges();
-
-      expect(component.expandedGateway()).toEqual(mockGateways[0]);
-    });
-
-    it('should accept canSendCommands', () => {
       fixture.componentRef.setInput('canSendCommands', true);
-      fixture.detectChanges();
-
-      expect(component.canSendCommands()).toBe(true);
-    });
-
-    it('should accept gatewayLoading', () => {
       fixture.componentRef.setInput('gatewayLoading', true);
-      fixture.detectChanges();
-
-      expect(component.gatewayLoading()).toBe(true);
-    });
-
-    it('should accept sensorLoading', () => {
       fixture.componentRef.setInput('sensorLoading', true);
+      fixture.componentRef.setInput('gatewayTotal', 100);
+      fixture.componentRef.setInput('gatewayPageIndex', 5);
+      fixture.componentRef.setInput('gatewayLimit', 25);
+      fixture.componentRef.setInput('sensorTotal', 50);
+      fixture.componentRef.setInput('sensorPageIndex', 3);
+      fixture.componentRef.setInput('sensorLimit', 5);
       fixture.detectChanges();
 
+      expect(component.gateways()).toEqual(mockGateways);
+      expect(component.sensors()).toEqual(mockSensors);
+      expect(component.expandedGateway()).toEqual(mockGateways[0]);
+      expect(component.canSendCommands()).toBe(true);
+      expect(component.gatewayLoading()).toBe(true);
       expect(component.sensorLoading()).toBe(true);
+      expect(component.gatewayTotal()).toBe(100);
+      expect(component.gatewayPageIndex()).toBe(5);
+      expect(component.gatewayLimit()).toBe(25);
+      expect(component.sensorTotal()).toBe(50);
+      expect(component.sensorPageIndex()).toBe(3);
+      expect(component.sensorLimit()).toBe(5);
     });
   });
 });

@@ -18,14 +18,22 @@ describe('DashboardPage', () => {
   let fixture: ComponentFixture<DashboardPage>;
 
   let gatewayListSignal: WritableSignal<Gateway[]>;
-  let sensorListSignal: WritableSignal<Sensor[]>;
+  let gatewayTotalSignal: WritableSignal<number>;
+  let gatewayPageIndexSignal: WritableSignal<number>;
+  let gatewayLimitSignal: WritableSignal<number>;
   let gatewayLoadingSignal: WritableSignal<boolean>;
+  let gatewayErrorSignal: WritableSignal<string | null>;
+
+  let sensorListSignal: WritableSignal<Sensor[]>;
+  let sensorTotalSignal: WritableSignal<number>;
+  let sensorPageIndexSignal: WritableSignal<number>;
+  let sensorLimitSignal: WritableSignal<number>;
   let sensorLoadingSignal: WritableSignal<boolean>;
+  let sensorErrorSignal: WritableSignal<string | null>;
+
   let expandedGatewaySignal: WritableSignal<Gateway | null>;
   let selectedChartSignal: WritableSignal<ChartRequest | null>;
   let canSendCommandsSignal: WritableSignal<boolean>;
-  let gatewayErrorSignal: WritableSignal<string | null>;
-  let sensorErrorSignal: WritableSignal<string | null>;
 
   const mockGateways: Gateway[] = [
     { id: 'gw-1', name: 'Gateway 1', tenantId: 'tenant-1', status: GatewayStatus.ONLINE },
@@ -41,7 +49,12 @@ describe('DashboardPage', () => {
     },
   ];
 
-  // ESLint whining
+  const mockChartRequest: ChartRequest = {
+    sensor: mockSensors[0],
+    chartType: ChartType.HISTORIC,
+    timeInterval: null!,
+  };
+
   let dashboardServiceMock: any;
   const dialogMock = { open: vi.fn() };
   const snackBarMock = { open: vi.fn() };
@@ -50,27 +63,46 @@ describe('DashboardPage', () => {
     vi.resetAllMocks();
 
     gatewayListSignal = signal<Gateway[]>([]);
-    sensorListSignal = signal<Sensor[]>([]);
+    gatewayTotalSignal = signal(0);
+    gatewayPageIndexSignal = signal(0);
+    gatewayLimitSignal = signal(10);
     gatewayLoadingSignal = signal(false);
+    gatewayErrorSignal = signal<string | null>(null);
+
+    sensorListSignal = signal<Sensor[]>([]);
+    sensorTotalSignal = signal(0);
+    sensorPageIndexSignal = signal(0);
+    sensorLimitSignal = signal(10);
     sensorLoadingSignal = signal(false);
+    sensorErrorSignal = signal<string | null>(null);
+
     expandedGatewaySignal = signal<Gateway | null>(null);
     selectedChartSignal = signal<ChartRequest | null>(null);
     canSendCommandsSignal = signal(false);
-    gatewayErrorSignal = signal<string | null>(null);
-    sensorErrorSignal = signal<string | null>(null);
 
     dashboardServiceMock = {
       gatewayList: gatewayListSignal.asReadonly(),
-      sensorList: sensorListSignal.asReadonly(),
+      gatewayTotal: gatewayTotalSignal.asReadonly(),
+      gatewayPageIndex: gatewayPageIndexSignal.asReadonly(),
+      gatewayLimit: gatewayLimitSignal.asReadonly(),
       gatewayLoading: gatewayLoadingSignal.asReadonly(),
+      gatewayError: gatewayErrorSignal.asReadonly(),
+
+      sensorList: sensorListSignal.asReadonly(),
+      sensorTotal: sensorTotalSignal.asReadonly(),
+      sensorPageIndex: sensorPageIndexSignal.asReadonly(),
+      sensorLimit: sensorLimitSignal.asReadonly(),
       sensorLoading: sensorLoadingSignal.asReadonly(),
+      sensorError: sensorErrorSignal.asReadonly(),
+
       expandedGateway: expandedGatewaySignal.asReadonly(),
       selectedChart: selectedChartSignal.asReadonly(),
       canSendCommands: canSendCommandsSignal.asReadonly(),
-      gatewayError: gatewayErrorSignal.asReadonly(),
-      sensorError: sensorErrorSignal.asReadonly(),
+
       loadDashboard: vi.fn(),
       toggleExpandedGateway: vi.fn(),
+      changeGatewayPage: vi.fn(),
+      changeSensorPage: vi.fn(),
       openChart: vi.fn(),
       closeChart: vi.fn(),
     };
@@ -90,58 +122,42 @@ describe('DashboardPage', () => {
     fixture.detectChanges();
   });
 
-  describe('initial state', () => {
-    it('should create', () => {
-      expect(component).toBeTruthy();
-    });
-
-    it('should call loadDashboard on init', () => {
-      expect(dashboardServiceMock.loadDashboard).toHaveBeenCalled();
-    });
-
-    it('should render the dashboard layout', () => {
-      const layout = fixture.debugElement.query(By.css('.dashboard-layout'));
-      expect(layout).toBeTruthy();
-    });
-
-    it('should render the left panel', () => {
-      const left = fixture.debugElement.query(By.css('.dashboard-left'));
-      expect(left).toBeTruthy();
-    });
-
-    it('should render the top right panel', () => {
-      const topRight = fixture.debugElement.query(By.css('.dashboard-top-right'));
-      expect(topRight).toBeTruthy();
-    });
-
-    it('should render the bottom right panel', () => {
-      const bottomRight = fixture.debugElement.query(By.css('.dashboard-bottom-right'));
-      expect(bottomRight).toBeTruthy();
-    });
+  it('should create and call loadDashboard on init', () => {
+    expect(component).toBeTruthy();
+    expect(dashboardServiceMock.loadDashboard).toHaveBeenCalled();
   });
 
-  describe('error state', () => {
-    it('should not render error banner by default', () => {
-      const errorBanner = fixture.debugElement.query(By.css('.error-banner'));
-      expect(errorBanner).toBeFalsy();
+  it('should render all dashboard layout panels', () => {
+    expect(fixture.debugElement.query(By.css('.dashboard-layout'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.dashboard-left'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.dashboard-top-right'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.dashboard-bottom-right'))).toBeTruthy();
+  });
+
+  describe('error', () => {
+    it('should not render error banner and error computed returns null by default', () => {
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeFalsy();
+      expect(component['error']()).toBeNull();
     });
 
-    it('should render error banner when gateway error exists', () => {
+    it('should show gateway error banner with icon and update computed', () => {
       gatewayErrorSignal.set('Gateway failed');
       fixture.detectChanges();
 
       const errorBanner = fixture.debugElement.query(By.css('.error-banner'));
       expect(errorBanner).toBeTruthy();
       expect(errorBanner.nativeElement.textContent).toContain('Gateway failed');
+      expect(errorBanner.query(By.css('mat-icon')).nativeElement.textContent).toContain('error');
+      expect(component['error']()).toBe('Gateway failed');
     });
 
-    it('should render error banner when sensor error exists', () => {
+    it('should show sensor error banner when no gateway error', () => {
       sensorErrorSignal.set('Sensor failed');
       fixture.detectChanges();
 
       const errorBanner = fixture.debugElement.query(By.css('.error-banner'));
-      expect(errorBanner).toBeTruthy();
       expect(errorBanner.nativeElement.textContent).toContain('Sensor failed');
+      expect(component['error']()).toBe('Sensor failed');
     });
 
     it('should prefer gateway error over sensor error', () => {
@@ -149,59 +165,32 @@ describe('DashboardPage', () => {
       sensorErrorSignal.set('Sensor failed');
       fixture.detectChanges();
 
-      const errorBanner = fixture.debugElement.query(By.css('.error-banner'));
-      expect(errorBanner.nativeElement.textContent).toContain('Gateway failed');
-    });
-
-    it('should render error icon', () => {
-      gatewayErrorSignal.set('Some error');
-      fixture.detectChanges();
-
-      const icon = fixture.debugElement.query(By.css('.error-banner mat-icon'));
-      expect(icon.nativeElement.textContent).toContain('error');
-    });
-  });
-
-  describe('error computed', () => {
-    it('should return null when no errors', () => {
-      expect(component['error']()).toBeNull();
-    });
-
-    it('should return gateway error when present', () => {
-      gatewayErrorSignal.set('Gateway failed');
-      expect(component['error']()).toBe('Gateway failed');
-    });
-
-    it('should return sensor error when no gateway error', () => {
-      sensorErrorSignal.set('Sensor failed');
-      expect(component['error']()).toBe('Sensor failed');
+      expect(
+        fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent,
+      ).toContain('Gateway failed');
     });
   });
 
   describe('canSendCommands is false (sensor table)', () => {
-    it('should render sensor table by default', () => {
-      const sensorTable = fixture.debugElement.query(By.css('app-dashboard-sensor-table'));
-      expect(sensorTable).toBeTruthy();
+    it('should show sensor table and hide gateway table', () => {
+      expect(fixture.debugElement.query(By.css('app-dashboard-sensor-table'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('app-dashboard-gateway-table'))).toBeFalsy();
     });
 
-    it('should not render gateway table', () => {
-      const gatewayTable = fixture.debugElement.query(By.css('app-dashboard-gateway-table'));
-      expect(gatewayTable).toBeFalsy();
+    it('should call changeSensorPage when sensor table emits pageChange', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-sensor-table'))
+        .triggerEventHandler('pageChange', { pageIndex: 3, pageSize: 10, length: 50 });
+
+      expect(dashboardServiceMock.changeSensorPage).toHaveBeenCalledWith(3, 10);
     });
 
-    it('should emit onChartOpen when sensor table emits chartRequested', () => {
-      const sensorTable = fixture.debugElement.query(By.css('app-dashboard-sensor-table'));
+    it('should call openChart when sensor table emits chartRequested', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-sensor-table'))
+        .triggerEventHandler('chartRequested', mockChartRequest);
 
-      const request: ChartRequest = {
-        sensor: mockSensors[0],
-        chartType: ChartType.HISTORIC,
-        timeInterval: null!,
-      };
-
-      sensorTable.triggerEventHandler('chartRequested', request);
-      fixture.detectChanges();
-
-      expect(dashboardServiceMock.openChart).toHaveBeenCalledWith(request);
+      expect(dashboardServiceMock.openChart).toHaveBeenCalledWith(mockChartRequest);
     });
   });
 
@@ -213,66 +202,68 @@ describe('DashboardPage', () => {
       fixture.detectChanges();
     });
 
-    it('should render gateway table', () => {
-      const gatewayTable = fixture.debugElement.query(By.css('app-dashboard-gateway-table'));
-      expect(gatewayTable).toBeTruthy();
+    it('should show gateway table and hide sensor table', () => {
+      expect(fixture.debugElement.query(By.css('app-dashboard-gateway-table'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('app-dashboard-sensor-table'))).toBeFalsy();
     });
 
-    it('should not render sensor table', () => {
-      const sensorTable = fixture.debugElement.query(By.css('app-dashboard-sensor-table'));
-      expect(sensorTable).toBeFalsy();
+    it('should call changeGatewayPage on gatewayPageChange', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-table'))
+        .triggerEventHandler('gatewayPageChange', { pageIndex: 2, pageSize: 25, length: 100 });
+
+      expect(dashboardServiceMock.changeGatewayPage).toHaveBeenCalledWith(2, 25);
     });
 
-    it('should call toggleExpandedGateway when expandedGatewayChange is emitted', () => {
-      const gatewayTable = fixture.debugElement.query(By.css('app-dashboard-gateway-table'));
+    it('should call changeSensorPage on sensorPageChange', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-table'))
+        .triggerEventHandler('sensorPageChange', { pageIndex: 1, pageSize: 10, length: 50 });
 
-      gatewayTable.triggerEventHandler('expandedGatewayChange', mockGateways[0]);
-      fixture.detectChanges();
+      expect(dashboardServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
+    });
+
+    it('should call toggleExpandedGateway on expandedGatewayChange', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-table'))
+        .triggerEventHandler('expandedGatewayChange', mockGateways[0]);
 
       expect(dashboardServiceMock.toggleExpandedGateway).toHaveBeenCalledWith(mockGateways[0]);
     });
 
-    it('should open snackbar when commandRequested is emitted', () => {
-      const gatewayTable = fixture.debugElement.query(By.css('app-dashboard-gateway-table'));
-
-      gatewayTable.triggerEventHandler('commandRequested', mockGateways[0]);
-      fixture.detectChanges();
+    it('should open snackbar on commandRequested', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-table'))
+        .triggerEventHandler('commandRequested', mockGateways[0]);
 
       expect(snackBarMock.open).toHaveBeenCalledWith('gw-1', 'Close', { duration: 2000 });
     });
 
-    it('should call openChart when gateway table emits chartRequested', () => {
-      const gatewayTable = fixture.debugElement.query(By.css('app-dashboard-gateway-table'));
+    it('should call openChart on chartRequested', () => {
+      fixture.debugElement
+        .query(By.css('app-dashboard-gateway-table'))
+        .triggerEventHandler('chartRequested', mockChartRequest);
 
-      const request: ChartRequest = {
-        sensor: mockSensors[0],
-        chartType: ChartType.HISTORIC,
-        timeInterval: null!,
-      };
-
-      gatewayTable.triggerEventHandler('chartRequested', request);
-      fixture.detectChanges();
-
-      expect(dashboardServiceMock.openChart).toHaveBeenCalledWith(request);
+      expect(dashboardServiceMock.openChart).toHaveBeenCalledWith(mockChartRequest);
     });
   });
 
   describe('selectedChart', () => {
     it('should not render chart container by default', () => {
-      const topRight = fixture.debugElement.query(By.css('.dashboard-top-right'));
-      expect(topRight.children.length).toBe(0);
+      expect(fixture.debugElement.query(By.css('.dashboard-top-right')).children.length).toBe(0);
     });
 
-    it('should enter selectedChart block when chart is selected', () => {
-      const request: ChartRequest = {
-        sensor: mockSensors[0],
-        chartType: ChartType.HISTORIC,
-        timeInterval: null!,
-      };
-      selectedChartSignal.set(request);
+    it('should reflect selectedChart signal when chart is selected', () => {
+      selectedChartSignal.set(mockChartRequest);
       fixture.detectChanges();
 
-      expect(component['selectedChart']()).toEqual(request);
+      expect(component['selectedChart']()).toEqual(mockChartRequest);
+    });
+
+    it('should call closeChart when onChartClosed is invoked', () => {
+      component['onChartClosed']();
+
+      expect(dashboardServiceMock.closeChart).toHaveBeenCalled();
     });
   });
 });

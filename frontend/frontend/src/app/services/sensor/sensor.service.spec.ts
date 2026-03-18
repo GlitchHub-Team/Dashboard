@@ -3,9 +3,12 @@ import { of, throwError } from 'rxjs';
 
 import { SensorService } from './sensor.service';
 import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
+import { SensorAdapter } from '../../adapters/sensor.adapter';
 import { Sensor } from '../../models/sensor/sensor.model';
+import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
+import { PaginatedResponse } from '../../models/paginated-response.model';
 import { ApiError } from '../../models/api-error.model';
 
 describe('SensorService', () => {
@@ -26,13 +29,31 @@ describe('SensorService', () => {
     },
   ];
 
+  const mockBackendResponse: PaginatedResponse<SensorBackend> = {
+    count: 2,
+    total: 10,
+    data: [
+      { SensorId: 's-1', GatewayId: 'gw-1', Name: 'Temperature', Profile: 'health thermometer' },
+      { SensorId: 's-2', GatewayId: 'gw-1', Name: 'Humidity', Profile: 'environmental sensing' },
+    ],
+  };
+
+  const mockAdaptedResponse: PaginatedResponse<Sensor> = { count: 2, total: 10, data: mockSensors };
+  const emptyBackend: PaginatedResponse<SensorBackend> = { count: 0, total: 0, data: [] };
+  const emptyAdapted: PaginatedResponse<Sensor> = { count: 0, total: 0, data: [] };
+
+  const mockNewBackend: SensorBackend = {
+    SensorId: 's-3',
+    GatewayId: 'gw-1',
+    Name: 'Pressure',
+    Profile: 'environmental sensing',
+  };
   const mockNewSensor: Sensor = {
     id: 's-3',
     gatewayId: 'gw-1',
     name: 'Pressure',
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
   };
-
   const mockConfig: SensorConfig = {
     gatewayId: 'gw-1',
     name: 'Pressure',
@@ -46,11 +67,31 @@ describe('SensorService', () => {
     deleteSensor: vi.fn(),
   };
 
+  const adapterMock = {
+    fromPaginatedDTO: vi.fn(),
+    fromDTO: vi.fn(),
+  };
+
+  type ListApiKey = 'getSensorListByGateway' | 'getSensorListByTenant';
+
+  function mockListSuccess(
+    apiKey: ListApiKey,
+    backendRes = mockBackendResponse,
+    adaptedRes = mockAdaptedResponse,
+  ): void {
+    sensorApiMock[apiKey].mockReturnValue(of(backendRes));
+    adapterMock.fromPaginatedDTO.mockReturnValue(adaptedRes);
+  }
+
   beforeEach(() => {
     vi.resetAllMocks();
 
     TestBed.configureTestingModule({
-      providers: [SensorService, { provide: SensorApiClientService, useValue: sensorApiMock }],
+      providers: [
+        SensorService,
+        { provide: SensorApiClientService, useValue: sensorApiMock },
+        { provide: SensorAdapter, useValue: adapterMock },
+      ],
     });
 
     service = TestBed.inject(SensorService);
@@ -60,338 +101,272 @@ describe('SensorService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('initial state', () => {
-    it('should have empty sensor list', () => {
-      expect(service.sensorList()).toEqual([]);
-    });
-
-    it('should not be loading', () => {
-      expect(service.loading()).toBe(false);
-    });
-
-    it('should have no error', () => {
-      expect(service.error()).toBeNull();
-    });
+  it('should have correct initial state', () => {
+    expect(service.sensorList()).toEqual([]);
+    expect(service.loading()).toBe(false);
+    expect(service.error()).toBeNull();
+    expect(service.pageIndex()).toBe(0);
+    expect(service.limit()).toBe(10);
+    expect(service.total()).toBe(0);
   });
 
-  describe('getSensorsByGateway', () => {
-    it('should call api with gatewayId', () => {
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
+  describe.each([
+    {
+      label: 'getSensorsByGateway',
+      id: 'gw-1',
+      apiKey: 'getSensorListByGateway' as ListApiKey,
+      invoke: (s: SensorService, page: number, limit: number) =>
+        s.getSensorsByGateway('gw-1', page, limit),
+    },
+    {
+      label: 'getSensorsByTenant',
+      id: 'tenant-1',
+      apiKey: 'getSensorListByTenant' as ListApiKey,
+      invoke: (s: SensorService, page: number, limit: number) =>
+        s.getSensorsByTenant('tenant-1', page, limit),
+    },
+  ])('$label', ({ id, apiKey, invoke }) => {
+    it('should call api, map through adapter, and populate state on success', () => {
+      mockListSuccess(apiKey);
+      invoke(service, 0, 10);
 
-      service.getSensorsByGateway('gw-1');
-
-      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1');
-    });
-
-    it('should populate sensor list on success', () => {
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
-
-      service.getSensorsByGateway('gw-1');
-
+      expect(sensorApiMock[apiKey]).toHaveBeenCalledWith(id, 0, 10);
+      expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
       expect(service.sensorList()).toEqual(mockSensors);
+      expect(service.total()).toBe(10);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
+    });
+
+    it('should update pagination signals', () => {
+      mockListSuccess(apiKey);
+      invoke(service, 2, 25);
+
+      expect(service.pageIndex()).toBe(2);
+      expect(service.limit()).toBe(25);
     });
 
     it('should clear previous sensor list before fetching', () => {
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
-      service.getSensorsByGateway('gw-1');
+      mockListSuccess(apiKey);
+      invoke(service, 0, 10);
 
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of([]));
-      service.getSensorsByGateway('gw-2');
+      mockListSuccess(apiKey, emptyBackend, emptyAdapted);
+      invoke(service, 0, 10);
 
       expect(service.sensorList()).toEqual([]);
     });
 
-    it('should set error on failure with message', () => {
-      const apiError: ApiError = { status: 500, message: 'Gateway not found' };
-      sensorApiMock.getSensorListByGateway.mockReturnValue(throwError(() => apiError));
+    it('should set error on failure and clear it on next success', () => {
+      sensorApiMock[apiKey].mockReturnValue(
+        throwError(() => ({ status: 500, message: 'Error' }) as ApiError),
+      );
+      invoke(service, 0, 10);
 
-      service.getSensorsByGateway('gw-1');
-
-      expect(service.error()).toBe('Gateway not found');
+      expect(service.error()).toBe('Error');
       expect(service.loading()).toBe(false);
-      expect(service.sensorList()).toEqual([]);
+
+      mockListSuccess(apiKey);
+      invoke(service, 0, 10);
+
+      expect(service.error()).toBeNull();
     });
 
-    it('should set default error message when error has no message', () => {
-      const apiError: ApiError = { status: 500 } as ApiError;
-      sensorApiMock.getSensorListByGateway.mockReturnValue(throwError(() => apiError));
-
-      service.getSensorsByGateway('gw-1');
+    it('should use default error message when error has no message', () => {
+      sensorApiMock[apiKey].mockReturnValue(throwError(() => ({ status: 500 }) as ApiError));
+      invoke(service, 0, 10);
 
       expect(service.error()).toBe('Failed to load sensors');
-    });
-
-    it('should clear previous error before fetching', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.getSensorListByGateway.mockReturnValue(throwError(() => apiError));
-      service.getSensorsByGateway('gw-1');
-      expect(service.error()).toBe('Error');
-
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
-      service.getSensorsByGateway('gw-1');
-      expect(service.error()).toBeNull();
-    });
-  });
-
-  describe('getSensorsByTenant', () => {
-    it('should call api with tenantId', () => {
-      sensorApiMock.getSensorListByTenant.mockReturnValue(of(mockSensors));
-
-      service.getSensorsByTenant('tenant-1');
-
-      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1');
-    });
-
-    it('should populate sensor list on success', () => {
-      sensorApiMock.getSensorListByTenant.mockReturnValue(of(mockSensors));
-
-      service.getSensorsByTenant('tenant-1');
-
-      expect(service.sensorList()).toEqual(mockSensors);
-      expect(service.loading()).toBe(false);
-      expect(service.error()).toBeNull();
-    });
-
-    it('should clear previous sensor list before fetching', () => {
-      sensorApiMock.getSensorListByTenant.mockReturnValue(of(mockSensors));
-      service.getSensorsByTenant('tenant-1');
-
-      sensorApiMock.getSensorListByTenant.mockReturnValue(of([]));
-      service.getSensorsByTenant('tenant-1');
-
-      expect(service.sensorList()).toEqual([]);
-    });
-
-    it('should set error on failure with message', () => {
-      const apiError: ApiError = { status: 500, message: 'Tenant not found' };
-      sensorApiMock.getSensorListByTenant.mockReturnValue(throwError(() => apiError));
-
-      service.getSensorsByTenant('tenant-1');
-
-      expect(service.error()).toBe('Tenant not found');
-      expect(service.loading()).toBe(false);
-      expect(service.sensorList()).toEqual([]);
-    });
-
-    it('should set default error message when error has no message', () => {
-      const apiError: ApiError = { status: 500 } as ApiError;
-      sensorApiMock.getSensorListByTenant.mockReturnValue(throwError(() => apiError));
-
-      service.getSensorsByTenant('tenant-1');
-
-      expect(service.error()).toBe('Failed to load sensors');
-    });
-
-    it('should clear previous error before fetching', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.getSensorListByTenant.mockReturnValue(throwError(() => apiError));
-      service.getSensorsByTenant('tenant-1');
-      expect(service.error()).toBe('Error');
-
-      sensorApiMock.getSensorListByTenant.mockReturnValue(of(mockSensors));
-      service.getSensorsByTenant('tenant-1');
-      expect(service.error()).toBeNull();
     });
   });
 
   describe('addNewSensor', () => {
-    it('should call api with sensor config', () => {
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
+    it('should call api, map through adapter, return adapted sensor, and set loading to false', () => {
+      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
+      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
 
-      service.addNewSensor(mockConfig).subscribe();
+      let result: Sensor | undefined;
+      service.addNewSensor(mockConfig).subscribe((s) => (result = s));
 
       expect(sensorApiMock.addNewSensor).toHaveBeenCalledWith(mockConfig);
-    });
-
-    it('should append new sensor to list on success', () => {
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
-      service.getSensorsByGateway('gw-1');
-
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
-      service.addNewSensor(mockConfig).subscribe();
-
-      expect(service.sensorList()).toEqual([...mockSensors, mockNewSensor]);
-      expect(service.loading()).toBe(false);
-      expect(service.error()).toBeNull();
-    });
-
-    it('should set loading to false after success', () => {
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
-
-      service.addNewSensor(mockConfig).subscribe();
-
+      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
+      expect(result).toEqual(mockNewSensor);
       expect(service.loading()).toBe(false);
     });
 
-    it('should set error on failure with message', () => {
-      const apiError: ApiError = { status: 500, message: 'Duplicate sensor' };
-      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => apiError));
+    it('should refetch current page after success (gateway context)', () => {
+      mockListSuccess('getSensorListByGateway');
+      service.getSensorsByGateway('gw-1', 0, 10);
+      sensorApiMock.getSensorListByGateway.mockClear();
+      mockListSuccess('getSensorListByGateway');
 
+      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
+      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
       service.addNewSensor(mockConfig).subscribe();
+
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 0, 10);
+    });
+
+    it('should refetch current page after success (tenant context)', () => {
+      mockListSuccess('getSensorListByTenant');
+      service.getSensorsByTenant('tenant-1', 0, 10);
+      sensorApiMock.getSensorListByTenant.mockClear();
+      mockListSuccess('getSensorListByTenant');
+
+      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
+      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
+      service.addNewSensor(mockConfig).subscribe();
+
+      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 0, 10);
+    });
+
+    it('should set error on failure, not refetch, and complete without emitting', () => {
+      mockListSuccess('getSensorListByGateway');
+      service.getSensorsByGateway('gw-1', 0, 10);
+      sensorApiMock.getSensorListByGateway.mockClear();
+
+      sensorApiMock.addNewSensor.mockReturnValue(
+        throwError(() => ({ status: 500, message: 'Duplicate sensor' }) as ApiError),
+      );
+      const errorSpy = vi.fn();
+      const completeSpy = vi.fn();
+      service.addNewSensor(mockConfig).subscribe({ error: errorSpy, complete: completeSpy });
 
       expect(service.error()).toBe('Duplicate sensor');
       expect(service.loading()).toBe(false);
+      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
+      expect(errorSpy).not.toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalled();
     });
 
-    it('should set default error message when error has no message', () => {
-      const apiError: ApiError = { status: 500 } as ApiError;
-      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => apiError));
-
+    it('should use default error message when error has no message', () => {
+      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => ({ status: 500 }) as ApiError));
       service.addNewSensor(mockConfig).subscribe();
 
       expect(service.error()).toBe('Failed to add sensor');
     });
 
     it('should clear previous error before adding', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => apiError));
+      sensorApiMock.addNewSensor.mockReturnValue(
+        throwError(() => ({ status: 500, message: 'Error' })),
+      );
       service.addNewSensor(mockConfig).subscribe();
-      expect(service.error()).toBe('Error');
 
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
+      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
+      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
       service.addNewSensor(mockConfig).subscribe();
+
       expect(service.error()).toBeNull();
-    });
-
-    it('should return the new sensor', () => {
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
-
-      let result: Sensor | undefined;
-      service.addNewSensor(mockConfig).subscribe((sensor) => {
-        result = sensor;
-      });
-
-      expect(result).toEqual(mockNewSensor);
-    });
-
-    it('should complete without emitting on error', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => apiError));
-
-      const nextSpy = vi.fn();
-      const errorSpy = vi.fn();
-      const completeSpy = vi.fn();
-
-      service.addNewSensor(mockConfig).subscribe({
-        next: nextSpy,
-        error: errorSpy,
-        complete: completeSpy,
-      });
-
-      expect(nextSpy).not.toHaveBeenCalled();
-      expect(errorSpy).not.toHaveBeenCalled();
-      expect(completeSpy).toHaveBeenCalled();
     });
   });
 
   describe('deleteSensor', () => {
     beforeEach(() => {
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
-      service.getSensorsByGateway('gw-1');
+      mockListSuccess('getSensorListByGateway');
+      service.getSensorsByGateway('gw-1', 0, 10);
     });
 
-    it('should call api with sensor id', () => {
+    it('should call api, refetch current page, and set loading to false on success', () => {
+      sensorApiMock.getSensorListByGateway.mockClear();
       sensorApiMock.deleteSensor.mockReturnValue(of(undefined));
+      mockListSuccess('getSensorListByGateway');
 
       service.deleteSensor('s-1').subscribe();
 
       expect(sensorApiMock.deleteSensor).toHaveBeenCalledWith('s-1');
-    });
-
-    it('should remove sensor from list on success', () => {
-      sensorApiMock.deleteSensor.mockReturnValue(of(undefined));
-
-      service.deleteSensor('s-1').subscribe();
-
-      expect(service.sensorList()).toEqual([mockSensors[1]]);
-      expect(service.loading()).toBe(false);
-      expect(service.error()).toBeNull();
-    });
-
-    it('should set loading to false after success', () => {
-      sensorApiMock.deleteSensor.mockReturnValue(of(undefined));
-
-      service.deleteSensor('s-1').subscribe();
-
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 0, 10);
       expect(service.loading()).toBe(false);
     });
 
-    it('should set error on failure with message', () => {
-      const apiError: ApiError = { status: 500, message: 'Sensor in use' };
-      sensorApiMock.deleteSensor.mockReturnValue(throwError(() => apiError));
-
-      service.deleteSensor('s-1').subscribe();
+    it('should set error on failure, not refetch, and complete without emitting', () => {
+      sensorApiMock.getSensorListByGateway.mockClear();
+      sensorApiMock.deleteSensor.mockReturnValue(
+        throwError(() => ({ status: 500, message: 'Sensor in use' }) as ApiError),
+      );
+      const errorSpy = vi.fn();
+      const completeSpy = vi.fn();
+      service.deleteSensor('s-1').subscribe({ error: errorSpy, complete: completeSpy });
 
       expect(service.error()).toBe('Sensor in use');
       expect(service.loading()).toBe(false);
+      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
+      expect(errorSpy).not.toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalled();
     });
 
-    it('should set default error message when error has no message', () => {
-      const apiError: ApiError = {} as ApiError;
-      sensorApiMock.deleteSensor.mockReturnValue(throwError(() => apiError));
-
+    it('should use default error message when error has no message', () => {
+      sensorApiMock.deleteSensor.mockReturnValue(throwError(() => ({}) as ApiError));
       service.deleteSensor('s-1').subscribe();
 
       expect(service.error()).toBe('Failed to delete sensor');
     });
 
-    it('should not remove sensor from list on failure', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.deleteSensor.mockReturnValue(throwError(() => apiError));
-
-      service.deleteSensor('s-1').subscribe();
-
-      expect(service.sensorList()).toEqual(mockSensors);
-    });
-
     it('should clear previous error before deleting', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.deleteSensor.mockReturnValue(throwError(() => apiError));
+      sensorApiMock.deleteSensor.mockReturnValue(
+        throwError(() => ({ status: 500, message: 'Error' })),
+      );
       service.deleteSensor('s-1').subscribe();
-      expect(service.error()).toBe('Error');
 
       sensorApiMock.deleteSensor.mockReturnValue(of(undefined));
+      mockListSuccess('getSensorListByGateway');
       service.deleteSensor('s-1').subscribe();
+
       expect(service.error()).toBeNull();
     });
+  });
 
-    it('should complete without emitting on error', () => {
-      const apiError: ApiError = { status: 500, message: 'Error' };
-      sensorApiMock.deleteSensor.mockReturnValue(throwError(() => apiError));
+  describe('changePage', () => {
+    it('should refetch by gateway when gateway context is active', () => {
+      mockListSuccess('getSensorListByGateway');
+      service.getSensorsByGateway('gw-1', 0, 10);
+      sensorApiMock.getSensorListByGateway.mockClear();
+      mockListSuccess('getSensorListByGateway');
 
-      const nextSpy = vi.fn();
-      const errorSpy = vi.fn();
-      const completeSpy = vi.fn();
+      service.changePage(2, 20);
 
-      service.deleteSensor('s-1').subscribe({
-        next: nextSpy,
-        error: errorSpy,
-        complete: completeSpy,
-      });
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 2, 20);
+    });
 
-      expect(nextSpy).not.toHaveBeenCalled();
-      expect(errorSpy).not.toHaveBeenCalled();
-      expect(completeSpy).toHaveBeenCalled();
+    it('should refetch by tenant when tenant context is active', () => {
+      mockListSuccess('getSensorListByTenant');
+      service.getSensorsByTenant('tenant-1', 0, 10);
+      sensorApiMock.getSensorListByTenant.mockClear();
+      mockListSuccess('getSensorListByTenant');
+
+      service.changePage(3, 15);
+
+      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 3, 15);
+    });
+
+    it('should do nothing if no context is set', () => {
+      service.changePage(1, 10);
+
+      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
+      expect(sensorApiMock.getSensorListByTenant).not.toHaveBeenCalled();
     });
   });
 
   describe('clearSensors', () => {
-    it('should clear the sensor list', () => {
-      sensorApiMock.getSensorListByGateway.mockReturnValue(of(mockSensors));
-      service.getSensorsByGateway('gw-1');
-      expect(service.sensorList()).toEqual(mockSensors);
+    it('should reset all state and clear context so changePage does nothing', () => {
+      mockListSuccess('getSensorListByGateway');
+      service.getSensorsByGateway('gw-1', 2, 20);
+      sensorApiMock.getSensorListByGateway.mockClear();
 
       service.clearSensors();
 
       expect(service.sensorList()).toEqual([]);
+      expect(service.total()).toBe(0);
+      expect(service.pageIndex()).toBe(0);
+      expect(service.error()).toBeNull();
+
+      service.changePage(1, 10);
+      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
     });
 
-    it('should clear even when list is already empty', () => {
+    it('should clear even when state is already empty', () => {
       service.clearSensors();
 
       expect(service.sensorList()).toEqual([]);
+      expect(service.total()).toBe(0);
     });
   });
 });

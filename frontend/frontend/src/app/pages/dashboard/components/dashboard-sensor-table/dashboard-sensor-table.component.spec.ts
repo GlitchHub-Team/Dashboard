@@ -2,12 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { By } from '@angular/platform-browser';
+import { PageEvent } from '@angular/material/paginator';
 
 import { DashboardSensorTableComponent } from './dashboard-sensor-table.component';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../../../models/chart-type.enum';
-import { ChartRequest } from '../../../../models/chart-request.model';
 
 describe('DashboardSensorTableComponent', () => {
   let component: DashboardSensorTableComponent;
@@ -38,15 +38,13 @@ describe('DashboardSensorTableComponent', () => {
     component = fixture.componentInstance;
 
     fixture.componentRef.setInput('sensors', mockSensors);
+    fixture.componentRef.setInput('total', mockSensors.length);
     fixture.detectChanges();
   });
 
   describe('initial state', () => {
-    it('should create', () => {
+    it('should create with correct setup', () => {
       expect(component).toBeTruthy();
-    });
-
-    it('should have correct displayed columns', () => {
       expect(component['displayedColumns']).toEqual([
         'id',
         'gatewayId',
@@ -54,156 +52,115 @@ describe('DashboardSensorTableComponent', () => {
         'profile',
         'actions',
       ]);
+      expect(component['ChartType']).toBe(ChartType);
     });
 
-    it('should expose ChartType enum', () => {
-      expect(component['ChartType']).toBe(ChartType);
+    it('should default pagination inputs', () => {
+      const fresh = TestBed.createComponent(DashboardSensorTableComponent);
+      fresh.componentRef.setInput('sensors', []);
+      fresh.detectChanges();
+
+      expect(fresh.componentInstance.total()).toBe(0);
+      expect(fresh.componentInstance.pageIndex()).toBe(0);
+      expect(fresh.componentInstance.limit()).toBe(10);
+      expect(fresh.componentInstance.loading()).toBeUndefined();
     });
   });
 
   describe('loading state', () => {
-    it('should render spinner when loading', () => {
+    beforeEach(() => {
       fixture.componentRef.setInput('loading', true);
       fixture.detectChanges();
-
-      const spinner = fixture.debugElement.query(By.css('mat-spinner'));
-      expect(spinner).toBeTruthy();
     });
 
-    it('should not render table when loading', () => {
-      fixture.componentRef.setInput('loading', true);
-      fixture.detectChanges();
-
-      const table = fixture.debugElement.query(By.css('mat-table'));
-      expect(table).toBeFalsy();
-    });
-
-    it('should not render empty state when loading', () => {
-      fixture.componentRef.setInput('loading', true);
-      fixture.detectChanges();
-
-      const emptyState = fixture.debugElement.query(By.css('.empty-state'));
-      expect(emptyState).toBeFalsy();
+    it('should render only spinner when loading', () => {
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeFalsy();
     });
   });
 
   describe('empty state', () => {
     beforeEach(() => {
       fixture.componentRef.setInput('sensors', []);
+      fixture.componentRef.setInput('total', 0);
       fixture.componentRef.setInput('loading', false);
       fixture.detectChanges();
     });
 
-    it('should render empty state when no sensors', () => {
+    it('should render only empty state', () => {
       const emptyState = fixture.debugElement.query(By.css('.empty-state'));
       expect(emptyState).toBeTruthy();
-    });
-
-    it('should display no sensors message', () => {
-      const emptyState = fixture.debugElement.query(By.css('.empty-state p'));
-      expect(emptyState.nativeElement.textContent).toContain('No sensors available');
-    });
-
-    it('should render router icon', () => {
-      const icon = fixture.debugElement.query(By.css('.empty-state mat-icon'));
-      expect(icon.nativeElement.textContent).toContain('router');
-    });
-
-    it('should not render table', () => {
-      const table = fixture.debugElement.query(By.css('mat-table'));
-      expect(table).toBeFalsy();
-    });
-
-    it('should not render spinner', () => {
-      const spinner = fixture.debugElement.query(By.css('mat-spinner'));
-      expect(spinner).toBeFalsy();
+      expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain(
+        'No sensors available',
+      );
+      expect(emptyState.query(By.css('mat-icon')).nativeElement.textContent).toContain('router');
+      expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeFalsy();
     });
   });
 
   describe('table with data', () => {
-    it('should render the table', () => {
-      const table = fixture.debugElement.query(By.css('mat-table'));
-      expect(table).toBeTruthy();
+    it('should render table with header and correct rows', () => {
+      expect(fixture.debugElement.query(By.css('mat-table'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('mat-header-row'))).toBeTruthy();
+      expect(fixture.debugElement.queryAll(By.css('mat-row')).length).toBe(2);
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
     });
 
-    it('should not render spinner', () => {
-      const spinner = fixture.debugElement.query(By.css('mat-spinner'));
-      expect(spinner).toBeFalsy();
+    it('should render sensor data in cells', () => {
+      const cellTexts = fixture.debugElement
+        .queryAll(By.css('mat-cell'))
+        .map((cell) => cell.nativeElement.textContent.trim());
+
+      expect(cellTexts).toEqual(expect.arrayContaining(['1', '2']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['Temperature', 'Humidity']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
     });
 
-    it('should not render empty state', () => {
-      const emptyState = fixture.debugElement.query(By.css('.empty-state'));
-      expect(emptyState).toBeFalsy();
+    it('should render paginator', () => {
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeTruthy();
+    });
+  });
+
+  describe('pagination', () => {
+    it('should accept pagination inputs', () => {
+      fixture.componentRef.setInput('total', 50);
+      fixture.componentRef.setInput('pageIndex', 3);
+      fixture.componentRef.setInput('limit', 25);
+      fixture.detectChanges();
+
+      expect(component.total()).toBe(50);
+      expect(component.pageIndex()).toBe(3);
+      expect(component.limit()).toBe(25);
     });
 
-    it('should render correct number of rows', () => {
-      const rows = fixture.debugElement.queryAll(By.css('mat-row'));
-      expect(rows.length).toBe(2);
-    });
+    it('should emit pageChange when paginator emits page event', () => {
+      const spy = vi.fn();
+      component.pageChange.subscribe(spy);
 
-    it('should render header row', () => {
-      const headerRow = fixture.debugElement.query(By.css('mat-header-row'));
-      expect(headerRow).toBeTruthy();
-    });
+      const paginator = fixture.debugElement.query(By.css('mat-paginator'));
+      const event: PageEvent = { pageIndex: 2, pageSize: 10, length: 50 };
 
-    it('should render sensor ids', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const idCells = cells.filter(
-        (cell) =>
-          cell.nativeElement.textContent.trim() === '1' ||
-          cell.nativeElement.textContent.trim() === '2',
-      );
-      expect(idCells.length).toBeGreaterThan(0);
-    });
+      paginator.triggerEventHandler('page', event);
 
-    it('should render sensor names', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const nameCells = cells.filter(
-        (cell) =>
-          cell.nativeElement.textContent.includes('Temperature') ||
-          cell.nativeElement.textContent.includes('Humidity'),
-      );
-      expect(nameCells.length).toBe(2);
-    });
-
-    it('should render sensor gateway ids', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const gatewayCells = cells.filter(
-        (cell) =>
-          cell.nativeElement.textContent.includes('gw-1') ||
-          cell.nativeElement.textContent.includes('gw-2'),
-      );
-      expect(gatewayCells.length).toBe(2);
-    });
-
-    it('should render profile with titlecase', () => {
-      const cells = fixture.debugElement.queryAll(By.css('mat-cell'));
-      const profileCells = cells.filter((cell) => {
-        const text = cell.nativeElement.textContent.trim();
-        return (
-          text.charAt(0) === text.charAt(0).toUpperCase() &&
-          text.length > 3 &&
-          !text.includes('gw-')
-        );
-      });
-      expect(profileCells.length).toBeGreaterThan(0);
+      expect(spy).toHaveBeenCalledWith(event);
     });
   });
 
   describe('chart actions', () => {
-    it('should render historic chart button for each sensor', () => {
+    it('should render chart buttons for each sensor', () => {
       const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
       const historicButtons = buttons.filter((btn) =>
         btn.nativeElement.textContent.includes('query_stats'),
       );
-      expect(historicButtons.length).toBe(2);
-    });
-
-    it('should render realtime chart button for each sensor', () => {
-      const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
       const realtimeButtons = buttons.filter((btn) =>
         btn.nativeElement.textContent.includes('ssid_chart'),
       );
+      expect(historicButtons.length).toBe(2);
       expect(realtimeButtons.length).toBe(2);
     });
 
@@ -211,31 +168,26 @@ describe('DashboardSensorTableComponent', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
 
-      const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
-      const historicButton = buttons.find((btn) =>
-        btn.nativeElement.textContent.includes('query_stats'),
-      );
+      const historicButton = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('query_stats'));
       historicButton!.triggerEventHandler('click');
-      fixture.detectChanges();
 
-      const expected: ChartRequest = {
+      expect(spy).toHaveBeenCalledWith({
         sensor: mockSensors[0],
         chartType: ChartType.HISTORIC,
         timeInterval: null!,
-      };
-      expect(spy).toHaveBeenCalledWith(expected);
+      });
     });
 
     it('should emit chartRequested with REALTIME when realtime button is clicked', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
 
-      const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
-      const realtimeButton = buttons.find((btn) =>
-        btn.nativeElement.textContent.includes('ssid_chart'),
-      );
+      const realtimeButton = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('ssid_chart'));
       realtimeButton!.triggerEventHandler('click');
-      fixture.detectChanges();
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -247,19 +199,12 @@ describe('DashboardSensorTableComponent', () => {
   });
 
   describe('inputs', () => {
-    it('should accept sensors', () => {
+    it('should accept all standard inputs', () => {
       expect(component.sensors()).toEqual(mockSensors);
-    });
 
-    it('should accept empty sensors array', () => {
       fixture.componentRef.setInput('sensors', []);
       fixture.detectChanges();
-
       expect(component.sensors()).toEqual([]);
-    });
-
-    it('should default loading to undefined', () => {
-      expect(component.loading()).toBeUndefined();
     });
 
     it('should accept loading input', () => {

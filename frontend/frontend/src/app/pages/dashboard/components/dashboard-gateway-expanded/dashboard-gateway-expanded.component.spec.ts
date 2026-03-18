@@ -1,10 +1,8 @@
-// dashboard-gateway-expanded.component.spec.ts
-
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { PageEvent } from '@angular/material/paginator';
 
 import { DashboardGatewayExpandedComponent } from './dashboard-gateway-expanded.component';
-import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { GatewayStatus } from '../../../../models/gateway/gateway-status.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
@@ -16,7 +14,6 @@ describe('DashboardGatewayExpandedComponent', () => {
   let component: DashboardGatewayExpandedComponent;
   let fixture: ComponentFixture<DashboardGatewayExpandedComponent>;
 
-  // Adjust to match your actual models
   const mockGateway: Gateway = {
     id: 'gw-1',
     tenantId: 'tenant-1',
@@ -42,38 +39,39 @@ describe('DashboardGatewayExpandedComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardGatewayExpandedComponent],
-    })
-      .overrideComponent(DashboardGatewayExpandedComponent, {
-        remove: { imports: [DashboardSensorTableComponent] },
-        add: { schemas: [CUSTOM_ELEMENTS_SCHEMA] },
-      })
-      .compileComponents();
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardGatewayExpandedComponent);
     component = fixture.componentInstance;
 
-    // Required inputs
     fixture.componentRef.setInput('sensors', mockSensors);
     fixture.componentRef.setInput('gateway', mockGateway);
+    fixture.componentRef.setInput('sensorTotal', mockSensors.length);
     fixture.detectChanges();
   });
 
   describe('initial state', () => {
-    it('should create', () => {
+    it('should create with correct defaults', () => {
       expect(component).toBeTruthy();
+      expect(component.loading()).toBeUndefined();
     });
 
-    it('should default loading to undefined', () => {
-      expect(component.loading()).toBeUndefined();
+    it('should default pagination inputs', () => {
+      const fresh = TestBed.createComponent(DashboardGatewayExpandedComponent);
+      fresh.componentRef.setInput('sensors', []);
+      fresh.componentRef.setInput('gateway', mockGateway);
+      fresh.detectChanges();
+
+      expect(fresh.componentInstance.sensorTotal()).toBe(0);
+      expect(fresh.componentInstance.sensorPageIndex()).toBe(0);
+      expect(fresh.componentInstance.sensorLimit()).toBe(10);
     });
   });
 
   describe('inputs', () => {
-    it('should accept sensors', () => {
+    it('should accept all standard inputs', () => {
       expect(component.sensors()).toEqual(mockSensors);
-    });
-
-    it('should accept gateway', () => {
       expect(component.gateway()).toEqual(mockGateway);
     });
 
@@ -83,6 +81,17 @@ describe('DashboardGatewayExpandedComponent', () => {
 
       expect(component.loading()).toBe(true);
     });
+
+    it('should accept all pagination inputs', () => {
+      fixture.componentRef.setInput('sensorTotal', 50);
+      fixture.componentRef.setInput('sensorPageIndex', 3);
+      fixture.componentRef.setInput('sensorLimit', 5);
+      fixture.detectChanges();
+
+      expect(component.sensorTotal()).toBe(50);
+      expect(component.sensorPageIndex()).toBe(3);
+      expect(component.sensorLimit()).toBe(5);
+    });
   });
 
   describe('outputs', () => {
@@ -90,14 +99,36 @@ describe('DashboardGatewayExpandedComponent', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
 
-      const mockRequest: ChartRequest = {
+      const request: ChartRequest = {
         sensor: mockSensors[0],
         chartType: ChartType.HISTORIC,
         timeInterval: null!,
       };
-      component.chartRequested.emit(mockRequest);
+      component.chartRequested.emit(request);
 
-      expect(spy).toHaveBeenCalledWith(mockRequest);
+      expect(spy).toHaveBeenCalledWith(request);
+    });
+
+    it('should emit sensorPageChange', () => {
+      const spy = vi.fn();
+      component.sensorPageChange.subscribe(spy);
+
+      const event: PageEvent = { pageIndex: 2, pageSize: 10, length: 50 };
+      component.sensorPageChange.emit(event);
+
+      expect(spy).toHaveBeenCalledWith(event);
+    });
+  });
+
+  describe('template', () => {
+    it('should render gateway id in heading', () => {
+      const heading = fixture.nativeElement.querySelector('h3');
+      expect(heading.textContent).toContain('gw-1');
+    });
+
+    it('should render sensor table', () => {
+      const sensorTable = fixture.nativeElement.querySelector('app-dashboard-sensor-table');
+      expect(sensorTable).toBeTruthy();
     });
   });
 });
