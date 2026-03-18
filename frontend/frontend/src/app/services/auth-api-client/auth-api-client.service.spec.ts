@@ -3,11 +3,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { AuthApiClientService } from './auth-api-client.service';
-import { LoginRequest } from '../../models/login-request.model';
-import { AuthResponse } from '../../models/auth-response.model';
+import { LoginRequest } from '../../models/auth/login-request.model';
+import { AuthResponse } from '../../models/auth/auth-response.model';
 import { User } from '../../models/user.model';
 import { UserRole } from '../../models/user-role.enum';
-import { PasswordChange } from '../../models/password-change.model';
+import { PasswordChange } from '../../models/auth/password-change.model';
 import { environment } from '../../../environments/environment';
 
 describe('AuthApiClientService', () => {

@@ -4,7 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 
 import { LoginFormComponent } from './login-form.component';
-import { LoginRequest } from '../../../../models/login-request.model';
+import { LoginRequest } from '../../../../models/auth/login-request.model';
 
 describe('LoginFormComponent', () => {
   let component: LoginFormComponent;

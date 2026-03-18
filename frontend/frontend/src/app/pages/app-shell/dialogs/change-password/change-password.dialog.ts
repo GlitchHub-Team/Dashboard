@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
-import { PasswordChange } from '../../../../models/password-change.model';
+import { PasswordChange } from '../../../../models/auth/password-change.model';
 import { TokenStorageService } from '../../../../services/token-storage/token-storage.service';
 
 @Component({

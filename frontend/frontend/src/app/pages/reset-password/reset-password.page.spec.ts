@@ -6,7 +6,7 @@ import { of, EMPTY } from 'rxjs';
 
 import { ResetPasswordPage } from './reset-password.page';
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
-import { PasswordChange } from '../../models/password-change.model';
+import { PasswordChange } from '../../models/auth/password-change.model';
 
 describe('ResetPasswordPage', () => {
   let component: ResetPasswordPage;

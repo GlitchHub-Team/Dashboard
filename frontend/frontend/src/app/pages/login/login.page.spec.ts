@@ -8,8 +8,8 @@ import { of, EMPTY } from 'rxjs';
 import { LoginPage } from './login.page';
 import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.dialog';
-import { LoginRequest } from '../../models/login-request.model';
-import { AuthResponse } from '../../models/auth-response.model';
+import { LoginRequest } from '../../models/auth/login-request.model';
+import { AuthResponse } from '../../models/auth/auth-response.model';
 import { UserRole } from '../../models/user-role.enum';
 
 describe('LoginPage', () => {

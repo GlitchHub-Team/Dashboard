@@ -7,9 +7,9 @@ import { SensorService } from '../sensor/sensor.service';
 import { PermissionService } from '../permission/permission.service';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { ChartRequest } from '../../models/chart-request.model';
+import { ChartRequest } from '../../models/chart/chart-request.model';
 import { Permission } from '../../models/permission.enum';
-import { ChartType } from '../../models/chart-type.enum';
+import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 
 describe('DashboardService', () => {

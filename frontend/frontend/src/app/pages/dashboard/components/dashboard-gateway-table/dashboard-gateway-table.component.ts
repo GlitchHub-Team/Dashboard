@@ -9,7 +9,7 @@ import { UpperCasePipe } from '@angular/common';
 import { DashboardGatewayExpandedComponent } from '../dashboard-gateway-expanded/dashboard-gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
-import { ChartRequest } from '../../../../models/chart-request.model';
+import { ChartRequest } from '../../../../models/chart/chart-request.model';
 
 @Component({
   selector: 'app-dashboard-gateway-table',

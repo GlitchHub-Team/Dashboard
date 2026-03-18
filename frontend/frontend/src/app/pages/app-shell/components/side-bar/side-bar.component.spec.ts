@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 
 import { SideBarComponent } from './side-bar.component';
-import { NavItem } from '../../../../models/nav-item.model';
+import { NavItem } from '../../../../models/nav_items/nav-item.model';
 import { Permission } from '../../../../models/permission.enum';
 
 describe('SideBarComponent', () => {

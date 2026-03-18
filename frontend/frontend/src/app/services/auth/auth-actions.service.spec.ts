@@ -5,7 +5,7 @@ import { AuthActionsService } from './auth-actions.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 import { UserSessionService } from '../user-session/user-session.service';
 import { ApiError } from '../../models/api-error.model';
-import { PasswordChange } from '../../models/password-change.model';
+import { PasswordChange } from '../../models/auth/password-change.model';
 
 describe('AuthActionsService', () => {
   let service: AuthActionsService;

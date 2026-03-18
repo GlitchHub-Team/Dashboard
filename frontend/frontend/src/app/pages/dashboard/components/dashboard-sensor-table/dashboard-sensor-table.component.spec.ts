@@ -7,7 +7,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { DashboardSensorTableComponent } from './dashboard-sensor-table.component';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
-import { ChartType } from '../../../../models/chart-type.enum';
+import { ChartType } from '../../../../models/chart/chart-type.enum';
 
 describe('DashboardSensorTableComponent', () => {
   let component: DashboardSensorTableComponent;

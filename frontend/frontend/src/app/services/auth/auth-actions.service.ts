@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, throwError, tap, catchError, finalize, EMPTY } from 'rxjs';
 
 import { ApiError } from '../../models/api-error.model';
-import { PasswordChange } from '../../models/password-change.model';
+import { PasswordChange } from '../../models/auth/password-change.model';
 import { UserSessionService } from '../user-session/user-session.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 

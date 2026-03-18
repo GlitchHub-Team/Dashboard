@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay, throwError, timer, switchMap } from 'rxjs';
 
-import { LoginRequest } from '../models/login-request.model';
-import { AuthResponse } from '../models/auth-response.model';
-import { PasswordChange } from '../models/password-change.model';
+import { LoginRequest } from '../models/auth/login-request.model';
+import { AuthResponse } from '../models/auth/auth-response.model';
+import { PasswordChange } from '../models/auth/password-change.model';
 import { ApiError } from '../models/api-error.model';
 import { UserRole } from '../models/user-role.enum';
 

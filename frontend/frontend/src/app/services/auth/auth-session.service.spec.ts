@@ -6,8 +6,8 @@ import { AuthSessionService } from './auth-session.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { UserSessionService } from '../user-session/user-session.service';
-import { LoginRequest } from '../../models/login-request.model';
-import { AuthResponse } from '../../models/auth-response.model';
+import { LoginRequest } from '../../models/auth/login-request.model';
+import { AuthResponse } from '../../models/auth/auth-response.model';
 import { ApiError } from '../../models/api-error.model';
 import { UserRole } from '../../models/user-role.enum';
 

@@ -8,7 +8,7 @@ import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
 import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { ChartRequest } from '../../models/chart-request.model';
+import { ChartRequest } from '../../models/chart/chart-request.model';
 
 @Component({
   selector: 'app-dashboard',

@@ -7,8 +7,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TitleCasePipe } from '@angular/common';
 
 import { Sensor } from '../../../../models/sensor/sensor.model';
-import { ChartRequest } from '../../../../models/chart-request.model';
-import { ChartType } from '../../../../models/chart-type.enum';
+import { ChartRequest } from '../../../../models/chart/chart-request.model';
+import { ChartType } from '../../../../models/chart/chart-type.enum';
 
 @Component({
   selector: 'app-dashboard-sensor-table',

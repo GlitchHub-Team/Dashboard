@@ -2,7 +2,7 @@ import { Component, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 
-import { NavItem } from '../../../../models/nav-item.model';
+import { NavItem } from '../../../../models/nav_items/nav-item.model';
 
 @Component({
   selector: 'app-side-bar',

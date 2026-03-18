@@ -4,7 +4,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { ChartRequest } from '../../../../models/chart-request.model';
+import { ChartRequest } from '../../../../models/chart/chart-request.model';
 
 @Component({
   selector: 'app-dashboard-gateway-expanded',
