@@ -31,12 +31,12 @@ type CreateSuperAdminCommand struct {
 type DeleteTenantUserCommand struct {
 	identity.Requester
 	TenantId uuid.UUID
-	UserId uint
+	UserId   uint
 }
 type DeleteTenantAdminCommand struct {
 	identity.Requester
 	TenantId uuid.UUID
-	UserId uint
+	UserId   uint
 }
 type DeleteSuperAdminCommand struct {
 	identity.Requester
@@ -62,17 +62,20 @@ type GetSuperAdminCommand struct {
 }
 
 // Get multiple ---------------------------------------------------------------------------------------
+
+// TODO: possibile miglioramento: validazione nel command
+
 type GetTenantUsersByTenantCommand struct {
 	identity.Requester
-	Page  int
-	Limit int
+	Page     int
+	Limit    int
 	TenantId uuid.UUID
 }
 
 type GetTenantAdminsByTenantCommand struct {
 	identity.Requester
-	Page  int
-	Limit int
+	Page     int
+	Limit    int
 	TenantId uuid.UUID
 }
 
@@ -80,12 +83,4 @@ type GetSuperAdminListCommand struct {
 	identity.Requester
 	Page  int
 	Limit int
-}
-
-
-type GetUsersByTenantIdCommand struct {
-	identity.Requester
-	Page     int
-	Limit    int
-	TenantId uuid.UUID
 }
