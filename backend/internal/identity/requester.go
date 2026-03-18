@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"backend/internal/tenant"
 
 	"github.com/google/uuid"
 )
@@ -26,8 +25,4 @@ func (r *Requester) CanTenantAdminAccess(accessedTenantId uuid.UUID) bool {
 
 func (r *Requester) IsSuperAdmin() bool {
 	return r.RequesterRole == ROLE_SUPER_ADMIN
-}
-
-func (r *Requester) CanSuperAdminAccess(tenant tenant.Tenant) bool {
-	return r.IsSuperAdmin() && tenant.CanImpersonate
 }
