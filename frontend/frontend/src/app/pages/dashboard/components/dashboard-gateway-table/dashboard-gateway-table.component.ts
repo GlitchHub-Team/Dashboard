@@ -1,0 +1,63 @@
+import { Component, computed, input, output } from '@angular/core';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatIcon } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { UpperCasePipe } from '@angular/common';
+
+import { DashboardGatewayExpandedComponent } from '../dashboard-gateway-expanded/dashboard-gateway-expanded.component';
+import { Gateway } from '../../../../models/gateway/gateway.model';
+import { Sensor } from '../../../../models/sensor/sensor.model';
+import { ChartRequest } from '../../../../models/chart/chart-request.model';
+
+@Component({
+  selector: 'app-dashboard-gateway-table',
+  imports: [
+    MatProgressSpinner,
+    MatIcon,
+    MatTableModule,
+    MatTooltip,
+    MatPaginatorModule,
+    UpperCasePipe,
+    DashboardGatewayExpandedComponent,
+  ],
+  templateUrl: './dashboard-gateway-table.component.html',
+  styleUrl: './dashboard-gateway-table.component.css',
+})
+export class DashboardGatewayTableComponent {
+  public readonly gateways = input.required<Gateway[]>();
+  public readonly sensors = input.required<Sensor[]>();
+  public readonly expandedGateway = input<Gateway | null>(null);
+  public readonly canSendCommands = input<boolean>(false);
+  public readonly gatewayLoading = input<boolean>();
+  public readonly sensorLoading = input<boolean>();
+
+  public readonly gatewayTotal = input<number>(0);
+  public readonly gatewayPageIndex = input<number>(0);
+  public readonly gatewayLimit = input<number>(10);
+
+  public readonly sensorTotal = input<number>(0);
+  public readonly sensorPageIndex = input<number>(0);
+  public readonly sensorLimit = input<number>(10);
+
+  public readonly commandRequested = output<Gateway>();
+  public readonly chartRequested = output<ChartRequest>();
+  public readonly expandedGatewayChange = output<Gateway>();
+
+  public readonly gatewayPageChange = output<PageEvent>();
+  public readonly sensorPageChange = output<PageEvent>();
+
+  private readonly columns = ['id', 'tenantId', 'name', 'status'];
+  protected readonly displayedColumns = computed(() =>
+    this.columns.concat(this.canSendCommands() ? ['commands'] : []),
+  );
+
+  protected isExpanded(gateway: Gateway): boolean {
+    return this.expandedGateway()?.id === gateway.id;
+  }
+
+  protected onGatewayPageChange(event: PageEvent): void {
+    this.gatewayPageChange.emit(event);
+  }
+}

@@ -1,0 +1,22 @@
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  height: 100%;
+  padding: 16px;
+}
+
+.dashboard-left {
+  grid-row: 1 / -1;
+}
+
+.dashboard-top-right {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dashboard-bottom-right {
+  grid-column: 2;
+  grid-row: 2;
+}

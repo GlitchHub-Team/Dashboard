@@ -1,0 +1,42 @@
+import { Injectable, signal } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TokenStorageService {
+  // TODO: Che token viene ritornato dal backend? Viene usato come token di sessione?
+  private readonly TOKEN_KEY = '';
+  private _isValid = signal<boolean>(this.isTokenValid());
+
+  public readonly isValid = this._isValid.asReadonly();
+
+  public saveToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
+    this._isValid.set(this.isTokenValid());
+  }
+
+  public getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  public clearToken(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
+    this._isValid.set(false);
+  }
+
+  public isTokenValid(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return false;
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const exp = payload.exp;
+      const currentTime = Math.floor(Date.now() / 1000);
+      return exp > currentTime;
+    } catch {
+      return false;
+    }
+  }
+}

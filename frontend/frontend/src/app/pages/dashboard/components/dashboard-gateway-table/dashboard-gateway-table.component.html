@@ -1,0 +1,88 @@
+@if (gatewayLoading()) {
+  <mat-spinner diameter="32"></mat-spinner>
+} @else if (gateways().length === 0) {
+  <div class="empty-state">
+    <mat-icon>router</mat-icon>
+    <p>No gateways available</p>
+  </div>
+} @else {
+  <mat-table [dataSource]="gateways()" multiTemplateDataRows>
+    <ng-container matColumnDef="id">
+      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">{{ gateway.id }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="tenantId">
+      <mat-header-cell *matHeaderCellDef>Tenant ID</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">{{ gateway.tenantId }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">{{ gateway.name }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">
+        <span [class]="gateway.status">{{ gateway.status | uppercase }}</span>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="commands">
+      <mat-header-cell *matHeaderCellDef>Commands</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">
+        <button
+          mat-icon-button
+          matTooltip="Send Command"
+          (click)="commandRequested.emit(gateway); $event.stopPropagation()"
+        >
+          <mat-icon>terminal</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="expandedDetail">
+      <mat-cell *matCellDef="let gateway" [attr.colspan]="displayedColumns().length">
+        @if (isExpanded(gateway)) {
+          <app-dashboard-gateway-expanded
+            [gateway]="gateway"
+            [sensors]="sensors()"
+            [loading]="sensorLoading()"
+            [sensorTotal]="sensorTotal()"
+            [sensorPageIndex]="sensorPageIndex()"
+            [sensorLimit]="sensorLimit()"
+            (chartRequested)="chartRequested.emit($event)"
+            (sensorPageChange)="sensorPageChange.emit($event)"
+          >
+          </app-dashboard-gateway-expanded>
+        }
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns()"></mat-header-row>
+
+    <mat-row
+      *matRowDef="let row; columns: displayedColumns()"
+      [class.expanded]="isExpanded(row)"
+      (click)="expandedGatewayChange.emit(row)"
+    >
+    </mat-row>
+
+    <mat-row
+      *matRowDef="let row; columns: ['expandedDetail']"
+      class="detail-row"
+      [class.visible]="isExpanded(row)"
+    >
+    </mat-row>
+  </mat-table>
+
+  <mat-paginator
+    [length]="gatewayTotal()"
+    [pageIndex]="gatewayPageIndex()"
+    [pageSize]="gatewayLimit()"
+    [pageSizeOptions]="[5, 10, 25]"
+    (page)="onGatewayPageChange($event)"
+    showFirstLastButtons
+  />
+}
