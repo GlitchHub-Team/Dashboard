@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -7,16 +7,22 @@ import { PageEvent } from '@angular/material/paginator';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
 import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DashboardGatewayTableComponent, DashboardSensorTableComponent, MatIcon],
+  imports: [
+    DashboardGatewayTableComponent,
+    DashboardSensorTableComponent,
+    ChartContainerComponent,
+    MatIcon,
+  ],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -42,6 +48,10 @@ export class DashboardPage implements OnInit {
 
   public ngOnInit(): void {
     this.dashboardService.loadDashboard();
+  }
+
+  public ngOnDestroy(): void {
+    this.dashboardService.closeChart();
   }
 
   protected onExpandedGatewayChange(gateway: Gateway): void {

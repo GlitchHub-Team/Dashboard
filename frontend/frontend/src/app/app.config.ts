@@ -10,6 +10,10 @@ import { GatewayAdapter } from './adapters/gateway.adapter';
 import { GatewayApiAdapter } from './adapters/gateway-api.adapter';
 import { SensorAdapter } from './adapters/sensor.adapter';
 import { SensorApiAdapter } from './adapters/sensor-api.adapter';
+import { SensorHistoricAdapter } from './adapters/sensor-historic.adapter';
+import { SensorLiveReadingAdapter } from './adapters/sensor-live-reading.adapter';
+import { SensorHistoricApiAdapter } from './adapters/sensor-historic-api.adapter';
+import { SensorLiveReadingApiAdapter } from './adapters/sensor-livel-reading-api.adapter';
 // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
 import { AuthApiClientService } from './services/auth-api-client/auth-api-client.service';
 import { AuthServiceMock } from './mocks/auth.service.mock';
@@ -21,6 +25,10 @@ import { SensorApiClientServiceMock } from './mocks/sensor.service.mock';
 import { GatewayApiClientServiceMock } from './mocks/gateway.service.mock';
 import { SensorApiClientService } from './services/sensor-api-client/sensor-api-client.service';
 import { GatewayApiClientService } from './services/gateway-api-client/gateway-api-client.service';
+import { SensorHistoricMockService } from './mocks/historic.service.mock';
+import { SensorRealTimeMockService } from './mocks/live.service.mock';
+import { SensorLiveReadingsApiService } from './services/sensor-live-api/sensor-live-readings-api.service';
+import { SensorHistoricApiService } from './services/sensor-historic-api/sensor-historic-api.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -30,11 +38,15 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(MatDialogModule),
     { provide: GatewayAdapter, useClass: GatewayApiAdapter },
     { provide: SensorAdapter, useClass: SensorApiAdapter },
+    { provide: SensorHistoricAdapter, useClass: SensorHistoricApiAdapter },
+    { provide: SensorLiveReadingAdapter, useClass: SensorLiveReadingApiAdapter },
     // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
     { provide: AuthApiClientService, useClass: AuthServiceMock },
     { provide: TenantApiClientService, useClass: TenantApiClientMockService },
     { provide: UserApiClientService, useClass: UserApiClientMockService },
     { provide: SensorApiClientService, useClass: SensorApiClientServiceMock },
     { provide: GatewayApiClientService, useClass: GatewayApiClientServiceMock },
+    { provide: SensorLiveReadingsApiService, useClass: SensorRealTimeMockService },
+    { provide: SensorHistoricApiService, useClass: SensorHistoricMockService },
   ],
 };

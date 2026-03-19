@@ -1,4 +1,4 @@
 export interface TimeInterval {
-  start: Date;
-  end: Date;
+  from: Date;
+  to: Date;
 }
