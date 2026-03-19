@@ -9,13 +9,19 @@ var Module = fx.Module(
 
     // Metodi pubblici
     fx.Provide(
-        NewTenantPostgreRepository,
-        NewGetTenantsPostgreAdapter,
+        // controller
+        NewTenantController,
+
+        //UseCase
+        NewCreateTenantService,
+      
+        //Outbound Port
+        NewTenantPostgreAdapter,
     ),
 
     // Metodi privati
     fx.Provide(
         fx.Private,
-        // ...
+        
    ),
 )

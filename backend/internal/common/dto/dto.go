@@ -31,3 +31,7 @@ type UserRoleField struct {
 type TenantIdField struct {
 	TenantId string `uri:"tenant_id" form:"tenant_id" json:"tenant_id" binding:"uuid4,required"`
 }
+
+type TenantNameField struct {
+	TenantMane string `uri:"tenant_name" form:"tenant_name" json:"tenant_name" binding:"required"`
+}
