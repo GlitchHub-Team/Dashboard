@@ -6,10 +6,13 @@ import { UserRole } from '../../models/user-role.enum';
 import { User } from '../../models/user.model';
 
 class MockUserApiClientService {
-  getUsersResult = of<User[]>([
-    { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
-    { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
-  ]);
+  getUsersResult = of<{ items: User[]; totalCount: number }>({
+    items: [
+      { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
+      { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
+    ],
+    totalCount: 2
+  });
   createUserResult = of<User>({ id: '3', email: 'new@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' });
   deleteUserResult = of<void>(undefined);
 
@@ -55,7 +58,7 @@ describe('UserService', () => {
       const mockUsers: User[] = [
         { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
       ];
-      apiClient.getUsersResult = of(mockUsers);
+      apiClient.getUsersResult = of({ items: mockUsers, totalCount: 1 });
 
       service.retrieveUser(UserRole.TENANT_ADMIN);
 

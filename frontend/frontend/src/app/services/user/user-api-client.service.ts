@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { UserDataAdapter } from './user-data.adapter';
+import { UserDataAdapter, RawPaginatedResponse } from './user-data.adapter';
 import { User } from '../../models/user.model';
 import { UserRole } from '../../models/user-role.enum';
 import { environment } from '../../../environments/environment';
@@ -18,13 +18,17 @@ export class UserApiClientService {
   private readonly userAdapter = inject(UserDataAdapter);
   private readonly apiUrl = `${environment.apiUrl}/users`;
 
-  public getUsers(role?: UserRole): Observable<User[]> {
-    let params = new HttpParams();
+  public getUsers(role?: UserRole, page = 0, size = 10): Observable<{ items: User[]; totalCount: number }> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
     if (role) {
       params = params.set('role', role);
     }
-    return this.http.get<RawUserConfig[]>(this.apiUrl, { params }).pipe(
-      map(data => this.userAdapter.adaptArray(data))
+
+    return this.http.get<RawPaginatedResponse>(this.apiUrl, { params }).pipe(
+      map(response => this.userAdapter.adaptPaginated(response))
     );
   }
 

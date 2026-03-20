@@ -4,7 +4,10 @@ import { TenantService } from './tenant.service';
 import { TenantApiClientService } from './tenant-api-client.service';
 
 class MockTenantApiClientService {
-  getTenantResult = of([{ name: 'Tenant 1' }, { name: 'Tenant 2' }]);
+  getTenantResult = of({
+    items: [{ name: 'Tenant 1' }, { name: 'Tenant 2' }],
+    totalCount: 2
+  });
   getTenantCalled = false;
 
   getTenant() {
@@ -40,7 +43,10 @@ describe('TenantService', () => {
 
   describe('retrieveTenant', () => {
     it('should retrieve tenants and update the list', () => {
-      apiClient.getTenantResult = of([{ name: 'Tenant 1' }, { name: 'Tenant 2' }]);
+      apiClient.getTenantResult = of({
+        items: [{ name: 'Tenant 1' }, { name: 'Tenant 2' }],
+        totalCount: 2
+      });
 
       service.retrieveTenant();
 

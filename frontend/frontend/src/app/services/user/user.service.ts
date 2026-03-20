@@ -11,14 +11,16 @@ export class UserService {
   public readonly loading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
   public readonly userList = signal<User[]>([]);
+  public readonly totalUsers = signal<number>(0);
 
-  public retrieveUser(role?: UserRole): void {
+  public retrieveUser(role?: UserRole, page = 0, size = 10): void {
     this.loading.set(true);
     this.error.set(null);
     
-    this.userApi.getUsers(role).subscribe({
-      next: (users) => {
-        this.userList.set(users);
+    this.userApi.getUsers(role, page, size).subscribe({
+      next: (res) => {
+        this.userList.set(res.items);
+        this.totalUsers.set(res.totalCount);
         this.loading.set(false);
       },
       error: (err: Error) => {

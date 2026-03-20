@@ -24,12 +24,14 @@ export class UserApiClientMockService {
     { id: 'user-1516', email: 'laura.croft@tenant-b.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-b' },
   ];
 
-  public getUsers(role?: UserRole): Observable<User[]> {
+  public getUsers(role?: UserRole, page = 0, size = 10): Observable<{ items: User[]; totalCount: number }> {
     let filteredUsers = [...this.mockUsers];
     if (role) {
       filteredUsers = filteredUsers.filter(user => user.role === role);
     }
-    return of(filteredUsers).pipe(delay(500));
+    const totalCount = filteredUsers.length;
+    const items = filteredUsers.slice(page * size, (page + 1) * size);
+    return of({ items, totalCount }).pipe(delay(500));
   }
 
   public createUser(config: UserConfig): Observable<User> {

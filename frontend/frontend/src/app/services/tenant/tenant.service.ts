@@ -11,14 +11,16 @@ export class TenantService {
   public readonly loading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
   public readonly tenantList = signal<Tenant[]>([]);
+  public readonly totalTenants = signal<number>(0);
 
-  retrieveTenant(): void {
+  retrieveTenant(page = 0, size = 10): void {
     this.loading.set(true);
     this.error.set(null);
 
-    this.tenantApiClient.getTenant().subscribe({
-      next: (tenants: Tenant[]) => {
-        this.tenantList.set(tenants);
+    this.tenantApiClient.getTenant(page, size).subscribe({
+      next: (res) => {
+        this.tenantList.set(res.items);
+        this.totalTenants.set(res.totalCount);
         this.loading.set(false);
       },
       error: (err: Error) => {
