@@ -25,7 +25,6 @@ describe('DashboardService', () => {
   };
   const mockChartRequest: ChartRequest = { sensor: mockSensor, chartType: ChartType.HISTORIC };
 
-  // Writable signal refs for gateway service mock
   const _gwList = signal<Gateway[]>([mockGateway]);
   const _gwTotal = signal(5);
   const _gwPageIndex = signal(1);
@@ -33,7 +32,6 @@ describe('DashboardService', () => {
   const _gwLoading = signal(true);
   const _gwError = signal<string | null>('gw-error');
 
-  // Writable signal refs for sensor service mock
   const _sList = signal<Sensor[]>([mockSensor]);
   const _sTotal = signal(3);
   const _sPageIndex = signal(2);
@@ -143,7 +141,6 @@ describe('DashboardService', () => {
 
   describe('changeGatewayPage', () => {
     it('should collapse gateway, clear sensors, and delegate to gateway service', () => {
-      // First expand a gateway
       service.toggleExpandedGateway(mockGateway);
       expect(service.expandedGateway()).toEqual(mockGateway);
 

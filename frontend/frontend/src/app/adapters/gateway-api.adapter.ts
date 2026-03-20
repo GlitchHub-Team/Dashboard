@@ -1,4 +1,3 @@
-// adapters/gateway-api.adapter.ts
 import { Injectable } from '@angular/core';
 import { GatewayAdapter } from './gateway.adapter';
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';

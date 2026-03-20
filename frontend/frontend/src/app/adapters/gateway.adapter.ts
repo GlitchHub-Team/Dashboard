@@ -1,4 +1,3 @@
-// adapters/gateway.adapter.ts
 import { Gateway } from '../models/gateway/gateway.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
 

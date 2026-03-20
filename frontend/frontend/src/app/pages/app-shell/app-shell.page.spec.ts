@@ -17,7 +17,6 @@ describe('AppShellPage', () => {
   let fixture: ComponentFixture<AppShellPage>;
   // ESLint whining
   let headerDebug: any;
-  let sideBarDebug: any;
   let router: Router;
 
   const mockUser: User = {
@@ -30,24 +29,15 @@ describe('AppShellPage', () => {
   let currentUserSignal: WritableSignal<User | null>;
   let currentRoleSignal: WritableSignal<UserRole | null>;
   let currentTenantSignal: WritableSignal<string | null>;
-
   let userSessionMock: {
     currentUser: ReturnType<WritableSignal<User | null>['asReadonly']>;
     currentRole: ReturnType<WritableSignal<UserRole | null>['asReadonly']>;
     currentTenant: ReturnType<WritableSignal<string | null>['asReadonly']>;
   };
 
-  const authSessionServiceMock = {
-    logout: vi.fn(),
-  };
-
-  const permissionServiceMock = {
-    canAny: vi.fn().mockReturnValue(true),
-  };
-
-  const dialogMock = {
-    open: vi.fn(),
-  };
+  const authSessionServiceMock = { logout: vi.fn() };
+  const permissionServiceMock = { canAny: vi.fn().mockReturnValue(true) };
+  const dialogMock = { open: vi.fn() };
 
   beforeEach(async () => {
     vi.resetAllMocks();
@@ -82,65 +72,32 @@ describe('AppShellPage', () => {
     fixture.detectChanges();
 
     headerDebug = fixture.debugElement.query(By.css('app-header'));
-    sideBarDebug = fixture.debugElement.query(By.css('app-side-bar'));
   });
 
   describe('initial state', () => {
-    it('should create', () => {
+    it('should create and render the full shell layout with header, sidebar, and router outlet', () => {
       expect(component).toBeTruthy();
-    });
-
-    it('should render the shell layout', () => {
-      const layout = fixture.debugElement.query(By.css('.shell-layout'));
-      expect(layout).toBeTruthy();
-    });
-
-    it('should render the main content area', () => {
-      const mainContent = fixture.debugElement.query(By.css('.main-content'));
-      expect(mainContent).toBeTruthy();
-    });
-
-    it('should render the main element', () => {
-      const main = fixture.debugElement.query(By.css('main'));
-      expect(main).toBeTruthy();
-    });
-
-    it('should render the router outlet', () => {
-      const routerOutlet = fixture.debugElement.query(By.css('router-outlet'));
-      expect(routerOutlet).toBeTruthy();
-    });
-
-    it('should render the side bar', () => {
-      expect(sideBarDebug).toBeTruthy();
-    });
-
-    it('should render the header', () => {
+      expect(fixture.debugElement.query(By.css('.shell-layout'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('.main-content'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('main'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('router-outlet'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('app-side-bar'))).toBeTruthy();
       expect(headerDebug).toBeTruthy();
     });
 
-    it('should expose current user', () => {
+    it('should expose current user, role, and tenant from session', () => {
       expect(component['currentUser']()).toEqual(mockUser);
-    });
-
-    it('should expose current role', () => {
       expect(component['currentUserRole']()).toBe(UserRole.SUPER_ADMIN);
-    });
-
-    it('should expose current tenant', () => {
       expect(component['currentTenant']()).toBe('tenant-1');
     });
   });
 
   describe('navItems', () => {
     it('should include items when user has permission', () => {
-      permissionServiceMock.canAny.mockReturnValue(true);
-
-      const items = component['navItems']();
-
-      expect(items.length).toBeGreaterThan(0);
+      expect(component['navItems']().length).toBeGreaterThan(0);
     });
 
-    it('should return empty list when user has no permissions', () => {
+    it('should return only items without a permission gate when canAny returns false', () => {
       permissionServiceMock.canAny.mockReturnValue(false);
 
       fixture = TestBed.createComponent(AppShellPage);
@@ -148,35 +105,20 @@ describe('AppShellPage', () => {
       fixture.detectChanges();
 
       const items = component['navItems']();
-
-      expect(items).toEqual([]);
-    });
-
-    it('should filter out items user has no permission for', () => {
-      permissionServiceMock.canAny.mockReturnValue(false);
-
-      fixture = TestBed.createComponent(AppShellPage);
-      component = fixture.componentInstance;
-      fixture.detectChanges();
-
-      const items = component['navItems']();
-      const itemsWithoutPermission = items.filter((item) => !item.permission);
-
-      expect(items.length).toBe(itemsWithoutPermission.length);
+      expect(items.every((item) => !item.permission)).toBe(true);
     });
   });
 
   describe('template bindings', () => {
-    it('should handle null user email gracefully', () => {
+    it('should handle null user gracefully', () => {
       currentUserSignal.set(null);
       fixture.detectChanges();
-
       expect(component['currentUser']()).toBeNull();
     });
   });
 
   describe('onLogout', () => {
-    it('should call authSessionService.logout and navigate to /login', () => {
+    it('should call logout and navigate to /login', () => {
       headerDebug.triggerEventHandler('logoutRequested');
       fixture.detectChanges();
 
@@ -186,7 +128,7 @@ describe('AppShellPage', () => {
   });
 
   describe('onChangePassword', () => {
-    it('should open ChangePasswordDialog', () => {
+    it('should open ChangePasswordDialog with correct config', () => {
       headerDebug.triggerEventHandler('changePasswordRequested');
       fixture.detectChanges();
 

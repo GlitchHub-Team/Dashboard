@@ -37,58 +37,35 @@ describe('SideBarComponent', () => {
     fixture.detectChanges();
   });
 
-  describe('initial state', () => {
-    it('should create', () => {
-      expect(component).toBeTruthy();
-    });
-
-    it('should default to empty navItems', () => {
-      expect(component.navItems()).toEqual([]);
-    });
-
-    it('should render no nav items by default', () => {
-      const navLinks = fixture.debugElement.queryAll(By.css('.nav-item'));
-      expect(navLinks.length).toBe(0);
-    });
+  it('should create with empty navItems and render nothing', () => {
+    expect(component).toBeTruthy();
+    expect(component.navItems()).toEqual([]);
+    expect(fixture.debugElement.queryAll(By.css('.nav-item')).length).toBe(0);
   });
 
   describe('inputs', () => {
-    it('should accept navItems and render them', () => {
+    it('should render nav items with correct labels and icons', () => {
       fixture.componentRef.setInput('navItems', mockNavItems);
       fixture.detectChanges();
 
       expect(component.navItems()).toEqual(mockNavItems);
-
-      const navLinks = fixture.debugElement.queryAll(By.css('.nav-item'));
-      expect(navLinks.length).toBe(2);
-    });
-
-    it('should render correct labels', () => {
-      fixture.componentRef.setInput('navItems', mockNavItems);
-      fixture.detectChanges();
+      expect(fixture.debugElement.queryAll(By.css('.nav-item')).length).toBe(2);
 
       const spans = fixture.debugElement.queryAll(By.css('.nav-item span'));
       expect(spans[0].nativeElement.textContent).toContain('Dashboard');
       expect(spans[1].nativeElement.textContent).toContain('Settings');
-    });
-
-    it('should render correct icons', () => {
-      fixture.componentRef.setInput('navItems', mockNavItems);
-      fixture.detectChanges();
 
       const icons = fixture.debugElement.queryAll(By.css('.nav-item mat-icon'));
       expect(icons[0].nativeElement.textContent).toContain('dashboard');
       expect(icons[1].nativeElement.textContent).toContain('settings');
     });
 
-    it('should accept empty array', () => {
+    it('should accept empty array and render nothing', () => {
       fixture.componentRef.setInput('navItems', []);
       fixture.detectChanges();
 
       expect(component.navItems()).toEqual([]);
-
-      const navLinks = fixture.debugElement.queryAll(By.css('.nav-item'));
-      expect(navLinks.length).toBe(0);
+      expect(fixture.debugElement.queryAll(By.css('.nav-item')).length).toBe(0);
     });
   });
 });

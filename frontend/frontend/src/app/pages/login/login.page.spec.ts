@@ -26,12 +26,13 @@ describe('LoginPage', () => {
     isAuthenticated: signal(false).asReadonly(),
   };
 
-  const routerMock = {
-    navigate: vi.fn(),
-  };
+  const routerMock = { navigate: vi.fn() };
+  const dialogMock = { open: vi.fn() };
 
-  const dialogMock = {
-    open: vi.fn(),
+  const mockRequest: LoginRequest = { email: 'user@example.com', password: 'secret123' };
+  const mockResponse: AuthResponse = {
+    token: 'jwt-token',
+    user: { id: '1', email: 'user@example.com', role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
   };
 
   beforeEach(async () => {
@@ -54,79 +55,37 @@ describe('LoginPage', () => {
     loginFormDebug = fixture.debugElement.query(By.css('app-login-form'));
   });
 
-  it('should create', () => {
+  it('should create and render shell, heading, and login form', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should render the login container', () => {
-    const container = fixture.debugElement.query(By.css('.login-container'));
-    expect(container).toBeTruthy();
-  });
-
-  it('should render the heading', () => {
-    const heading = fixture.debugElement.query(By.css('h1'));
-    expect(heading.nativeElement.textContent).toContain('Login');
-  });
-
-  it('should render the login form', () => {
+    expect(fixture.debugElement.query(By.css('.login-container'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('h1')).nativeElement.textContent).toContain('Login');
     expect(loginFormDebug).toBeTruthy();
   });
 
   describe('onLogin', () => {
-    const mockRequest: LoginRequest = {
-      email: 'user@example.com',
-      password: 'secret123',
-    };
-
-    const mockResponse: AuthResponse = {
-      token: 'jwt-token',
-      user: {
-        id: '1',
-        email: 'user@example.com',
-        role: UserRole.SUPER_ADMIN,
-        tenantId: 'tenant-1',
-      },
-    };
-
-    it('should call authSessionService.login with the request', () => {
+    it('should call login and navigate to /dashboard on success', () => {
       authSessionServiceMock.login.mockReturnValue(of(mockResponse));
 
       loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
       fixture.detectChanges();
 
       expect(authSessionServiceMock.login).toHaveBeenCalledWith(mockRequest);
-    });
-
-    it('should navigate to /dashboard on success', () => {
-      authSessionServiceMock.login.mockReturnValue(of(mockResponse));
-
-      loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
-      fixture.detectChanges();
-
       expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
-    it('should not navigate on error', () => {
-      authSessionServiceMock.login.mockReturnValue(EMPTY);
-
-      loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
-      fixture.detectChanges();
-
-      expect(routerMock.navigate).not.toHaveBeenCalled();
-    });
-
-    it('should call login even if it errors', () => {
+    it('should call login but not navigate when observable completes without value', () => {
       authSessionServiceMock.login.mockReturnValue(EMPTY);
 
       loginFormDebug.triggerEventHandler('submitLogin', mockRequest);
       fixture.detectChanges();
 
       expect(authSessionServiceMock.login).toHaveBeenCalledWith(mockRequest);
+      expect(routerMock.navigate).not.toHaveBeenCalled();
     });
   });
 
   describe('onForgotPassword', () => {
-    it('should open ForgotPasswordDialog', () => {
+    it('should open ForgotPasswordDialog with correct config', () => {
       loginFormDebug.triggerEventHandler('forgotPassword');
       fixture.detectChanges();
 

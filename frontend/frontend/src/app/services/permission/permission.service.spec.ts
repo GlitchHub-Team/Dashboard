@@ -8,17 +8,13 @@ import { Permission } from '../../models/permission.enum';
 describe('PermissionService', () => {
   let service: PermissionService;
 
-  const userSessionMock = {
-    currentRole: vi.fn(),
-  };
+  const userSessionMock = { currentRole: vi.fn() };
 
   beforeEach(() => {
     vi.resetAllMocks();
-
     TestBed.configureTestingModule({
       providers: [PermissionService, { provide: UserSessionService, useValue: userSessionMock }],
     });
-
     service = TestBed.inject(PermissionService);
   });
 
@@ -29,142 +25,90 @@ describe('PermissionService', () => {
   describe('can', () => {
     it('should return false when role is null', () => {
       userSessionMock.currentRole.mockReturnValue(null);
-
       expect(service.can(Permission.DASHBOARD_ACCESS)).toBe(false);
     });
 
-    it('should allow DASHBOARD_ACCESS for TENANT_USER', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.can(Permission.DASHBOARD_ACCESS)).toBe(true);
-    });
-
-    it('should deny GATEWAY_COMMANDS for TENANT_USER', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.can(Permission.GATEWAY_COMMANDS)).toBe(false);
-    });
-
-    it('should deny TENANT_USER_MANAGEMENT for TENANT_USER', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.can(Permission.TENANT_USER_MANAGEMENT)).toBe(false);
-    });
-
-    it('should allow DASHBOARD_ACCESS for TENANT_ADMIN', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(service.can(Permission.DASHBOARD_ACCESS)).toBe(true);
-    });
-
-    it('should allow GATEWAY_COMMANDS for TENANT_ADMIN', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(service.can(Permission.GATEWAY_COMMANDS)).toBe(true);
-    });
-
-    it('should allow TENANT_USER_MANAGEMENT for TENANT_ADMIN', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(service.can(Permission.TENANT_USER_MANAGEMENT)).toBe(true);
-    });
-
-    it('should deny GATEWAY_MANAGEMENT for TENANT_ADMIN', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(service.can(Permission.GATEWAY_MANAGEMENT)).toBe(false);
-    });
-
-    it('should allow all permissions for SUPER_ADMIN', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
-
-      expect(service.can(Permission.DASHBOARD_ACCESS)).toBe(true);
-      expect(service.can(Permission.GATEWAY_MANAGEMENT)).toBe(true);
-      expect(service.can(Permission.SENSOR_MANAGEMENT)).toBe(true);
-      expect(service.can(Permission.GATEWAY_COMMANDS)).toBe(true);
-      expect(service.can(Permission.TENANT_ADMIN_MANAGEMENT)).toBe(true);
-      expect(service.can(Permission.TENANT_MANAGEMENT)).toBe(true);
-      expect(service.can(Permission.APIKEY_MANAGEMENT)).toBe(true);
-    });
-
-    it('should deny TENANT_USER_MANAGEMENT for SUPER_ADMIN', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
-
-      expect(service.can(Permission.TENANT_USER_MANAGEMENT)).toBe(false);
+    it.each([
+      // TENANT_USER
+      [UserRole.TENANT_USER, Permission.DASHBOARD_ACCESS, true],
+      [UserRole.TENANT_USER, Permission.GATEWAY_COMMANDS, false],
+      [UserRole.TENANT_USER, Permission.TENANT_USER_MANAGEMENT, false],
+      // TENANT_ADMIN
+      [UserRole.TENANT_ADMIN, Permission.DASHBOARD_ACCESS, true],
+      [UserRole.TENANT_ADMIN, Permission.GATEWAY_COMMANDS, true],
+      [UserRole.TENANT_ADMIN, Permission.TENANT_USER_MANAGEMENT, true],
+      [UserRole.TENANT_ADMIN, Permission.GATEWAY_MANAGEMENT, false],
+      // SUPER_ADMIN
+      [UserRole.SUPER_ADMIN, Permission.DASHBOARD_ACCESS, true],
+      [UserRole.SUPER_ADMIN, Permission.GATEWAY_MANAGEMENT, true],
+      [UserRole.SUPER_ADMIN, Permission.SENSOR_MANAGEMENT, true],
+      [UserRole.SUPER_ADMIN, Permission.GATEWAY_COMMANDS, true],
+      [UserRole.SUPER_ADMIN, Permission.TENANT_ADMIN_MANAGEMENT, true],
+      [UserRole.SUPER_ADMIN, Permission.TENANT_MANAGEMENT, true],
+      [UserRole.SUPER_ADMIN, Permission.APIKEY_MANAGEMENT, true],
+      [UserRole.SUPER_ADMIN, Permission.TENANT_USER_MANAGEMENT, false],
+    ])('%s / %s => %s', (role: UserRole, permission: Permission, expected: boolean) => {
+      userSessionMock.currentRole.mockReturnValue(role);
+      expect(service.can(permission)).toBe(expected);
     });
   });
 
   describe('canAny', () => {
     it('should return false when role is null', () => {
       userSessionMock.currentRole.mockReturnValue(null);
-
       expect(service.canAny([Permission.DASHBOARD_ACCESS])).toBe(false);
     });
 
-    it('should return true if at least one permission matches', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.canAny([Permission.DASHBOARD_ACCESS, Permission.GATEWAY_MANAGEMENT])).toBe(
+    it.each([
+      [
+        UserRole.TENANT_USER,
+        [Permission.DASHBOARD_ACCESS, Permission.GATEWAY_MANAGEMENT],
         true,
-      );
-    });
-
-    it('should return false if no permissions match', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.canAny([Permission.GATEWAY_MANAGEMENT, Permission.SENSOR_MANAGEMENT])).toBe(
+        'at least one matches',
+      ],
+      [
+        UserRole.TENANT_USER,
+        [Permission.GATEWAY_MANAGEMENT, Permission.SENSOR_MANAGEMENT],
         false,
-      );
-    });
-
-    it('should return true if all permissions match', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(service.canAny([Permission.DASHBOARD_ACCESS, Permission.GATEWAY_COMMANDS])).toBe(true);
-    });
-
-    it('should return false for empty array', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
-
-      expect(service.canAny([])).toBe(false);
+        'none match',
+      ],
+      [
+        UserRole.TENANT_ADMIN,
+        [Permission.DASHBOARD_ACCESS, Permission.GATEWAY_COMMANDS],
+        true,
+        'all match',
+      ],
+      [UserRole.SUPER_ADMIN, [], false, 'empty array'],
+    ])('%s: %s => %s (%s)', (role: UserRole, permissions: Permission[], expected: boolean) => {
+      userSessionMock.currentRole.mockReturnValue(role);
+      expect(service.canAny(permissions)).toBe(expected);
     });
   });
 
   describe('canAll', () => {
     it('should return false when role is null', () => {
       userSessionMock.currentRole.mockReturnValue(null);
-
       expect(service.canAll([Permission.DASHBOARD_ACCESS])).toBe(false);
     });
 
-    it('should return true when user has all permissions', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(service.canAll([Permission.DASHBOARD_ACCESS, Permission.GATEWAY_COMMANDS])).toBe(true);
-    });
-
-    it('should return false when user is missing one permission', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-
-      expect(
-        service.canAll([
-          Permission.DASHBOARD_ACCESS,
-          Permission.GATEWAY_COMMANDS,
-          Permission.GATEWAY_MANAGEMENT,
-        ]),
-      ).toBe(false);
-    });
-
-    it('should return true for single permission the user has', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.canAll([Permission.DASHBOARD_ACCESS])).toBe(true);
-    });
-
-    it('should return true for empty array', () => {
-      userSessionMock.currentRole.mockReturnValue(UserRole.TENANT_USER);
-
-      expect(service.canAll([])).toBe(true);
+    it.each([
+      [UserRole.TENANT_USER, [Permission.DASHBOARD_ACCESS], true, 'single granted permission'],
+      [UserRole.TENANT_USER, [], true, 'empty array'],
+      [
+        UserRole.TENANT_ADMIN,
+        [Permission.DASHBOARD_ACCESS, Permission.GATEWAY_COMMANDS],
+        true,
+        'all granted',
+      ],
+      [
+        UserRole.TENANT_ADMIN,
+        [Permission.DASHBOARD_ACCESS, Permission.GATEWAY_COMMANDS, Permission.GATEWAY_MANAGEMENT],
+        false,
+        'one missing',
+      ],
+    ])('%s: %s => %s (%s)', (role: UserRole, permissions: Permission[], expected: boolean) => {
+      userSessionMock.currentRole.mockReturnValue(role);
+      expect(service.canAll(permissions)).toBe(expected);
     });
   });
 });
