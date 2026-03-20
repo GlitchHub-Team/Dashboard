@@ -13,11 +13,11 @@ export class UserService {
   public readonly userList = signal<User[]>([]);
   public readonly totalUsers = signal<number>(0);
 
-  public retrieveUser(role?: UserRole, page = 0, size = 10): void {
+  public retrieveUser(role: UserRole, tenantId?: string, page = 0, size = 10): void {
     this.loading.set(true);
     this.error.set(null);
     
-    this.userApi.getUsers(role, page, size).subscribe({
+    this.userApi.getUsers(role, tenantId, page, size).subscribe({
       next: (res) => {
         this.userList.set(res.items);
         this.totalUsers.set(res.totalCount);
@@ -30,9 +30,9 @@ export class UserService {
     });
   }
 
-  public addNewUser(config: UserConfig): Observable<User> {
+  public addNewUser(config: UserConfig, tenantId?: string): Observable<User> {
     this.loading.set(true);
-    return this.userApi.createUser(config).pipe(
+    return this.userApi.createUser(config, tenantId).pipe(
       tap({
         next: () => this.loading.set(false),
         error: () => this.loading.set(false)
@@ -40,9 +40,9 @@ export class UserService {
     );
   }
 
-  public removeUser(email: string): Observable<void> {
+  public removeUser(user: User): Observable<void> {
     this.loading.set(true);
-    return this.userApi.deleteUser(email).pipe(
+    return this.userApi.deleteUser(user.id, user.role, user.tenantId).pipe(
       tap({
         next: () => this.loading.set(false),
         error: () => this.loading.set(false)

@@ -20,48 +20,8 @@ import { RawTenantConfig } from '../../../models/raw-tenant-config.model';
     MatInputModule,
     MatButtonModule,
   ],
-  template: `
-    <h2 mat-dialog-title>Aggiungi Tenant</h2>
-    <mat-dialog-content>
-      <form [formGroup]="formBuilder">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Nome</mat-label>
-          <input matInput formControlName="name" required />
-          @if (serverErrors()['name']) {
-            <mat-error>{{ serverErrors()['name'] }}</mat-error>
-          }
-        </mat-form-field>
-        @if (generalError()) {
-          <div class="error-text">
-            {{ generalError() }}
-          </div>
-        }
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Annulla</button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="onSave()"
-        [disabled]="formBuilder.invalid || loading()"
-      >
-        Salva
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [
-    `
-      .w-100 {
-        width: 100%;
-      }
-      .error-text {
-        color: red;
-        margin-top: 0.5rem;
-        font-size: 0.875rem;
-      }
-    `,
-  ],  
+  templateUrl: './tenant-form.dialog.html',
+  styleUrl: './tenant-form.dialog.css',
   providers: [TenantService],
 })
 

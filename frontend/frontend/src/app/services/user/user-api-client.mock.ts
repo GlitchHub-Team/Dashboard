@@ -24,19 +24,30 @@ export class UserApiClientMockService {
     { id: 'user-1516', email: 'laura.croft@tenant-b.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-b' },
   ];
 
-  public getUsers(role?: UserRole, page = 0, size = 10): Observable<{ items: User[]; totalCount: number }> {
+  public getUsers(role: UserRole, tenantId?: string, page = 0, size = 10): Observable<{ items: User[]; totalCount: number }> {
     let filteredUsers = [...this.mockUsers];
     if (role) {
       filteredUsers = filteredUsers.filter(user => user.role === role);
+    }
+    if (tenantId) {
+      filteredUsers = filteredUsers.filter(user => user.tenantId === tenantId);
     }
     const totalCount = filteredUsers.length;
     const items = filteredUsers.slice(page * size, (page + 1) * size);
     return of({ items, totalCount }).pipe(delay(500));
   }
 
-  public createUser(config: UserConfig): Observable<User> {
+  public getUser(id: string, role: UserRole, tenantId?: string): Observable<User> {
+    const user = this.mockUsers.find(u => u.id === id && u.role === role && (role === UserRole.SUPER_ADMIN || u.tenantId === tenantId));
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return of(user).pipe(delay(500));
+  }
+
+  public createUser(config: UserConfig, tenantId?: string): Observable<User> {
     const newId = `user-${Math.floor(Math.random() * 10000)}`;
-    const newTenantId = 'mock-tenant-id';
+    const newTenantId = tenantId || 'mock-tenant-id';
 
     const newUser: User = {
       id: newId,
@@ -48,8 +59,8 @@ export class UserApiClientMockService {
     return of(newUser).pipe(delay(500));
   }
 
-  public deleteUser(email: string): Observable<void> {
-    this.mockUsers = this.mockUsers.filter((u) => u.email !== email);
+  public deleteUser(id: string): Observable<void> {
+    this.mockUsers = this.mockUsers.filter((u) => u.id !== id);
     return of(void 0).pipe(delay(500));
   }
 }

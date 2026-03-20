@@ -17,11 +17,11 @@ class MockUserApiClientService {
   deleteUserResult = of<void>(undefined);
 
   getUsersCalled = false;
-  getUsersRole: UserRole | undefined;
+  getUsersArgs: { role: UserRole, tenantId?: string } | null = null;
 
-  getUsers(role?: UserRole) {
+  getUsers(role: UserRole, tenantId?: string) {
     this.getUsersCalled = true;
-    this.getUsersRole = role;
+    this.getUsersArgs = { role, tenantId };
     return this.getUsersResult;
   }
 
@@ -63,7 +63,8 @@ describe('UserService', () => {
       service.retrieveUser(UserRole.TENANT_ADMIN);
 
       expect(apiClient.getUsersCalled).toBe(true);
-      expect(apiClient.getUsersRole).toBe(UserRole.TENANT_ADMIN);
+      expect(apiClient.getUsersArgs!.role).toBe(UserRole.TENANT_ADMIN);
+      expect(apiClient.getUsersArgs!.tenantId).toBeUndefined();
       expect(service.loading()).toBe(false);
       expect(service.userList().length).toBe(1);
       expect(service.userList()).toEqual(mockUsers);
@@ -74,7 +75,7 @@ describe('UserService', () => {
       const error = new Error('Failed to fetch');
       apiClient.getUsersResult = throwError(() => error);
 
-      service.retrieveUser();
+      service.retrieveUser(UserRole.TENANT_ADMIN);
 
       expect(apiClient.getUsersCalled).toBe(true);
       expect(service.loading()).toBe(false);
@@ -109,7 +110,8 @@ describe('UserService', () => {
 
   describe('removeUser', () => {
     it('should call deleteUser and manage loading state on success', () => {
-      service.removeUser('test@test.com').subscribe({
+      const user: User = { id: '1', email: 'test@test.com', role: UserRole.TENANT_USER, tenantId: 't1' };
+      service.removeUser(user).subscribe({
         next: () => {
           expect(service.loading()).toBe(false);
         },
@@ -119,7 +121,8 @@ describe('UserService', () => {
     it('should set loading to false on error', () => {
       apiClient.deleteUserResult = throwError(() => new Error('Error deleting'));
 
-      service.removeUser('test@test.com').subscribe({
+      const user: User = { id: '1', email: 'test@test.com', role: UserRole.TENANT_USER, tenantId: 't1' };
+      service.removeUser(user).subscribe({
         error: () => {
           expect(service.loading()).toBe(false);
         },

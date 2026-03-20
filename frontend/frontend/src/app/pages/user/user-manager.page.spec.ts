@@ -15,21 +15,21 @@ class MockUserService {
   userList = signal<User[]>([]);
   loading = signal(false);
 
-  retrieveUserCalledWith: UserRole | null = null;
-  addNewUserCalledWith: { email: string; role: UserRole } | null = null;
-  removeUserCalledWith: string | null = null;
+  retrieveUserCalledWith: { role: UserRole, tenantId?: string } | null = null;
+  addNewUserCalledWith: { config: { email: string; role: UserRole }, tenantId?: string } | null = null;
+  removeUserCalledWith: User | null = null;
 
-  retrieveUser(role: UserRole) {
-    this.retrieveUserCalledWith = role;
+  retrieveUser(role: UserRole, tenantId?: string) {
+    this.retrieveUserCalledWith = { role, tenantId };
   }
 
-  addNewUser(config: { email: string; role: UserRole }) {
-    this.addNewUserCalledWith = config;
+  addNewUser(config: { email: string; role: UserRole }, tenantId?: string) {
+    this.addNewUserCalledWith = { config, tenantId };
     return of(void 0);
   }
 
-  removeUser(email: string) {
-    this.removeUserCalledWith = email;
+  removeUser(user: User) {
+    this.removeUserCalledWith = user;
     return of(void 0);
   }
 
@@ -100,7 +100,7 @@ describe('UserManagerPage', () => {
 
   it('should call retrieveUser on init with role from ActivatedRoute', () => {
     fixture.detectChanges();
-    expect(userService.retrieveUserCalledWith).toBe(UserRole.TENANT_ADMIN);
+    expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
   });
 
   it('should open the UserFormDialog on create and add the user if closed with data', () => {
@@ -114,8 +114,8 @@ describe('UserManagerPage', () => {
     expect(dialog.openArgs?.config?.width).toBe('400px');
     
     // Verifica se ha chiamato il servizio per creare l'utente e poi lo ha ricaricato
-    expect(userService.addNewUserCalledWith).toEqual({ email: 'new@user.com', role: UserRole.TENANT_ADMIN });
-    expect(userService.retrieveUserCalledWith).toBe(UserRole.TENANT_ADMIN);
+    expect(userService.addNewUserCalledWith).toEqual({ config: { email: 'new@user.com', role: UserRole.TENANT_ADMIN }, tenantId: undefined });
+    expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
   });
 
   it('should open confirm dialog and remove user on confirmed delete', () => {
@@ -126,9 +126,9 @@ describe('UserManagerPage', () => {
     component.onDeleteUser(userToDelete);
 
     expect(dialog.openCalled).toBe(true);
-    expect(userService.removeUserCalledWith).toBe('delete@user.com');
+    expect(userService.removeUserCalledWith).toBe(userToDelete);
     
     // Verifica ricaricamento della lista dopo la cancellazione
-    expect(userService.retrieveUserCalledWith).toBe(UserRole.TENANT_ADMIN);
+    expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
   });
 });

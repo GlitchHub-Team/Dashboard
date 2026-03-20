@@ -13,6 +13,7 @@ import { UserRole } from '../../models/user-role.enum';
 interface UserManagerContext {
   title: string;
   role: UserRole;
+  tenantId?: string;
 }
 
 @Component({
@@ -37,7 +38,7 @@ export class UserManagerPage implements OnInit {
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(data => {
       this.context = data['userManagerContext'] || this.context;
-      this.userService.retrieveUser(this.context.role);
+      this.userService.retrieveUser(this.context.role, this.context.tenantId);
     });
   }
 
@@ -48,8 +49,8 @@ export class UserManagerPage implements OnInit {
     }).afterClosed().subscribe((result: User) => {
       if (result) {
         const userConfig = { email: result.email, role: this.context.role };
-        this.userService.addNewUser(userConfig).subscribe(() => {
-          this.userService.retrieveUser(this.context.role);
+        this.userService.addNewUser(userConfig, this.context.tenantId).subscribe(() => {
+          this.userService.retrieveUser(this.context.role, this.context.tenantId);
         });
       }
     });
@@ -66,8 +67,8 @@ export class UserManagerPage implements OnInit {
     .afterClosed()
     .subscribe((confirmed) => {
       if (confirmed) {
-        this.userService.removeUser(user.email).subscribe(() => {
-          this.userService.retrieveUser(this.context.role);
+        this.userService.removeUser(user).subscribe(() => {
+          this.userService.retrieveUser(this.context.role, this.context.tenantId);
         });
       }
     });
