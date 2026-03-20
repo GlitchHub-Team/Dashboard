@@ -1,4 +1,4 @@
-import { Component, inject, signal, WritableSignal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -25,6 +25,9 @@ import { User } from '../../../models/user.model';
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" required />
+          @if (serverErrors()['email']) {
+            <mat-error>{{ serverErrors()['email'] }}</mat-error>
+          }
         </mat-form-field>
 
         @if (generalError()) {
@@ -61,19 +64,24 @@ import { User } from '../../../models/user.model';
   ],
 })
 export class UserFormDialogComponent {
-  protected form: FormGroup;
-  protected generalError: WritableSignal<string> = signal<string>('');
-  
-  private serverError: Map<string, string> = new Map<string, string>();
-
-  private formBuilder = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<UserFormDialogComponent>);
+  private readonly fb = inject(FormBuilder);
+  private readonly dialogRef = inject(MatDialogRef<UserFormDialogComponent>);
   public data = inject<User | null>(MAT_DIALOG_DATA);
 
+  protected form: FormGroup;
+  protected generalError = signal<string | null>(null);
+  protected serverErrors = signal<Record<string, string>>({});
+
   constructor() {
-    this.form = this.formBuilder.group({
+    this.form = this.fb.group({
       id: [this.data?.id || ''],
       email: [this.data?.email || '', [Validators.required, Validators.email]],
+    });
+
+    // Resetta gli errori quando l'utente digita qualcosa
+    this.form.valueChanges.subscribe(() => {
+      this.serverErrors.set({});
+      this.generalError.set(null);
     });
   }
 

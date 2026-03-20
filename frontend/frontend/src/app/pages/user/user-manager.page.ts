@@ -23,14 +23,15 @@ interface UserManagerContext {
   styleUrl: './user-manager.page.css',
 })
 export class UserManagerPage implements OnInit {
-  readonly userService = inject(UserService);
-  readonly dialog = inject(MatDialog);
+  private readonly userService = inject(UserService);
+  private readonly dialog = inject(MatDialog);
   private readonly activatedRoute = inject(ActivatedRoute);
-  //userSession: UserSessionService;
-  context: UserManagerContext = { title: 'User Management', role: UserRole.TENANT_ADMIN };
 
-  users = this.userService.userList;
-  loading = this.userService.loading;
+  // private readonly userSession = inject(UserSessionService); // Utile per gestire permessi o recuperare il Tenant ID corrente
+  public context: UserManagerContext = { title: 'User Management', role: UserRole.TENANT_ADMIN };
+
+  public users = this.userService.userList;
+  public loading = this.userService.loading;
 
 
   ngOnInit(): void {

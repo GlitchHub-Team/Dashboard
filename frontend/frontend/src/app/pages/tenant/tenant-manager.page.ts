@@ -22,13 +22,14 @@ export class TenantManagerPage implements OnInit {
   tenants = this.tenantService.tenantList;
   loading = this.tenantService.loading;
 
+  // non appena l'utente naviga su questa pagina, l'applicazione richiede automaticamente i dati dei tenant per poterli poi mostrare a schermo
   ngOnInit(): void {
     this.tenantService.retrieveTenant();
   }
 
   onCreateTenant(): void {
     this.dialog.open(TenantFormDialog, {
-      width: '400px',
+      width: '500px',
       data: null,
     }).afterClosed().subscribe(() => {
       this.tenantService.retrieveTenant();

@@ -1,5 +1,6 @@
-import { Component, inject, Signal, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,6 +27,9 @@ import { RawTenantConfig } from '../../../models/raw-tenant-config.model';
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Nome</mat-label>
           <input matInput formControlName="name" required />
+          @if (serverErrors()['name']) {
+            <mat-error>{{ serverErrors()['name'] }}</mat-error>
+          }
         </mat-form-field>
         @if (generalError()) {
           <div class="error-text">
@@ -67,9 +71,10 @@ export class TenantFormDialog {
   private readonly dialogRef = inject(MatDialogRef<TenantFormDialog>);
   public data = inject<RawTenantConfig | null>(MAT_DIALOG_DATA);
 
-  public formBuilder: FormGroup;
-  public loading: Signal<boolean>;
-  public generalError: Signal<string | null>;
+  protected formBuilder: FormGroup;
+  public loading = signal(false);
+  protected generalError = signal<string | null>(null);
+  protected serverErrors = signal<Record<string, string>>({});
 
   constructor() {
     this.formBuilder = this.fb.group({
@@ -80,24 +85,38 @@ export class TenantFormDialog {
       this.formBuilder.patchValue(this.data);
     }
 
-    this.loading = signal(false);
-    this.generalError = signal(null);
+    // Resetta gli errori quando l'utente digita qualcosa
+    this.formBuilder.valueChanges.subscribe(() => {
+      this.serverErrors.set({});
+      this.generalError.set(null);
+    });
   }
 
   onSave(): void {
     if (this.formBuilder.invalid) return;
 
-    this.loading = signal(true);
+    this.loading.set(true);
+    this.serverErrors.set({});
+    this.generalError.set(null);
+
     const config: RawTenantConfig = this.formBuilder.value;
 
     this.tenantService.addNewTenant(config).subscribe({
       next: (tenant: unknown) => {
-        this.loading = signal(false);
+        this.loading.set(false);
         this.dialogRef.close(tenant);
       },
-      error: (err: Error) => {
-        this.loading = signal(false);
-        this.generalError = signal(err.message || 'Failed to save tenant');
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        
+        if (err.error && err.error.fieldErrors) {
+          this.serverErrors.set(err.error.fieldErrors);
+          Object.keys(err.error.fieldErrors).forEach((field) => {
+            this.formBuilder.get(field)?.setErrors({ serverError: true });
+          });
+        } else {
+          this.generalError.set(err.message || 'Failed to save tenant');
+        }
       },
     });
   }
