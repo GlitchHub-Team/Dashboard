@@ -79,18 +79,9 @@ export class SensorService {
       .subscribe();
   }
 
+  // TODO: Metodi chiamati dai dialog non devono gestire stato perchè lo gestisce il dialog
   public addNewSensor(config: SensorConfig): Observable<Sensor> {
-    this.setLoadingState();
-
-    return this.sensorApi.addNewSensor(config).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
-      tap(() => this.refetchCurrentPage()),
-      catchError((err: ApiError) => {
-        this._error.set(err.message ?? 'Failed to add sensor');
-        return EMPTY;
-      }),
-      finalize(() => this._loading.set(false)),
-    );
+    return this.sensorApi.addNewSensor(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
   }
 
   public deleteSensor(id: string): Observable<void> {

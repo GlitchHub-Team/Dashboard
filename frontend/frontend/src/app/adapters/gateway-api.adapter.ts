@@ -8,24 +8,21 @@ import { Status } from '../models/gateway-sensor-status.enum';
 
 @Injectable()
 export class GatewayApiAdapter extends GatewayAdapter {
-  fromDTO(dto: GatewayBackend, tenantId?: string): Gateway {
+  fromDTO(dto: GatewayBackend): Gateway {
     return {
       id: dto.gateway_id,
       name: dto.name,
       status: dto.status as Status,
       interval: dto.intervals,
-      ...(tenantId && { tenantId }),
+      tenantId: dto.tenant_id ?? undefined,
     };
   }
 
-  fromPaginatedDTO(
-    response: PaginatedResponse<GatewayBackend>,
-    tenantId?: string,
-  ): PaginatedResponse<Gateway> {
+  fromPaginatedDTO(response: PaginatedResponse<GatewayBackend>): PaginatedResponse<Gateway> {
     return {
       count: response.count,
       total: response.total,
-      data: response.data.map((dto) => this.fromDTO(dto, tenantId)),
+      data: response.data.map((dto) => this.fromDTO(dto)),
     };
   }
 }

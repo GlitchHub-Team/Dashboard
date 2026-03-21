@@ -4,8 +4,6 @@ import { GatewayService } from '../gateway/gateway.service';
 import { SensorService } from '../sensor/sensor.service';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { GatewayConfig } from '../../models/gateway/gateway-config.model';
-import { SensorConfig } from '../../models/sensor/sensor-config.model';
 
 @Injectable({ providedIn: 'root' })
 export class GatewaySensorManagerService {
@@ -48,33 +46,11 @@ export class GatewaySensorManagerService {
     }
   }
 
-  public changeGatewayPage(pageIndex: number, limit: number): void {
-    this.collapseGateway();
-    this.gatewayService.changePage(pageIndex, limit);
-  }
-
-  public changeSensorPage(pageIndex: number, limit: number): void {
-    this.sensorService.changePage(pageIndex, limit);
-  }
-
-  public createGateway(data: GatewayConfig): void {
-    this.gatewayService.addNewGateway(data).subscribe(() => {
-      this.refreshGateways();
-    });
-  }
-
   public deleteGateway(gateway: Gateway): void {
     const wasExpanded = this._expandedGateway()?.id === gateway.id;
     this.gatewayService.deleteGateway(gateway.id).subscribe(() => {
       if (wasExpanded) this.collapseGateway();
       this.refreshGateways();
-    });
-  }
-
-  public createSensor(gatewayId: string, data: SensorConfig): void {
-    const sensorData = { ...data, gatewayId };
-    this.sensorService.addNewSensor(sensorData).subscribe(() => {
-      this.refreshSensors(gatewayId);
     });
   }
 
@@ -84,11 +60,20 @@ export class GatewaySensorManagerService {
     });
   }
 
-  private refreshGateways(): void {
+  public changeGatewayPage(pageIndex: number, limit: number): void {
+    this.collapseGateway();
+    this.gatewayService.changePage(pageIndex, limit);
+  }
+
+  public changeSensorPage(pageIndex: number, limit: number): void {
+    this.sensorService.changePage(pageIndex, limit);
+  }
+
+  public refreshGateways(): void {
     this.gatewayService.changePage(this.gatewayPageIndex(), this.gatewayLimit());
   }
 
-  private refreshSensors(gatewayId: string): void {
+  public refreshSensors(gatewayId: string): void {
     this.sensorService.getSensorsByGateway(gatewayId, this.sensorPageIndex(), this.sensorLimit());
   }
 

@@ -63,9 +63,9 @@ describe('GatewaySensorManagerPage', () => {
       toggleExpandedGateway: vi.fn(),
       changeGatewayPage: vi.fn(),
       changeSensorPage: vi.fn(),
-      createGateway: vi.fn(),
+      refreshGateways: vi.fn(),
+      refreshSensors: vi.fn(),
       deleteGateway: vi.fn(),
-      createSensor: vi.fn(),
       deleteSensor: vi.fn(),
     };
 
@@ -156,26 +156,25 @@ describe('GatewaySensorManagerPage', () => {
   });
 
   describe('onCreateGateway', () => {
-    it('should open CreateGatewayDialog and call createGateway on result', () => {
-      const newGateway = { name: 'New Gateway' };
-      mockDialog(newGateway);
+    it('should open CreateGatewayDialog and call refreshGateways on result', () => {
+      mockDialog(true);
 
       component['onCreateGateway']();
 
       expect(dialogMock.open).toHaveBeenCalledOnce();
-      expect(managerServiceMock.createGateway).toHaveBeenCalledWith(newGateway);
+      expect(managerServiceMock.refreshGateways).toHaveBeenCalledOnce();
       expect(snackBarMock.open).toHaveBeenCalledWith('Gateway created', 'Close', {
         duration: 3000,
       });
     });
 
     it.each([undefined, null, ''])(
-      'should not call createGateway when dialog returns %s',
+      'should not call refreshGateways when dialog returns %s',
       (result) => {
         mockDialog(result);
         component['onCreateGateway']();
 
-        expect(managerServiceMock.createGateway).not.toHaveBeenCalled();
+        expect(managerServiceMock.refreshGateways).not.toHaveBeenCalled();
         expect(snackBarMock.open).not.toHaveBeenCalled();
       },
     );
@@ -208,26 +207,28 @@ describe('GatewaySensorManagerPage', () => {
   });
 
   describe('onCreateSensor', () => {
-    it('should open CreateSensorDialog with gatewayId and call createSensor on result', () => {
-      const newSensor = { name: 'New Sensor', profile: SensorProfiles.HEART_RATE_SERVICE };
-      mockDialog(newSensor);
+    it('should open CreateSensorDialog with gateway id and name and call refreshSensors on result', () => {
+      mockDialog(true);
 
       component['onCreateSensor'](mockGateway);
 
       expect(dialogMock.open).toHaveBeenCalledWith(expect.anything(), {
-        data: { gatewayId: 'gw-1' },
+        data: { id: 'gw-1', name: 'Gateway 1' },
       });
-      expect(managerServiceMock.createSensor).toHaveBeenCalledWith('gw-1', newSensor);
+      expect(managerServiceMock.refreshSensors).toHaveBeenCalledWith('gw-1');
       expect(snackBarMock.open).toHaveBeenCalledWith('Sensor created', 'Close', { duration: 3000 });
     });
 
-    it.each([undefined, null])('should not call createSensor when dialog returns %s', (result) => {
-      mockDialog(result);
-      component['onCreateSensor'](mockGateway);
+    it.each([undefined, null])(
+      'should not call refreshSensors when dialog returns %s',
+      (result) => {
+        mockDialog(result);
+        component['onCreateSensor'](mockGateway);
 
-      expect(managerServiceMock.createSensor).not.toHaveBeenCalled();
-      expect(snackBarMock.open).not.toHaveBeenCalled();
-    });
+        expect(managerServiceMock.refreshSensors).not.toHaveBeenCalled();
+        expect(snackBarMock.open).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('onDeleteSensor', () => {

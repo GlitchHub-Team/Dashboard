@@ -1,1 +1,66 @@
-<p>create-sensor.dialog works!</p>
+<h2 mat-dialog-title>New Sensor</h2>
+
+<mat-dialog-content>
+  @if (generalError) {
+    <div class="error-banner">
+      <mat-icon>error</mat-icon>
+      <span>{{ generalError }}</span>
+    </div>
+  }
+
+  <form [formGroup]="sensorForm" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Gateway</mat-label>
+      <input matInput [value]="data.name" disabled />
+      <mat-hint>{{ data.id }}</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Sensor Name</mat-label>
+      <input matInput formControlName="name" />
+      @if (sensorForm.controls.name.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Profile</mat-label>
+      <mat-select formControlName="profile">
+        @for (profile of profiles; track profile.key) {
+          <mat-option [value]="profile.key">{{ profile.label | titlecase }}</mat-option>
+        }
+      </mat-select>
+      @if (sensorForm.controls.profile.hasError('required')) {
+        <mat-error>Profile is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Data Interval</mat-label>
+      <input matInput type="number" formControlName="interval" />
+      <span matTextSuffix>ms</span>
+      @if (sensorForm.controls.interval.hasError('required')) {
+        <mat-error>Interval is required</mat-error>
+      } @else if (sensorForm.controls.interval.hasError('min')) {
+        <mat-error>Minimum 100ms</mat-error>
+      }
+      <mat-hint>How often the sensor emits a reading</mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close [disabled]="isSubmitting">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="sensorForm.invalid || isSubmitting"
+    (click)="onSubmit()"
+  >
+    @if (isSubmitting) {
+      <mat-spinner diameter="20" />
+    } @else {
+      Create
+    }
+  </button>
+</mat-dialog-actions>

@@ -9,8 +9,6 @@ import { Gateway } from '../../models/gateway/gateway.model';
 import { Status } from '../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
-import { GatewayConfig } from '../../models/gateway/gateway-config.model';
-import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { signal } from '@angular/core';
 
 describe('GatewaySensorManagerService', () => {
@@ -49,18 +47,6 @@ describe('GatewaySensorManagerService', () => {
     dataInterval: 1000,
   };
 
-  const mockGatewayConfig: GatewayConfig = {
-    name: 'New Gateway',
-    interval: 5000,
-  };
-
-  const mockSensorConfig: SensorConfig = {
-    gatewayId: 'gw-1',
-    name: 'New Sensor',
-    profile: SensorProfiles.CUSTOM_ECG_SERVICE,
-    dataInterval: 2000,
-  };
-
   beforeEach(() => {
     gatewayPageIndexSig = signal(0);
     gatewayLimitSig = signal(10);
@@ -77,7 +63,6 @@ describe('GatewaySensorManagerService', () => {
       getGateways: vi.fn(),
       getGatewaysByTenant: vi.fn(),
       changePage: vi.fn(),
-      addNewGateway: vi.fn().mockReturnValue(of(mockGateway)),
       deleteGateway: vi.fn().mockReturnValue(of(undefined)),
     };
 
@@ -91,9 +76,8 @@ describe('GatewaySensorManagerService', () => {
       getSensorsByGateway: vi.fn(),
       getSensorsByTenant: vi.fn(),
       changePage: vi.fn(),
-      addNewSensor: vi.fn().mockReturnValue(of(mockSensor)),
-      deleteSensor: vi.fn().mockReturnValue(of(undefined)),
       clearSensors: vi.fn(),
+      deleteSensor: vi.fn().mockReturnValue(of(undefined)),
     };
 
     TestBed.configureTestingModule({
@@ -197,26 +181,27 @@ describe('GatewaySensorManagerService', () => {
     expect(sensorServiceMock.changePage).toHaveBeenCalledWith(3, 15);
   });
 
-  describe('createGateway', () => {
-    it('should call gatewayService.addNewGateway', () => {
-      service.createGateway(mockGatewayConfig);
-      expect(gatewayServiceMock.addNewGateway).toHaveBeenCalledWith(mockGatewayConfig);
-    });
-
+  describe('refreshGateways', () => {
     it.each([
       [0, 10],
       [2, 25],
-    ])('should refresh gateways at page %i with limit %i after creation', (page, limit) => {
+    ])('should call gatewayService.changePage with page %i and limit %i', (page, limit) => {
       gatewayPageIndexSig.set(page);
       gatewayLimitSig.set(limit);
-      service.createGateway(mockGatewayConfig);
+      service.refreshGateways();
       expect(gatewayServiceMock.changePage).toHaveBeenCalledWith(page, limit);
     });
+  });
 
-    it('should not refresh if addNewGateway returns EMPTY', () => {
-      gatewayServiceMock.addNewGateway.mockReturnValue(EMPTY);
-      service.createGateway(mockGatewayConfig);
-      expect(gatewayServiceMock.changePage).not.toHaveBeenCalled();
+  describe('refreshSensors', () => {
+    it.each([
+      [0, 10],
+      [1, 5],
+    ])('should call sensorService.getSensorsByGateway with page %i and limit %i', (page, limit) => {
+      sensorPageIndexSig.set(page);
+      sensorLimitSig.set(limit);
+      service.refreshSensors('gw-1');
+      expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-1', page, limit);
     });
   });
 
@@ -264,35 +249,6 @@ describe('GatewaySensorManagerService', () => {
       gatewayServiceMock.deleteGateway.mockReturnValue(EMPTY);
       service.deleteGateway(mockGateway);
       expect(gatewayServiceMock.changePage).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('createSensor', () => {
-    it('should call sensorService.addNewSensor with merged gatewayId', () => {
-      const config: SensorConfig = {
-        gatewayId: '',
-        name: 'New Sensor',
-        profile: SensorProfiles.CUSTOM_ECG_SERVICE,
-        dataInterval: 2000,
-      };
-      service.createSensor('gw-1', config);
-      expect(sensorServiceMock.addNewSensor).toHaveBeenCalledWith({ ...config, gatewayId: 'gw-1' });
-    });
-
-    it.each([
-      [0, 10],
-      [1, 5],
-    ])('should refresh sensors at page %i with limit %i after creation', (page, limit) => {
-      sensorPageIndexSig.set(page);
-      sensorLimitSig.set(limit);
-      service.createSensor('gw-1', mockSensorConfig);
-      expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-1', page, limit);
-    });
-
-    it('should not refresh if addNewSensor returns EMPTY', () => {
-      sensorServiceMock.addNewSensor.mockReturnValue(EMPTY);
-      service.createSensor('gw-1', mockSensorConfig);
-      expect(sensorServiceMock.getSensorsByGateway).not.toHaveBeenCalled();
     });
   });
 

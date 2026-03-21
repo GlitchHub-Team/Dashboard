@@ -39,7 +39,7 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayListByTenant(tenantId, page, limit)
       .pipe(
-        map((response) => this.adapter.fromPaginatedDTO(response, tenantId)),
+        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._gatewayList.set(result.data);
           this._total.set(result.total);
@@ -77,17 +77,7 @@ export class GatewayService {
   }
 
   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
-    this.setLoadingState();
-
-    return this.gatewayApi.addNewGateway(config).pipe(
-      map((dto) => this.adapter.fromDTO(dto, this._currentTenantId() ?? undefined)),
-      tap(() => this.refetchCurrentPage()),
-      catchError((err: ApiError) => {
-        this._error.set(err.message ?? 'Failed to add gateway');
-        return EMPTY;
-      }),
-      finalize(() => this._loading.set(false)),
-    );
+    return this.gatewayApi.addNewGateway(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
   }
 
   public deleteGateway(id: string): Observable<void> {

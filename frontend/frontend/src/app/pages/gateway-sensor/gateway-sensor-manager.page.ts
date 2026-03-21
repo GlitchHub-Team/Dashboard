@@ -60,9 +60,9 @@ export class GatewaySensorManagerPage implements OnInit {
   protected onCreateGateway(): void {
     const ref = this.dialog.open(CreateGatewayDialog);
 
-    ref.afterClosed().subscribe((result) => {
-      if (result) {
-        this.managerService.createGateway(result);
+    ref.afterClosed().subscribe((created) => {
+      if (created) {
+        this.managerService.refreshGateways();
         this.snackBar.open('Gateway created', 'Close', { duration: 3000 });
       }
     });
@@ -70,7 +70,10 @@ export class GatewaySensorManagerPage implements OnInit {
 
   protected onDeleteGateway(gateway: Gateway): void {
     const ref = this.dialog.open(ConfirmDeleteDialog, {
-      data: { entityName: gateway.name, entityType: 'gateway' },
+      data: {
+        title: 'Delete Gateway',
+        message: `Are you sure you want to delete the gateway "${gateway.name}"?`,
+      },
     });
 
     ref.afterClosed().subscribe((confirmed) => {
@@ -83,12 +86,15 @@ export class GatewaySensorManagerPage implements OnInit {
 
   protected onCreateSensor(gateway: Gateway): void {
     const ref = this.dialog.open(CreateSensorDialog, {
-      data: { gatewayId: gateway.id },
+      data: {
+        id: gateway.id,
+        name: gateway.name,
+      },
     });
 
-    ref.afterClosed().subscribe((result) => {
-      if (result) {
-        this.managerService.createSensor(gateway.id, result);
+    ref.afterClosed().subscribe((created) => {
+      if (created) {
+        this.managerService.refreshSensors(gateway.id);
         this.snackBar.open('Sensor created', 'Close', { duration: 3000 });
       }
     });
@@ -96,7 +102,10 @@ export class GatewaySensorManagerPage implements OnInit {
 
   protected onDeleteSensor(sensor: Sensor): void {
     const ref = this.dialog.open(ConfirmDeleteDialog, {
-      data: { entityName: sensor.name, entityType: 'sensor' },
+      data: {
+        title: 'Delete Sensor',
+        message: `Are you sure you want to delete the sensor "${sensor.name}"?`,
+      },
     });
 
     ref.afterClosed().subscribe((confirmed) => {

@@ -53,9 +53,9 @@ describe('DashboardSensorTableComponent', () => {
       expect(component).toBeTruthy();
       expect(component['displayedColumns']()).toEqual([
         'id',
-        'gatewayId',
         'name',
         'profile',
+        'status',
         'actions',
       ]);
       expect(component['ChartType']).toBe(ChartType);
@@ -186,7 +186,11 @@ describe('DashboardSensorTableComponent', () => {
 
       expect(cellTexts).toEqual(expect.arrayContaining(['1', '2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Temperature', 'Humidity']));
-      expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
+      expect(cellTexts).toEqual(
+        expect.arrayContaining(['Health Thermometer', 'Environmental Sensing']),
+      );
+      expect(cellTexts).toEqual(expect.arrayContaining(['query_statsssid_chart']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['ACTIVE', 'INACTIVE']));
     });
 
     it('should render paginator', () => {

@@ -119,7 +119,7 @@ describe('GatewayService', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
       expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 0, 10);
-      expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse, 'tenant-1');
+      expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
     });
 
     it('should set success state, update pagination, clear previous error, and reset list on refetch', () => {
@@ -221,7 +221,7 @@ describe('GatewayService', () => {
       service.addNewGateway(mockConfig).subscribe((gw) => (result = gw));
 
       expect(gatewayApiMock.addNewGateway).toHaveBeenCalledWith(mockConfig);
-      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend, undefined);
+      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
       expect(result).toEqual(mockNewGateway);
     });
 
@@ -235,7 +235,7 @@ describe('GatewayService', () => {
 
       service.addNewGateway(mockConfig).subscribe();
 
-      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend, 'tenant-1');
+      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
     });
 
     it('should refetch by tenant and set loading false after success', () => {
