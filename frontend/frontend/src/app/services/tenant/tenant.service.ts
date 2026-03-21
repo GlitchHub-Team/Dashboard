@@ -59,15 +59,15 @@ export class TenantService {
     });
   }
 
-  removeTenant(id: string): Observable<void> {
+  removeTenant(name: string): Observable<void> {
     this.loading.set(true);
     this.error.set(null);
 
     return new Observable((observer) => {
-      this.tenantApiClient.deleteTenant(id).subscribe({
+      this.tenantApiClient.deleteTenant(name).subscribe({
         next: () => {
           this.tenantList.update((current: Tenant[]) =>
-            current.filter((t) => t.name !== id)
+            current.filter((t) => t.name !== name)
           );
           this.loading.set(false);
           observer.next();

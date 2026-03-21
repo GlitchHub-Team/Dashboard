@@ -8,6 +8,7 @@ import { TenantFormDialog } from './dialogs/tenant-form.dialog';
 import { TenantTableComponent } from './components/tenant-table.component';
 import { ConfirmDeleteDialog } from './dialogs/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tenant-manager-page',
@@ -19,6 +20,7 @@ import { Tenant } from '../../models/tenant.model';
 export class TenantManagerPage implements OnInit {
   private readonly tenantService = inject(TenantService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   tenants = this.tenantService.tenantList;
   total = this.tenantService.total;
@@ -58,5 +60,11 @@ export class TenantManagerPage implements OnInit {
 
   onPageChange(event: PageEvent): void {
     this.tenantService.changePage(event.pageIndex, event.pageSize);
+  }
+
+  onGoToDashboard(tenant: Tenant): void {
+    // Adattamento per i mock: trasforma "Tenant 1" in "tenant-01"
+    const mockTenantId = tenant.name.toLowerCase().replace(' ', '-0');
+    this.router.navigate(['/dashboard'], { queryParams: { tenantId: mockTenantId } });
   }
 }

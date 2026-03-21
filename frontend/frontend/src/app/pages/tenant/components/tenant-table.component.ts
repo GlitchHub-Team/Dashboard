@@ -28,11 +28,16 @@ export class TenantTableComponent {
   ]);
 
   deleteRequested = output<Tenant>();
+  dashboardRequested = output<Tenant>();
 
   // Calcola automaticamente le colonne da mostrare unendo le chiavi dinamiche a "actions"
   displayedColumns = computed(() => [...this.columnConfig().map(c => c.key as string), 'actions']);
 
   onDelete(tenant: Tenant): void {
     this.deleteRequested.emit(tenant);
+  }
+
+  onGoToDashboard(tenant: Tenant): void {
+    this.dashboardRequested.emit(tenant);
   }
 }

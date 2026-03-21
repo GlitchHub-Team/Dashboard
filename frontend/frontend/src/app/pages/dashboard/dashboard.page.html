@@ -1,43 +1,62 @@
 <div class="dashboard-layout">
   <div class="dashboard-left">
-    @if (error()) {
-      <div class="error-banner">
-        <mat-icon>error</mat-icon>
-        <span>{{ error() }}</span>
+    @if (activeTenantId()) {
+      <div style="display: flex; align-items: center; justify-content: space-between; background-color: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <span>Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span>
+        <button mat-button color="primary" (click)="onBackToTenants()">
+          <mat-icon>arrow_back</mat-icon>
+          Torna ai Tenant
+        </button>
       </div>
     }
-    @if (canSendCommands()) {
-      <app-dashboard-gateway-table
-        [gateways]="gatewayList()"
-        [sensors]="sensorList()"
-        [expandedGateway]="expandedGateway()"
-        [canSendCommands]="canSendCommands()"
-        [gatewayLoading]="gatewayLoading()"
-        [sensorLoading]="sensorLoading()"
-        [gatewayTotal]="gatewayTotal()"
-        [gatewayPageIndex]="gatewayPageIndex()"
-        [gatewayLimit]="gatewayLimit()"
-        [sensorTotal]="sensorTotal()"
-        [sensorPageIndex]="sensorPageIndex()"
-        [sensorLimit]="sensorLimit()"
-        (commandRequested)="onCommandRequested($event)"
-        (chartRequested)="onChartOpen($event)"
-        (expandedGatewayChange)="onExpandedGatewayChange($event)"
-        (gatewayPageChange)="onGatewayPageChange($event)"
-        (sensorPageChange)="onSensorPageChange($event)"
-      >
-      </app-dashboard-gateway-table>
+    @if (currentRole() === UserRole.SUPER_ADMIN && !activeTenantId()) {
+      <div style="display: flex; align-items: center; justify-content: space-between; background-color: #fff3e0; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <span>Per visualizzare i dati, devi selezionare un tenant.</span>
+        <button mat-button color="primary" (click)="onBackToTenants()">
+          <mat-icon>domain</mat-icon>
+          Vai a Tenant Management
+        </button>
+      </div>
     } @else {
-      <app-dashboard-sensor-table
-        [sensors]="sensorList()"
-        [loading]="sensorLoading()"
-        [total]="sensorTotal()"
-        [pageIndex]="sensorPageIndex()"
-        [limit]="sensorLimit()"
-        (chartRequested)="onChartOpen($event)"
-        (pageChange)="onSensorPageChange($event)"
-      >
-      </app-dashboard-sensor-table>
+      @if (error()) {
+        <div class="error-banner">
+          <mat-icon>error</mat-icon>
+          <span>{{ error() }}</span>
+        </div>
+      }
+      @if (canSendCommands()) {
+        <app-dashboard-gateway-table
+          [gateways]="gatewayList()"
+          [sensors]="sensorList()"
+          [expandedGateway]="expandedGateway()"
+          [canSendCommands]="canSendCommands()"
+          [gatewayLoading]="gatewayLoading()"
+          [sensorLoading]="sensorLoading()"
+          [gatewayTotal]="gatewayTotal()"
+          [gatewayPageIndex]="gatewayPageIndex()"
+          [gatewayLimit]="gatewayLimit()"
+          [sensorTotal]="sensorTotal()"
+          [sensorPageIndex]="sensorPageIndex()"
+          [sensorLimit]="sensorLimit()"
+          (commandRequested)="onCommandRequested($event)"
+          (chartRequested)="onChartOpen($event)"
+          (expandedGatewayChange)="onExpandedGatewayChange($event)"
+          (gatewayPageChange)="onGatewayPageChange($event)"
+          (sensorPageChange)="onSensorPageChange($event)"
+        >
+        </app-dashboard-gateway-table>
+      } @else {
+        <app-dashboard-sensor-table
+          [sensors]="sensorList()"
+          [loading]="sensorLoading()"
+          [total]="sensorTotal()"
+          [pageIndex]="sensorPageIndex()"
+          [limit]="sensorLimit()"
+          (chartRequested)="onChartOpen($event)"
+          (pageChange)="onSensorPageChange($event)"
+        >
+        </app-dashboard-sensor-table>
+      }
     }
   </div>
 

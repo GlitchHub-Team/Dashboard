@@ -17,4 +17,5 @@
 .actions-cell {
   text-align: right;
   padding-right: 1rem;
+  white-space: nowrap;
 }
