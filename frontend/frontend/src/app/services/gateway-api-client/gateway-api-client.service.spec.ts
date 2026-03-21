@@ -99,6 +99,7 @@ describe('GatewayApiClientService', () => {
   describe('addNewGateway', () => {
     const mockConfig: GatewayConfig = {
       name: 'New Gateway',
+      interval: 60,
     };
 
     const mockResponse: GatewayBackend = {

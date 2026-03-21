@@ -75,6 +75,17 @@ describe('DashboardGatewayExpandedComponent', () => {
       expect(component.gateway()).toEqual(mockGateway);
     });
 
+    it('should accept actionMode input', () => {
+      fixture.componentRef.setInput('actionMode', 'manage');
+      fixture.detectChanges();
+
+      expect(component.actionMode()).toBe('manage');
+    });
+
+    it('should default actionMode to dashboard', () => {
+      expect(component.actionMode()).toBe('dashboard');
+    });
+
     it('should accept loading', () => {
       fixture.componentRef.setInput('loading', true);
       fixture.detectChanges();
@@ -118,11 +129,29 @@ describe('DashboardGatewayExpandedComponent', () => {
 
       expect(spy).toHaveBeenCalledWith(event);
     });
+
+    it('should emit sensorDeleteRequested', () => {
+      const spy = vi.fn();
+      component.sensorDeleteRequested.subscribe(spy);
+
+      component.sensorDeleteRequested.emit(mockSensors[0]);
+
+      expect(spy).toHaveBeenCalledWith(mockSensors[0]);
+    });
+
+    it('should emit sensorCreateRequested with the gateway', () => {
+      const spy = vi.fn();
+      component.sensorCreateRequested.subscribe(spy);
+
+      component.sensorCreateRequested.emit(mockGateway);
+
+      expect(spy).toHaveBeenCalledWith(mockGateway);
+    });
   });
 
   describe('template', () => {
     it('should render gateway id in heading', () => {
-      const heading = fixture.nativeElement.querySelector('h3');
+      const heading = fixture.nativeElement.querySelector('h2');
       expect(heading.textContent).toContain('gw-1');
     });
 

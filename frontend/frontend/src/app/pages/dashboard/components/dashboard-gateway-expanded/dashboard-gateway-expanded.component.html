@@ -1,13 +1,16 @@
 <div class="expanded-content">
-  <h3>Sensors for {{ gateway().id }}</h3>
+  <h2>Sensors for {{ gateway().id }}</h2>
 
   <app-dashboard-sensor-table
     [sensors]="sensors()"
     [loading]="loading()"
+    [actionMode]="actionMode()"
     [total]="sensorTotal()"
     [pageIndex]="sensorPageIndex()"
     [limit]="sensorLimit()"
     (chartRequested)="chartRequested.emit($event)"
+    (createRequested)="sensorCreateRequested.emit(gateway())"
+    (deleteRequested)="sensorDeleteRequested.emit($event)"
     (pageChange)="sensorPageChange.emit($event)"
   >
   </app-dashboard-sensor-table>

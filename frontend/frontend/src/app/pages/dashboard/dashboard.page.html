@@ -8,10 +8,10 @@
     }
     @if (canSendCommands()) {
       <app-dashboard-gateway-table
+        actionMode="dashboard"
         [gateways]="gatewayList()"
         [sensors]="sensorList()"
         [expandedGateway]="expandedGateway()"
-        [canSendCommands]="canSendCommands()"
         [gatewayLoading]="gatewayLoading()"
         [sensorLoading]="sensorLoading()"
         [gatewayTotal]="gatewayTotal()"
@@ -25,8 +25,7 @@
         (expandedGatewayChange)="onExpandedGatewayChange($event)"
         (gatewayPageChange)="onGatewayPageChange($event)"
         (sensorPageChange)="onSensorPageChange($event)"
-      >
-      </app-dashboard-gateway-table>
+      />
     } @else {
       <app-dashboard-sensor-table
         [sensors]="sensorList()"

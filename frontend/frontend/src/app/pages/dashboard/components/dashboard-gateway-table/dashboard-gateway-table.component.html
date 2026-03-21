@@ -1,3 +1,12 @@
+@if (actionMode() === 'manage') {
+  <div class="manager-header">
+    <h1>Gateway & Sensors Management</h1>
+    <button mat-raised-button color="primary" (click)="gatewayCreateRequested.emit()">
+      <mat-icon>add</mat-icon> New Gateway
+    </button>
+  </div>
+}
+
 @if (gatewayLoading()) {
   <mat-spinner diameter="32"></mat-spinner>
 } @else if (gateways().length === 0) {
@@ -42,6 +51,20 @@
       </mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="delete">
+      <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">
+        <button
+          mat-icon-button
+          color="warn"
+          matTooltip="Delete"
+          (click)="gatewayDeleteRequested.emit(gateway); $event.stopPropagation()"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="expandedDetail">
       <mat-cell *matCellDef="let gateway" [attr.colspan]="displayedColumns().length">
         @if (isExpanded(gateway)) {
@@ -49,13 +72,15 @@
             [gateway]="gateway"
             [sensors]="sensors()"
             [loading]="sensorLoading()"
+            [actionMode]="actionMode()"
             [sensorTotal]="sensorTotal()"
             [sensorPageIndex]="sensorPageIndex()"
             [sensorLimit]="sensorLimit()"
             (chartRequested)="chartRequested.emit($event)"
+            (sensorDeleteRequested)="sensorDeleteRequested.emit($event)"
+            (sensorCreateRequested)="sensorCreateRequested.emit($event)"
             (sensorPageChange)="sensorPageChange.emit($event)"
-          >
-          </app-dashboard-gateway-expanded>
+          />
         }
       </mat-cell>
     </ng-container>
@@ -66,15 +91,13 @@
       *matRowDef="let row; columns: displayedColumns()"
       [class.expanded]="isExpanded(row)"
       (click)="expandedGatewayChange.emit(row)"
-    >
-    </mat-row>
+    ></mat-row>
 
     <mat-row
       *matRowDef="let row; columns: ['expandedDetail']"
       class="detail-row"
       [class.visible]="isExpanded(row)"
-    >
-    </mat-row>
+    ></mat-row>
   </mat-table>
 
   <mat-paginator

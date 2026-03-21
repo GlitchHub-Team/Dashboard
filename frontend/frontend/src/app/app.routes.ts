@@ -15,13 +15,22 @@ export const routes: Routes = [
       import('./pages/reset-password/reset-password.page').then((m) => m.ResetPasswordPage),
   },
   {
-    path: "",
+    path: '',
     // Usare entrambe le guards, altrimenti si entra in un circolo vizioso (da canAny() manda a dashboard, ma
     // se non si è autenticati authGuard fallisce lo stesso). Se fallisce authGuard, non viene neanche valutato
     // roleGuard, quindi non c'è rischio di errori strani
     canActivate: [authGuard, roleGuard],
     loadComponent: () => import('./pages/app-shell/app-shell.page').then((m) => m.AppShellPage),
     children: [
+      {
+        path: 'gateway-management',
+        canActivate: [roleGuard],
+        data: { permissions: [Permission.GATEWAY_MANAGEMENT] },
+        loadComponent: () =>
+          import('./pages/gateway-sensor/gateway-sensor-manager.page').then(
+            (m) => m.GatewaySensorManagerPage,
+          ),
+      },
       {
         path: 'tenant-management',
         canActivate: [roleGuard],
@@ -32,14 +41,20 @@ export const routes: Routes = [
       {
         path: 'user-management/tenant-users',
         canActivate: [roleGuard],
-        data: { permissions: [Permission.TENANT_USER_MANAGEMENT], userManagerContext: { title: 'Tenant User Management', role: UserRole.TENANT_USER } },
+        data: {
+          permissions: [Permission.TENANT_USER_MANAGEMENT],
+          userManagerContext: { title: 'Tenant User Management', role: UserRole.TENANT_USER },
+        },
         loadComponent: () =>
           import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),
       },
       {
         path: 'user-management/tenant-admins',
         canActivate: [roleGuard],
-        data: { permissions: [Permission.TENANT_ADMIN_MANAGEMENT], userManagerContext: { title: 'Tenant Admin Management', role: UserRole.TENANT_ADMIN } },
+        data: {
+          permissions: [Permission.TENANT_ADMIN_MANAGEMENT],
+          userManagerContext: { title: 'Tenant Admin Management', role: UserRole.TENANT_ADMIN },
+        },
         loadComponent: () =>
           import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),
       },
@@ -54,7 +69,7 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',
-      }
+      },
     ],
   },
   {

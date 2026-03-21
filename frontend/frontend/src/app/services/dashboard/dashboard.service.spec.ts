@@ -126,7 +126,7 @@ describe('DashboardService', () => {
       permissionServiceMock.can.mockReturnValue(true);
       service.loadDashboard();
 
-      expect(gatewayServiceMock.getGatewaysByTenant).toHaveBeenCalledWith('tenant-01', 0, 10);
+      expect(gatewayServiceMock.getGatewaysByTenant).toHaveBeenCalledWith('tenant-01', 1, 20);
       expect(sensorServiceMock.getSensorsByTenant).not.toHaveBeenCalled();
     });
 
@@ -134,7 +134,7 @@ describe('DashboardService', () => {
       permissionServiceMock.can.mockReturnValue(false);
       service.loadDashboard();
 
-      expect(sensorServiceMock.getSensorsByTenant).toHaveBeenCalledWith('tenant-01', 0, 10);
+      expect(sensorServiceMock.getSensorsByTenant).toHaveBeenCalledWith('tenant-01', 2, 15);
       expect(gatewayServiceMock.getGatewaysByTenant).not.toHaveBeenCalled();
     });
   });
@@ -165,7 +165,7 @@ describe('DashboardService', () => {
       service.toggleExpandedGateway(mockGateway);
 
       expect(service.expandedGateway()).toEqual(mockGateway);
-      expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-1', 0, 10);
+      expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-1', 2, 15);
     });
 
     it('should collapse gateway and clear sensors when the same gateway is toggled again', () => {
@@ -185,7 +185,7 @@ describe('DashboardService', () => {
       service.toggleExpandedGateway(mockGateway2);
 
       expect(service.expandedGateway()).toEqual(mockGateway2);
-      expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-2', 0, 10);
+      expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-2', 2, 15);
     });
   });
 

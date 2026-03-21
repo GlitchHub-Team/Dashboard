@@ -40,9 +40,17 @@ export class DashboardService {
 
   public loadDashboard(): void {
     if (this.canSendCommands()) {
-      this.gatewayService.getGatewaysByTenant('tenant-01', 0, 10);
+      this.gatewayService.getGatewaysByTenant(
+        'tenant-01',
+        this.gatewayPageIndex(),
+        this.gatewayLimit(),
+      );
     } else {
-      this.sensorService.getSensorsByTenant('tenant-01', 0, 10);
+      this.sensorService.getSensorsByTenant(
+        'tenant-01',
+        this.sensorPageIndex(),
+        this.sensorLimit(),
+      );
     }
   }
 
@@ -61,7 +69,11 @@ export class DashboardService {
       this.collapseGateway();
     } else {
       this._expandedGateway.set(gateway);
-      this.sensorService.getSensorsByGateway(gateway.id, 0, 10);
+      this.sensorService.getSensorsByGateway(
+        gateway.id,
+        this.sensorPageIndex(),
+        this.sensorLimit(),
+      );
     }
   }
 

@@ -36,7 +36,7 @@ describe('GatewayService', () => {
 
   const mockNewBackend: GatewayBackend = { GatewayId: 'gw-3', GatewayName: 'New Gateway' };
   const mockNewGateway: Gateway = { id: 'gw-3', name: 'New Gateway' };
-  const mockConfig: GatewayConfig = { name: 'New Gateway' };
+  const mockConfig: GatewayConfig = { name: 'New Gateway', interval: 60 };
 
   const gatewayApiMock = {
     getGatewayListByTenant: vi.fn(),

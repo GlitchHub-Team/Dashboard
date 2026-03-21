@@ -18,6 +18,19 @@
   margin-bottom: 8px;
 }
 
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manager-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  flex: 1;
+}
+
 .mat-column-actions {
   flex: 0 0 96px;
   justify-content: center;

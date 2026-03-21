@@ -8,6 +8,7 @@ import { DashboardSensorTableComponent } from './dashboard-sensor-table.componen
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
+import { ActionMode } from '../../../../models/action-mode.model';
 
 describe('DashboardSensorTableComponent', () => {
   let component: DashboardSensorTableComponent;
@@ -45,7 +46,7 @@ describe('DashboardSensorTableComponent', () => {
   describe('initial state', () => {
     it('should create with correct setup', () => {
       expect(component).toBeTruthy();
-      expect(component['displayedColumns']).toEqual([
+      expect(component['displayedColumns']()).toEqual([
         'id',
         'gatewayId',
         'name',
@@ -64,6 +65,68 @@ describe('DashboardSensorTableComponent', () => {
       expect(fresh.componentInstance.pageIndex()).toBe(0);
       expect(fresh.componentInstance.limit()).toBe(10);
       expect(fresh.componentInstance.loading()).toBeUndefined();
+    });
+
+    it('should default actionMode to dashboard', () => {
+      expect(component.actionMode()).toBe('dashboard');
+    });
+  });
+
+  describe('actionMode', () => {
+    it('should show actions column in dashboard mode', () => {
+      fixture.componentRef.setInput('actionMode', 'dashboard' as ActionMode);
+      fixture.detectChanges();
+
+      expect(component['displayedColumns']()).toContain('actions');
+      expect(component['displayedColumns']()).not.toContain('delete');
+    });
+
+    it('should show delete column in manage mode', () => {
+      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
+      fixture.detectChanges();
+
+      expect(component['displayedColumns']()).toContain('delete');
+      expect(component['displayedColumns']()).not.toContain('actions');
+    });
+
+    it('should render manager header and create button in manage mode', () => {
+      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.manager-header'))).toBeTruthy();
+    });
+
+    it('should not render manager header in dashboard mode', () => {
+      fixture.componentRef.setInput('actionMode', 'dashboard' as ActionMode);
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
+    });
+
+    it('should emit deleteRequested when delete button is clicked in manage mode', () => {
+      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
+      fixture.detectChanges();
+
+      const spy = vi.fn();
+      component.deleteRequested.subscribe(spy);
+
+      const deleteButton = fixture.debugElement.query(By.css('mat-cell button'));
+      deleteButton.triggerEventHandler('click', new MouseEvent('click'));
+
+      expect(spy).toHaveBeenCalledWith(mockSensors[0]);
+    });
+
+    it('should emit createRequested when new sensor button is clicked in manage mode', () => {
+      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
+      fixture.detectChanges();
+
+      const spy = vi.fn();
+      component.createRequested.subscribe(spy);
+
+      const createButton = fixture.debugElement.query(By.css('.manager-header button'));
+      createButton.triggerEventHandler('click', new MouseEvent('click'));
+
+      expect(spy).toHaveBeenCalled();
     });
   });
 

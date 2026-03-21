@@ -55,7 +55,6 @@ describe('DashboardGatewayTableComponent', () => {
     it('should create with correct defaults', () => {
       expect(component).toBeTruthy();
       expect(component.expandedGateway()).toBeNull();
-      expect(component.canSendCommands()).toBe(false);
       expect(component.gatewayPageIndex()).toBe(0);
       expect(component.gatewayLimit()).toBe(10);
       expect(component.sensorPageIndex()).toBe(0);
@@ -142,12 +141,7 @@ describe('DashboardGatewayTableComponent', () => {
   });
 
   describe('displayedColumns', () => {
-    it('should exclude commands column by default and include it when canSendCommands is true', () => {
-      expect(component['displayedColumns']()).toEqual(['id', 'tenantId', 'name', 'status']);
-
-      fixture.componentRef.setInput('canSendCommands', true);
-      fixture.detectChanges();
-
+    it('should show commands column by default and delete column in manage mode', () => {
       expect(component['displayedColumns']()).toEqual([
         'id',
         'tenantId',
@@ -155,15 +149,68 @@ describe('DashboardGatewayTableComponent', () => {
         'status',
         'commands',
       ]);
+
+      fixture.componentRef.setInput('actionMode', 'manage');
+      fixture.detectChanges();
+
+      expect(component['displayedColumns']()).toEqual([
+        'id',
+        'tenantId',
+        'name',
+        'status',
+        'delete',
+      ]);
+    });
+  });
+
+  describe('manage mode', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('actionMode', 'manage');
+      fixture.detectChanges();
+    });
+
+    it('should render manager header', () => {
+      expect(fixture.debugElement.query(By.css('.manager-header'))).toBeTruthy();
+    });
+
+    it('should not render manager header in dashboard mode', () => {
+      fixture.componentRef.setInput('actionMode', 'dashboard');
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
+    });
+
+    it('should render delete buttons for each gateway', () => {
+      const deleteButtons = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .filter((btn) => btn.nativeElement.textContent.includes('delete'));
+      expect(deleteButtons.length).toBe(2);
+    });
+
+    it('should emit gatewayDeleteRequested when delete button is clicked', () => {
+      const spy = vi.fn();
+      component.gatewayDeleteRequested.subscribe(spy);
+
+      const deleteButton = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('delete'));
+      deleteButton!.triggerEventHandler('click', { stopPropagation: vi.fn() });
+
+      expect(spy).toHaveBeenCalledWith(mockGateways[0]);
+    });
+
+    it('should emit gatewayCreateRequested when new gateway button is clicked', () => {
+      const spy = vi.fn();
+      component.gatewayCreateRequested.subscribe(spy);
+
+      const createButton = fixture.debugElement.query(By.css('.manager-header button'));
+      createButton.triggerEventHandler('click', new MouseEvent('click'));
+
+      expect(spy).toHaveBeenCalled();
     });
   });
 
   describe('commands column', () => {
-    beforeEach(() => {
-      fixture.componentRef.setInput('canSendCommands', true);
-      fixture.detectChanges();
-    });
-
     it('should render command buttons for each gateway', () => {
       const commandButtons = fixture.debugElement
         .queryAll(By.css('mat-cell button'))
@@ -264,7 +311,7 @@ describe('DashboardGatewayTableComponent', () => {
   describe('inputs', () => {
     it('should accept all inputs', () => {
       fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
-      fixture.componentRef.setInput('canSendCommands', true);
+      fixture.componentRef.setInput('actionMode', 'manage');
       fixture.componentRef.setInput('gatewayLoading', true);
       fixture.componentRef.setInput('sensorLoading', true);
       fixture.componentRef.setInput('gatewayTotal', 100);
@@ -278,7 +325,6 @@ describe('DashboardGatewayTableComponent', () => {
       expect(component.gateways()).toEqual(mockGateways);
       expect(component.sensors()).toEqual(mockSensors);
       expect(component.expandedGateway()).toEqual(mockGateways[0]);
-      expect(component.canSendCommands()).toBe(true);
       expect(component.gatewayLoading()).toBe(true);
       expect(component.sensorLoading()).toBe(true);
       expect(component.gatewayTotal()).toBe(100);
