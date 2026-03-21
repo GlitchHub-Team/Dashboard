@@ -1,7 +1,7 @@
 import { UserDataAdapter } from './user-data.adapter';
-import { User } from '../../models/user.model';
-import { UserRole } from '../../models/user-role.enum';
-import { RawUserConfig } from '../../models/raw-user-config.model';
+import { User } from '../models/user.model';
+import { UserRole } from '../models/user-role.enum';
+import { RawUserConfig } from '../models/raw-user-config.model';
 
 describe('UserDataAdapter', () => {
   let adapter: UserDataAdapter;

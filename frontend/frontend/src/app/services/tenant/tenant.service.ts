@@ -11,16 +11,18 @@ export class TenantService {
   public readonly loading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
   public readonly tenantList = signal<Tenant[]>([]);
-  public readonly totalTenants = signal<number>(0);
+  public readonly total = signal<number>(0);
+  public readonly pageIndex = signal<number>(0);
+  public readonly limit = signal<number>(10);
 
-  retrieveTenant(page = 0, size = 10): void {
+  retrieveTenant(): void {
     this.loading.set(true);
     this.error.set(null);
 
-    this.tenantApiClient.getTenant(page, size).subscribe({
+    this.tenantApiClient.getTenant(this.pageIndex(), this.limit()).subscribe({
       next: (res) => {
         this.tenantList.set(res.items);
-        this.totalTenants.set(res.totalCount);
+        this.total.set(res.totalCount);
         this.loading.set(false);
       },
       error: (err: Error) => {
@@ -28,6 +30,12 @@ export class TenantService {
         this.loading.set(false);
       },
     });
+  }
+
+  changePage(pageIndex: number, limit: number): void {
+    this.pageIndex.set(pageIndex);
+    this.limit.set(limit);
+    this.retrieveTenant();
   }
 
   addNewTenant(config: RawTenantConfig): Observable<Tenant> {

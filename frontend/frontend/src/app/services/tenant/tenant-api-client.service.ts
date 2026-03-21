@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { Tenant } from '../../models/tenant.model';
 import { RawTenantConfig } from '../../models/raw-tenant-config.model';
 import { environment } from '../../../environments/environment';
-import { TenantDataAdapter, RawPaginatedTenantResponse } from './tenant-data.adapter';
+import { TenantDataAdapter, RawPaginatedTenantResponse } from '../../adapters/tenant-data.adapter';
 
 export interface TenantConfig {
   name: string;

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { User } from '../../models/user.model';
-import { UserConfig } from './user-api-client.service';
-import { UserRole } from '../../models/user-role.enum';
+import { User } from '../models/user.model';
+import { UserConfig } from '../services/user/user-api-client.service';
+import { UserRole } from '../models/user-role.enum';
 
 @Injectable({ providedIn: 'root' })
 export class UserApiClientMockService {

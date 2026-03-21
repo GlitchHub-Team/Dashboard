@@ -11,16 +11,18 @@ export class UserService {
   public readonly loading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
   public readonly userList = signal<User[]>([]);
-  public readonly totalUsers = signal<number>(0);
+  public readonly total = signal<number>(0);
+  public readonly pageIndex = signal<number>(0);
+  public readonly limit = signal<number>(10);
 
-  public retrieveUser(role: UserRole, tenantId?: string, page = 0, size = 10): void {
+  public retrieveUser(role: UserRole, tenantId?: string): void {
     this.loading.set(true);
     this.error.set(null);
     
-    this.userApi.getUsers(role, tenantId, page, size).subscribe({
+    this.userApi.getUsers(role, tenantId, this.pageIndex(), this.limit()).subscribe({
       next: (res) => {
         this.userList.set(res.items);
-        this.totalUsers.set(res.totalCount);
+        this.total.set(res.totalCount);
         this.loading.set(false);
       },
       error: (err: Error) => {
@@ -28,6 +30,12 @@ export class UserService {
         this.loading.set(false);
       }
     });
+  }
+
+  public changePage(pageIndex: number, limit: number, role: UserRole, tenantId?: string): void {
+    this.pageIndex.set(pageIndex);
+    this.limit.set(limit);
+    this.retrieveUser(role, tenantId);
   }
 
   public addNewUser(config: UserConfig, tenantId?: string): Observable<User> {

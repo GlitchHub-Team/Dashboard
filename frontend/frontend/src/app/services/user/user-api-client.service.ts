@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { UserDataAdapter, RawPaginatedResponse } from './user-data.adapter';
+import { UserDataAdapter, RawPaginatedResponse } from '../../adapters/user-data.adapter';
 import { User } from '../../models/user.model';
 import { UserRole } from '../../models/user-role.enum';
 import { environment } from '../../../environments/environment';

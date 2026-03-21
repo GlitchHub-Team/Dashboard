@@ -12,6 +12,15 @@
       [loading]="(loading() || false)"
       (deleteRequested)="onDeleteTenant($event)"
     ></app-tenant-table>
+
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="limit()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      (page)="onPageChange($event)"
+      aria-label="Seleziona pagina">
+    </mat-paginator>
   </div>
 
 </div>

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { UserService } from '../../services/user/user.service';
 import { UserFormDialogComponent } from './dialogs/user-form.dialog';
 import { UserTableComponent } from './components/user-table.component';
@@ -19,7 +20,7 @@ interface UserManagerContext {
 @Component({
   selector: 'app-user-manager-page',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatDialogModule, UserTableComponent],
+  imports: [CommonModule, MatButtonModule, MatDialogModule, UserTableComponent, MatPaginatorModule],
   templateUrl: './user-manager.page.html',
   styleUrl: './user-manager.page.css',
 })
@@ -32,6 +33,9 @@ export class UserManagerPage implements OnInit {
   public context: UserManagerContext = { title: 'User Management', role: UserRole.TENANT_ADMIN };
 
   public users = this.userService.userList;
+  public total = this.userService.total;
+  public pageIndex = this.userService.pageIndex;
+  public limit = this.userService.limit;
   public loading = this.userService.loading;
 
 
@@ -72,5 +76,9 @@ export class UserManagerPage implements OnInit {
         });
       }
     });
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.userService.changePage(event.pageIndex, event.pageSize, this.context.role, this.context.tenantId);
   }
 }

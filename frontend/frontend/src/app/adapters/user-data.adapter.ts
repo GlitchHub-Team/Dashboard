@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { User } from '../../models/user.model';
-import { RawUserConfig } from '../../models/raw-user-config.model';
+import { User } from '../models/user.model';
+import { RawUserConfig } from '../models/raw-user-config.model';
 
 export interface RawPaginatedResponse {
   content?: RawUserConfig[];
