@@ -62,7 +62,7 @@ func newStepTenantError_CreateUserService(targetTenantId uuid.UUID, err error) m
 	}
 }
 
-func TestCreateTenantUser(t *testing.T) {
+func TestService_CreateTenantUser(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -472,7 +472,7 @@ func TestCreateTenantUser(t *testing.T) {
 	}
 }
 
-func TestCreateTenantAdmin(t *testing.T) {
+func TestService_CreateTenantAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -881,8 +881,7 @@ func TestCreateTenantAdmin(t *testing.T) {
 	}
 }
 
-
-func TestCreateSuperAdmin(t *testing.T) {
+func TestService_CreateSuperAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := (*uuid.UUID)(nil)
 	targetUserId := uint(1)

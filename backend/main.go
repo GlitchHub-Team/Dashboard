@@ -3,8 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -41,42 +45,50 @@ func NewGinEngine(
 ) *gin.Engine {
 	router := gin.Default()
 
+	// https://blog.depa.do/post/gin-validation-errors-handling
+	if validator, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+	} else {
+		log.Warn("Cannot register name func!")
+	}
+
+	public := router.Group("/api/v1")
+
+	{
+		// TODO: questo è solo un test
+		public.POST("/gateway", gatewayController.CreateGateway)
+		public.DELETE("/gateway/:id", gatewayController.DeleteGateway)
+
+		public.POST("/tenant/:tenant_id/tenant_user", userController.CreateTenantUser)
+		public.POST("/tenant/:tenant_id/tenant_admin", userController.CreateTenantAdmin)
+		public.POST("/super_admin", userController.CreateSuperAdmin)
+
+		public.DELETE("/tenant/:tenant_id/tenant_user/:user_id", userController.DeleteTenantUser)
+		public.DELETE("/tenant/:tenant_id/tenant_admin/:user_id", userController.DeleteTenantAdmin)
+		public.DELETE("/super_admin/:user_id", userController.DeleteSuperAdmin)
+
+		public.GET("/tenant/:tenant_id/tenant_user/:user_id", userController.GetTenantUser)
+		public.GET("/tenant/:tenant_id/tenant_admin/:user_id", userController.GetTenantAdmin)
+		public.GET("/super_admin/:user_id", userController.GetSuperAdmin)
+
+		public.GET("/tenant/:tenant_id/tenant_users", userController.GetTenantUsers)
+		public.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
+		public.GET("/super_admins", userController.GetSuperAdmins)
+
+		
+	}
+
 	log.Info("CONFIG DB URL:" + config.CloudDBUrl)
 
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			log.Info("Starting HTTP server!")
-
-			public := router.Group("/api/v1")
-
-			{
-				public.GET("/", func(ctx *gin.Context) {
-					ctx.JSON(200, gin.H{
-						"msg": "It works!",
-					})
-				})
-
-				// TODO: questo è solo un test
-				public.POST("/gateway", gatewayController.CreateGateway)
-				public.DELETE("/gateway/:id", gatewayController.DeleteGateway)
-
-				public.POST("/tenant/:tenant_id/tenant_user", userController.CreateTenantUser)
-				public.POST("/tenant/:tenant_id/tenant_admin", userController.CreateTenantAdmin)
-				public.POST("/super_admin", userController.CreateSuperAdmin)
-
-				public.DELETE("/tenant/:tenant_id/tenant_user/:user_id", userController.DeleteTenantUser)
-				public.DELETE("/tenant/:tenant_id/tenant_admin/:user_id", userController.DeleteTenantAdmin)
-				public.DELETE("/super_admin/:user_id", userController.DeleteSuperAdmin)
-
-				public.GET("/tenant/:tenant_id/tenant_user/:user_id", userController.GetTenantUser)
-				public.GET("/tenant/:tenant_id/tenant_admin/:user_id", userController.GetTenantAdmin)
-				public.GET("/super_admin/:user_id", userController.GetSuperAdmin)
-				
-				public.GET("/tenant/:tenant_id/tenant_users", userController.GetTenantUsers)
-				public.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
-				public.GET("/super_admins", userController.GetSuperAdmins)
-			}
-
 			go router.Run()
 			return nil
 		},
@@ -94,7 +106,7 @@ func main() {
 		// Moduli infrastrutturali
 		config.Module,
 		db_connection.Module,
-		migrate.Module,
+		migrate.Module,  // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
 		email.Module,
 
 		// Moduli funzionalità

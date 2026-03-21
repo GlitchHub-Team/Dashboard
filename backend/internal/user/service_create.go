@@ -7,6 +7,9 @@ import (
 	"backend/internal/tenant"
 )
 
+//go:generate mockgen -destination=../../tests/user/mocks/use_cases_create.go -package=mocks . CreateTenantUserUseCase,CreateTenantAdminUseCase,CreateSuperAdminUseCase
+
+
 type CreateTenantUserUseCase interface {
 	CreateTenantUser(cmd CreateTenantUserCommand) (User, error)
 }
@@ -67,16 +70,16 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 	}
 
 	// 3. Controlla user
-	user, err := service.getUserPort.GetTenantUserByEmail(cmd.TenantId, cmd.Email)
+	checkedUser, err := service.getUserPort.GetTenantUserByEmail(cmd.TenantId, cmd.Email)
 	if err != nil {
 		return User{}, err
 	}
-	if !user.IsZero() {
+	if !checkedUser.IsZero() {
 		return User{}, ErrUserAlreadyExists
 	}
 
 	// 4. Crea user
-	user, err = service.createUserPort.CreateUser(User{
+	user, err := service.createUserPort.CreateUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
 		Role:      identity.ROLE_TENANT_USER,

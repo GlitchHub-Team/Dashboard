@@ -1,11 +1,15 @@
 package user
 
 import (
-	"fmt"
+	"errors"
+	// "fmt"
 	"net/http"
 
 	"backend/internal/common"
 	"backend/internal/common/dto"
+	"backend/internal/identity"
+	"backend/internal/tenant"
+
 	// "backend/internal/identity"
 	transportHttp "backend/internal/transport/http"
 
@@ -79,251 +83,277 @@ func NewUserController(
 // Create =============================================================================================
 
 func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto CreateTenantUserDTO
-	
-	// 2. Binding JSON
-	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.TenantUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
+		return
+	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
+
+	// Binding JSON
+	var bodyDto CreateUserBodyDTO
+	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 3. Esecuzione comando
+	// Esecuzione comando
 	cmd := CreateTenantUserCommand{
 		Requester: requester,
-		Email:    requestDto.Email,
-		Username: requestDto.Username,
-		TenantId: tenantId,
+		Email:     bodyDto.Email,
+		Username:  bodyDto.Username,
+		TenantId:  tenantId,
 	}
 
-	user, err := controller.createTenantUserUseCase.CreateTenantUser(cmd)
+	createdUser, err := controller.createTenantUserUseCase.CreateTenantUser(cmd)
 	if err != nil {
-		common.RequestError(ctx, fmt.Errorf("error creating tenant user: %v", err))
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserAlreadyExists) {
+			common.RequestError(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Invio risposta
-	responseDto := NewUserResponseDTO(user)
+	// Invio risposta
+	responseDto := NewUserResponseDTO(createdUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) CreateTenantAdmin(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto CreateTenantAdminDTO
-	
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.TenantUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
+		return
+	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
+
+	// Binding JSON
+	var bodyDto CreateUserBodyDTO
+	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	// 3. Binding JSON
-	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 4. Esecuzione comando
+	// Esecuzione comando
 	cmd := CreateTenantAdminCommand{
 		Requester: requester,
-		Email:    requestDto.Email,
-		Username: requestDto.Username,
-		TenantId: tenantId,
+		Email:     bodyDto.Email,
+		Username:  bodyDto.Username,
+		TenantId:  tenantId,
 	}
 
-	user, err := controller.createTenantAdminUseCase.CreateTenantAdmin(cmd)
-	if err != nil { 
-		common.RequestError(ctx, err)
+	createdUser, err := controller.createTenantAdminUseCase.CreateTenantAdmin(cmd)
+	if err != nil {
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserAlreadyExists) {
+			common.RequestError(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 5. Invio risposta
-	responseDto := NewUserResponseDTO(user)
+	// Invio risposta
+	responseDto := NewUserResponseDTO(createdUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
-	
-	var requestDto CreateSuperAdminDTO
-	
-	// 2. Binding JSON
+
+	var requestDto CreateUserBodyDTO
+
+	// Binding JSON
 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 3. Esecuzione comando
+	// Esecuzione comando
 	cmd := CreateSuperAdminCommand{
 		Requester: requester,
-		Email:    requestDto.Email,
-		Username: requestDto.Username,
+		Email:     requestDto.Email,
+		Username:  requestDto.Username,
 	}
 
-	user, err := controller.createSuperAdminUseCase.CreateSuperAdmin(cmd)
+	createdUser, err := controller.createSuperAdminUseCase.CreateSuperAdmin(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserAlreadyExists) {
+			common.RequestError(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Invio risposta
-	responseDto := NewUserResponseDTO(user)
+
+	// Invio risposta
+	responseDto := NewUserResponseDTO(createdUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 // Delete =============================================================================================
 
 func (controller *Controller) DeleteTenantUser(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto DeleteTenantUserDTO
-	
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.TenantMemberUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
-	// 3. Binding JSON
-	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
-
-	// 4. Esecuzione comando
+	// Esecuzione comando
 	cmd := DeleteTenantUserCommand{
 		Requester: requester,
-		TenantId: tenantId,
-		UserId:   requestDto.UserId,
+		TenantId:  tenantId,
+		UserId:    uriDto.UserId,
 	}
 
 	oldUser, err := controller.deleteTenantUserUseCase.DeleteTenantUser(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserNotFound) {
+			common.RequestNotFound(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 5. Invio risposta
+	// Invio risposta
 	responseDto := NewUserResponseDTO(oldUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto DeleteTenantAdminDTO
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.TenantMemberUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
-	// 3. Binding JSON
-	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	tenantId, err := uuid.Parse(requestDto.TenantId)
-	if err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	// 4. Esecuzione comando
+	// Esecuzione comando
 	cmd := DeleteTenantAdminCommand{
 		Requester: requester,
-		TenantId: tenantId,
-		UserId:   requestDto.UserId,
+		TenantId:  tenantId,
+		UserId:    uriDto.UserId,
 	}
 
 	oldUser, err := controller.deleteTenantAdminUseCase.DeleteTenantAdmin(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserNotFound) {
+			common.RequestNotFound(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 5. Invio risposta
+	// Invio risposta
 	responseDto := NewUserResponseDTO(oldUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
-	
-	var requestDto DeleteSuperAdminDTO
 
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.SuperAdminUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 3. Esecuzione comando
+	// Esecuzione comando
 	cmd := DeleteSuperAdminCommand{
 		Requester: requester,
-		UserId: requestDto.UserId,
+		UserId:    uriDto.UserId,
 	}
 
 	oldUser, err := controller.deleteSuperAdminUseCase.DeleteSuperAdmin(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, ErrUserNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, ErrUserNotFound)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Invio risposta
+	// Invio risposta
 	responseDto := NewUserResponseDTO(oldUser)
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -331,256 +361,281 @@ func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
 // Get single =========================================================================================
 
 func (controller *Controller) GetTenantUser(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto GetTenantUserDTO
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.TenantMemberUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 3. Esecuzione comando
+	// Esecuzione comando
 	cmd := GetTenantUserCommand{
 		Requester: requester,
-		TenantId: tenantId,
-		UserId:   requestDto.UserId,
+		TenantId:  tenantId,
+		UserId:    uriDto.UserId,
 	}
 
 	user, err := controller.getTenantUserUseCase.GetTenantUser(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserNotFound) {
+			common.RequestNotFound(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Invio risposta
+	// Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func (controller *Controller) GetTenantAdmin(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto GetTenantAdminDTO
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.TenantMemberUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 3. Esecuzione comando
+	// Esecuzione comando
 	cmd := GetTenantAdminCommand{
 		Requester: requester,
-		TenantId: tenantId,
-		UserId:   requestDto.UserId,
+		TenantId:  tenantId,
+		UserId:    uriDto.UserId,
 	}
 
 	user, err := controller.getTenantAdminUseCase.GetTenantAdmin(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserNotFound) {
+			common.RequestNotFound(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Invio risposta
+	// Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	common.RequestOk(ctx, responseDto)
 }
 
 func (controller *Controller) GetSuperAdmin(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	var requestDto GetSuperAdminDTO
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	// Binding URI
+	var uriDto dto.SuperAdminUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta!
-
-	// 3. Esecuzione comando
+	// Esecuzione comando
 	cmd := GetSuperAdminCommand{
 		Requester: requester,
-		UserId: requestDto.UserId,
+		UserId:    uriDto.UserId,
 	}
 
 	user, err := controller.getSuperAdminUseCase.GetSuperAdmin(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, ErrUserNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, ErrUserNotFound)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Invio risposta
+	// Invio risposta
 	responseDto := NewUserResponseDTO(user)
 	common.RequestOk(ctx, responseDto)
 }
 
-
 // Get multiple =======================================================================================
 
-func (controller *Controller) GetTenantUsers(ctx *gin.Context) {	
-	// 1. Autorizza utente
+func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
+	
+	// Binding URI
+	var uriDto dto.TenantUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
+		return
+	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
-	requestDto := GetTenantUsersByTenantDTO{
+	// Binding Query
+	queryDto := GetUserListQueryDTO{
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	// 3. Binding Query
-	if err := ctx.ShouldBindQuery(&requestDto); err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta! Da fare nel servizio!!!
-
-	// 4. Esecuzione comando
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
+	// Esecuzione comando
 	cmd := GetTenantUsersByTenantCommand{
 		Requester: requester,
-		Page:  requestDto.Page,
-		Limit: requestDto.Limit,
-		TenantId: tenantId,
+		Page:      queryDto.Page,
+		Limit:     queryDto.Limit,
+		TenantId:  tenantId,
 	}
 
 	users, total, err := controller.getTenantUsersByTenantUseCase.GetTenantUsersByTenant(cmd)
+	if users == nil {
+		users = make([]User, 0)
+	}
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserNotFound) {
+			common.RequestNotFound(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 5. Invio risposta
+
+	// Invio risposta
 	responseDto := NewUserListResponseDTO(users, total)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-
-func (controller *Controller) GetTenantAdmins(ctx *gin.Context) {	
-	// 1. Autorizza utente
+func (controller *Controller) GetTenantAdmins(ctx *gin.Context) {
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	requestDto := GetTenantAdminsByTenantDTO{
+	// Binding URI
+	var uriDto dto.TenantUriDTO
+	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
+		return
+	}
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
+
+	// Binding Query
+	queryDto := GetUserListQueryDTO{
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
 
-	// 3. Binding Query
-	if err := ctx.ShouldBindQuery(&requestDto); err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta! Da fare nel servizio!!!
-
-	// 4. Esecuzione comando
-	tenantId, _ := uuid.Parse(requestDto.TenantId)
-
+	// Esecuzione comando
 	cmd := GetTenantAdminsByTenantCommand{
 		Requester: requester,
-		Page:  requestDto.Page,
-		Limit: requestDto.Limit,
-		TenantId: tenantId,
+		Page:      queryDto.Page,
+		Limit:     queryDto.Limit,
+		TenantId:  tenantId,
 	}
 
 	users, total, err := controller.getTenantAdminsByTenantUseCase.GetTenantAdminsByTenant(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			return
+		} else if errors.Is(err, ErrUserNotFound) {
+			common.RequestNotFound(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 5. Invio risposta
+	// Invio risposta
 	responseDto := NewUserListResponseDTO(users, total)
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-
 func (controller *Controller) GetSuperAdmins(ctx *gin.Context) {
-	// 1. Autorizza utente
+	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
 
-	requestDto := GetTenantUsersByTenantDTO{
+	// Binding Query
+	queryDto := GetUserListQueryDTO{
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
-
-	// 2. Binding URI
-	if err := ctx.ShouldBindUri(&requestDto); err != nil {
-		common.RequestError(ctx, err)
+	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
+		if !common.ValidationError(ctx, err) {
+			common.RequestError(ctx, err)
+		}
 		return
 	}
-
-	// 3. Binding Query
-	if err := ctx.ShouldBindQuery(&requestDto); err != nil {
-		common.RequestError(ctx, err)
-		return
-	}
-
-	// TODO: verificare che l'utente abbia autorizzazione per fare richiesta! Da fare nel servizio!!!
-
-	// 4. Esecuzione comando
-
+	// Esecuzione comando
 	cmd := GetSuperAdminListCommand{
 		Requester: requester,
-		Page:  requestDto.Page,
-		Limit: requestDto.Limit,
+		Page:      queryDto.Page,
+		Limit:     queryDto.Limit,
 	}
 
 	users, total, err := controller.getSuperAdminListUseCase.GetSuperAdminList(cmd)
 	if err != nil {
-		common.RequestError(ctx, err)
+		if errors.Is(err, identity.ErrUnauthorizedAccess) {
+			common.RequestUnauthorized(ctx, err)
+			return
+		}
+		common.RequestServerError(ctx, err)
 		return
 	}
 
-	// 5. Invio risposta
+	// Invio risposta
 	responseDto := NewUserListResponseDTO(users, total)
 	ctx.JSON(http.StatusOK, responseDto)
 }

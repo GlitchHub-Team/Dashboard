@@ -55,7 +55,7 @@ func newStepTenantError_DeleteUserService(targetTenantId uuid.UUID, err error) m
 	}
 }
 
-func TestDeleteTenantUser(t *testing.T) {
+func TestService_DeleteTenantUser(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -338,7 +338,7 @@ func TestDeleteTenantUser(t *testing.T) {
 	}
 }
 
-func TestDeleteTenantAdmin(t *testing.T) {
+func TestService_DeleteTenantAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -622,7 +622,7 @@ func TestDeleteTenantAdmin(t *testing.T) {
 	}
 }
 
-func TestDeleteSuperAdmin(t *testing.T) {
+func TestService_DeleteSuperAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := (*uuid.UUID)(nil)
 	targetUserId := uint(1)

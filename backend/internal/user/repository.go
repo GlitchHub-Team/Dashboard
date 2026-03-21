@@ -34,6 +34,8 @@ type TenantMemberEntity struct {
 	Password  *string
 	Confirmed bool   `gorm:"not null"`
 	Role      string `gorm:"not null;size:32;check:role = 'tenant_user' or role ='tenant_admin'"`
+
+	// NOTA: Questo parametro è ignorato, ma è FONDAMENTALE perché va specificato quando si chiama il repository!
 	TenantId  string `gorm:"-"`
 	CreatedAt time.Time
 	UpdatedAt time.Time

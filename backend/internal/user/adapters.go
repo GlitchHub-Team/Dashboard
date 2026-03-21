@@ -1,7 +1,7 @@
 package user
 
 import (
-	"fmt"
+	// "fmt"
 
 	"backend/internal/common"
 	"backend/internal/identity"
@@ -179,11 +179,11 @@ func (adapter *UserPostgreAdapter) GetTenantUserByEmail(tenantId uuid.UUID, emai
 		userRepositoryGetUserBy{Email: &email},
 	)
 	if err != nil {
-		return User{}, fmt.Errorf("error GetTenantUser: %v", err)
+		return User{}, err
 	}
 	tenantUser.TenantId = tenantId.String()
-	var user User
 
+	var user User
 	if *tenantUser != (TenantMemberEntity{}) {
 		user, err = tenantUser.toUser()
 	} else {

@@ -45,7 +45,7 @@ func (migrator *PostgreMigrator) Migrate() error {
 	}
 
 	/* Entity da associare a uno schema tenant specifico */
-	schemaEntities := [](interface{ TableName() string }){
+	tenantSchemaEntities := [](interface{ TableName() string }){
 		&user.TenantMemberEntity{},
 	}
 
@@ -96,7 +96,7 @@ func (migrator *PostgreMigrator) Migrate() error {
 				return fmt.Errorf("failed to set search_path to %s: %v", schemaName, err)
 			}
 
-			for _, entity := range schemaEntities {
+			for _, entity := range tenantSchemaEntities {
 				migrator.log.Sugar().Infof("Migrating %v", entity.TableName())
 
 				if err = tx.AutoMigrate(entity); err != nil {

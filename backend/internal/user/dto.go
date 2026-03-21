@@ -2,100 +2,103 @@ package user
 
 import (
 	"backend/internal/common/dto"
+	"backend/internal/identity"
 )
 
 // Request DTO ========================================================================================
 
 // Create ---------------------------------------------------------------------------------------------
-type CreateTenantUserDTO struct {
+
+type CreateUserBodyDTO struct {
 	dto.EmailField
 	dto.UsernameField
-	dto.TenantIdField
 }
 
-type CreateTenantAdminDTO struct {
-	dto.EmailField
-	dto.UsernameField
-	dto.TenantIdField
-}
-
-type CreateSuperAdminDTO struct {
-	dto.EmailField
-	dto.UsernameField
-}
+// type CreateUserDTO struct {
+// 	dto.EmailField
+// 	dto.UsernameField
+// }
 
 // Delete ---------------------------------------------------------------------------------------------
 
-type DeleteTenantUserDTO struct {
-	dto.TenantIdField
-	dto.UserIdField
-}
+// type DeleteTenantUserDTO struct {
+// 	dto.TenantIdField
+// 	dto.UserIdField
+// }
 
-type DeleteTenantAdminDTO struct {
-	dto.TenantIdField
-	dto.UserIdField
-}
+// type DeleteTenantAdminDTO struct {
+// 	dto.TenantIdField
+// 	dto.UserIdField
+// }
 
-type DeleteSuperAdminDTO struct {
-	dto.UserIdField
-}
+// type DeleteSuperAdminDTO struct {
+// 	dto.UserIdField
+// }
 
 // Get single ---------------------------------------------------------------------------------------------
-type GetTenantUserDTO struct {
-	dto.TenantIdField
-	dto.UserIdField
-}
+// type GetTenantUserDTO struct {
+// 	dto.TenantIdField
+// 	dto.UserIdField
+// }
 
-type GetTenantAdminDTO struct {
-	dto.TenantIdField
-	dto.UserIdField
-}
+// type GetTenantAdminDTO struct {
+// 	dto.TenantIdField
+// 	dto.UserIdField
+// }
 
-type GetSuperAdminDTO struct {
-	dto.UserIdField
-}
+// type GetSuperAdminDTO struct {
+// 	dto.UserIdField
+// }
 
 // Get multiple ---------------------------------------------------------------------------------------
-type GetTenantUsersByTenantDTO struct {
-	dto.Pagination
-	dto.TenantIdField
-	dto.UserIdField
-}
+// type GetTenantUsersByTenantQueryDTO struct {
+// 	dto.Pagination
+// }
 
-type GetTenantAdminsByTenantDTO struct {
-	dto.Pagination
-	dto.TenantIdField
-	dto.UserIdField
-}
+// type GetTenantAdminsByTenantQueryDTO struct {
+// 	dto.Pagination
+// }
 
-type GetSuperAdminListDTO struct {
-	dto.Pagination
-	dto.UserIdField
-}
+// type GetSuperAdminListQueryDTO struct {
+// 	dto.Pagination
+// }
 
+type GetUserListQueryDTO struct {
+	dto.Pagination
+}
 
 // Response DTO
 type UserResponseDTO struct {
 	dto.UserIdField
 	dto.EmailField
+	dto.UsernameField
 	dto.UserRoleField
 	dto.TenantIdField
 }
+
 func NewUserResponseDTO(user User) UserResponseDTO {
-	return UserResponseDTO{
-		dto.UserIdField{UserId: user.Id},
-		dto.EmailField{Email: user.Email},
-		dto.UserRoleField{UserRole: string(user.Role)},
-		dto.TenantIdField{TenantId: user.TenantId.String()},
+	response := UserResponseDTO{
+		UserIdField: dto.UserIdField{UserId: user.Id},
+		UsernameField: dto.UsernameField{Username: user.Name},
+		EmailField: dto.EmailField{Email: user.Email},
+		UserRoleField: dto.UserRoleField{UserRole: string(user.Role)},
 	}
+	if user.Role != identity.ROLE_SUPER_ADMIN {
+		response.TenantIdField = dto.TenantIdField{
+			TenantId: user.TenantId.String(),
+		}
+	}
+
+	return response
 }
 
-type UserListResponseDTO struct{
+type UserListResponseDTO struct {
 	dto.ListInfo
-	Users []UserResponseDTO
+	Users []UserResponseDTO `json:"users" binding:"required,min=0"`
 }
+
 func NewUserListResponseDTO(userList []User, total uint) UserListResponseDTO {
-	var userDtos []UserResponseDTO
+	userDtos := make([]UserResponseDTO, 0) // Importante creare un empty slice e non un nil slice!
 
 	for _, user := range userList {
 		userDtos = append(userDtos, NewUserResponseDTO(user))
@@ -109,3 +112,4 @@ func NewUserListResponseDTO(userList []User, total uint) UserListResponseDTO {
 		},
 	}
 }
+

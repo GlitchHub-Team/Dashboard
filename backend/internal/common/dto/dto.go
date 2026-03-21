@@ -37,3 +37,18 @@ type UserRoleField struct {
 type TenantIdField struct {
 	TenantId string `uri:"tenant_id" form:"tenant_id" json:"tenant_id" binding:"uuid4,required"`
 }
+
+
+// Uri DTOs -------------------------------------------------------------------------------------------
+type TenantUriDTO struct {
+	TenantIdField
+}
+
+type TenantMemberUriDTO struct {
+	TenantIdField
+	UserIdField
+}
+
+type SuperAdminUriDTO struct {
+	UserIdField
+}

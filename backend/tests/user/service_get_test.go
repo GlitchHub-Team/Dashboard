@@ -59,7 +59,7 @@ func newStepTenantError_GetUserService(targetTenantId uuid.UUID, mockError error
 }
 
 // Get singolo =============================================================================================================================
-func TestGetTenantUser(t *testing.T) {
+func TestService_GetTenantUser(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -344,7 +344,7 @@ func TestGetTenantUser(t *testing.T) {
 	}
 }
 
-func TestGetTenantAdmin(t *testing.T) {
+func TestService_GetTenantAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -591,7 +591,7 @@ func TestGetTenantAdmin(t *testing.T) {
 	}
 }
 
-func TestGetSuperAdmin(t *testing.T) {
+func TestService_GetSuperAdmin(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 
@@ -778,7 +778,7 @@ func TestGetSuperAdmin(t *testing.T) {
 }
 
 // Get multiplo ===================================================================================================================
-func TestGetTenantUsersByTenant(t *testing.T) {
+func TestService_GetTenantUsersByTenant(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -1078,7 +1078,7 @@ func TestGetTenantUsersByTenant(t *testing.T) {
 	}
 }
 
-func TestGetTenantAdminsByTenant(t *testing.T) {
+func TestService_GetTenantAdminsByTenant(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
@@ -1378,8 +1378,7 @@ func TestGetTenantAdminsByTenant(t *testing.T) {
 	}
 }
 
-
-func TestGetSuperAdminList(t *testing.T) {
+func TestService_GetSuperAdminList(t *testing.T) {
 	// Dati test
 	targetUserId := uint(1)
 

@@ -5,6 +5,8 @@ import (
 	"backend/internal/tenant"
 )
 
+//go:generate mockgen -destination=../../tests/user/mocks/use_cases_delete.go -package=mocks . DeleteTenantUserUseCase,DeleteTenantAdminUseCase,DeleteSuperAdminUseCase
+
 // Delete User ====================================================================================
 type DeleteTenantUserUseCase interface {
 	DeleteTenantUser(cmd DeleteTenantUserCommand) (User, error)
@@ -84,8 +86,8 @@ func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand
 
 	// 2. Controlla autorizzazione tenant
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate  //nolint:staticcheck
-	if !superAdminAccess && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
+	if !superAdminAccess && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {    //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 

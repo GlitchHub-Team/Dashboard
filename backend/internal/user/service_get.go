@@ -5,6 +5,9 @@ import (
 	"backend/internal/tenant"
 )
 
+//go:generate mockgen -destination=../../tests/user/mocks/use_cases_get.go -package=mocks . GetTenantUserUseCase,GetTenantAdminUseCase,GetSuperAdminUseCase,GetTenantUsersByTenantUseCase,GetTenantAdminsByTenantUseCase,GetSuperAdminListUseCase
+
+
 type GetUserService struct {
 	getUserPort   GetUserPort
 	getTenantPort tenant.GetTenantPort
