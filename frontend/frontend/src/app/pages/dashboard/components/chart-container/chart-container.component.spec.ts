@@ -9,6 +9,7 @@ import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { SensorReading } from '../../../../models/sensor-data/sensor-reading.model';
+import { Status } from '../../../../models/gateway-sensor-status.enum';
 
 describe('ChartContainerComponent', () => {
   let fixture: ComponentFixture<ChartContainerComponent>;
@@ -32,6 +33,7 @@ describe('ChartContainerComponent', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
     dataInterval: 1000,
   };
 

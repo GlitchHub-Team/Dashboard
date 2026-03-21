@@ -17,16 +17,20 @@ describe('SensorApiClientService', () => {
 
   const mockSensors: SensorBackend[] = [
     {
-      SensorId: 's-1',
-      GatewayId: 'gw-1',
-      Name: 'Temperature',
-      Profile: 'health thermometer',
+      sensor_id: 's-1',
+      gateway_id: 'gw-1',
+      sensor_name: 'Temperature',
+      profile: 'health thermometer',
+      sensor_interval: 60,
+      status: 'active',
     },
     {
-      SensorId: 's-2',
-      GatewayId: 'gw-1',
-      Name: 'Humidity',
-      Profile: 'environmental sensing',
+      sensor_id: 's-2',
+      gateway_id: 'gw-1',
+      sensor_name: 'Humidity',
+      profile: 'environmental sensing',
+      sensor_interval: 60,
+      status: 'inactive',
     },
   ];
 
@@ -73,8 +77,8 @@ describe('SensorApiClientService', () => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
         expect(response.data.length).toBe(2);
-        expect(response.data[0].SensorId).toBe('s-1');
-        expect(response.data[1].SensorId).toBe('s-2');
+        expect(response.data[0].sensor_id).toBe('s-1');
+        expect(response.data[1].sensor_id).toBe('s-2');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gw-1/list?page=1&limit=20`);
@@ -100,6 +104,12 @@ describe('SensorApiClientService', () => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
         expect(response.data.length).toBe(2);
+        expect(response.data[0].sensor_id).toBe('s-1');
+        expect(response.data[0].sensor_name).toBe('Temperature');
+        expect(response.data[0].sensor_interval).toBe(60);
+        expect(response.data[1].sensor_id).toBe('s-2');
+        expect(response.data[1].sensor_name).toBe('Humidity');
+        expect(response.data[1].sensor_interval).toBe(60);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/list?page=1&limit=10`);
@@ -112,13 +122,16 @@ describe('SensorApiClientService', () => {
       gatewayId: 'gw-1',
       name: 'New Sensor',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+      dataInterval: 60,
     };
 
     const mockResponse: SensorBackend = {
-      SensorId: 's-3',
-      GatewayId: 'gw-1',
-      Name: 'New Sensor',
-      Profile: 'health thermometer',
+      sensor_id: 's-3',
+      gateway_id: 'gw-1',
+      sensor_name: 'New Sensor',
+      profile: 'health thermometer',
+      sensor_interval: 60,
+      status: 'active',
     };
 
     it('should send POST request with sensor config as body', () => {
@@ -134,8 +147,9 @@ describe('SensorApiClientService', () => {
 
     it('should return a SensorBackend', () => {
       service.addNewSensor(mockConfig).subscribe((sensor) => {
-        expect(sensor.SensorId).toBe('s-3');
-        expect(sensor.Name).toBe('New Sensor');
+        expect(sensor.sensor_id).toBe('s-3');
+        expect(sensor.sensor_name).toBe('New Sensor');
+        expect(sensor.sensor_interval).toBe(60);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/add`);

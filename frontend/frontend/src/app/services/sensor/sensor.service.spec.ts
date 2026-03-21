@@ -10,6 +10,7 @@ import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { PaginatedResponse } from '../../models/paginated-response.model';
 import { ApiError } from '../../models/api-error.model';
+import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('SensorService', () => {
   let service: SensorService;
@@ -20,12 +21,14 @@ describe('SensorService', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+      status: Status.ACTIVE,
     },
     {
       id: 's-2',
       gatewayId: 'gw-1',
       name: 'Humidity',
       profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+      status: Status.INACTIVE,
     },
   ];
 
@@ -33,8 +36,22 @@ describe('SensorService', () => {
     count: 2,
     total: 10,
     data: [
-      { SensorId: 's-1', GatewayId: 'gw-1', Name: 'Temperature', Profile: 'health thermometer' },
-      { SensorId: 's-2', GatewayId: 'gw-1', Name: 'Humidity', Profile: 'environmental sensing' },
+      {
+        sensor_id: 's-1',
+        gateway_id: 'gw-1',
+        sensor_name: 'Temperature',
+        profile: 'health thermometer',
+        sensor_interval: 60,
+        status: Status.ACTIVE,
+      },
+      {
+        sensor_id: 's-2',
+        gateway_id: 'gw-1',
+        sensor_name: 'Humidity',
+        profile: 'environmental sensing',
+        sensor_interval: 60,
+        status: Status.INACTIVE,
+      },
     ],
   };
 
@@ -43,20 +60,24 @@ describe('SensorService', () => {
   const emptyAdapted: PaginatedResponse<Sensor> = { count: 0, total: 0, data: [] };
 
   const mockNewBackend: SensorBackend = {
-    SensorId: 's-3',
-    GatewayId: 'gw-1',
-    Name: 'Pressure',
-    Profile: 'environmental sensing',
+    sensor_id: 's-3',
+    gateway_id: 'gw-1',
+    sensor_name: 'Pressure',
+    profile: 'environmental sensing',
+    sensor_interval: 60,
+    status: Status.ACTIVE,
   };
   const mockNewSensor: Sensor = {
     id: 's-3',
     gatewayId: 'gw-1',
     name: 'Pressure',
+    status: Status.ACTIVE,
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
   };
   const mockConfig: SensorConfig = {
     gatewayId: 'gw-1',
     name: 'Pressure',
+    dataInterval: 60,
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
   };
 

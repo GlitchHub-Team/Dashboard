@@ -15,8 +15,20 @@ describe('GatewayApiClientService', () => {
   const apiUrl = `${environment.apiUrl}/gateway`;
 
   const mockGateways: GatewayBackend[] = [
-    { GatewayId: 'gw-1', GatewayName: 'Gateway 1' },
-    { GatewayId: 'gw-2', GatewayName: 'Gateway 2' },
+    {
+      gateway_id: 'gw-1',
+      name: 'Gateway 1',
+      tenant_id: 'tenant-1',
+      status: 'active',
+      intervals: 60,
+    },
+    {
+      gateway_id: 'gw-2',
+      name: 'Gateway 2',
+      tenant_id: 'tenant-1',
+      status: 'inactive',
+      intervals: 120,
+    },
   ];
 
   const mockPaginatedResponse: PaginatedResponse<GatewayBackend> = {
@@ -62,8 +74,8 @@ describe('GatewayApiClientService', () => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
         expect(response.data.length).toBe(2);
-        expect(response.data[0].GatewayId).toBe('gw-1');
-        expect(response.data[1].GatewayId).toBe('gw-2');
+        expect(response.data[0].gateway_id).toBe('gw-1');
+        expect(response.data[1].gateway_id).toBe('gw-2');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant-1/list?page=0&limit=10`);
@@ -103,8 +115,11 @@ describe('GatewayApiClientService', () => {
     };
 
     const mockResponse: GatewayBackend = {
-      GatewayId: 'gw-3',
-      GatewayName: 'New Gateway',
+      gateway_id: 'gw-3',
+      name: 'New Gateway',
+      tenant_id: 'tenant-1',
+      status: 'active',
+      intervals: 60,
     };
 
     it('should send POST request with gateway config as body', () => {
@@ -120,8 +135,8 @@ describe('GatewayApiClientService', () => {
 
     it('should return a GatewayBackend', () => {
       service.addNewGateway(mockConfig).subscribe((gateway) => {
-        expect(gateway.GatewayId).toBe('gw-3');
-        expect(gateway.GatewayName).toBe('New Gateway');
+        expect(gateway.gateway_id).toBe('gw-3');
+        expect(gateway.name).toBe('New Gateway');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/add`);

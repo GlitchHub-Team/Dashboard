@@ -6,7 +6,7 @@ import { GatewaySensorManagerService } from './gateway-sensor-manager.service';
 import { GatewayService } from '../gateway/gateway.service';
 import { SensorService } from '../sensor/sensor.service';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { GatewayStatus } from '../../models/gateway/gateway-status.enum';
+import { Status } from '../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
@@ -28,20 +28,23 @@ describe('GatewaySensorManagerService', () => {
     id: 'gw-1',
     tenantId: 'tenant-01',
     name: 'Gateway 1',
-    status: GatewayStatus.ONLINE,
+    status: Status.ACTIVE,
+    interval: 60,
   };
 
   const mockGateway2: Gateway = {
     id: 'gw-2',
     tenantId: 'tenant-01',
     name: 'Gateway 2',
-    status: GatewayStatus.OFFLINE,
+    status: Status.INACTIVE,
+    interval: 120,
   };
 
   const mockSensor: Sensor = {
     id: 'sensor-1',
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
+    status: Status.ACTIVE,
     profile: SensorProfiles.HEART_RATE_SERVICE,
     dataInterval: 1000,
   };
@@ -55,6 +58,7 @@ describe('GatewaySensorManagerService', () => {
     gatewayId: 'gw-1',
     name: 'New Sensor',
     profile: SensorProfiles.CUSTOM_ECG_SERVICE,
+    dataInterval: 2000,
   };
 
   beforeEach(() => {
@@ -269,6 +273,7 @@ describe('GatewaySensorManagerService', () => {
         gatewayId: '',
         name: 'New Sensor',
         profile: SensorProfiles.CUSTOM_ECG_SERVICE,
+        dataInterval: 2000,
       };
       service.createSensor('gw-1', config);
       expect(sensorServiceMock.addNewSensor).toHaveBeenCalledWith({ ...config, gatewayId: 'gw-1' });

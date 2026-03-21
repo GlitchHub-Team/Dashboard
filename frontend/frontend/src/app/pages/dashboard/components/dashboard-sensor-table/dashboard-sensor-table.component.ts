@@ -6,6 +6,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TitleCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
@@ -21,6 +22,7 @@ import { ActionMode } from '../../../../models/action-mode.model';
     MatIcon,
     MatPaginatorModule,
     TitleCasePipe,
+    UpperCasePipe,
     MatButtonModule,
   ],
   templateUrl: './dashboard-sensor-table.component.html',
@@ -36,7 +38,7 @@ export class DashboardSensorTableComponent {
   public readonly limit = input<number>(10);
 
   protected readonly displayedColumns = computed(() => {
-    const base = ['id', 'gatewayId', 'name', 'profile'];
+    const base = ['id', 'name', 'profile', 'status'];
     switch (this.actionMode()) {
       case 'manage':
         return [...base, 'delete'];

@@ -1,3 +1,4 @@
+import { Status } from '../gateway-sensor-status.enum';
 import { SensorProfiles } from './sensor-profiles.enum';
 
 export interface Sensor {
@@ -5,5 +6,6 @@ export interface Sensor {
   gatewayId: string;
   name: string;
   profile: SensorProfiles;
+  status: Status;
   dataInterval?: number;
 }

@@ -1,22 +1,20 @@
 import { Injectable } from '@angular/core';
+
 import { GatewayAdapter } from './gateway.adapter';
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { Gateway } from '../models/gateway/gateway.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
+import { Status } from '../models/gateway-sensor-status.enum';
 
 @Injectable()
 export class GatewayApiAdapter extends GatewayAdapter {
   fromDTO(dto: GatewayBackend, tenantId?: string): Gateway {
     return {
-      id: dto.GatewayId,
-      name: dto.GatewayName,
+      id: dto.gateway_id,
+      name: dto.name,
+      status: dto.status as Status,
+      interval: dto.intervals,
       ...(tenantId && { tenantId }),
-    };
-  }
-
-  toDTO(gateway: Partial<Gateway>): Partial<GatewayBackend> {
-    return {
-      GatewayName: gateway.name,
     };
   }
 

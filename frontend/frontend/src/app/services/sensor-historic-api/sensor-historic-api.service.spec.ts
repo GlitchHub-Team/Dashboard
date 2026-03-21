@@ -8,6 +8,7 @@ import { HistoricResponse } from '../../models/sensor-data/historic-response.mod
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { TimeInterval } from '../../models/time-interval.model';
+import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('SensorHistoricApiService', () => {
   let service: SensorHistoricApiService;
@@ -20,6 +21,8 @@ describe('SensorHistoricApiService', () => {
     gatewayId: 'gateway-1',
     name: 'Test Sensor',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+    status: Status.ACTIVE,
+    dataInterval: 60,
   };
 
   const mockTimeInterval: TimeInterval = {

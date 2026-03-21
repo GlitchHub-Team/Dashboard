@@ -9,7 +9,7 @@ import { DashboardPage } from './dashboard.page';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { SensorChartService } from '../../services/sensor-chart/sensor-chart.service';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { GatewayStatus } from '../../models/gateway/gateway-status.enum';
+import { Status } from '../../models/gateway-sensor-status.enum';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -41,7 +41,8 @@ describe('DashboardPage', () => {
     id: 'gw-1',
     tenantId: 'tenant-01',
     name: 'Gateway 1',
-    status: GatewayStatus.ONLINE,
+    status: Status.ACTIVE,
+    interval: 60,
   };
 
   const mockSensor: Sensor = {
@@ -49,6 +50,7 @@ describe('DashboardPage', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
     dataInterval: 1000,
   };
 

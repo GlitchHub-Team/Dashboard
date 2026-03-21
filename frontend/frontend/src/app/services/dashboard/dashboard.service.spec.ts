@@ -11,17 +11,30 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 import { Permission } from '../../models/permission.enum';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
+import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('DashboardService', () => {
   let service: DashboardService;
 
-  const mockGateway: Gateway = { id: 'gw-1', name: 'Gateway 1' };
-  const mockGateway2: Gateway = { id: 'gw-2', name: 'Gateway 2' };
+  const mockGateway: Gateway = {
+    id: 'gw-1',
+    name: 'Gateway 1',
+    status: Status.ACTIVE,
+    interval: 60,
+  };
+  const mockGateway2: Gateway = {
+    id: 'gw-2',
+    name: 'Gateway 2',
+    status: Status.INACTIVE,
+    interval: 120,
+  };
   const mockSensor: Sensor = {
     id: 's-1',
     gatewayId: 'gw-1',
     name: 'Temp',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+    status: Status.ACTIVE,
+    dataInterval: 60,
   };
   const mockChartRequest: ChartRequest = { sensor: mockSensor, chartType: ChartType.HISTORIC };
 

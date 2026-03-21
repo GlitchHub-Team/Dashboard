@@ -6,6 +6,7 @@ import { HistoricChartComponent } from './historic-chart.component';
 import { SensorReading } from '../../../../../../models/sensor-data/sensor-reading.model';
 import { Sensor } from '../../../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.enum';
+import { Status } from '../../../../../../models/gateway-sensor-status.enum';
 
 describe('HistoricChartComponent', () => {
   let fixture: ComponentFixture<HistoricChartComponent>;
@@ -17,6 +18,7 @@ describe('HistoricChartComponent', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
     dataInterval: 1000,
   };
 

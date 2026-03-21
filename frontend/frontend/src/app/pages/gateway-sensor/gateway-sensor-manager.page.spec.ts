@@ -9,7 +9,7 @@ import { of } from 'rxjs';
 import { GatewaySensorManagerPage } from '../../pages/gateway-sensor/gateway-sensor-manager.page';
 import { GatewaySensorManagerService } from '../../services/gateway-sensor-manager/gateway-sensor-manager.service';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { GatewayStatus } from '../../models/gateway/gateway-status.enum';
+import { Status } from '../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 
@@ -24,7 +24,8 @@ describe('GatewaySensorManagerPage', () => {
     id: 'gw-1',
     tenantId: 'tenant-01',
     name: 'Gateway 1',
-    status: GatewayStatus.ONLINE,
+    status: Status.ACTIVE,
+    interval: 60,
   };
 
   const mockSensor: Sensor = {
@@ -32,6 +33,7 @@ describe('GatewaySensorManagerPage', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
     dataInterval: 1000,
   };
 

@@ -1,7 +1,8 @@
 export interface SensorBackend {
-  SensorId: string;
-  GatewayId: string;
-  Name: string;
-  Profile: string;
-  DataInterval?: number;
+  sensor_id: string;
+  gateway_id: string;
+  sensor_name: string;
+  status: string;
+  profile: string;
+  sensor_interval: number;
 }

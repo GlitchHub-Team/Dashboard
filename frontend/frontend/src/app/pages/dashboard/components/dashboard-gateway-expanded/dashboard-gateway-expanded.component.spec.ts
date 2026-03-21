@@ -4,7 +4,7 @@ import { PageEvent } from '@angular/material/paginator';
 
 import { DashboardGatewayExpandedComponent } from './dashboard-gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { GatewayStatus } from '../../../../models/gateway/gateway-status.enum';
+import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
@@ -18,7 +18,8 @@ describe('DashboardGatewayExpandedComponent', () => {
     id: 'gw-1',
     tenantId: 'tenant-1',
     name: 'Gateway Alpha',
-    status: GatewayStatus.ONLINE,
+    status: Status.ACTIVE,
+    interval: 60,
   };
 
   const mockSensors: Sensor[] = [
@@ -27,12 +28,16 @@ describe('DashboardGatewayExpandedComponent', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+      status: Status.ACTIVE,
+      dataInterval: 60,
     },
     {
       id: 's-2',
       gatewayId: 'gw-1',
       name: 'Humidity',
       profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+      status: Status.INACTIVE,
+      dataInterval: 120,
     },
   ];
 

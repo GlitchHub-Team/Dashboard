@@ -21,11 +21,6 @@
       <mat-cell *matCellDef="let sensor">{{ sensor.id }}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="gatewayId">
-      <mat-header-cell *matHeaderCellDef>Gateway</mat-header-cell>
-      <mat-cell *matCellDef="let sensor">{{ sensor.gatewayId }}</mat-cell>
-    </ng-container>
-
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
       <mat-cell *matCellDef="let sensor">{{ sensor.name }}</mat-cell>
@@ -34,6 +29,11 @@
     <ng-container matColumnDef="profile">
       <mat-header-cell *matHeaderCellDef>Profile</mat-header-cell>
       <mat-cell *matCellDef="let sensor">{{ sensor.profile | titlecase }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">{{ sensor.status | uppercase }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">

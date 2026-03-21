@@ -8,21 +8,34 @@ import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { PaginatedResponse } from '../../models/paginated-response.model';
+import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('GatewayService', () => {
   let service: GatewayService;
 
   const mockGateways: Gateway[] = [
-    { id: 'gw-1', tenantId: 'tenant-1', name: 'Gateway 1' },
-    { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway 2' },
+    { id: 'gw-1', tenantId: 'tenant-1', name: 'Gateway 1', status: Status.ACTIVE, interval: 60 },
+    { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway 2', status: Status.INACTIVE, interval: 60 },
   ];
 
   const mockBackendResponse: PaginatedResponse<GatewayBackend> = {
     count: 2,
     total: 10,
     data: [
-      { GatewayId: 'gw-1', GatewayName: 'Gateway 1' },
-      { GatewayId: 'gw-2', GatewayName: 'Gateway 2' },
+      {
+        gateway_id: 'gw-1',
+        name: 'Gateway 1',
+        tenant_id: 'tenant-1',
+        status: 'active',
+        intervals: 60,
+      },
+      {
+        gateway_id: 'gw-2',
+        name: 'Gateway 2',
+        tenant_id: 'tenant-1',
+        status: 'inactive',
+        intervals: 60,
+      },
     ],
   };
 
@@ -34,8 +47,20 @@ describe('GatewayService', () => {
   const emptyBackend: PaginatedResponse<GatewayBackend> = { count: 0, total: 0, data: [] };
   const emptyAdapted: PaginatedResponse<Gateway> = { count: 0, total: 0, data: [] };
 
-  const mockNewBackend: GatewayBackend = { GatewayId: 'gw-3', GatewayName: 'New Gateway' };
-  const mockNewGateway: Gateway = { id: 'gw-3', name: 'New Gateway' };
+  const mockNewBackend: GatewayBackend = {
+    gateway_id: 'gw-3',
+    name: 'New Gateway',
+    tenant_id: 'tenant-1',
+    status: 'active',
+    intervals: 60,
+  };
+  const mockNewGateway: Gateway = {
+    id: 'gw-3',
+    name: 'New Gateway',
+    tenantId: 'tenant-1',
+    status: Status.ACTIVE,
+    interval: 60,
+  };
   const mockConfig: GatewayConfig = { name: 'New Gateway', interval: 60 };
 
   const gatewayApiMock = {

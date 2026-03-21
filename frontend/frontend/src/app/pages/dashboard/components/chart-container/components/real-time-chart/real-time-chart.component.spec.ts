@@ -6,6 +6,7 @@ import { RealTimeChartComponent } from './real-time-chart.component';
 import { SensorReading } from '../../../../../../models/sensor-data/sensor-reading.model';
 import { Sensor } from '../../../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.enum';
+import { Status } from '../../../../../../models/gateway-sensor-status.enum';
 
 describe('RealTimeChartComponent', () => {
   let fixture: ComponentFixture<RealTimeChartComponent>;
@@ -17,6 +18,7 @@ describe('RealTimeChartComponent', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
     dataInterval: 1000,
   };
 

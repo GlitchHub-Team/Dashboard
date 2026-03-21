@@ -13,6 +13,7 @@ import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { HistoricResponse } from '../../models/sensor-data/historic-response.model';
 import { RealTimeReading } from '../../models/sensor-data/real-time-reading.model';
 import { SensorReading } from '../../models/sensor-data/sensor-reading.model';
+import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('SensorChartService', () => {
   let service: SensorChartService;
@@ -22,6 +23,8 @@ describe('SensorChartService', () => {
     gatewayId: 'gateway-1',
     name: 'Test Sensor',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+    status: Status.ACTIVE,
+    dataInterval: 60,
   };
 
   const mockTimeInterval = {

@@ -4,6 +4,7 @@ import { webSocket } from 'rxjs/webSocket';
 import { environment } from '../../../environments/environment';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
+import { Status } from '../../models/gateway-sensor-status.enum';
 
 vi.mock('rxjs/webSocket', () => ({
   webSocket: vi.fn(),
@@ -20,6 +21,8 @@ describe('SensorLiveReadingsApiService', () => {
     gatewayId: 'gateway-1',
     name: 'Temperature',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+    dataInterval: 60,
+    status: Status.ACTIVE,
   };
 
   const createMockSocket = () => ({

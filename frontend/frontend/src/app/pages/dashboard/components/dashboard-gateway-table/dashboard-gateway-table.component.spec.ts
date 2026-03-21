@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 
 import { DashboardGatewayTableComponent } from './dashboard-gateway-table.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { GatewayStatus } from '../../../../models/gateway/gateway-status.enum';
+import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
@@ -16,8 +16,20 @@ describe('DashboardGatewayTableComponent', () => {
   let fixture: ComponentFixture<DashboardGatewayTableComponent>;
 
   const mockGateways: Gateway[] = [
-    { id: 'gw-1', tenantId: 'tenant-1', name: 'Gateway Alpha', status: GatewayStatus.ONLINE },
-    { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway Beta', status: GatewayStatus.OFFLINE },
+    {
+      id: 'gw-1',
+      tenantId: 'tenant-1',
+      name: 'Gateway Alpha',
+      status: Status.ACTIVE,
+      interval: 60,
+    },
+    {
+      id: 'gw-2',
+      tenantId: 'tenant-1',
+      name: 'Gateway Beta',
+      status: Status.INACTIVE,
+      interval: 120,
+    },
   ];
 
   const mockSensors: Sensor[] = [
@@ -26,6 +38,8 @@ describe('DashboardGatewayTableComponent', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+      status: Status.ACTIVE,
+      dataInterval: 60,
     },
   ];
 
@@ -113,7 +127,7 @@ describe('DashboardGatewayTableComponent', () => {
 
       expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Gateway Alpha', 'Gateway Beta']));
-      expect(cellTexts).toEqual(expect.arrayContaining(['ONLINE', 'OFFLINE']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['ACTIVE', 'INACTIVE']));
     });
   });
 

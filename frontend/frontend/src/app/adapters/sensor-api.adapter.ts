@@ -4,25 +4,18 @@ import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { Sensor } from '../models/sensor/sensor.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { Status } from '../models/gateway-sensor-status.enum';
 
 @Injectable()
 export class SensorApiAdapter extends SensorAdapter {
   fromDTO(dto: SensorBackend): Sensor {
     return {
-      id: dto.SensorId,
-      gatewayId: dto.GatewayId,
-      name: dto.Name,
-      profile: dto.Profile as SensorProfiles,
-      ...(dto.DataInterval != null && { dataInterval: dto.DataInterval }),
-    };
-  }
-
-  toDTO(sensor: Partial<Sensor>): Partial<SensorBackend> {
-    return {
-      Name: sensor.name,
-      GatewayId: sensor.gatewayId,
-      Profile: sensor.profile,
-      // TODO: Aggiungere DataInterval
+      id: dto.sensor_id,
+      gatewayId: dto.gateway_id,
+      name: dto.sensor_name,
+      status: dto.status as Status,
+      profile: dto.profile as SensorProfiles,
+      dataInterval: dto.sensor_interval,
     };
   }
 

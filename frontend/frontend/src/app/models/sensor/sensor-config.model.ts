@@ -1,7 +1,8 @@
 import { SensorProfiles } from './sensor-profiles.enum';
 
 export interface SensorConfig {
-  gatewayId: string;
   name: string;
+  dataInterval: number;
+  gatewayId: string;
   profile: SensorProfiles;
 }
