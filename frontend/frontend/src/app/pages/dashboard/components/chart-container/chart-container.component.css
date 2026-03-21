@@ -1,0 +1,83 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+mat-card {
+  width: 100%;
+  overflow: hidden;
+}
+
+mat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-right: 16px;
+  box-sizing: border-box;
+}
+
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.connection-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 16px;
+}
+
+.status-connecting {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.status-connected {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-disconnected {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+.status-error {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+mat-card-content {
+  height: 800px;
+  position: relative;
+}
+
+.chart-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #c62828;
+  font-size: 1rem;
+}
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.chart-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: rgba(0, 0, 0, 0.38);
+  font-size: 1.2rem;
+}

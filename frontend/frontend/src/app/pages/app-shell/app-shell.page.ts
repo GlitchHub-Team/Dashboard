@@ -9,7 +9,7 @@ import { ChangePasswordDialog } from './dialogs/change-password/change-password.
 import { HeaderComponent } from './components/header/header.component';
 import { SideBarComponent } from './components/side-bar/side-bar.component';
 
-import { NAV_ITEMS } from '../../models/nav-config.model';
+import { NAV_ITEMS } from '../../models/nav_items/nav-config.model';
 
 @Component({
   selector: 'app-shell',

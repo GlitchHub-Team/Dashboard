@@ -1,4 +1,4 @@
-import { Permission } from './permission.enum';
+import { Permission } from '../permission.enum';
 
 export interface NavItem {
   label: string;

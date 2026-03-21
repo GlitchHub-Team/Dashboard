@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { LoginFormComponent } from './components/login-form/login-form.component';
 import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.dialog';
-import { LoginRequest } from '../../models/login-request.model';
+import { LoginRequest } from '../../models/auth/login-request.model';
 
 @Component({
   selector: 'app-login.page',

@@ -1,12 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, finalize } from 'rxjs';
+import { Observable, tap, catchError, finalize, EMPTY } from 'rxjs';
 
 import { UserSessionService } from '../user-session/user-session.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
-import { LoginRequest } from '../../models/login-request.model';
-import { AuthResponse } from '../../models/auth-response.model';
+import { LoginRequest } from '../../models/auth/login-request.model';
+import { AuthResponse } from '../../models/auth/auth-response.model';
 import { ApiError } from '../../models/api-error.model';
 
 @Injectable({
@@ -38,7 +38,7 @@ export class AuthSessionService {
       }),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Login failed');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );

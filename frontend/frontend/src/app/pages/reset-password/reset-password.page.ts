@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
 import { ResetPasswordFormComponent } from './components/reset-password-form/reset-password-form.component';
-import { PasswordChange } from '../../models/password-change.model';
+import { PasswordChange } from '../../models/auth/password-change.model';
 
 @Component({
   selector: 'app-reset-password-page',
@@ -30,7 +30,7 @@ export class ResetPasswordPage {
     this.authActionsService
       .confirmPasswordChange(data)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({});
+      .subscribe();
   }
 
   protected onGoToLogin(): void {

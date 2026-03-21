@@ -1,9 +1,11 @@
+// services/gateway/gateway.service.ts
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, catchError, finalize } from 'rxjs';
+import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
 
 import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { Gateway } from '../../models/gateway.model';
-import { GatewayConfig } from '../../models/gateway-config.model';
+import { GatewayAdapter } from '../../adapters/gateway.adapter';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { ApiError } from '../../models/api-error.model';
 
 @Injectable({
@@ -11,41 +13,63 @@ import { ApiError } from '../../models/api-error.model';
 })
 export class GatewayService {
   private readonly gatewayApi = inject(GatewayApiClientService);
+  private readonly adapter = inject(GatewayAdapter);
 
   private readonly _gatewayList = signal<Gateway[]>([]);
+  private readonly _total = signal(0);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
+  private readonly _pageIndex = signal(0);
+  private readonly _limit = signal(10);
+  private readonly _currentTenantId = signal<string | null>(null);
 
   public readonly gatewayList = this._gatewayList.asReadonly();
+  public readonly total = this._total.asReadonly();
   public readonly loading = this._loading.asReadonly();
   public readonly error = this._error.asReadonly();
+  public readonly pageIndex = this._pageIndex.asReadonly();
+  public readonly limit = this._limit.asReadonly();
 
-  public getGatewaysByTenant(tenantId: string): void {
+  public getGatewaysByTenant(tenantId: string, page: number, limit: number): void {
+    this._currentTenantId.set(tenantId);
+    this._pageIndex.set(page);
+    this._limit.set(limit);
     this.setGettingGatewaysState();
 
     this.gatewayApi
-      .getGatewayListByTenant(tenantId)
+      .getGatewayListByTenant(tenantId, page, limit)
       .pipe(
-        tap((list) => this._gatewayList.set(list)),
+        map((response) => this.adapter.fromPaginatedDTO(response, tenantId)),
+        tap((result) => {
+          this._gatewayList.set(result.data);
+          this._total.set(result.total);
+        }),
         catchError((err: ApiError) => {
           this._error.set(err.message ?? 'Failed to load gateways');
-          throw err;
+          return EMPTY;
         }),
         finalize(() => this._loading.set(false)),
       )
       .subscribe();
   }
 
-  public getGateways(): void {
+  public getGateways(page: number, limit: number): void {
+    this._currentTenantId.set(null);
+    this._pageIndex.set(page);
+    this._limit.set(limit);
     this.setGettingGatewaysState();
 
     this.gatewayApi
-      .getGatewayList()
+      .getGatewayList(page, limit)
       .pipe(
-        tap((list) => this._gatewayList.set(list)),
+        map((response) => this.adapter.fromPaginatedDTO(response)),
+        tap((result) => {
+          this._gatewayList.set(result.data);
+          this._total.set(result.total);
+        }),
         catchError((err: ApiError) => {
           this._error.set(err.message ?? 'Failed to load gateways');
-          throw err;
+          return EMPTY;
         }),
         finalize(() => this._loading.set(false)),
       )
@@ -56,12 +80,11 @@ export class GatewayService {
     this.setLoadingState();
 
     return this.gatewayApi.addNewGateway(config).pipe(
-      tap((newGateway) => {
-        this._gatewayList.update((list) => [...list, newGateway]);
-      }),
+      map((dto) => this.adapter.fromDTO(dto, this._currentTenantId() ?? undefined)),
+      tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to add gateway');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );
@@ -71,15 +94,26 @@ export class GatewayService {
     this.setLoadingState();
 
     return this.gatewayApi.deleteGateway(id).pipe(
-      tap(() => {
-        this._gatewayList.update((list) => list.filter((g) => g.id !== id));
-      }),
+      tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete gateway');
-        throw err;
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );
+  }
+
+  public changePage(page: number, limit: number): void {
+    const tenantId = this._currentTenantId();
+    if (tenantId) {
+      this.getGatewaysByTenant(tenantId, page, limit);
+    } else {
+      this.getGateways(page, limit);
+    }
+  }
+
+  private refetchCurrentPage(): void {
+    this.changePage(this._pageIndex(), this._limit());
   }
 
   private setGettingGatewaysState(): void {

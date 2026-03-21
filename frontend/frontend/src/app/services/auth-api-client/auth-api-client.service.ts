@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { LoginRequest } from '../../models/login-request.model';
-import { AuthResponse } from '../../models/auth-response.model';
-import { PasswordChange } from '../../models/password-change.model';
+import { LoginRequest } from '../../models/auth/login-request.model';
+import { AuthResponse } from '../../models/auth/auth-response.model';
+import { PasswordChange } from '../../models/auth/password-change.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({

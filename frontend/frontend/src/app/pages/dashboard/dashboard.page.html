@@ -14,16 +14,28 @@
         [canSendCommands]="canSendCommands()"
         [gatewayLoading]="gatewayLoading()"
         [sensorLoading]="sensorLoading()"
+        [gatewayTotal]="gatewayTotal()"
+        [gatewayPageIndex]="gatewayPageIndex()"
+        [gatewayLimit]="gatewayLimit()"
+        [sensorTotal]="sensorTotal()"
+        [sensorPageIndex]="sensorPageIndex()"
+        [sensorLimit]="sensorLimit()"
         (commandRequested)="onCommandRequested($event)"
         (chartRequested)="onChartOpen($event)"
         (expandedGatewayChange)="onExpandedGatewayChange($event)"
+        (gatewayPageChange)="onGatewayPageChange($event)"
+        (sensorPageChange)="onSensorPageChange($event)"
       >
       </app-dashboard-gateway-table>
     } @else {
       <app-dashboard-sensor-table
         [sensors]="sensorList()"
         [loading]="sensorLoading()"
+        [total]="sensorTotal()"
+        [pageIndex]="sensorPageIndex()"
+        [limit]="sensorLimit()"
         (chartRequested)="onChartOpen($event)"
+        (pageChange)="onSensorPageChange($event)"
       >
       </app-dashboard-sensor-table>
     }
@@ -31,8 +43,8 @@
 
   <div class="dashboard-top-right">
     @if (selectedChart()) {
-      <!--       <app-chart-container [chartRequest]="selectedChart()!" (chartClosed)="onChartClosed()">
-      </app-chart-container> -->
+      <app-chart-container [chartRequest]="selectedChart()!" (chartClosed)="onChartClosed()">
+      </app-chart-container>
     }
   </div>
 

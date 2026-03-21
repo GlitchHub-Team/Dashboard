@@ -1,4 +1,4 @@
-import { Permission } from './permission.enum';
+import { Permission } from '../permission.enum';
 import { NavItem } from './nav-item.model';
 
 export const NAV_ITEMS: NavItem[] = [
