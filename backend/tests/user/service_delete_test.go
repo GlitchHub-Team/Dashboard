@@ -168,14 +168,14 @@ func TestService_DeleteTenantUser(t *testing.T) {
 
 	baseInput := user.DeleteTenantUserCommand{
 		TenantId: targetTenantId,
-		UserId: targetUserId,
+		UserId:   targetUserId,
 	}
 
 	inputWith := func(requester identity.Requester) user.DeleteTenantUserCommand {
 		return user.DeleteTenantUserCommand{
 			Requester: requester,
 			TenantId:  baseInput.TenantId,
-			UserId: baseInput.UserId,
+			UserId:    baseInput.UserId,
 		}
 	}
 
@@ -351,7 +351,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 
 	type testCase struct {
 		name          string
-		input         user.DeleteTenantUserCommand
+		input         user.DeleteTenantAdminCommand
 		setupSteps    []mockSetupFunc_DeleteUserService
 		expectedError error
 		expectedUser  user.User
@@ -373,7 +373,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUser(targetTenantId, targetUserId).
+			GetTenantAdmin(targetTenantId, targetUserId).
 			Return(expectedUser, nil).
 			Times(1)
 	}
@@ -382,7 +382,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUser(targetTenantId, targetUserId).
+			GetTenantAdmin(targetTenantId, targetUserId).
 			Return(user.User{}, user.ErrUserNotFound).
 			Times(1)
 	}
@@ -392,7 +392,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUser(targetTenantId, targetUserId).
+			GetTenantAdmin(targetTenantId, targetUserId).
 			Return(user.User{}, errMockStep2).
 			Times(1)
 	}
@@ -401,7 +401,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUser(gomock.Any(), gomock.Any()).
+			GetTenantAdmin(gomock.Any(), gomock.Any()).
 			Times(0)
 	}
 
@@ -410,7 +410,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
-			DeleteTenantUser(targetTenantId, targetUserId).
+			DeleteTenantAdmin(targetTenantId, targetUserId).
 			Return(expectedUser, nil).
 			Times(1)
 	}
@@ -421,7 +421,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
-			DeleteTenantUser(targetTenantId, targetUserId).
+			DeleteTenantAdmin(targetTenantId, targetUserId).
 			Return(user.User{}, errMockStep3).
 			Times(1)
 	}
@@ -452,14 +452,14 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 
 	baseInput := user.DeleteTenantUserCommand{
 		TenantId: targetTenantId,
-		UserId: targetUserId,
+		UserId:   targetUserId,
 	}
 
-	inputWith := func(requester identity.Requester) user.DeleteTenantUserCommand {
-		return user.DeleteTenantUserCommand{
+	inputWith := func(requester identity.Requester) user.DeleteTenantAdminCommand {
+		return user.DeleteTenantAdminCommand{
 			Requester: requester,
 			TenantId:  baseInput.TenantId,
-			UserId: baseInput.UserId,
+			UserId:    baseInput.UserId,
 		}
 	}
 
@@ -604,12 +604,12 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			deleteTenantUserUseCase, _, _ := user.NewDeleteUserService(
+			_, deleteTenantAdminUseCase, _ := user.NewDeleteUserService(
 				mockDeletePort, mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := deleteTenantUserUseCase.DeleteTenantUser(tc.input)
+			createdUser, err := deleteTenantAdminUseCase.DeleteTenantAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -705,7 +705,6 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
-
 	// Requesters
 	superAdminRequester := identity.Requester{
 		RequesterUserId: uint(1),
@@ -732,7 +731,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 	inputWith := func(requester identity.Requester) user.DeleteSuperAdminCommand {
 		return user.DeleteSuperAdminCommand{
 			Requester: requester,
-			UserId: baseInput.UserId,
+			UserId:    baseInput.UserId,
 		}
 	}
 
@@ -767,7 +766,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 			expectedError: identity.ErrUnauthorizedAccess,
 			expectedUser:  user.User{},
 		},
-	
+
 		// Test 1
 		{
 			name:  "Fail (step 1): unexpected error",
