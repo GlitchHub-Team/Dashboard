@@ -28,9 +28,20 @@ describe('SensorChartService', () => {
   };
 
   const mockHistoricResponse: HistoricResponse = {
-    count: 2,
-    resolution: 60,
-    data: [],
+    count: {
+      current: 2,
+      real: 2,
+      total: 2,
+    },
+    duration: 60,
+    dataset: {
+      timestamps: [
+        new Date('2026-01-01T00:00:00.000Z').getTime(),
+        new Date('2026-01-01T01:00:00.000Z').getTime(),
+      ],
+      values: [36.6, 37.0],
+    },
+    unit: '°C',
   };
 
   const mockAdaptedReadings: SensorReading[] = [
@@ -106,7 +117,6 @@ describe('SensorChartService', () => {
     expect(service.loading()).toBe(false);
     expect(service.connectionStatus()).toBe('disconnected');
     expect(service.error()).toBeNull();
-    expect(service.resolution()).toBeNull();
   });
 
   describe('startChart - historic', () => {
@@ -121,7 +131,6 @@ describe('SensorChartService', () => {
 
       expect(historicApiMock.getHistoricData).toHaveBeenCalledWith(historicRequest);
       expect(service.historicReadings()).toEqual(mockAdaptedReadings);
-      expect(service.resolution()).toBe(60);
       expect(service.loading()).toBe(false);
     });
 
@@ -180,7 +189,7 @@ describe('SensorChartService', () => {
     it('should trim live readings buffer to MAX_LIVE_READINGS (50)', () => {
       const subject = new Subject<RealTimeReading>();
       liveReadingsApiMock.connect.mockReturnValue(subject.asObservable());
-      liveReadingsAdapterMock.fromDTO.mockImplementation((_, i) => mockAdaptedReading);
+      liveReadingsAdapterMock.fromDTO.mockImplementation(() => mockAdaptedReading);
 
       service.startChart(liveRequest);
 
@@ -201,18 +210,34 @@ describe('SensorChartService', () => {
       expect(service.connectionStatus()).toBe('disconnected');
     });
 
+    it('should set connectionStatus to reconnecting and update error on retry', () => {
+      vi.useFakeTimers();
+      liveReadingsApiMock.connect.mockReturnValue(throwError(() => ({ status: 500 })));
+
+      service.startChart(liveRequest);
+
+      expect(service.connectionStatus()).toBe('reconnecting');
+      expect(service.error()).toContain('Retry 1/3');
+
+      vi.useRealTimers();
+    });
+
     it.each([
       { error: { status: 500, message: 'Connection lost' }, expected: 'Connection lost' },
       { error: { status: 500 }, expected: 'Failed to load live readings' },
     ])(
-      'should set error "$expected" and connectionStatus disconnected on failure',
+      'should set error "$expected" and connectionStatus disconnected after all retries fail',
       ({ error, expected }) => {
+        vi.useFakeTimers();
         liveReadingsApiMock.connect.mockReturnValue(throwError(() => error));
 
         service.startChart(liveRequest);
+        vi.advanceTimersByTime(3000 * 3);
 
         expect(service.error()).toBe(expected);
         expect(service.connectionStatus()).toBe('disconnected');
+
+        vi.useRealTimers();
       },
     );
   });
@@ -254,7 +279,6 @@ describe('SensorChartService', () => {
 
       expect(service.historicReadings()).toEqual([]);
       expect(service.error()).toBeNull();
-      expect(service.resolution()).toBe(0);
     });
 
     it('should unsubscribe from previous live subscription when starting a new chart', () => {

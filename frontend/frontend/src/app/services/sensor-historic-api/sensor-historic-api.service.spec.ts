@@ -38,22 +38,21 @@ describe('SensorHistoricApiService', () => {
   };
 
   const mockHistoricResponse: HistoricResponse = {
-    count: 2,
-    resolution: 60,
-    data: [
-      {
-        sensorId: 'sensor-1',
-        timestamp: '2026-01-01T00:00:00.000Z',
-        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-        value: 36.6,
-      },
-      {
-        sensorId: 'sensor-1',
-        timestamp: '2026-01-01T01:00:00.000Z',
-        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-        value: 37.0,
-      },
-    ],
+    count: {
+      current: 250,
+      real: 500,
+      total: 1000,
+    },
+    duration: 60,
+    dataset: {
+      timestamps: [
+        new Date('2026-01-01T00:00:00.000Z').getTime(),
+        new Date('2026-01-01T00:01:00.000Z').getTime(),
+        // ... more timestamps
+      ],
+      values: [20, 21 /* ... more values */],
+    },
+    unit: '°C',
   };
 
   beforeEach(() => {
@@ -100,11 +99,7 @@ describe('SensorHistoricApiService', () => {
 
     it('should return a HistoricResponse', () => {
       service.getHistoricData(mockChartRequest).subscribe((response) => {
-        expect(response.count).toBe(2);
-        expect(response.resolution).toBe(60);
-        expect(response.data.length).toBe(2);
-        expect(response.data[0].sensorId).toBe('sensor-1');
-        expect(response.data[0].value).toBe(36.6);
+        expect(response).toEqual(mockHistoricResponse);
       });
 
       const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);

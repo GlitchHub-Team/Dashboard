@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { retry, Subscription, timer } from 'rxjs';
 
 import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
 import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
@@ -25,18 +25,16 @@ export class SensorChartService {
   private readonly _historicReadings = signal<SensorReading[]>([]);
   private readonly _liveReadings = signal<SensorReading[]>([]);
   private readonly _loading = signal(false);
-  private readonly _connectionStatus = signal<'connected' | 'connecting' | 'disconnected'>(
-    'disconnected',
-  );
+  private readonly _connectionStatus = signal<
+    'connected' | 'connecting' | 'disconnected' | 'reconnecting'
+  >('disconnected');
   private readonly _error = signal<string | null>(null);
-  private readonly _resolution = signal<number | null>(null);
 
   public readonly historicReadings = this._historicReadings.asReadonly();
   public readonly liveReadings = this._liveReadings.asReadonly();
   public readonly loading = this._loading.asReadonly();
   public readonly connectionStatus = this._connectionStatus.asReadonly();
   public readonly error = this._error.asReadonly();
-  public readonly resolution = this._resolution.asReadonly();
 
   public startChart(req: ChartRequest): void {
     this.reset();
@@ -62,7 +60,6 @@ export class SensorChartService {
       next: (response) => {
         const historicData = this.historicAdapter.fromResponse(response);
         this._historicReadings.set(historicData.readings);
-        this._resolution.set(historicData.resolution);
       },
       error: (err: ApiError) => {
         this._error.set(err.message ?? 'Failed to load historic data');
@@ -75,25 +72,37 @@ export class SensorChartService {
   private startLiveReadingsChart(req: ChartRequest): void {
     this._connectionStatus.set('connecting');
 
-    this.subscription = this.liveReadingsService.connect(req.sensor).subscribe({
-      next: (raw) => {
-        this._connectionStatus.set('connected');
-        const reading = this.liveReadingsAdapter.fromDTO(raw);
-        this._liveReadings.update((readings) => {
-          const updated = [...readings, reading];
-          return updated.length > this.MAX_LIVE_READINGS
-            ? updated.slice(updated.length - this.MAX_LIVE_READINGS)
-            : updated;
-        });
-      },
-      error: (err: ApiError) => {
-        this._error.set(err.message ?? 'Failed to load live readings');
-        this._connectionStatus.set('disconnected');
-      },
-      complete: () => {
-        this._connectionStatus.set('disconnected');
-      },
-    });
+    this.subscription = this.liveReadingsService
+      .connect(req.sensor)
+      .pipe(
+        retry({
+          count: 3,
+          delay: (_, retryCount) => {
+            this._connectionStatus.set('reconnecting');
+            this._error.set(`Connection lost. Retry ${retryCount}/3...`);
+            return timer(3000);
+          },
+        }),
+      )
+      .subscribe({
+        next: (raw) => {
+          this._connectionStatus.set('connected');
+          const reading = this.liveReadingsAdapter.fromDTO(raw);
+          this._liveReadings.update((readings) => {
+            const updated = [...readings, reading];
+            return updated.length > this.MAX_LIVE_READINGS
+              ? updated.slice(updated.length - this.MAX_LIVE_READINGS)
+              : updated;
+          });
+        },
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to load live readings');
+          this._connectionStatus.set('disconnected');
+        },
+        complete: () => {
+          this._connectionStatus.set('disconnected');
+        },
+      });
   }
 
   private reset(): void {
@@ -103,6 +112,5 @@ export class SensorChartService {
     this._loading.set(false);
     this._connectionStatus.set('disconnected');
     this._error.set(null);
-    this._resolution.set(null);
   }
 }

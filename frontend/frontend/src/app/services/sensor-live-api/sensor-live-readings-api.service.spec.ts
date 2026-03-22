@@ -25,10 +25,13 @@ describe('SensorLiveReadingsApiService', () => {
     status: Status.ACTIVE,
   };
 
-  const createMockSocket = () => ({
-    asObservable: vi.fn().mockReturnValue(new Subject().asObservable()),
-    complete: vi.fn(),
-  });
+  const createMockSocket = () => {
+    const subject = new Subject();
+    return {
+      pipe: vi.fn().mockReturnValue(subject.asObservable()),
+      complete: vi.fn(),
+    };
+  };
 
   beforeEach(async () => {
     vi.resetAllMocks();
@@ -57,7 +60,7 @@ describe('SensorLiveReadingsApiService', () => {
 
       const result = service.connect(mockSensor);
 
-      expect(mockSocket.asObservable).toHaveBeenCalled();
+      expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 

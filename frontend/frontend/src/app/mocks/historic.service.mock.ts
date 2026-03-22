@@ -13,8 +13,9 @@ export class SensorHistoricMockService {
     const interval = req.timeInterval ?? this.getDefaultInterval();
     const from = interval.from.getTime();
     const to = interval.to.getTime();
-    const resolution = 60;
-    const totalPoints = Math.floor((to - from) / (resolution * 1000));
+    const durationMs = to - from;
+    const resolution = 60_000; // 60 seconds in ms
+    const totalPoints = Math.floor(durationMs / resolution);
     const count = req.dataPointsCounter
       ? Math.min(req.dataPointsCounter, totalPoints)
       : totalPoints;
@@ -24,25 +25,23 @@ export class SensorHistoricMockService {
     const amplitude = this.getAmplitude(req.sensor.profile);
     const lowerBound = req.valuesInterval?.lowerBound ?? -Infinity;
     const upperBound = req.valuesInterval?.upperBound ?? Infinity;
+    const unit = this.getUnit(req.sensor.profile);
 
-    const data = Array.from({ length: count }, (_, i) => {
-      const timestamp = new Date(from + Math.floor(i * step) * resolution * 1000).toISOString();
+    const timestamps: number[] = [];
+    const values: number[] = [];
+
+    for (let i = 0; i < count; i++) {
+      timestamps.push(from + Math.floor(i * step) * resolution);
       const noise = (Math.random() - 0.5) * amplitude * 0.2;
       const raw = baseValue + amplitude * Math.sin((2 * Math.PI * i) / count) + noise;
-      const value = Math.min(upperBound, Math.max(lowerBound, Math.round(raw * 100) / 100));
-
-      return {
-        sensorId: req.sensor.id,
-        timestamp,
-        profile: req.sensor.profile,
-        value,
-      };
-    });
+      values.push(Math.min(upperBound, Math.max(lowerBound, Math.round(raw * 100) / 100)));
+    }
 
     const response: HistoricResponse = {
-      count,
-      resolution,
-      data,
+      count: { current: count, real: count, total: totalPoints },
+      duration: durationMs,
+      dataset: { timestamps, values },
+      unit,
     };
 
     return of(response).pipe(delay(800));
@@ -50,7 +49,7 @@ export class SensorHistoricMockService {
 
   private getDefaultInterval(): TimeInterval {
     const to = new Date();
-    const from = new Date(to.getTime() - this.DEFAULT_HOURS * 60 * 60 * 1000); // 24 hours ago
+    const from = new Date(to.getTime() - this.DEFAULT_HOURS * 60 * 60 * 1000);
     return { from, to };
   }
 
@@ -81,6 +80,21 @@ export class SensorHistoricMockService {
         return 0.5;
       case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
         return 5;
+    }
+  }
+
+  private getUnit(profile: SensorProfiles): string {
+    switch (profile) {
+      case SensorProfiles.HEART_RATE_SERVICE:
+        return 'bpm';
+      case SensorProfiles.PULSE_OXIMETER_SERVICE:
+        return '%';
+      case SensorProfiles.CUSTOM_ECG_SERVICE:
+        return 'mV';
+      case SensorProfiles.HEALTH_THERMOMETER_SERVICE:
+        return '°C';
+      case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
+        return '°C';
     }
   }
 }

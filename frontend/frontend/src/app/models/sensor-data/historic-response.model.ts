@@ -1,7 +1,14 @@
-import { HistoricDataPoint } from './historic-data-point.model';
-
 export interface HistoricResponse {
-  count: number;
-  resolution: number;
-  data: HistoricDataPoint[];
+  count: {
+    current: number;
+    real: number;
+    total: number;
+  };
+  duration: number;
+  // Timestamp in milliseconds UNIX
+  dataset: {
+    timestamps: number[];
+    values: number[];
+  };
+  unit: string;
 }

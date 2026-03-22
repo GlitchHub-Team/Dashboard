@@ -55,6 +55,8 @@ export class ChartContainerComponent implements OnDestroy {
         return 'Connecting...';
       case 'disconnected':
         return 'Disconnected';
+      case 'reconnecting':
+        return 'Reconnecting...';
     }
   });
 
@@ -66,6 +68,8 @@ export class ChartContainerComponent implements OnDestroy {
         return 'status-connecting';
       case 'disconnected':
         return 'status-disconnected';
+      case 'reconnecting':
+        return 'status-reconnecting';
     }
   });
 
