@@ -1,17 +1,34 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { MatTableModule } from '@angular/material/table';
+import { Component, input, output } from '@angular/core';
+import { PageEvent } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
 
 import { DashboardGatewayTableComponent } from './dashboard-gateway-table.component';
+import { DashboardGatewayExpandedComponent } from '../dashboard-gateway-expanded/dashboard-gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
+import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
+import { ActionMode } from '../../../../models/action-mode.model';
 
-describe('DashboardGatewayTableComponent', () => {
+@Component({ selector: 'app-dashboard-gateway-expanded', template: '', standalone: true })
+class StubGatewayExpanded {
+  gateway = input<Gateway>();
+  sensors = input<Sensor[]>();
+  loading = input<boolean>();
+  actionMode = input<ActionMode>();
+  sensorTotal = input<number>();
+  sensorPageIndex = input<number>();
+  sensorLimit = input<number>();
+  chartRequested = output<ChartRequest>();
+  sensorDeleteRequested = output<Sensor>();
+  sensorCreateRequested = output<Gateway>();
+  sensorPageChange = output<PageEvent>();
+}
+
+describe('DashboardGatewayTableComponent (Unit)', () => {
   let component: DashboardGatewayTableComponent;
   let fixture: ComponentFixture<DashboardGatewayTableComponent>;
 
@@ -49,19 +66,29 @@ describe('DashboardGatewayTableComponent', () => {
     timeInterval: null!,
   };
 
+  const setInput = (key: string, value: unknown) => fixture.componentRef.setInput(key, value);
+
+  const getExpanded = () =>
+    fixture.debugElement.query(By.directive(StubGatewayExpanded))
+      ?.componentInstance as StubGatewayExpanded;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DashboardGatewayTableComponent, MatTableModule],
-      schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+      imports: [DashboardGatewayTableComponent],
+    })
+      .overrideComponent(DashboardGatewayTableComponent, {
+        remove: { imports: [DashboardGatewayExpandedComponent] },
+        add: { imports: [StubGatewayExpanded] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(DashboardGatewayTableComponent);
     component = fixture.componentInstance;
 
-    fixture.componentRef.setInput('gateways', mockGateways);
-    fixture.componentRef.setInput('sensors', mockSensors);
-    fixture.componentRef.setInput('gatewayTotal', mockGateways.length);
-    fixture.componentRef.setInput('sensorTotal', mockSensors.length);
+    setInput('gateways', mockGateways);
+    setInput('sensors', mockSensors);
+    setInput('gatewayTotal', mockGateways.length);
+    setInput('sensorTotal', mockSensors.length);
     fixture.detectChanges();
   });
 
@@ -77,12 +104,10 @@ describe('DashboardGatewayTableComponent', () => {
   });
 
   describe('loading state', () => {
-    beforeEach(() => {
-      fixture.componentRef.setInput('gatewayLoading', true);
-      fixture.detectChanges();
-    });
-
     it('should render only spinner when loading', () => {
+      setInput('gatewayLoading', true);
+      fixture.detectChanges();
+
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
@@ -91,14 +116,12 @@ describe('DashboardGatewayTableComponent', () => {
   });
 
   describe('empty state', () => {
-    beforeEach(() => {
-      fixture.componentRef.setInput('gateways', []);
-      fixture.componentRef.setInput('gatewayTotal', 0);
-      fixture.componentRef.setInput('gatewayLoading', false);
-      fixture.detectChanges();
-    });
-
     it('should render only empty state', () => {
+      setInput('gateways', []);
+      setInput('gatewayTotal', 0);
+      setInput('gatewayLoading', false);
+      fixture.detectChanges();
+
       const emptyState = fixture.debugElement.query(By.css('.empty-state'));
       expect(emptyState).toBeTruthy();
       expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain(
@@ -123,8 +146,7 @@ describe('DashboardGatewayTableComponent', () => {
     it('should render gateway data in cells', () => {
       const cellTexts = fixture.debugElement
         .queryAll(By.css('mat-cell'))
-        .map((cell) => cell.nativeElement.textContent.trim());
-
+        .map((c) => c.nativeElement.textContent.trim());
       expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Gateway Alpha', 'Gateway Beta']));
       expect(cellTexts).toEqual(expect.arrayContaining(['ACTIVE', 'INACTIVE']));
@@ -133,9 +155,9 @@ describe('DashboardGatewayTableComponent', () => {
 
   describe('gateway pagination', () => {
     it('should accept pagination inputs', () => {
-      fixture.componentRef.setInput('gatewayTotal', 83);
-      fixture.componentRef.setInput('gatewayPageIndex', 2);
-      fixture.componentRef.setInput('gatewayLimit', 25);
+      setInput('gatewayTotal', 83);
+      setInput('gatewayPageIndex', 2);
+      setInput('gatewayLimit', 25);
       fixture.detectChanges();
 
       expect(component.gatewayTotal()).toBe(83);
@@ -143,7 +165,7 @@ describe('DashboardGatewayTableComponent', () => {
       expect(component.gatewayLimit()).toBe(25);
     });
 
-    it('should emit gatewayPageChange when paginator emits page event', () => {
+    it('should emit gatewayPageChange when paginator fires page event', () => {
       const spy = vi.fn();
       component.gatewayPageChange.subscribe(spy);
 
@@ -164,7 +186,7 @@ describe('DashboardGatewayTableComponent', () => {
         'commands',
       ]);
 
-      fixture.componentRef.setInput('actionMode', 'manage');
+      setInput('actionMode', 'manage');
       fixture.detectChanges();
 
       expect(component['displayedColumns']()).toEqual([
@@ -179,7 +201,7 @@ describe('DashboardGatewayTableComponent', () => {
 
   describe('manage mode', () => {
     beforeEach(() => {
-      fixture.componentRef.setInput('actionMode', 'manage');
+      setInput('actionMode', 'manage');
       fixture.detectChanges();
     });
 
@@ -188,9 +210,8 @@ describe('DashboardGatewayTableComponent', () => {
     });
 
     it('should not render manager header in dashboard mode', () => {
-      fixture.componentRef.setInput('actionMode', 'dashboard');
+      setInput('actionMode', 'dashboard');
       fixture.detectChanges();
-
       expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
     });
 
@@ -217,8 +238,9 @@ describe('DashboardGatewayTableComponent', () => {
       const spy = vi.fn();
       component.gatewayCreateRequested.subscribe(spy);
 
-      const createButton = fixture.debugElement.query(By.css('.manager-header button'));
-      createButton.triggerEventHandler('click', new MouseEvent('click'));
+      fixture.debugElement
+        .query(By.css('.manager-header button'))
+        .triggerEventHandler('click', new MouseEvent('click'));
 
       expect(spy).toHaveBeenCalled();
     });
@@ -258,17 +280,37 @@ describe('DashboardGatewayTableComponent', () => {
       expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
 
-    it('should hide expanded component by default and show it when a gateway is expanded', () => {
-      expect(fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'))).toBeFalsy();
+    it('should hide expanded component by default', () => {
+      expect(fixture.debugElement.query(By.directive(StubGatewayExpanded))).toBeFalsy();
+    });
 
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
+    it('should show expanded component when a gateway is expanded', () => {
+      setInput('expandedGateway', mockGateways[0]);
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.directive(StubGatewayExpanded))).toBeTruthy();
+    });
+
+    it('should pass correct inputs to expanded component', () => {
+      setInput('expandedGateway', mockGateways[0]);
+      setInput('sensorLoading', true);
+      setInput('actionMode', 'dashboard');
+      setInput('sensorTotal', 42);
+      setInput('sensorPageIndex', 3);
+      setInput('sensorLimit', 5);
       fixture.detectChanges();
 
-      expect(fixture.debugElement.query(By.css('app-dashboard-gateway-expanded'))).toBeTruthy();
+      const expanded = getExpanded();
+      expect(expanded.gateway()).toEqual(mockGateways[0]);
+      expect(expanded.sensors()).toEqual(mockSensors);
+      expect(expanded.loading()).toBe(true);
+      expect(expanded.actionMode()).toBe('dashboard');
+      expect(expanded.sensorTotal()).toBe(42);
+      expect(expanded.sensorPageIndex()).toBe(3);
+      expect(expanded.sensorLimit()).toBe(5);
     });
 
     it('should apply correct CSS classes when expanded', () => {
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
+      setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
       const dataRows = fixture.debugElement
@@ -276,37 +318,65 @@ describe('DashboardGatewayTableComponent', () => {
         .filter((row) => !row.nativeElement.classList.contains('detail-row'));
       expect(dataRows[0].nativeElement.classList.contains('expanded')).toBe(true);
       expect(dataRows[1].nativeElement.classList.contains('expanded')).toBe(false);
-
-      const visibleDetailRows = fixture.debugElement.queryAll(By.css('mat-row.detail-row.visible'));
-      expect(visibleDetailRows.length).toBe(1);
+      expect(fixture.debugElement.queryAll(By.css('mat-row.detail-row.visible'))).toHaveLength(1);
     });
 
     it('should emit sensorPageChange from expanded component', () => {
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
+      setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
       const spy = vi.fn();
       component.sensorPageChange.subscribe(spy);
 
       fixture.debugElement
-        .query(By.css('app-dashboard-gateway-expanded'))
+        .query(By.directive(StubGatewayExpanded))
         .triggerEventHandler('sensorPageChange', { pageIndex: 1, pageSize: 10, length: 42 });
 
       expect(spy).toHaveBeenCalledWith({ pageIndex: 1, pageSize: 10, length: 42 });
     });
 
     it('should emit chartRequested from expanded component', () => {
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
+      setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
 
       fixture.debugElement
-        .query(By.css('app-dashboard-gateway-expanded'))
+        .query(By.directive(StubGatewayExpanded))
         .triggerEventHandler('chartRequested', mockChartRequest);
 
       expect(spy).toHaveBeenCalledWith(mockChartRequest);
+    });
+
+    it('should emit sensorDeleteRequested from expanded component', () => {
+      setInput('expandedGateway', mockGateways[0]);
+      setInput('actionMode', 'manage');
+      fixture.detectChanges();
+
+      const spy = vi.fn();
+      component.sensorDeleteRequested.subscribe(spy);
+
+      fixture.debugElement
+        .query(By.directive(StubGatewayExpanded))
+        .triggerEventHandler('sensorDeleteRequested', mockSensors[0]);
+
+      expect(spy).toHaveBeenCalledWith(mockSensors[0]);
+    });
+
+    it('should emit sensorCreateRequested from expanded component', () => {
+      setInput('expandedGateway', mockGateways[0]);
+      setInput('actionMode', 'manage');
+      fixture.detectChanges();
+
+      const spy = vi.fn();
+      component.sensorCreateRequested.subscribe(spy);
+
+      fixture.debugElement
+        .query(By.directive(StubGatewayExpanded))
+        .triggerEventHandler('sensorCreateRequested', mockGateways[0]);
+
+      expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
   });
 
@@ -314,7 +384,7 @@ describe('DashboardGatewayTableComponent', () => {
     it('should return true only for the matching gateway and false otherwise', () => {
       expect(component['isExpanded'](mockGateways[0])).toBe(false);
 
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
+      setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
 
       expect(component['isExpanded'](mockGateways[0])).toBe(true);
@@ -324,16 +394,16 @@ describe('DashboardGatewayTableComponent', () => {
 
   describe('inputs', () => {
     it('should accept all inputs', () => {
-      fixture.componentRef.setInput('expandedGateway', mockGateways[0]);
-      fixture.componentRef.setInput('actionMode', 'manage');
-      fixture.componentRef.setInput('gatewayLoading', true);
-      fixture.componentRef.setInput('sensorLoading', true);
-      fixture.componentRef.setInput('gatewayTotal', 100);
-      fixture.componentRef.setInput('gatewayPageIndex', 5);
-      fixture.componentRef.setInput('gatewayLimit', 25);
-      fixture.componentRef.setInput('sensorTotal', 50);
-      fixture.componentRef.setInput('sensorPageIndex', 3);
-      fixture.componentRef.setInput('sensorLimit', 5);
+      setInput('expandedGateway', mockGateways[0]);
+      setInput('actionMode', 'manage');
+      setInput('gatewayLoading', true);
+      setInput('sensorLoading', true);
+      setInput('gatewayTotal', 100);
+      setInput('gatewayPageIndex', 5);
+      setInput('gatewayLimit', 25);
+      setInput('sensorTotal', 50);
+      setInput('sensorPageIndex', 3);
+      setInput('sensorLimit', 5);
       fixture.detectChanges();
 
       expect(component.gateways()).toEqual(mockGateways);

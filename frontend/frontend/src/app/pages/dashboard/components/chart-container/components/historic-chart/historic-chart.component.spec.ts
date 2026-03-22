@@ -1,80 +1,91 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { NO_ERRORS_SCHEMA, ComponentRef } from '@angular/core';
+import { ComponentRef, Directive, input } from '@angular/core';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { ChartData, ChartOptions } from 'chart.js';
 
 import { HistoricChartComponent } from './historic-chart.component';
+import { BaseChartDirective } from 'ng2-charts';
 import { SensorReading } from '../../../../../../models/sensor-data/sensor-reading.model';
 import { Sensor } from '../../../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.enum';
 import { Status } from '../../../../../../models/gateway-sensor-status.enum';
 
-describe('HistoricChartComponent', () => {
+@Directive({ selector: 'canvas[baseChart]', standalone: true })
+class StubBaseChart {
+  type = input<string>();
+  data = input<ChartData<'line'>>();
+  options = input<ChartOptions<'line'>>();
+}
+
+describe('HistoricChartComponent (Unit)', () => {
   let fixture: ComponentFixture<HistoricChartComponent>;
   let component: HistoricChartComponent;
   let componentRef: ComponentRef<HistoricChartComponent>;
 
-  const mockSensor: Sensor = {
-    id: 'sensor-1',
-    gatewayId: 'gw-1',
-    name: 'Heart Rate Sensor',
-    profile: SensorProfiles.HEART_RATE_SERVICE,
-    status: Status.ACTIVE,
-    dataInterval: 1000,
-  };
+  const mockSensor: Sensor = { id: 'sensor-1', gatewayId: 'gw-1', name: 'Heart Rate Sensor', profile: SensorProfiles.HEART_RATE_SERVICE, status: Status.ACTIVE, dataInterval: 1000 };
 
-  function generateReadings(count: number): SensorReading[] {
-    return Array.from({ length: count }, (_, i) => ({
-      timestamp: new Date(2025, 0, 1, 10, i).toISOString(),
-      value: 70 + (i % 10),
-    }));
-  }
+  const generateReadings = (count: number): SensorReading[] =>
+    Array.from({ length: count }, (_, i) => ({ timestamp: new Date(2025, 0, 1, 10, i).toISOString(), value: 70 + (i % 10) }));
 
   const smallReadings = generateReadings(10);
   const exactReadings = generateReadings(50);
   const largeReadings = generateReadings(100);
 
+  const setInputs = (sensor: Sensor, readings: SensorReading[]) => {
+    componentRef.setInput('sensor', sensor);
+    componentRef.setInput('readings', readings);
+    fixture.detectChanges();
+  };
+
+  const getStubChart = () =>
+    fixture.debugElement.query(By.directive(StubBaseChart)).injector.get(StubBaseChart);
+
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [HistoricChartComponent],
-      schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [HistoricChartComponent] })
+      .overrideComponent(HistoricChartComponent, {
+        remove: { imports: [BaseChartDirective] },
+        add: { imports: [StubBaseChart] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(HistoricChartComponent);
     component = fixture.componentInstance;
     componentRef = fixture.componentRef;
   });
 
-  function setInputs(sensor: Sensor, readings: SensorReading[]): void {
-    componentRef.setInput('sensor', sensor);
-    componentRef.setInput('readings', readings);
-    fixture.detectChanges();
-  }
-
-  function query(selector: string): HTMLElement | null {
-    return fixture.nativeElement.querySelector(selector);
-  }
-
-  function queryAll(selector: string): HTMLElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll(selector));
-  }
-
   describe('template', () => {
     it('should render canvas and hide scroll controls when readings fit in VISIBLE_POINTS', () => {
       setInputs(mockSensor, smallReadings);
-      expect(query('canvas')).not.toBeNull();
-      expect(query('.scroll-controls')).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubBaseChart))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('.scroll-controls'))).toBeNull();
     });
 
     it('should hide scroll controls when readings equal VISIBLE_POINTS', () => {
       setInputs(mockSensor, exactReadings);
-      expect(query('.scroll-controls')).toBeNull();
+      expect(fixture.debugElement.query(By.css('.scroll-controls'))).toBeNull();
     });
 
     it('should render scroll controls with two buttons and a slider when readings exceed VISIBLE_POINTS', () => {
       setInputs(mockSensor, largeReadings);
-      expect(query('.scroll-controls')).not.toBeNull();
-      expect(queryAll('button[mat-icon-button]')).toHaveLength(2);
-      expect(query('mat-slider')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.scroll-controls'))).toBeTruthy();
+      expect(fixture.debugElement.queryAll(By.css('button[mat-icon-button]'))).toHaveLength(2);
+      expect(fixture.debugElement.query(By.css('mat-slider'))).toBeTruthy();
+    });
+
+    it('should pass chartData and chartOptions to canvas directive', () => {
+      setInputs(mockSensor, smallReadings);
+      const stub = getStubChart();
+      expect(stub.data()?.datasets[0].data).toEqual(smallReadings.map((r) => r.value));
+      expect(stub.options()?.responsive).toBe(true);
+    });
+
+    it('should update canvas data when offset changes', () => {
+      setInputs(mockSensor, largeReadings);
+      const dataBefore = getStubChart().data()?.datasets[0].data;
+      component['offset'].set(25);
+      fixture.detectChanges();
+      expect(getStubChart().data()?.datasets[0].data).not.toEqual(dataBefore);
     });
   });
 
@@ -84,7 +95,7 @@ describe('HistoricChartComponent', () => {
       ['exact (50)', exactReadings, 0, false],
       ['large (100)', largeReadings, 50, true],
       ['empty', [], 0, false],
-    ])('readings=%s to maxOffset=%i, canScroll=%s', (_, readings, maxOff, canScr) => {
+    ])('readings=%s → maxOffset=%i, canScroll=%s', (_, readings, maxOff, canScr) => {
       setInputs(mockSensor, readings);
       expect(component['maxOffset']()).toBe(maxOff);
       expect(component['canScroll']()).toBe(canScr);
@@ -111,7 +122,7 @@ describe('HistoricChartComponent', () => {
       [0, 0, 49],
       [25, 25, 74],
       [50, 50, 99],
-    ])('offset=%i to window largeReadings[%i..%i]', (offset, start, end) => {
+    ])('offset=%i → window largeReadings[%i..%i]', (offset, start, end) => {
       setInputs(mockSensor, largeReadings);
       component['offset'].set(offset);
       const visible = component['visibleReadings']();
@@ -126,7 +137,7 @@ describe('HistoricChartComponent', () => {
       [SensorProfiles.HEART_RATE_SERVICE, { label: 'Heart Rate', unit: 'bpm' }],
       [SensorProfiles.CUSTOM_ECG_SERVICE, { label: 'ECG', unit: 'mV' }],
       [SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE, { label: 'Environmental', unit: '%' }],
-    ])('profile %s and %o', (profile, expected) => {
+    ])('profile %s → %o', (profile, expected) => {
       setInputs({ ...mockSensor, profile }, smallReadings);
       expect(component['profileDisplay']()).toEqual(expected);
     });
@@ -137,7 +148,6 @@ describe('HistoricChartComponent', () => {
       setInputs(mockSensor, smallReadings);
       const data = component['chartData']();
       const ds = data.datasets[0];
-
       expect(data.labels).toHaveLength(10);
       expect(data.labels![0]).toBe(new Date(smallReadings[0].timestamp).toLocaleTimeString());
       expect(ds.data).toEqual(smallReadings.map((r) => r.value));
@@ -173,7 +183,6 @@ describe('HistoricChartComponent', () => {
       const options = component['chartOptions']();
       const xScale = options.scales?.['x'] as any;
       const yScale = options.scales?.['y'] as any;
-
       expect(options.responsive).toBe(true);
       expect(options.maintainAspectRatio).toBe(false);
       expect(xScale.title.display).toBe(true);
@@ -184,10 +193,9 @@ describe('HistoricChartComponent', () => {
       expect(options.plugins?.legend?.position).toBe('top');
     });
 
-    it('should set y axis title without unit when unit is empty', () => {
+    it('should set y axis title without unit for unknown profile', () => {
       setInputs({ ...mockSensor, profile: 'unknown-profile' as SensorProfiles }, smallReadings);
-      const yScale = component['chartOptions']().scales?.['y'] as any;
-      expect(yScale.title.text).toBe('Value');
+      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value');
     });
   });
 
@@ -203,20 +211,20 @@ describe('HistoricChartComponent', () => {
     });
 
     it.each<[number, number]>([
-      [30, 18], // 30 - 12
-      [5, 0], // Math.max(0, 5 - 12)
-      [0, 0], // already at floor
-    ])('onScrollLeft: offset %i to %i', (initial, expected) => {
+      [30, 18],
+      [5, 0],
+      [0, 0],
+    ])('onScrollLeft: offset %i → %i', (initial, expected) => {
       component['offset'].set(initial);
       component['onScrollLeft']();
       expect(component['offset']()).toBe(expected);
     });
 
     it.each<[number, number]>([
-      [0, 12], // 0 + 12
-      [45, 50], // Math.min(50, 45 + 12)
-      [50, 50], // already at maxOffset
-    ])('onScrollRight: offset %i to %i', (initial, expected) => {
+      [0, 12],
+      [45, 50],
+      [50, 50],
+    ])('onScrollRight: offset %i → %i', (initial, expected) => {
       component['offset'].set(initial);
       component['onScrollRight']();
       expect(component['offset']()).toBe(expected);
@@ -229,15 +237,15 @@ describe('HistoricChartComponent', () => {
       component['offset'].set(30);
       fixture.detectChanges();
 
-      const [leftButton, rightButton] = queryAll('button[mat-icon-button]');
+      const [leftBtn, rightBtn] = fixture.debugElement.queryAll(By.css('button[mat-icon-button]')).map((b) => b.nativeElement);
 
-      leftButton.click();
+      leftBtn.click();
       fixture.detectChanges();
       expect(component['offset']()).toBe(18);
 
       component['offset'].set(0);
       fixture.detectChanges();
-      rightButton.click();
+      rightBtn.click();
       fixture.detectChanges();
       expect(component['offset']()).toBe(12);
     });
@@ -246,15 +254,15 @@ describe('HistoricChartComponent', () => {
   describe('signal reactivity', () => {
     it('should show and hide scroll controls as readings grow and shrink', () => {
       setInputs(mockSensor, smallReadings);
-      expect(query('.scroll-controls')).toBeNull();
+      expect(fixture.debugElement.query(By.css('.scroll-controls'))).toBeNull();
 
       componentRef.setInput('readings', largeReadings);
       fixture.detectChanges();
-      expect(query('.scroll-controls')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.scroll-controls'))).toBeTruthy();
 
       componentRef.setInput('readings', smallReadings);
       fixture.detectChanges();
-      expect(query('.scroll-controls')).toBeNull();
+      expect(fixture.debugElement.query(By.css('.scroll-controls'))).toBeNull();
     });
 
     it('should handle visibleReadings without error when maxOffset decreases', () => {
@@ -263,7 +271,6 @@ describe('HistoricChartComponent', () => {
 
       componentRef.setInput('readings', generateReadings(60));
       fixture.detectChanges();
-
       expect(component['visibleReadings']().length).toBeLessThanOrEqual(50);
     });
   });

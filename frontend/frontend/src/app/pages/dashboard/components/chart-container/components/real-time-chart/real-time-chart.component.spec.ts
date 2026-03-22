@@ -1,42 +1,49 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { NO_ERRORS_SCHEMA, ComponentRef } from '@angular/core';
+import { ComponentRef, Directive, input } from '@angular/core';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import { RealTimeChartComponent } from './real-time-chart.component';
+import { BaseChartDirective } from 'ng2-charts';
 import { SensorReading } from '../../../../../../models/sensor-data/sensor-reading.model';
 import { Sensor } from '../../../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.enum';
 import { Status } from '../../../../../../models/gateway-sensor-status.enum';
+import { ChartData, ChartOptions } from 'chart.js';
 
-describe('RealTimeChartComponent', () => {
+@Directive({ selector: 'canvas[baseChart]', standalone: true })
+class StubBaseChart {
+  type = input<string>();
+  data = input<ChartData<'line'>>();
+  options = input<ChartOptions<'line'>>();
+}
+
+describe('RealTimeChartComponent (Unit)', () => {
   let fixture: ComponentFixture<RealTimeChartComponent>;
   let component: RealTimeChartComponent;
   let componentRef: ComponentRef<RealTimeChartComponent>;
 
-  const mockSensor: Sensor = {
-    id: 'sensor-1',
-    gatewayId: 'gw-1',
-    name: 'Heart Rate Sensor',
-    profile: SensorProfiles.HEART_RATE_SERVICE,
-    status: Status.ACTIVE,
-    dataInterval: 1000,
-  };
-
+  const mockSensor: Sensor = { id: 'sensor-1', gatewayId: 'gw-1', name: 'Heart Rate Sensor', profile: SensorProfiles.HEART_RATE_SERVICE, status: Status.ACTIVE, dataInterval: 1000 };
   const mockReadings: SensorReading[] = [
     { timestamp: '2025-01-01T10:00:00Z', value: 72 },
     { timestamp: '2025-01-01T10:01:00Z', value: 75 },
     { timestamp: '2025-01-01T10:02:00Z', value: 70 },
   ];
 
+  const setInputs = (sensor: Sensor, readings: SensorReading[]) => {
+    componentRef.setInput('sensor', sensor);
+    componentRef.setInput('readings', readings);
+    fixture.detectChanges();
+  };
+
+  const getStubChart = () =>
+    fixture.debugElement.query(By.directive(StubBaseChart)).injector.get(StubBaseChart);
+
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [RealTimeChartComponent],
-    })
+    await TestBed.configureTestingModule({ imports: [RealTimeChartComponent] })
       .overrideComponent(RealTimeChartComponent, {
-        set: {
-          imports: [],
-          schemas: [NO_ERRORS_SCHEMA],
-        },
+        remove: { imports: [BaseChartDirective] },
+        add: { imports: [StubBaseChart] },
       })
       .compileComponents();
 
@@ -45,87 +52,58 @@ describe('RealTimeChartComponent', () => {
     componentRef = fixture.componentRef;
   });
 
-  function setInputs(sensor: Sensor, readings: SensorReading[]): void {
-    componentRef.setInput('sensor', sensor);
-    componentRef.setInput('readings', readings);
-    fixture.detectChanges();
-  }
-
-  function query(selector: string): HTMLElement | null {
-    return fixture.nativeElement.querySelector(selector);
-  }
-
   describe('template', () => {
     it('should render a canvas element', () => {
       setInputs(mockSensor, mockReadings);
-      expect(query('canvas')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('canvas')).toBeTruthy();
+    });
+
+    it('should pass chartData and chartOptions to canvas', () => {
+      setInputs(mockSensor, mockReadings);
+      const stub = getStubChart();
+      expect(stub.data()?.datasets[0].data).toEqual([72, 75, 70]);
+      expect(stub.options()?.responsive).toBe(true);
     });
   });
 
   describe('computed: profileDisplay', () => {
-    it('should return correct display for HEART_RATE_SERVICE', () => {
-      setInputs(mockSensor, mockReadings);
-      expect(component['profileDisplay']()).toEqual({ label: 'Heart Rate', unit: 'bpm' });
-    });
-
-    it('should return correct display for PULSE_OXIMETER_SERVICE', () => {
-      const sensor: Sensor = { ...mockSensor, profile: SensorProfiles.PULSE_OXIMETER_SERVICE };
-      setInputs(sensor, mockReadings);
-      expect(component['profileDisplay']()).toEqual({ label: 'Pulse Oximeter', unit: '%SpO₂' });
-    });
-
-    it('should return correct display for CUSTOM_ECG_SERVICE', () => {
-      const sensor: Sensor = { ...mockSensor, profile: SensorProfiles.CUSTOM_ECG_SERVICE };
-      setInputs(sensor, mockReadings);
-      expect(component['profileDisplay']()).toEqual({ label: 'ECG', unit: 'mV' });
-    });
-
-    it('should return correct display for HEALTH_THERMOMETER_SERVICE', () => {
-      const sensor: Sensor = { ...mockSensor, profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE };
-      setInputs(sensor, mockReadings);
-      expect(component['profileDisplay']()).toEqual({ label: 'Thermometer', unit: '°C' });
-    });
-
-    it('should return correct display for ENVIRONMENTAL_SENSING_SERVICE', () => {
-      const sensor: Sensor = {
-        ...mockSensor,
-        profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
-      };
-      setInputs(sensor, mockReadings);
-      expect(component['profileDisplay']()).toEqual({ label: 'Environmental', unit: '%' });
+    it.each([
+      [SensorProfiles.HEART_RATE_SERVICE, { label: 'Heart Rate', unit: 'bpm' }],
+      [SensorProfiles.PULSE_OXIMETER_SERVICE, { label: 'Pulse Oximeter', unit: '%SpO₂' }],
+      [SensorProfiles.CUSTOM_ECG_SERVICE, { label: 'ECG', unit: 'mV' }],
+      [SensorProfiles.HEALTH_THERMOMETER_SERVICE, { label: 'Thermometer', unit: '°C' }],
+      [SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE, { label: 'Environmental', unit: '%' }],
+    ] as const)('should return correct display for %s', (profile, expected) => {
+      setInputs({ ...mockSensor, profile }, mockReadings);
+      expect(component['profileDisplay']()).toEqual(expected);
     });
   });
 
   describe('computed: chartData', () => {
     it('should map readings to chart labels using toLocaleTimeString', () => {
       setInputs(mockSensor, mockReadings);
-      const data = component['chartData']();
-
-      expect(data.labels).toHaveLength(3);
-      expect(data.labels![0]).toBe(new Date('2025-01-01T10:00:00Z').toLocaleTimeString());
-      expect(data.labels![1]).toBe(new Date('2025-01-01T10:01:00Z').toLocaleTimeString());
-      expect(data.labels![2]).toBe(new Date('2025-01-01T10:02:00Z').toLocaleTimeString());
+      const labels = component['chartData']().labels!;
+      expect(labels).toHaveLength(3);
+      expect(labels[0]).toBe(new Date('2025-01-01T10:00:00Z').toLocaleTimeString());
+      expect(labels[1]).toBe(new Date('2025-01-01T10:01:00Z').toLocaleTimeString());
+      expect(labels[2]).toBe(new Date('2025-01-01T10:02:00Z').toLocaleTimeString());
     });
 
     it('should map readings values to dataset data', () => {
       setInputs(mockSensor, mockReadings);
-      const data = component['chartData']();
-
-      expect(data.datasets).toHaveLength(1);
-      expect(data.datasets[0].data).toEqual([72, 75, 70]);
+      const { datasets } = component['chartData']();
+      expect(datasets).toHaveLength(1);
+      expect(datasets[0].data).toEqual([72, 75, 70]);
     });
 
     it('should use profileDisplay label as dataset label', () => {
       setInputs(mockSensor, mockReadings);
-      const data = component['chartData']();
-
-      expect(data.datasets[0].label).toBe('Heart Rate');
+      expect(component['chartData']().datasets[0].label).toBe('Heart Rate');
     });
 
     it('should set correct chart styling properties', () => {
       setInputs(mockSensor, mockReadings);
       const dataset = component['chartData']().datasets[0];
-
       expect(dataset.borderColor).toBe('#4caf50');
       expect(dataset.backgroundColor).toBe('rgba(76, 175, 80, 0.1)');
       expect(dataset.fill).toBe(true);
@@ -136,7 +114,6 @@ describe('RealTimeChartComponent', () => {
     it('should handle empty readings', () => {
       setInputs(mockSensor, []);
       const data = component['chartData']();
-
       expect(data.labels).toHaveLength(0);
       expect(data.datasets[0].data).toHaveLength(0);
     });
@@ -144,7 +121,6 @@ describe('RealTimeChartComponent', () => {
     it('should handle single reading', () => {
       setInputs(mockSensor, [{ timestamp: '2025-01-01T10:00:00Z', value: 80 }]);
       const data = component['chartData']();
-
       expect(data.labels).toHaveLength(1);
       expect(data.datasets[0].data).toEqual([80]);
     });
@@ -153,13 +129,8 @@ describe('RealTimeChartComponent', () => {
       setInputs(mockSensor, mockReadings);
       expect(component['chartData']().datasets[0].data).toEqual([72, 75, 70]);
 
-      const newReadings: SensorReading[] = [
-        ...mockReadings,
-        { timestamp: '2025-01-01T10:03:00Z', value: 68 },
-      ];
-      componentRef.setInput('readings', newReadings);
+      componentRef.setInput('readings', [...mockReadings, { timestamp: '2025-01-01T10:03:00Z', value: 68 }]);
       fixture.detectChanges();
-
       expect(component['chartData']().datasets[0].data).toEqual([72, 75, 70, 68]);
     });
 
@@ -167,83 +138,54 @@ describe('RealTimeChartComponent', () => {
       setInputs(mockSensor, mockReadings);
       expect(component['chartData']().datasets[0].label).toBe('Heart Rate');
 
-      const ecgSensor: Sensor = { ...mockSensor, profile: SensorProfiles.CUSTOM_ECG_SERVICE };
-      componentRef.setInput('sensor', ecgSensor);
+      componentRef.setInput('sensor', { ...mockSensor, profile: SensorProfiles.CUSTOM_ECG_SERVICE });
       fixture.detectChanges();
-
       expect(component['chartData']().datasets[0].label).toBe('ECG');
     });
   });
 
   describe('computed: chartOptions', () => {
-    it('should set responsive to true', () => {
+    it('should set responsive, maintainAspectRatio, and animation', () => {
       setInputs(mockSensor, mockReadings);
-      const options = component['chartOptions']();
-      expect(options.responsive).toBe(true);
-    });
-
-    it('should set maintainAspectRatio to false', () => {
-      setInputs(mockSensor, mockReadings);
-      const options = component['chartOptions']();
-      expect(options.maintainAspectRatio).toBe(false);
-    });
-
-    it('should disable animation', () => {
-      setInputs(mockSensor, mockReadings);
-      const options = component['chartOptions']();
-      expect(options.animation).toBe(false);
+      const opts = component['chartOptions']();
+      expect(opts.responsive).toBe(true);
+      expect(opts.maintainAspectRatio).toBe(false);
+      expect(opts.animation).toBe(false);
     });
 
     it('should set x axis title to "Time"', () => {
       setInputs(mockSensor, mockReadings);
-      const options = component['chartOptions']();
-      const xScale = options.scales?.['x'] as any;
+      const xScale = component['chartOptions']().scales?.['x'] as any;
       expect(xScale.title.display).toBe(true);
       expect(xScale.title.text).toBe('Time');
     });
 
-    it('should set y axis title with unit when unit exists', () => {
+    it('should set y axis title with unit', () => {
       setInputs(mockSensor, mockReadings);
-      const options = component['chartOptions']();
-      const yScale = options.scales?.['y'] as any;
+      const yScale = component['chartOptions']().scales?.['y'] as any;
       expect(yScale.title.display).toBe(true);
       expect(yScale.title.text).toBe('Value (bpm)');
     });
 
-    it('should set y axis title without unit when unit is empty', () => {
-      const unknownSensor: Sensor = {
-        ...mockSensor,
-        profile: 'unknown-profile' as SensorProfiles,
-      };
-      setInputs(unknownSensor, mockReadings);
-      const options = component['chartOptions']();
-      const yScale = options.scales?.['y'] as any;
-      expect(yScale.title.text).toBe('Value');
+    it('should set y axis title without unit for unknown profile', () => {
+      setInputs({ ...mockSensor, profile: 'unknown-profile' as SensorProfiles }, mockReadings);
+      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value');
     });
 
     it('should enable legend at top position', () => {
       setInputs(mockSensor, mockReadings);
-      const options = component['chartOptions']();
-      expect(options.plugins?.legend?.display).toBe(true);
-      expect(options.plugins?.legend?.position).toBe('top');
+      const opts = component['chartOptions']();
+      expect(opts.plugins?.legend?.display).toBe(true);
+      expect(opts.plugins?.legend?.position).toBe('top');
     });
 
     it('should update y axis title when sensor profile changes', () => {
       setInputs(mockSensor, mockReadings);
-      let options = component['chartOptions']();
-      let yScale = options.scales?.['y'] as any;
-      expect(yScale.title.text).toBe('Value (bpm)');
+      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value (bpm)');
 
-      const thermSensor: Sensor = {
-        ...mockSensor,
-        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-      };
-      componentRef.setInput('sensor', thermSensor);
+      componentRef.setInput('sensor', { ...mockSensor, profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE });
       fixture.detectChanges();
-
-      options = component['chartOptions']();
-      yScale = options.scales?.['y'] as any;
-      expect(yScale.title.text).toBe('Value (°C)');
+      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value (°C)');
     });
   });
 });

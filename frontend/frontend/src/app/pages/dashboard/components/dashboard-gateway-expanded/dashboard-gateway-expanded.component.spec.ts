@@ -1,16 +1,33 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
+import { By } from '@angular/platform-browser';
 
 import { DashboardGatewayExpandedComponent } from './dashboard-gateway-expanded.component';
+import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
+import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
+import { ActionMode } from '../../../../models/action-mode.model';
 
-describe('DashboardGatewayExpandedComponent', () => {
+@Component({ selector: 'app-dashboard-sensor-table', template: '', standalone: true })
+class StubSensorTable {
+  sensors = input<Sensor[]>();
+  loading = input<boolean>();
+  actionMode = input<ActionMode>();
+  total = input<number>();
+  pageIndex = input<number>();
+  limit = input<number>();
+  chartRequested = output<ChartRequest>();
+  createRequested = output<void>();
+  deleteRequested = output<Sensor>();
+  pageChange = output<PageEvent>();
+}
+
+describe('DashboardGatewayExpandedComponent (Unit)', () => {
   let component: DashboardGatewayExpandedComponent;
   let fixture: ComponentFixture<DashboardGatewayExpandedComponent>;
 
@@ -21,7 +38,6 @@ describe('DashboardGatewayExpandedComponent', () => {
     status: Status.ACTIVE,
     interval: 60,
   };
-
   const mockSensors: Sensor[] = [
     {
       id: 's-1',
@@ -41,18 +57,25 @@ describe('DashboardGatewayExpandedComponent', () => {
     },
   ];
 
+  const setInput = (key: string, value: unknown) => fixture.componentRef.setInput(key, value);
+
+  const getTable = () =>
+    fixture.debugElement.query(By.directive(StubSensorTable)).componentInstance as StubSensorTable;
+
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [DashboardGatewayExpandedComponent],
-      schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [DashboardGatewayExpandedComponent] })
+      .overrideComponent(DashboardGatewayExpandedComponent, {
+        remove: { imports: [DashboardSensorTableComponent] },
+        add: { imports: [StubSensorTable] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(DashboardGatewayExpandedComponent);
     component = fixture.componentInstance;
 
-    fixture.componentRef.setInput('sensors', mockSensors);
-    fixture.componentRef.setInput('gateway', mockGateway);
-    fixture.componentRef.setInput('sensorTotal', mockSensors.length);
+    setInput('sensors', mockSensors);
+    setInput('gateway', mockGateway);
+    setInput('sensorTotal', mockSensors.length);
     fixture.detectChanges();
   });
 
@@ -60,6 +83,7 @@ describe('DashboardGatewayExpandedComponent', () => {
     it('should create with correct defaults', () => {
       expect(component).toBeTruthy();
       expect(component.loading()).toBeUndefined();
+      expect(component.actionMode()).toBe('dashboard');
     });
 
     it('should default pagination inputs', () => {
@@ -74,44 +98,34 @@ describe('DashboardGatewayExpandedComponent', () => {
     });
   });
 
-  describe('inputs', () => {
-    it('should accept all standard inputs', () => {
-      expect(component.sensors()).toEqual(mockSensors);
-      expect(component.gateway()).toEqual(mockGateway);
-    });
-
-    it('should accept actionMode input', () => {
-      fixture.componentRef.setInput('actionMode', 'manage');
-      fixture.detectChanges();
-
-      expect(component.actionMode()).toBe('manage');
-    });
-
-    it('should default actionMode to dashboard', () => {
-      expect(component.actionMode()).toBe('dashboard');
-    });
-
-    it('should accept loading', () => {
-      fixture.componentRef.setInput('loading', true);
-      fixture.detectChanges();
-
-      expect(component.loading()).toBe(true);
-    });
-
-    it('should accept all pagination inputs', () => {
-      fixture.componentRef.setInput('sensorTotal', 50);
-      fixture.componentRef.setInput('sensorPageIndex', 3);
-      fixture.componentRef.setInput('sensorLimit', 5);
-      fixture.detectChanges();
-
-      expect(component.sensorTotal()).toBe(50);
-      expect(component.sensorPageIndex()).toBe(3);
-      expect(component.sensorLimit()).toBe(5);
+  describe('template', () => {
+    it('should render gateway id in heading and sensor table stub', () => {
+      expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('gw-1');
+      expect(fixture.debugElement.query(By.directive(StubSensorTable))).toBeTruthy();
     });
   });
 
-  describe('outputs', () => {
-    it('should emit chartRequested', () => {
+  describe('input bindings', () => {
+    it('should pass sensors, loading, actionMode, and pagination to sensor table', () => {
+      setInput('loading', true);
+      setInput('actionMode', 'manage');
+      setInput('sensorTotal', 50);
+      setInput('sensorPageIndex', 3);
+      setInput('sensorLimit', 5);
+      fixture.detectChanges();
+
+      const table = getTable();
+      expect(table.sensors()).toEqual(mockSensors);
+      expect(table.loading()).toBe(true);
+      expect(table.actionMode()).toBe('manage');
+      expect(table.total()).toBe(50);
+      expect(table.pageIndex()).toBe(3);
+      expect(table.limit()).toBe(5);
+    });
+  });
+
+  describe('output events', () => {
+    it('should emit chartRequested when sensor table emits chartRequested', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
 
@@ -120,49 +134,64 @@ describe('DashboardGatewayExpandedComponent', () => {
         chartType: ChartType.HISTORIC,
         timeInterval: null!,
       };
-      component.chartRequested.emit(request);
+      fixture.debugElement
+        .query(By.directive(StubSensorTable))
+        .triggerEventHandler('chartRequested', request);
 
       expect(spy).toHaveBeenCalledWith(request);
     });
 
-    it('should emit sensorPageChange', () => {
+    it('should emit sensorCreateRequested with gateway when sensor table emits createRequested', () => {
       const spy = vi.fn();
-      component.sensorPageChange.subscribe(spy);
+      component.sensorCreateRequested.subscribe(spy);
 
-      const event: PageEvent = { pageIndex: 2, pageSize: 10, length: 50 };
-      component.sensorPageChange.emit(event);
+      fixture.debugElement
+        .query(By.directive(StubSensorTable))
+        .triggerEventHandler('createRequested');
 
-      expect(spy).toHaveBeenCalledWith(event);
+      expect(spy).toHaveBeenCalledWith(mockGateway);
     });
 
-    it('should emit sensorDeleteRequested', () => {
+    it('should emit sensorDeleteRequested when sensor table emits deleteRequested', () => {
       const spy = vi.fn();
       component.sensorDeleteRequested.subscribe(spy);
 
-      component.sensorDeleteRequested.emit(mockSensors[0]);
+      fixture.debugElement
+        .query(By.directive(StubSensorTable))
+        .triggerEventHandler('deleteRequested', mockSensors[0]);
 
       expect(spy).toHaveBeenCalledWith(mockSensors[0]);
     });
 
-    it('should emit sensorCreateRequested with the gateway', () => {
+    it('should emit sensorPageChange when sensor table emits pageChange', () => {
       const spy = vi.fn();
-      component.sensorCreateRequested.subscribe(spy);
+      component.sensorPageChange.subscribe(spy);
 
-      component.sensorCreateRequested.emit(mockGateway);
+      const event: PageEvent = { pageIndex: 2, pageSize: 10, length: 50 };
+      fixture.debugElement
+        .query(By.directive(StubSensorTable))
+        .triggerEventHandler('pageChange', event);
 
-      expect(spy).toHaveBeenCalledWith(mockGateway);
+      expect(spy).toHaveBeenCalledWith(event);
     });
   });
 
-  describe('template', () => {
-    it('should render gateway id in heading', () => {
-      const heading = fixture.nativeElement.querySelector('h2');
-      expect(heading.textContent).toContain('gw-1');
-    });
+  describe('inputs', () => {
+    it('should accept all inputs', () => {
+      setInput('actionMode', 'manage');
+      setInput('loading', true);
+      setInput('sensorTotal', 50);
+      setInput('sensorPageIndex', 3);
+      setInput('sensorLimit', 5);
+      fixture.detectChanges();
 
-    it('should render sensor table', () => {
-      const sensorTable = fixture.nativeElement.querySelector('app-dashboard-sensor-table');
-      expect(sensorTable).toBeTruthy();
+      expect(component.sensors()).toEqual(mockSensors);
+      expect(component.gateway()).toEqual(mockGateway);
+      expect(component.actionMode()).toBe('manage');
+      expect(component.loading()).toBe(true);
+      expect(component.sensorTotal()).toBe(50);
+      expect(component.sensorPageIndex()).toBe(3);
+      expect(component.sensorLimit()).toBe(5);
     });
   });
 });

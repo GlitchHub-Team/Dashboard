@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signal, WritableSignal, NO_ERRORS_SCHEMA, ComponentRef } from '@angular/core';
+import { signal, WritableSignal, ComponentRef, Component, input, output } from '@angular/core';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import { ChartContainerComponent } from './chart-container.component';
+import { HistoricChartComponent } from './components/historic-chart/historic-chart.component';
+import { RealTimeChartComponent } from './components/real-time-chart/real-time-chart.component';
 import { SensorChartService } from '../../../../services/sensor-chart/sensor-chart.service';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
@@ -11,13 +14,29 @@ import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { SensorReading } from '../../../../models/sensor-data/sensor-reading.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 
-describe('ChartContainerComponent', () => {
+@Component({ selector: 'app-historic-chart', template: '', standalone: true })
+class StubHistoricChart {
+  readings = input<SensorReading[]>();
+  sensor = input<Sensor>();
+}
+
+@Component({ selector: 'app-real-time-chart', template: '', standalone: true })
+class StubRealTimeChart {
+  readings = input<SensorReading[]>();
+  sensor = input<Sensor>();
+}
+
+describe('ChartContainerComponent (Unit)', () => {
   let fixture: ComponentFixture<ChartContainerComponent>;
   let component: ChartContainerComponent;
   let componentRef: ComponentRef<ChartContainerComponent>;
+
   let loadingSig: WritableSignal<boolean>;
   let connectionStatusSig: WritableSignal<'connected' | 'connecting' | 'disconnected'>;
   let errorSig: WritableSignal<string | null>;
+  let historicReadingsSig: WritableSignal<SensorReading[]>;
+  let liveReadingsSig: WritableSignal<SensorReading[]>;
+
   let chartServiceMock: {
     historicReadings: WritableSignal<SensorReading[]>;
     liveReadings: WritableSignal<SensorReading[]>;
@@ -36,26 +55,34 @@ describe('ChartContainerComponent', () => {
     status: Status.ACTIVE,
     dataInterval: 1000,
   };
-
   const mockHistoricRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
     timeInterval: { from: new Date('2025-01-01'), to: new Date('2025-01-02') },
   };
+  const mockRealtimeRequest: ChartRequest = { sensor: mockSensor, chartType: ChartType.REALTIME };
+  const mockReadings: SensorReading[] = [
+    { timestamp: '2025-01-01T10:00:00Z', value: 72 } as SensorReading,
+    { timestamp: '2025-01-01T10:01:00Z', value: 75 } as SensorReading,
+  ];
 
-  const mockRealtimeRequest: ChartRequest = {
-    sensor: mockSensor,
-    chartType: ChartType.REALTIME,
+  const setChartRequest = (req: ChartRequest | null) => {
+    componentRef.setInput('chartRequest', req);
+    fixture.detectChanges();
   };
 
   beforeEach(async () => {
+    vi.resetAllMocks();
+
     loadingSig = signal(false);
     connectionStatusSig = signal<'connected' | 'connecting' | 'disconnected'>('disconnected');
     errorSig = signal<string | null>(null);
+    historicReadingsSig = signal<SensorReading[]>([]);
+    liveReadingsSig = signal<SensorReading[]>([]);
 
     chartServiceMock = {
-      historicReadings: signal<SensorReading[]>([]),
-      liveReadings: signal<SensorReading[]>([]),
+      historicReadings: historicReadingsSig,
+      liveReadings: liveReadingsSig,
       loading: loadingSig,
       connectionStatus: connectionStatusSig,
       error: errorSig,
@@ -65,32 +92,27 @@ describe('ChartContainerComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ChartContainerComponent],
-      schemas: [NO_ERRORS_SCHEMA],
       providers: [{ provide: SensorChartService, useValue: chartServiceMock }],
-    }).compileComponents();
+    })
+      .overrideComponent(ChartContainerComponent, {
+        remove: { imports: [HistoricChartComponent, RealTimeChartComponent] },
+        add: { imports: [StubHistoricChart, StubRealTimeChart] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(ChartContainerComponent);
     component = fixture.componentInstance;
     componentRef = fixture.componentRef;
   });
 
-  function query(selector: string): HTMLElement | null {
-    return fixture.nativeElement.querySelector(selector);
-  }
-
-  function setChartRequest(req: ChartRequest | null): void {
-    componentRef.setInput('chartRequest', req);
-    fixture.detectChanges();
-  }
-
   describe('when chartRequest is null', () => {
     beforeEach(() => setChartRequest(null));
 
     it('should show placeholder and hide mat-card', () => {
-      const placeholder = query('.chart-placeholder');
-      expect(placeholder).not.toBeNull();
-      expect(placeholder!.textContent).toContain('No chart selected');
-      expect(query('mat-card')).toBeNull();
+      const placeholder = fixture.debugElement.query(By.css('.chart-placeholder'));
+      expect(placeholder).toBeTruthy();
+      expect(placeholder.nativeElement.textContent).toContain('No chart selected');
+      expect(fixture.debugElement.query(By.css('mat-card'))).toBeNull();
     });
 
     it('should not call startChart', () => {
@@ -112,9 +134,9 @@ describe('ChartContainerComponent', () => {
   describe('card header', () => {
     it('should display sensor name and profile label for heart-rate sensor', () => {
       setChartRequest(mockHistoricRequest);
-      const title = query('mat-card-title');
-      expect(title!.textContent).toContain('Heart Rate Sensor');
-      expect(title!.textContent).toContain('Heart Rate');
+      const title = fixture.debugElement.query(By.css('mat-card-title'));
+      expect(title.nativeElement.textContent).toContain('Heart Rate Sensor');
+      expect(title.nativeElement.textContent).toContain('Heart Rate');
     });
 
     it('should display correct profile label for ECG sensor', () => {
@@ -123,9 +145,9 @@ describe('ChartContainerComponent', () => {
         chartType: ChartType.HISTORIC,
         timeInterval: { from: new Date(), to: new Date() },
       });
-      const title = query('mat-card-title');
-      expect(title!.textContent).toContain('ECG Sensor');
-      expect(title!.textContent).toContain('ECG');
+      const title = fixture.debugElement.query(By.css('mat-card-title'));
+      expect(title.nativeElement.textContent).toContain('ECG Sensor');
+      expect(title.nativeElement.textContent).toContain('ECG');
     });
   });
 
@@ -135,7 +157,7 @@ describe('ChartContainerComponent', () => {
       const closedSpy = vi.fn();
       component.chartClosed.subscribe(closedSpy);
 
-      query('button[mat-icon-button]')!.click();
+      fixture.debugElement.query(By.css('button[mat-icon-button]')).nativeElement.click();
 
       expect(chartServiceMock.stopChart).toHaveBeenCalled();
       expect(closedSpy).toHaveBeenCalledOnce();
@@ -145,7 +167,7 @@ describe('ChartContainerComponent', () => {
   describe('connection status', () => {
     it('should not show connection status for historic chart', () => {
       setChartRequest(mockHistoricRequest);
-      expect(query('.connection-status')).toBeNull();
+      expect(fixture.debugElement.query(By.css('.connection-status'))).toBeNull();
     });
 
     it.each([
@@ -157,10 +179,10 @@ describe('ChartContainerComponent', () => {
       connectionStatusSig.set(status);
       fixture.detectChanges();
 
-      const el = query('.connection-status');
-      expect(el).not.toBeNull();
-      expect(el!.textContent).toContain(label);
-      expect(el!.classList.contains(cls)).toBe(true);
+      const el = fixture.debugElement.query(By.css('.connection-status'));
+      expect(el).toBeTruthy();
+      expect(el.nativeElement.textContent).toContain(label);
+      expect(el.nativeElement.classList.contains(cls)).toBe(true);
     });
   });
 
@@ -170,11 +192,12 @@ describe('ChartContainerComponent', () => {
       errorSig.set('Failed to load data');
       fixture.detectChanges();
 
-      const err = query('.chart-error');
-      expect(err!.textContent).toContain('Failed to load data');
-      expect(query('mat-spinner')).toBeNull();
-      expect(query('app-historic-chart')).toBeNull();
-      expect(query('app-real-time-chart')).toBeNull();
+      expect(
+        fixture.debugElement.query(By.css('.chart-error')).nativeElement.textContent,
+      ).toContain('Failed to load data');
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubRealTimeChart))).toBeNull();
     });
 
     it('should show spinner and hide charts/error when loading', () => {
@@ -182,22 +205,66 @@ describe('ChartContainerComponent', () => {
       loadingSig.set(true);
       fixture.detectChanges();
 
-      expect(query('mat-spinner')).not.toBeNull();
-      expect(query('.chart-error')).toBeNull();
-      expect(query('app-historic-chart')).toBeNull();
-      expect(query('app-real-time-chart')).toBeNull();
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('.chart-error'))).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubRealTimeChart))).toBeNull();
     });
 
-    it('should render app-historic-chart when historic and not loading/error', () => {
+    it('should render historic chart when not loading/error', () => {
       setChartRequest(mockHistoricRequest);
-      expect(query('app-historic-chart')).not.toBeNull();
-      expect(query('app-real-time-chart')).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeTruthy();
+      expect(fixture.debugElement.query(By.directive(StubRealTimeChart))).toBeNull();
     });
 
-    it('should render app-real-time-chart when realtime and not loading/error', () => {
+    it('should render realtime chart when not loading/error', () => {
       setChartRequest(mockRealtimeRequest);
-      expect(query('app-real-time-chart')).not.toBeNull();
-      expect(query('app-historic-chart')).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubRealTimeChart))).toBeTruthy();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeNull();
+    });
+  });
+
+  describe('input bindings', () => {
+    it('should pass historicReadings and sensor to historic chart', () => {
+      historicReadingsSig.set(mockReadings);
+      setChartRequest(mockHistoricRequest);
+
+      const chart = fixture.debugElement.query(By.directive(StubHistoricChart))
+        .componentInstance as StubHistoricChart;
+      expect(chart.readings()).toEqual(mockReadings);
+      expect(chart.sensor()).toEqual(mockSensor);
+    });
+
+    it('should pass liveReadings and sensor to realtime chart', () => {
+      liveReadingsSig.set(mockReadings);
+      setChartRequest(mockRealtimeRequest);
+
+      const chart = fixture.debugElement.query(By.directive(StubRealTimeChart))
+        .componentInstance as StubRealTimeChart;
+      expect(chart.readings()).toEqual(mockReadings);
+      expect(chart.sensor()).toEqual(mockSensor);
+    });
+
+    it('should update historic chart when readings change', () => {
+      setChartRequest(mockHistoricRequest);
+      const chart = fixture.debugElement.query(By.directive(StubHistoricChart))
+        .componentInstance as StubHistoricChart;
+      expect(chart.readings()).toEqual([]);
+
+      historicReadingsSig.set(mockReadings);
+      fixture.detectChanges();
+      expect(chart.readings()).toEqual(mockReadings);
+    });
+
+    it('should update realtime chart when readings change', () => {
+      setChartRequest(mockRealtimeRequest);
+      const chart = fixture.debugElement.query(By.directive(StubRealTimeChart))
+        .componentInstance as StubRealTimeChart;
+      expect(chart.readings()).toEqual([]);
+
+      liveReadingsSig.set(mockReadings);
+      fixture.detectChanges();
+      expect(chart.readings()).toEqual(mockReadings);
     });
   });
 
@@ -209,7 +276,7 @@ describe('ChartContainerComponent', () => {
       [mockRealtimeRequest, 'isLiveChart', true],
       [mockHistoricRequest, 'isLiveChart', false],
       [null, 'isLiveChart', false],
-    ] as const)('chartRequest=%s to %s() === %s', (req, prop, expected) => {
+    ] as const)('chartRequest=%s → %s() === %s', (req, prop, expected) => {
       setChartRequest(req);
       expect(component[prop]()).toBe(expected);
     });
@@ -221,7 +288,7 @@ describe('ChartContainerComponent', () => {
       ['connected', 'statusClass', 'status-connected'],
       ['connecting', 'statusClass', 'status-connecting'],
       ['disconnected', 'statusClass', 'status-disconnected'],
-    ] as const)('connectionStatus=%s to %s() === "%s"', (status, prop, expected) => {
+    ] as const)('connectionStatus=%s → %s() === "%s"', (status, prop, expected) => {
       connectionStatusSig.set(status);
       expect(component[prop]()).toBe(expected);
     });
@@ -254,36 +321,39 @@ describe('ChartContainerComponent', () => {
   describe('signal reactivity', () => {
     it('should transition from placeholder to card when request is set', () => {
       setChartRequest(null);
-      expect(query('.chart-placeholder')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.chart-placeholder'))).toBeTruthy();
 
       setChartRequest(mockHistoricRequest);
-      expect(query('.chart-placeholder')).toBeNull();
-      expect(query('mat-card')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.chart-placeholder'))).toBeNull();
+      expect(fixture.debugElement.query(By.css('mat-card'))).toBeTruthy();
     });
 
     it('should transition between loading, chart and error', () => {
       setChartRequest(mockHistoricRequest);
+
       loadingSig.set(true);
       fixture.detectChanges();
-      expect(query('mat-spinner')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
 
       loadingSig.set(false);
       fixture.detectChanges();
-      expect(query('app-historic-chart')).not.toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeTruthy();
 
       errorSig.set('Something broke');
       fixture.detectChanges();
-      expect(query('app-historic-chart')).toBeNull();
-      expect(query('.chart-error')!.textContent).toContain('Something broke');
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeNull();
+      expect(
+        fixture.debugElement.query(By.css('.chart-error')).nativeElement.textContent,
+      ).toContain('Something broke');
     });
 
     it('should switch between historic and realtime charts', () => {
       setChartRequest(mockHistoricRequest);
-      expect(query('app-historic-chart')).not.toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeTruthy();
 
       setChartRequest(mockRealtimeRequest);
-      expect(query('app-historic-chart')).toBeNull();
-      expect(query('app-real-time-chart')).not.toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeNull();
+      expect(fixture.debugElement.query(By.directive(StubRealTimeChart))).toBeTruthy();
     });
   });
 });

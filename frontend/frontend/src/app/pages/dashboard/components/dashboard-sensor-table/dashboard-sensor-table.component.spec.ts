@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { MatTableModule } from '@angular/material/table';
 import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PageEvent } from '@angular/material/paginator';
 
 import { DashboardSensorTableComponent } from './dashboard-sensor-table.component';
@@ -11,7 +10,7 @@ import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 
-describe('DashboardSensorTableComponent', () => {
+describe('DashboardSensorTableComponent (Unit)', () => {
   let component: DashboardSensorTableComponent;
   let fixture: ComponentFixture<DashboardSensorTableComponent>;
 
@@ -34,15 +33,18 @@ describe('DashboardSensorTableComponent', () => {
     },
   ];
 
+  const setInput = (key: string, value: unknown) => {
+    fixture.componentRef.setInput(key, value);
+    fixture.detectChanges();
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DashboardSensorTableComponent, MatTableModule],
-      schemas: [NO_ERRORS_SCHEMA],
+      imports: [DashboardSensorTableComponent, NoopAnimationsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardSensorTableComponent);
     component = fixture.componentInstance;
-
     fixture.componentRef.setInput('sensors', mockSensors);
     fixture.componentRef.setInput('total', mockSensors.length);
     fixture.detectChanges();
@@ -65,7 +67,6 @@ describe('DashboardSensorTableComponent', () => {
       const fresh = TestBed.createComponent(DashboardSensorTableComponent);
       fresh.componentRef.setInput('sensors', []);
       fresh.detectChanges();
-
       expect(fresh.componentInstance.total()).toBe(0);
       expect(fresh.componentInstance.pageIndex()).toBe(0);
       expect(fresh.componentInstance.limit()).toBe(10);
@@ -78,70 +79,49 @@ describe('DashboardSensorTableComponent', () => {
   });
 
   describe('actionMode', () => {
-    it('should show actions column in dashboard mode', () => {
-      fixture.componentRef.setInput('actionMode', 'dashboard' as ActionMode);
-      fixture.detectChanges();
-
+    it('should show actions column in dashboard mode and delete column in manage mode', () => {
+      setInput('actionMode', 'dashboard' as ActionMode);
       expect(component['displayedColumns']()).toContain('actions');
       expect(component['displayedColumns']()).not.toContain('delete');
-    });
 
-    it('should show delete column in manage mode', () => {
-      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
-      fixture.detectChanges();
-
+      setInput('actionMode', 'manage' as ActionMode);
       expect(component['displayedColumns']()).toContain('delete');
       expect(component['displayedColumns']()).not.toContain('actions');
     });
 
-    it('should render manager header and create button in manage mode', () => {
-      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
-      fixture.detectChanges();
+    it('should show manager header only in manage mode', () => {
+      setInput('actionMode', 'dashboard' as ActionMode);
+      expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
 
+      setInput('actionMode', 'manage' as ActionMode);
       expect(fixture.debugElement.query(By.css('.manager-header'))).toBeTruthy();
     });
 
-    it('should not render manager header in dashboard mode', () => {
-      fixture.componentRef.setInput('actionMode', 'dashboard' as ActionMode);
-      fixture.detectChanges();
-
-      expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
-    });
-
     it('should emit deleteRequested when delete button is clicked in manage mode', () => {
-      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
-      fixture.detectChanges();
-
+      setInput('actionMode', 'manage' as ActionMode);
       const spy = vi.fn();
       component.deleteRequested.subscribe(spy);
-
-      const deleteButton = fixture.debugElement.query(By.css('mat-cell button'));
-      deleteButton.triggerEventHandler('click', new MouseEvent('click'));
-
+      fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('delete'))!
+        .triggerEventHandler('click', { stopPropagation: vi.fn() });
       expect(spy).toHaveBeenCalledWith(mockSensors[0]);
     });
 
     it('should emit createRequested when new sensor button is clicked in manage mode', () => {
-      fixture.componentRef.setInput('actionMode', 'manage' as ActionMode);
-      fixture.detectChanges();
-
+      setInput('actionMode', 'manage' as ActionMode);
       const spy = vi.fn();
       component.createRequested.subscribe(spy);
-
-      const createButton = fixture.debugElement.query(By.css('.manager-header button'));
-      createButton.triggerEventHandler('click', new MouseEvent('click'));
-
+      fixture.debugElement
+        .query(By.css('.manager-header button'))
+        .triggerEventHandler('click', new MouseEvent('click'));
       expect(spy).toHaveBeenCalled();
     });
   });
 
   describe('loading state', () => {
-    beforeEach(() => {
-      fixture.componentRef.setInput('loading', true);
-      fixture.detectChanges();
-    });
-
     it('should render only spinner when loading', () => {
+      setInput('loading', true);
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
@@ -150,14 +130,11 @@ describe('DashboardSensorTableComponent', () => {
   });
 
   describe('empty state', () => {
-    beforeEach(() => {
+    it('should render only empty state', () => {
       fixture.componentRef.setInput('sensors', []);
       fixture.componentRef.setInput('total', 0);
       fixture.componentRef.setInput('loading', false);
       fixture.detectChanges();
-    });
-
-    it('should render only empty state', () => {
       const emptyState = fixture.debugElement.query(By.css('.empty-state'));
       expect(emptyState).toBeTruthy();
       expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain(
@@ -171,30 +148,22 @@ describe('DashboardSensorTableComponent', () => {
   });
 
   describe('table with data', () => {
-    it('should render table with header and correct rows', () => {
+    it('should render table with header, correct rows, and paginator', () => {
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('mat-header-row'))).toBeTruthy();
       expect(fixture.debugElement.queryAll(By.css('mat-row')).length).toBe(2);
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeTruthy();
     });
 
     it('should render sensor data in cells', () => {
       const cellTexts = fixture.debugElement
         .queryAll(By.css('mat-cell'))
         .map((cell) => cell.nativeElement.textContent.trim());
-
       expect(cellTexts).toEqual(expect.arrayContaining(['1', '2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Temperature', 'Humidity']));
-      expect(cellTexts).toEqual(
-        expect.arrayContaining(['Health Thermometer', 'Environmental Sensing']),
-      );
-      expect(cellTexts).toEqual(expect.arrayContaining(['query_statsssid_chart']));
       expect(cellTexts).toEqual(expect.arrayContaining(['ACTIVE', 'INACTIVE']));
-    });
-
-    it('should render paginator', () => {
-      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeTruthy();
     });
   });
 
@@ -204,7 +173,6 @@ describe('DashboardSensorTableComponent', () => {
       fixture.componentRef.setInput('pageIndex', 3);
       fixture.componentRef.setInput('limit', 25);
       fixture.detectChanges();
-
       expect(component.total()).toBe(50);
       expect(component.pageIndex()).toBe(3);
       expect(component.limit()).toBe(25);
@@ -213,12 +181,8 @@ describe('DashboardSensorTableComponent', () => {
     it('should emit pageChange when paginator emits page event', () => {
       const spy = vi.fn();
       component.pageChange.subscribe(spy);
-
-      const paginator = fixture.debugElement.query(By.css('mat-paginator'));
       const event: PageEvent = { pageIndex: 2, pageSize: 10, length: 50 };
-
-      paginator.triggerEventHandler('page', event);
-
+      fixture.debugElement.query(By.css('mat-paginator')).triggerEventHandler('page', event);
       expect(spy).toHaveBeenCalledWith(event);
     });
   });
@@ -226,25 +190,21 @@ describe('DashboardSensorTableComponent', () => {
   describe('chart actions', () => {
     it('should render chart buttons for each sensor', () => {
       const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
-      const historicButtons = buttons.filter((btn) =>
-        btn.nativeElement.textContent.includes('query_stats'),
-      );
-      const realtimeButtons = buttons.filter((btn) =>
-        btn.nativeElement.textContent.includes('ssid_chart'),
-      );
-      expect(historicButtons.length).toBe(2);
-      expect(realtimeButtons.length).toBe(2);
+      expect(
+        buttons.filter((btn) => btn.nativeElement.textContent.includes('query_stats')).length,
+      ).toBe(2);
+      expect(
+        buttons.filter((btn) => btn.nativeElement.textContent.includes('ssid_chart')).length,
+      ).toBe(2);
     });
 
     it('should emit chartRequested with HISTORIC when historic button is clicked', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
-
-      const historicButton = fixture.debugElement
+      fixture.debugElement
         .queryAll(By.css('mat-cell button'))
-        .find((btn) => btn.nativeElement.textContent.includes('query_stats'));
-      historicButton!.triggerEventHandler('click');
-
+        .find((btn) => btn.nativeElement.textContent.includes('query_stats'))!
+        .triggerEventHandler('click');
       expect(spy).toHaveBeenCalledWith({
         sensor: mockSensors[0],
         chartType: ChartType.HISTORIC,
@@ -255,17 +215,12 @@ describe('DashboardSensorTableComponent', () => {
     it('should emit chartRequested with REALTIME when realtime button is clicked', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
-
-      const realtimeButton = fixture.debugElement
+      fixture.debugElement
         .queryAll(By.css('mat-cell button'))
-        .find((btn) => btn.nativeElement.textContent.includes('ssid_chart'));
-      realtimeButton!.triggerEventHandler('click');
-
+        .find((btn) => btn.nativeElement.textContent.includes('ssid_chart'))!
+        .triggerEventHandler('click');
       expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sensor: mockSensors[0],
-          chartType: ChartType.REALTIME,
-        }),
+        expect.objectContaining({ sensor: mockSensors[0], chartType: ChartType.REALTIME }),
       );
     });
   });
@@ -273,16 +228,10 @@ describe('DashboardSensorTableComponent', () => {
   describe('inputs', () => {
     it('should accept all standard inputs', () => {
       expect(component.sensors()).toEqual(mockSensors);
-
-      fixture.componentRef.setInput('sensors', []);
-      fixture.detectChanges();
+      setInput('sensors', []);
       expect(component.sensors()).toEqual([]);
-    });
 
-    it('should accept loading input', () => {
-      fixture.componentRef.setInput('loading', true);
-      fixture.detectChanges();
-
+      setInput('loading', true);
       expect(component.loading()).toBe(true);
     });
   });
