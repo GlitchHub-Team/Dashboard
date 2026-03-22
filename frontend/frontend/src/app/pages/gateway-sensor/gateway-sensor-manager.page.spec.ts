@@ -1,22 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signal, WritableSignal, NO_ERRORS_SCHEMA } from '@angular/core';
+import { signal, WritableSignal, Component, input, output } from '@angular/core';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
-import { GatewaySensorManagerPage } from '../../pages/gateway-sensor/gateway-sensor-manager.page';
+import { GatewaySensorManagerPage } from './gateway-sensor-manager.page';
+import { DashboardGatewayTableComponent } from '../dashboard/components/dashboard-gateway-table/dashboard-gateway-table.component';
 import { GatewaySensorManagerService } from '../../services/gateway-sensor-manager/gateway-sensor-manager.service';
+import { ConfirmDeleteDialog } from './dialogs/confirm-delete/confirm-delete.dialog';
+import { CreateGatewayDialog } from './dialogs/create-gateway/create-gateway.dialog';
+import { CreateSensorDialog } from './dialogs/create-sensor/create-sensor.dialog';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
+import { Status } from '../../models/gateway-sensor-status.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
+import { ActionMode } from '../../models/action-mode.model';
 
-describe('GatewaySensorManagerPage', () => {
+@Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
+class StubGatewayTable {
+  actionMode = input<ActionMode>();
+  gateways = input<Gateway[]>();
+  sensors = input<Sensor[]>();
+  expandedGateway = input<Gateway | null>();
+  gatewayLoading = input<boolean>();
+  sensorLoading = input<boolean>();
+  gatewayTotal = input<number>();
+  gatewayPageIndex = input<number>();
+  gatewayLimit = input<number>();
+  sensorTotal = input<number>();
+  sensorPageIndex = input<number>();
+  sensorLimit = input<number>();
+  gatewayCreateRequested = output<void>();
+  gatewayDeleteRequested = output<Gateway>();
+  sensorCreateRequested = output<Gateway>();
+  sensorDeleteRequested = output<Sensor>();
+  expandedGatewayChange = output<Gateway>();
+  gatewayPageChange = output<PageEvent>();
+  sensorPageChange = output<PageEvent>();
+}
+
+describe('GatewaySensorManagerPage (Unit)', () => {
   let fixture: ComponentFixture<GatewaySensorManagerPage>;
   let component: GatewaySensorManagerPage;
-
   let gatewayErrorSig: WritableSignal<string | null>;
   let sensorErrorSig: WritableSignal<string | null>;
 
@@ -27,7 +55,6 @@ describe('GatewaySensorManagerPage', () => {
     status: Status.ACTIVE,
     interval: 60,
   };
-
   const mockSensor: Sensor = {
     id: 'sensor-1',
     gatewayId: 'gw-1',
@@ -38,10 +65,11 @@ describe('GatewaySensorManagerPage', () => {
   };
 
   let managerServiceMock: any;
-  let dialogMock: any;
-  let snackBarMock: any;
+  let dialogMock: { open: ReturnType<typeof vi.fn> };
+  let snackBarMock: { open: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
+    vi.resetAllMocks();
     gatewayErrorSig = signal<string | null>(null);
     sensorErrorSig = signal<string | null>(null);
 
@@ -74,28 +102,32 @@ describe('GatewaySensorManagerPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [GatewaySensorManagerPage],
-      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: GatewaySensorManagerService, useValue: managerServiceMock },
         { provide: MatDialog, useValue: dialogMock },
         { provide: MatSnackBar, useValue: snackBarMock },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(GatewaySensorManagerPage, {
+        remove: { imports: [DashboardGatewayTableComponent] },
+        add: { imports: [StubGatewayTable] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(GatewaySensorManagerPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  const query = (selector: string): HTMLElement | null =>
-    fixture.nativeElement.querySelector(selector);
-
-  function mockDialog(result: any): void {
+  const getTable = () => fixture.debugElement.query(By.directive(StubGatewayTable));
+  const mockDialog = (result: any) => {
     dialogMock.open.mockReturnValue({ afterClosed: () => of(result) });
-  }
+  };
 
-  it('should call loadGateways on init', () => {
-    expect(managerServiceMock.loadGateways).toHaveBeenCalledOnce();
+  describe('ngOnInit', () => {
+    it('should call loadGateways on init', () => {
+      expect(managerServiceMock.loadGateways).toHaveBeenCalledOnce();
+    });
   });
 
   describe('error banner', () => {
@@ -107,85 +139,117 @@ describe('GatewaySensorManagerPage', () => {
       gatewayErrorSig.set(gwErr);
       sensorErrorSig.set(sensErr);
       fixture.detectChanges();
-
-      const banner = query('.error-banner');
-      expect(banner).not.toBeNull();
-      expect(banner!.textContent).toContain(expected);
+      const banner = fixture.debugElement.query(By.css('.error-banner'));
+      expect(banner).toBeTruthy();
+      expect(banner.nativeElement.textContent).toContain(expected);
     });
 
-    it('should hide and show banner reactively as errors change', () => {
-      expect(query('.error-banner')).toBeNull();
+    it('should hide when no errors', () => {
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+    });
 
+    it('should show and hide reactively', () => {
       gatewayErrorSig.set('Error appeared');
       fixture.detectChanges();
-      expect(query('.error-banner')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
 
       gatewayErrorSig.set(null);
       fixture.detectChanges();
-      expect(query('.error-banner')).toBeNull();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
     });
   });
 
   describe('template rendering', () => {
-    it('should render the gateway table', () => {
-      expect(query('app-dashboard-gateway-table')).not.toBeNull();
-    });
+    it('should render gateway table stub, and alongside error banner when error is set', () => {
+      expect(getTable()).toBeTruthy();
 
-    it('should render error banner and gateway table simultaneously', () => {
       gatewayErrorSig.set('Something went wrong');
       fixture.detectChanges();
-
-      expect(query('.error-banner')).not.toBeNull();
-      expect(query('app-dashboard-gateway-table')).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+      expect(getTable()).toBeTruthy();
     });
   });
 
-  it('should call toggleExpandedGateway on the service', () => {
-    component['onExpandedGatewayChange'](mockGateway);
-    expect(managerServiceMock.toggleExpandedGateway).toHaveBeenCalledWith(mockGateway);
+  describe('input bindings', () => {
+    it('should pass all service signals and actionMode to gateway table', () => {
+      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set([mockGateway]);
+      (managerServiceMock.sensorList as WritableSignal<Sensor[]>).set([mockSensor]);
+      (managerServiceMock.gatewayTotal as WritableSignal<number>).set(25);
+      (managerServiceMock.gatewayPageIndex as WritableSignal<number>).set(2);
+      (managerServiceMock.gatewayLimit as WritableSignal<number>).set(5);
+      (managerServiceMock.sensorTotal as WritableSignal<number>).set(10);
+      (managerServiceMock.sensorPageIndex as WritableSignal<number>).set(1);
+      (managerServiceMock.sensorLimit as WritableSignal<number>).set(15);
+      (managerServiceMock.gatewayLoading as WritableSignal<boolean>).set(true);
+      (managerServiceMock.sensorLoading as WritableSignal<boolean>).set(true);
+      (managerServiceMock.expandedGateway as WritableSignal<Gateway | null>).set(mockGateway);
+      fixture.detectChanges();
+
+      const table = getTable().componentInstance as StubGatewayTable;
+      expect(table.actionMode()).toBe('manage');
+      expect(table.gateways()).toEqual([mockGateway]);
+      expect(table.sensors()).toEqual([mockSensor]);
+      expect(table.gatewayTotal()).toBe(25);
+      expect(table.gatewayPageIndex()).toBe(2);
+      expect(table.gatewayLimit()).toBe(5);
+      expect(table.sensorTotal()).toBe(10);
+      expect(table.sensorPageIndex()).toBe(1);
+      expect(table.sensorLimit()).toBe(15);
+      expect(table.gatewayLoading()).toBe(true);
+      expect(table.sensorLoading()).toBe(true);
+      expect(table.expandedGateway()).toEqual(mockGateway);
+    });
   });
 
-  it('should call changeGatewayPage with pageIndex and pageSize', () => {
-    component['onGatewayPageChange']({ pageIndex: 2, pageSize: 25, length: 100 } as PageEvent);
-    expect(managerServiceMock.changeGatewayPage).toHaveBeenCalledWith(2, 25);
-  });
+  describe('output events', () => {
+    it('should call toggleExpandedGateway when table emits expandedGatewayChange', () => {
+      getTable().triggerEventHandler('expandedGatewayChange', mockGateway);
+      expect(managerServiceMock.toggleExpandedGateway).toHaveBeenCalledWith(mockGateway);
+    });
 
-  it('should call changeSensorPage with pageIndex and pageSize', () => {
-    component['onSensorPageChange']({ pageIndex: 1, pageSize: 10, length: 50 } as PageEvent);
-    expect(managerServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
+    it('should call changeGatewayPage when table emits gatewayPageChange', () => {
+      getTable().triggerEventHandler('gatewayPageChange', {
+        pageIndex: 2,
+        pageSize: 25,
+        length: 100,
+      });
+      expect(managerServiceMock.changeGatewayPage).toHaveBeenCalledWith(2, 25);
+    });
+
+    it('should call changeSensorPage when table emits sensorPageChange', () => {
+      getTable().triggerEventHandler('sensorPageChange', {
+        pageIndex: 1,
+        pageSize: 10,
+        length: 50,
+      });
+      expect(managerServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
+    });
   });
 
   describe('onCreateGateway', () => {
-    it('should open CreateGatewayDialog and call refreshGateways on result', () => {
+    it('should open CreateGatewayDialog and refresh on result', () => {
       mockDialog(true);
-
-      component['onCreateGateway']();
-
-      expect(dialogMock.open).toHaveBeenCalledOnce();
+      getTable().triggerEventHandler('gatewayCreateRequested');
+      expect(dialogMock.open).toHaveBeenCalledWith(CreateGatewayDialog);
       expect(managerServiceMock.refreshGateways).toHaveBeenCalledOnce();
       expect(snackBarMock.open).toHaveBeenCalledWith('Gateway created', 'Close', {
         duration: 3000,
       });
     });
 
-    it.each([undefined, null, ''])(
-      'should not call refreshGateways when dialog returns %s',
-      (result) => {
-        mockDialog(result);
-        component['onCreateGateway']();
-
-        expect(managerServiceMock.refreshGateways).not.toHaveBeenCalled();
-        expect(snackBarMock.open).not.toHaveBeenCalled();
-      },
-    );
+    it.each([undefined, null, ''])('should not refresh when dialog returns %s', (result) => {
+      mockDialog(result);
+      getTable().triggerEventHandler('gatewayCreateRequested');
+      expect(managerServiceMock.refreshGateways).not.toHaveBeenCalled();
+      expect(snackBarMock.open).not.toHaveBeenCalled();
+    });
   });
 
   describe('onDeleteGateway', () => {
-    it('should open ConfirmDeleteDialog with gateway data and delete on confirm', () => {
+    it('should open ConfirmDeleteDialog and delete on confirm', () => {
       mockDialog(true);
-      component['onDeleteGateway'](mockGateway);
-
-      expect(dialogMock.open).toHaveBeenCalledWith(expect.anything(), {
+      getTable().triggerEventHandler('gatewayDeleteRequested', mockGateway);
+      expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
         data: {
           title: 'Delete Gateway',
           message: `Are you sure you want to delete the gateway "${mockGateway.name}"?`,
@@ -197,49 +261,38 @@ describe('GatewaySensorManagerPage', () => {
       });
     });
 
-    it.each([undefined, false])(
-      'should not call deleteGateway when dialog returns %s',
-      (result) => {
-        mockDialog(result);
-        component['onDeleteGateway'](mockGateway);
-
-        expect(managerServiceMock.deleteGateway).not.toHaveBeenCalled();
-        expect(snackBarMock.open).not.toHaveBeenCalled();
-      },
-    );
+    it.each([undefined, false])('should not delete when dialog returns %s', (result) => {
+      mockDialog(result);
+      getTable().triggerEventHandler('gatewayDeleteRequested', mockGateway);
+      expect(managerServiceMock.deleteGateway).not.toHaveBeenCalled();
+      expect(snackBarMock.open).not.toHaveBeenCalled();
+    });
   });
 
   describe('onCreateSensor', () => {
-    it('should open CreateSensorDialog with gateway id and name and call refreshSensors on result', () => {
+    it('should open CreateSensorDialog with gateway data and refresh on result', () => {
       mockDialog(true);
-
-      component['onCreateSensor'](mockGateway);
-
-      expect(dialogMock.open).toHaveBeenCalledWith(expect.anything(), {
+      getTable().triggerEventHandler('sensorCreateRequested', mockGateway);
+      expect(dialogMock.open).toHaveBeenCalledWith(CreateSensorDialog, {
         data: { id: 'gw-1', name: 'Gateway 1' },
       });
       expect(managerServiceMock.refreshSensors).toHaveBeenCalledWith('gw-1');
       expect(snackBarMock.open).toHaveBeenCalledWith('Sensor created', 'Close', { duration: 3000 });
     });
 
-    it.each([undefined, null])(
-      'should not call refreshSensors when dialog returns %s',
-      (result) => {
-        mockDialog(result);
-        component['onCreateSensor'](mockGateway);
-
-        expect(managerServiceMock.refreshSensors).not.toHaveBeenCalled();
-        expect(snackBarMock.open).not.toHaveBeenCalled();
-      },
-    );
+    it.each([undefined, null])('should not refresh when dialog returns %s', (result) => {
+      mockDialog(result);
+      getTable().triggerEventHandler('sensorCreateRequested', mockGateway);
+      expect(managerServiceMock.refreshSensors).not.toHaveBeenCalled();
+      expect(snackBarMock.open).not.toHaveBeenCalled();
+    });
   });
 
   describe('onDeleteSensor', () => {
-    it('should open ConfirmDeleteDialog with sensor data and delete on confirm', () => {
+    it('should open ConfirmDeleteDialog and delete on confirm', () => {
       mockDialog(true);
-      component['onDeleteSensor'](mockSensor);
-
-      expect(dialogMock.open).toHaveBeenCalledWith(expect.anything(), {
+      getTable().triggerEventHandler('sensorDeleteRequested', mockSensor);
+      expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
         data: {
           title: 'Delete Sensor',
           message: `Are you sure you want to delete the sensor "${mockSensor.name}"?`,
@@ -249,10 +302,9 @@ describe('GatewaySensorManagerPage', () => {
       expect(snackBarMock.open).toHaveBeenCalledWith('Sensor deleted', 'Close', { duration: 3000 });
     });
 
-    it.each([undefined, false])('should not call deleteSensor when dialog returns %s', (result) => {
+    it.each([undefined, false])('should not delete when dialog returns %s', (result) => {
       mockDialog(result);
-      component['onDeleteSensor'](mockSensor);
-
+      getTable().triggerEventHandler('sensorDeleteRequested', mockSensor);
       expect(managerServiceMock.deleteSensor).not.toHaveBeenCalled();
       expect(snackBarMock.open).not.toHaveBeenCalled();
     });

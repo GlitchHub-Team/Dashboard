@@ -14,7 +14,7 @@ vi.mock('rxjs/webSocket', () => ({
 describe('SensorLiveReadingsApiService', () => {
   let service: any;
 
-  const apiUrl = environment.apiUrl;
+  const wsUrl = environment.wsUrl;
 
   const mockSensor: Sensor = {
     id: 'sensor-1',
@@ -48,9 +48,7 @@ describe('SensorLiveReadingsApiService', () => {
 
       service.connect(mockSensor);
 
-      expect(webSocket).toHaveBeenCalledWith(
-        `${apiUrl}/live?gatewayId=gateway-1&sensorId=sensor-1`,
-      );
+      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/live?gatewayId=gateway-1&sensorId=sensor-1`);
     });
 
     it('should return the observable from the socket', () => {
