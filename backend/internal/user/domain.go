@@ -20,19 +20,3 @@ type User struct {
 func (u *User) IsZero() bool {
 	return *u == (User{})
 }
-
-func (u *User) SetName(name string) {
-	u.Name = name
-}
-
-func (u *User) SetEmail(email string) {
-	u.Email = email
-}
-
-func (u *User) SetPasswordHash(passwordHash string) {
-	u.PasswordHash = &passwordHash
-}
-
-func (u *User) Confirm() {
-	u.Confirmed = true
-}
