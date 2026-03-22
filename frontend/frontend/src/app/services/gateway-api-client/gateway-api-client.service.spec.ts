@@ -12,7 +12,7 @@ describe('GatewayApiClientService', () => {
   let service: GatewayApiClientService;
   let httpMock: HttpTestingController;
 
-  const apiUrl = `${environment.apiUrl}/gateway`;
+  const apiUrl = `${environment.apiUrl}`;
 
   const mockGateways: GatewayBackend[] = [
     {
@@ -62,7 +62,7 @@ describe('GatewayApiClientService', () => {
         expect(response).toEqual(mockPaginatedResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/tenant-1/list?page=1&limit=20`);
+      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/gateways?page=1&limit=20`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('page')).toBe('1');
       expect(req.request.params.get('limit')).toBe('20');
@@ -78,7 +78,7 @@ describe('GatewayApiClientService', () => {
         expect(response.data[1].gateway_id).toBe('gw-2');
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/tenant-1/list?page=0&limit=10`);
+      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/gateways?page=0&limit=10`);
       req.flush(mockPaginatedResponse);
     });
   });
@@ -89,7 +89,7 @@ describe('GatewayApiClientService', () => {
         expect(response).toEqual(mockPaginatedResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/list?page=0&limit=10`);
+      const req = httpMock.expectOne(`${apiUrl}/gateways?page=0&limit=10`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('page')).toBe('0');
       expect(req.request.params.get('limit')).toBe('10');
@@ -103,7 +103,7 @@ describe('GatewayApiClientService', () => {
         expect(response.data.length).toBe(2);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/list?page=2&limit=25`);
+      const req = httpMock.expectOne(`${apiUrl}/gateways?page=2&limit=25`);
       req.flush(mockPaginatedResponse);
     });
   });
@@ -127,7 +127,7 @@ describe('GatewayApiClientService', () => {
         expect(gateway).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/add`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(mockConfig);
       req.flush(mockResponse);
@@ -139,7 +139,7 @@ describe('GatewayApiClientService', () => {
         expect(gateway.name).toBe('New Gateway');
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/add`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway`);
       req.flush(mockResponse);
     });
   });
@@ -148,7 +148,7 @@ describe('GatewayApiClientService', () => {
     it('should send DELETE request with gateway id in the URL', () => {
       service.deleteGateway('gw-1').subscribe();
 
-      const req = httpMock.expectOne(`${apiUrl}/delete/gw-1`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1`);
       expect(req.request.method).toBe('DELETE');
       req.flush(null);
     });
@@ -158,7 +158,7 @@ describe('GatewayApiClientService', () => {
         expect(result).toBeNull();
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/delete/gw-1`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1`);
       req.flush(null);
     });
   });

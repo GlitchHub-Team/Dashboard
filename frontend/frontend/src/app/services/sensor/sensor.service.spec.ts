@@ -214,63 +214,60 @@ describe('SensorService', () => {
       expect(service.loading()).toBe(false);
     });
 
-    it('should refetch current page after success (gateway context)', () => {
+    it('should not refetch after success (gateway context)', () => {
       mockListSuccess('getSensorListByGateway');
       service.getSensorsByGateway('gw-1', 0, 10);
       sensorApiMock.getSensorListByGateway.mockClear();
-      mockListSuccess('getSensorListByGateway');
 
       sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewSensor);
       service.addNewSensor(mockConfig).subscribe();
 
-      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 0, 10);
+      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
     });
 
-    it('should refetch current page after success (tenant context)', () => {
+    it('should not refetch after success (tenant context)', () => {
       mockListSuccess('getSensorListByTenant');
       service.getSensorsByTenant('tenant-1', 0, 10);
       sensorApiMock.getSensorListByTenant.mockClear();
-      mockListSuccess('getSensorListByTenant');
 
       sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewSensor);
       service.addNewSensor(mockConfig).subscribe();
 
-      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 0, 10);
+      expect(sensorApiMock.getSensorListByTenant).not.toHaveBeenCalled();
     });
 
-    it('should set error on failure, not refetch, and complete without emitting', () => {
+    it('should propagate error to subscriber and not refetch', () => {
       mockListSuccess('getSensorListByGateway');
       service.getSensorsByGateway('gw-1', 0, 10);
       sensorApiMock.getSensorListByGateway.mockClear();
 
-      sensorApiMock.addNewSensor.mockReturnValue(
-        throwError(() => ({ status: 500, message: 'Duplicate sensor' }) as ApiError),
-      );
+      const error = { status: 500, message: 'Duplicate sensor' } as ApiError;
+      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => error));
       const errorSpy = vi.fn();
       const completeSpy = vi.fn();
       service.addNewSensor(mockConfig).subscribe({ error: errorSpy, complete: completeSpy });
 
-      expect(service.error()).toBe('Duplicate sensor');
-      expect(service.loading()).toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(error);
+      expect(completeSpy).not.toHaveBeenCalled();
       expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
-      expect(errorSpy).not.toHaveBeenCalled();
-      expect(completeSpy).toHaveBeenCalled();
     });
 
-    it('should use default error message when error has no message', () => {
-      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => ({ status: 500 }) as ApiError));
-      service.addNewSensor(mockConfig).subscribe();
+    it('should propagate error to subscriber when error has no message', () => {
+      const error = { status: 500 } as ApiError;
+      sensorApiMock.addNewSensor.mockReturnValue(throwError(() => error));
+      const errorSpy = vi.fn();
+      service.addNewSensor(mockConfig).subscribe({ error: errorSpy });
 
-      expect(service.error()).toBe('Failed to add sensor');
+      expect(errorSpy).toHaveBeenCalledWith(error);
     });
 
     it('should clear previous error before adding', () => {
       sensorApiMock.addNewSensor.mockReturnValue(
         throwError(() => ({ status: 500, message: 'Error' })),
       );
-      service.addNewSensor(mockConfig).subscribe();
+      service.addNewSensor(mockConfig).subscribe({ error: () => {} });
 
       sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewSensor);

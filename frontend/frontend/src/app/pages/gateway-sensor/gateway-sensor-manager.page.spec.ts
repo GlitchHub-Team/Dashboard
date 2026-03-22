@@ -186,7 +186,10 @@ describe('GatewaySensorManagerPage', () => {
       component['onDeleteGateway'](mockGateway);
 
       expect(dialogMock.open).toHaveBeenCalledWith(expect.anything(), {
-        data: { entityName: 'Gateway 1', entityType: 'gateway' },
+        data: {
+          title: 'Delete Gateway',
+          message: `Are you sure you want to delete the gateway "${mockGateway.name}"?`,
+        },
       });
       expect(managerServiceMock.deleteGateway).toHaveBeenCalledWith(mockGateway);
       expect(snackBarMock.open).toHaveBeenCalledWith('Gateway deleted', 'Close', {
@@ -237,7 +240,10 @@ describe('GatewaySensorManagerPage', () => {
       component['onDeleteSensor'](mockSensor);
 
       expect(dialogMock.open).toHaveBeenCalledWith(expect.anything(), {
-        data: { entityName: 'Heart Rate Sensor', entityType: 'sensor' },
+        data: {
+          title: 'Delete Sensor',
+          message: `Are you sure you want to delete the sensor "${mockSensor.name}"?`,
+        },
       });
       expect(managerServiceMock.deleteSensor).toHaveBeenCalledWith(mockSensor);
       expect(snackBarMock.open).toHaveBeenCalledWith('Sensor deleted', 'Close', { duration: 3000 });

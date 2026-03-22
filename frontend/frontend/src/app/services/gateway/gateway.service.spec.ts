@@ -237,68 +237,57 @@ describe('GatewayService', () => {
       expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
     });
 
-    it('should refetch by tenant and set loading false after success', () => {
+    it('should not trigger a refetch or change loading state after success', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
       gatewayApiMock.getGatewayListByTenant.mockClear();
-      mockTenantSuccess();
 
       gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewGateway);
 
       service.addNewGateway(mockConfig).subscribe();
 
-      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 0, 10);
+      expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
       expect(service.loading()).toBe(false);
     });
 
-    it('should refetch via getGatewayList when no tenant context', () => {
+    it('should not trigger a refetch when no tenant context', () => {
       mockListSuccess();
       service.getGateways(0, 10);
       gatewayApiMock.getGatewayList.mockClear();
-      mockListSuccess();
 
       gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewGateway);
 
       service.addNewGateway(mockConfig).subscribe();
 
-      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(0, 10);
+      expect(gatewayApiMock.getGatewayList).not.toHaveBeenCalled();
     });
 
-    it.each([
-      { error: { status: 409, message: 'Duplicate gateway' }, expected: 'Duplicate gateway' },
-      { error: { status: 500 }, expected: 'Failed to add gateway' },
-    ])('should set error "$expected" on failure', ({ error, expected }) => {
+    it('should propagate error to subscriber on failure', () => {
+      const error = { status: 409, message: 'Duplicate gateway' };
       gatewayApiMock.addNewGateway.mockReturnValue(throwError(() => error));
-      service.addNewGateway(mockConfig).subscribe();
-      expect(service.error()).toBe(expected);
-      expect(service.loading()).toBe(false);
+      const errorSpy = vi.fn();
+      service.addNewGateway(mockConfig).subscribe({ error: errorSpy });
+      expect(errorSpy).toHaveBeenCalledWith(error);
     });
 
-    it('should not refetch on error and clear previous error on retry', () => {
+    it('should not refetch on error', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
       gatewayApiMock.getGatewayListByTenant.mockClear();
 
-      gatewayApiMock.addNewGateway.mockReturnValue(
-        throwError(() => ({ status: 500, message: 'Error' })),
-      );
-      service.addNewGateway(mockConfig).subscribe();
+      const error = { status: 500, message: 'Error' };
+      gatewayApiMock.addNewGateway.mockReturnValue(throwError(() => error));
+      const errorSpy = vi.fn();
+      service.addNewGateway(mockConfig).subscribe({ error: errorSpy });
       expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
-      expect(service.error()).toBe('Error');
-
-      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
-      mockTenantSuccess();
-      service.addNewGateway(mockConfig).subscribe();
-      expect(service.error()).toBeNull();
+      expect(errorSpy).toHaveBeenCalledWith(error);
     });
 
-    it('should complete without emitting on error', () => {
-      gatewayApiMock.addNewGateway.mockReturnValue(
-        throwError(() => ({ status: 500, message: 'Error' })),
-      );
+    it('should propagate errors without completing', () => {
+      const error = { status: 500, message: 'Error' };
+      gatewayApiMock.addNewGateway.mockReturnValue(throwError(() => error));
       const nextSpy = vi.fn();
       const errorSpy = vi.fn();
       const completeSpy = vi.fn();
@@ -308,8 +297,8 @@ describe('GatewayService', () => {
         .subscribe({ next: nextSpy, error: errorSpy, complete: completeSpy });
 
       expect(nextSpy).not.toHaveBeenCalled();
-      expect(errorSpy).not.toHaveBeenCalled();
-      expect(completeSpy).toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalledWith(error);
+      expect(completeSpy).not.toHaveBeenCalled();
     });
   });
 

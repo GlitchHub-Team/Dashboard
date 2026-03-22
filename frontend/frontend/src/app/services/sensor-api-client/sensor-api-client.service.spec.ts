@@ -13,7 +13,7 @@ describe('SensorApiClientService', () => {
   let service: SensorApiClientService;
   let httpMock: HttpTestingController;
 
-  const apiUrl = `${environment.apiUrl}/sensor`;
+  const apiUrl = `${environment.apiUrl}`;
 
   const mockSensors: SensorBackend[] = [
     {
@@ -65,7 +65,7 @@ describe('SensorApiClientService', () => {
         expect(response).toEqual(mockPaginatedResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/gw-1/list?page=1&limit=20`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/sensors?page=1&limit=20`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('page')).toBe('1');
       expect(req.request.params.get('limit')).toBe('20');
@@ -81,7 +81,7 @@ describe('SensorApiClientService', () => {
         expect(response.data[1].sensor_id).toBe('s-2');
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/gw-1/list?page=1&limit=20`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/sensors?page=1&limit=20`);
       req.flush(mockPaginatedResponse);
     });
   });
@@ -92,7 +92,7 @@ describe('SensorApiClientService', () => {
         expect(response).toEqual(mockPaginatedResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/list?page=1&limit=10`);
+      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/sensors?page=1&limit=10`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('page')).toBe('1');
       expect(req.request.params.get('limit')).toBe('10');
@@ -112,7 +112,7 @@ describe('SensorApiClientService', () => {
         expect(response.data[1].sensor_interval).toBe(60);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/list?page=1&limit=10`);
+      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/sensors?page=1&limit=10`);
       req.flush(mockPaginatedResponse);
     });
   });
@@ -139,7 +139,7 @@ describe('SensorApiClientService', () => {
         expect(sensor).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/add`);
+      const req = httpMock.expectOne(`${apiUrl}/sensor`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(mockConfig);
       req.flush(mockResponse);
@@ -152,7 +152,7 @@ describe('SensorApiClientService', () => {
         expect(sensor.sensor_interval).toBe(60);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/add`);
+      const req = httpMock.expectOne(`${apiUrl}/sensor`);
       req.flush(mockResponse);
     });
   });
@@ -161,7 +161,7 @@ describe('SensorApiClientService', () => {
     it('should send DELETE request with sensor id in the URL', () => {
       service.deleteSensor('s-1').subscribe();
 
-      const req = httpMock.expectOne(`${apiUrl}/delete/s-1`);
+      const req = httpMock.expectOne(`${apiUrl}/sensor/s-1`);
       expect(req.request.method).toBe('DELETE');
       req.flush(null);
     });
@@ -171,7 +171,7 @@ describe('SensorApiClientService', () => {
         expect(result).toBeNull();
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/delete/s-1`);
+      const req = httpMock.expectOne(`${apiUrl}/sensor/s-1`);
       req.flush(null);
     });
   });
