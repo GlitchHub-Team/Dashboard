@@ -48,7 +48,7 @@ describe('SensorLiveReadingsApiService', () => {
 
       service.connect(mockSensor);
 
-      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/live?gatewayId=gateway-1&sensorId=sensor-1`);
+      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/sensor/${mockSensor.id}/real_time_data`);
     });
 
     it('should return the observable from the socket', () => {

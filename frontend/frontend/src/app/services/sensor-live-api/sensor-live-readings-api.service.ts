@@ -14,7 +14,7 @@ export class SensorLiveReadingsApiService {
   private socket$: WebSocketSubject<RealTimeReading> | null = null;
 
   public connect(sensor: Sensor): Observable<RealTimeReading> {
-    const url = `${this.apiUrl}/live?gatewayId=${sensor.gatewayId}&sensorId=${sensor.id}`;
+    const url = `${this.apiUrl}/sensor/${sensor.id}/real_time_data`;
 
     this.socket$ = webSocket<RealTimeReading>(url);
     return this.socket$.asObservable();
