@@ -4,21 +4,27 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { HistoricResponse } from '../../models/sensor-data/historic-response.model';
-import { TimeInterval } from '../../models/time-interval.model';
-import { Sensor } from '../../models/sensor/sensor.model';
+import { ChartRequest } from '../../models/chart/chart-request.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SensorHistoricApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/sensor-historic`;
+  private readonly apiUrl = `${environment.apiUrl}`;
 
-  public getHistoricData(sensor: Sensor, timeInterval: TimeInterval): Observable<HistoricResponse> {
+  public getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
     const params = new HttpParams()
-      .set('from', timeInterval.from.toISOString())
-      .set('to', timeInterval.to.toISOString());
-
-    return this.http.get<HistoricResponse>(`${this.apiUrl}/data?sensorId=${sensor.id}`, { params });
+      .set('from_time', req.timeInterval!.from.toISOString())
+      .set('to_time', req.timeInterval!.to.toISOString())
+      .set('lower_bound', req.valuesInterval!.lowerBound.toString())
+      .set('upper_bound', req.valuesInterval!.upperBound.toString())
+      .set('max_data_points', req.dataPointsCounter!.toString());
+    return this.http.get<HistoricResponse>(
+      `${this.apiUrl}/sensor/${req.sensor.id}/historical-data`,
+      {
+        params,
+      },
+    );
   }
 }

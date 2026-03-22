@@ -1,4 +1,3 @@
-// pages/manager/manager.page.ts
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';

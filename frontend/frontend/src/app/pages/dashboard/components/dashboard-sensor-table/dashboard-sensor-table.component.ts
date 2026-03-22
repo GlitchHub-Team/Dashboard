@@ -1,5 +1,6 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
@@ -8,6 +9,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TitleCasePipe } from '@angular/common';
 import { UpperCasePipe } from '@angular/common';
 
+import { HistoricChartFiltersDialog } from '../../dialogs/historic-chart-filters/historic-chart-filters.dialog';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
@@ -29,6 +31,8 @@ import { ActionMode } from '../../../../models/action-mode.model';
   styleUrl: './dashboard-sensor-table.component.css',
 })
 export class DashboardSensorTableComponent {
+  private readonly dialog = inject(MatDialog);
+
   public readonly sensors = input.required<Sensor[]>();
   public readonly loading = input<boolean>();
   public readonly actionMode = input<ActionMode>('dashboard');
@@ -55,11 +59,23 @@ export class DashboardSensorTableComponent {
   public readonly pageChange = output<PageEvent>();
 
   protected onViewChart(sensor: Sensor, chartType: ChartType): void {
-    this.chartRequested.emit({
-      sensor,
-      chartType,
-      timeInterval: null!,
-    });
+    if (chartType === ChartType.HISTORIC) {
+      const ref = this.dialog.open(HistoricChartFiltersDialog, {
+        data: { sensor, chartType },
+      });
+
+      ref.afterClosed().subscribe((result: ChartRequest | undefined) => {
+        if (result) {
+          this.chartRequested.emit(result);
+        }
+      });
+    } else {
+      const chartRequest: ChartRequest = {
+        chartType,
+        sensor,
+      };
+      this.chartRequested.emit(chartRequest);
+    }
   }
 
   protected onPageChange(event: PageEvent): void {

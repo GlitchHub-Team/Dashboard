@@ -2,11 +2,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { Subject } from 'rxjs';
 
 import { DashboardSensorTableComponent } from './dashboard-sensor-table.component';
+import { HistoricChartFiltersDialog } from '../../dialogs/historic-chart-filters/historic-chart-filters.dialog';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
+import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 
@@ -33,14 +37,23 @@ describe('DashboardSensorTableComponent (Unit)', () => {
     },
   ];
 
+  let afterClosedSubject: Subject<ChartRequest | undefined>;
+  let dialogMock: { open: ReturnType<typeof vi.fn> };
+
   const setInput = (key: string, value: unknown) => {
     fixture.componentRef.setInput(key, value);
     fixture.detectChanges();
   };
 
   beforeEach(async () => {
+    afterClosedSubject = new Subject();
+    dialogMock = {
+      open: vi.fn().mockReturnValue({ afterClosed: () => afterClosedSubject.asObservable() }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [DashboardSensorTableComponent, NoopAnimationsModule],
+      providers: [{ provide: MatDialog, useValue: dialogMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardSensorTableComponent);
@@ -198,18 +211,40 @@ describe('DashboardSensorTableComponent (Unit)', () => {
       ).toBe(2);
     });
 
-    it('should emit chartRequested with HISTORIC when historic button is clicked', () => {
+    it('should open HistoricChartFiltersDialog and emit chartRequested with dialog result', () => {
       const spy = vi.fn();
       component.chartRequested.subscribe(spy);
+
       fixture.debugElement
         .queryAll(By.css('mat-cell button'))
         .find((btn) => btn.nativeElement.textContent.includes('query_stats'))!
         .triggerEventHandler('click');
-      expect(spy).toHaveBeenCalledWith({
+
+      expect(dialogMock.open).toHaveBeenCalledWith(HistoricChartFiltersDialog, {
+        data: { sensor: mockSensors[0], chartType: ChartType.HISTORIC },
+      });
+      expect(spy).not.toHaveBeenCalled();
+
+      const result: ChartRequest = {
         sensor: mockSensors[0],
         chartType: ChartType.HISTORIC,
-        timeInterval: null!,
-      });
+        timeInterval: { from: new Date('2025-01-01'), to: new Date('2025-01-02') },
+      };
+      afterClosedSubject.next(result);
+      expect(spy).toHaveBeenCalledWith(result);
+    });
+
+    it('should not emit chartRequested when historic dialog is cancelled', () => {
+      const spy = vi.fn();
+      component.chartRequested.subscribe(spy);
+
+      fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('query_stats'))!
+        .triggerEventHandler('click');
+
+      afterClosedSubject.next(undefined);
+      expect(spy).not.toHaveBeenCalled();
     });
 
     it('should emit chartRequested with REALTIME when realtime button is clicked', () => {
@@ -219,9 +254,7 @@ describe('DashboardSensorTableComponent (Unit)', () => {
         .queryAll(By.css('mat-cell button'))
         .find((btn) => btn.nativeElement.textContent.includes('ssid_chart'))!
         .triggerEventHandler('click');
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({ sensor: mockSensors[0], chartType: ChartType.REALTIME }),
-      );
+      expect(spy).toHaveBeenCalledWith({ sensor: mockSensors[0], chartType: ChartType.REALTIME });
     });
   });
 

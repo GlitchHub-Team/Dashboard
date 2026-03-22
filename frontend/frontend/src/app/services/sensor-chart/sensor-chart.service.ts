@@ -58,20 +58,18 @@ export class SensorChartService {
   private startHistoricChart(req: ChartRequest): void {
     this._loading.set(true);
 
-    this.subscription = this.historicService
-      .getHistoricData(req.sensor, req.timeInterval!)
-      .subscribe({
-        next: (response) => {
-          const historicData = this.historicAdapter.fromResponse(response);
-          this._historicReadings.set(historicData.readings);
-          this._resolution.set(historicData.resolution);
-        },
-        error: (err: ApiError) => {
-          this._error.set(err.message ?? 'Failed to load historic data');
-          this._loading.set(false);
-        },
-        complete: () => this._loading.set(false),
-      });
+    this.subscription = this.historicService.getHistoricData(req).subscribe({
+      next: (response) => {
+        const historicData = this.historicAdapter.fromResponse(response);
+        this._historicReadings.set(historicData.readings);
+        this._resolution.set(historicData.resolution);
+      },
+      error: (err: ApiError) => {
+        this._error.set(err.message ?? 'Failed to load historic data');
+        this._loading.set(false);
+      },
+      complete: () => this._loading.set(false),
+    });
   }
 
   private startLiveReadingsChart(req: ChartRequest): void {

@@ -7,14 +7,15 @@ import { environment } from '../../../environments/environment';
 import { HistoricResponse } from '../../models/sensor-data/historic-response.model';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
-import { TimeInterval } from '../../models/time-interval.model';
+import { ChartRequest } from '../../models/chart/chart-request.model';
+import { ChartType } from '../../models/chart/chart-type.enum';
 import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('SensorHistoricApiService', () => {
   let service: SensorHistoricApiService;
   let httpMock: HttpTestingController;
 
-  const apiUrl = `${environment.apiUrl}/sensor-historic`;
+  const apiUrl = `${environment.apiUrl}`;
 
   const mockSensor: Sensor = {
     id: 'sensor-1',
@@ -25,9 +26,15 @@ describe('SensorHistoricApiService', () => {
     dataInterval: 60,
   };
 
-  const mockTimeInterval: TimeInterval = {
-    from: new Date('2026-01-01T00:00:00.000Z'),
-    to: new Date('2026-01-02T00:00:00.000Z'),
+  const mockChartRequest: ChartRequest = {
+    sensor: mockSensor,
+    chartType: ChartType.HISTORIC,
+    timeInterval: {
+      from: new Date('2026-01-01T00:00:00.000Z'),
+      to: new Date('2026-01-02T00:00:00.000Z'),
+    },
+    valuesInterval: { lowerBound: 0, upperBound: 100 },
+    dataPointsCounter: 250,
   };
 
   const mockHistoricResponse: HistoricResponse = {
@@ -69,27 +76,30 @@ describe('SensorHistoricApiService', () => {
   });
 
   describe('getHistoricData', () => {
-    it('should send GET request with correct URL and sensorId', () => {
-      service.getHistoricData(mockSensor, mockTimeInterval).subscribe((response) => {
+    it('should send GET request to correct URL', () => {
+      service.getHistoricData(mockChartRequest).subscribe((response) => {
         expect(response).toEqual(mockHistoricResponse);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/data?sensorId=sensor-1`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
       expect(req.request.method).toBe('GET');
       req.flush(mockHistoricResponse);
     });
 
-    it('should send GET request with from and to as query params', () => {
-      service.getHistoricData(mockSensor, mockTimeInterval).subscribe();
+    it('should send correct query params', () => {
+      service.getHistoricData(mockChartRequest).subscribe();
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/data?sensorId=sensor-1`);
-      expect(req.request.params.get('from')).toBe('2026-01-01T00:00:00.000Z');
-      expect(req.request.params.get('to')).toBe('2026-01-02T00:00:00.000Z');
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
+      expect(req.request.params.get('from_time')).toBe('2026-01-01T00:00:00.000Z');
+      expect(req.request.params.get('to_time')).toBe('2026-01-02T00:00:00.000Z');
+      expect(req.request.params.get('lower_bound')).toBe('0');
+      expect(req.request.params.get('upper_bound')).toBe('100');
+      expect(req.request.params.get('max_data_points')).toBe('250');
       req.flush(mockHistoricResponse);
     });
 
     it('should return a HistoricResponse', () => {
-      service.getHistoricData(mockSensor, mockTimeInterval).subscribe((response) => {
+      service.getHistoricData(mockChartRequest).subscribe((response) => {
         expect(response.count).toBe(2);
         expect(response.resolution).toBe(60);
         expect(response.data.length).toBe(2);
@@ -97,7 +107,7 @@ describe('SensorHistoricApiService', () => {
         expect(response.data[0].value).toBe(36.6);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/data?sensorId=sensor-1`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
       req.flush(mockHistoricResponse);
     });
   });

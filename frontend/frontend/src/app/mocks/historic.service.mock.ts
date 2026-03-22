@@ -1,34 +1,41 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { Sensor } from '../models/sensor/sensor.model';
-import { TimeInterval } from '../models/time-interval.model';
+import { ChartRequest } from '../models/chart/chart-request.model';
 import { HistoricResponse } from '../models/sensor-data/historic-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { TimeInterval } from '../models/time-interval.model';
 
 @Injectable()
 export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
 
-  getHistoricData(sensor: Sensor, timeInterval: TimeInterval): Observable<HistoricResponse> {
-    const interval = timeInterval ?? this.getDefaultInterval();
+  getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
+    const interval = req.timeInterval ?? this.getDefaultInterval();
     const from = interval.from.getTime();
     const to = interval.to.getTime();
-    const resolution = 60; // 60 seconds between points
-    const count = Math.floor((to - from) / (resolution * 1000));
+    const resolution = 60;
+    const totalPoints = Math.floor((to - from) / (resolution * 1000));
+    const count = req.dataPointsCounter
+      ? Math.min(req.dataPointsCounter, totalPoints)
+      : totalPoints;
+    const step = totalPoints / count;
 
-    const baseValue = this.getBaseValue(sensor.profile);
-    const amplitude = this.getAmplitude(sensor.profile);
+    const baseValue = this.getBaseValue(req.sensor.profile);
+    const amplitude = this.getAmplitude(req.sensor.profile);
+    const lowerBound = req.valuesInterval?.lowerBound ?? -Infinity;
+    const upperBound = req.valuesInterval?.upperBound ?? Infinity;
 
     const data = Array.from({ length: count }, (_, i) => {
-      const timestamp = new Date(from + i * resolution * 1000).toISOString();
+      const timestamp = new Date(from + Math.floor(i * step) * resolution * 1000).toISOString();
       const noise = (Math.random() - 0.5) * amplitude * 0.2;
-      const value = baseValue + amplitude * Math.sin((2 * Math.PI * i) / count) + noise;
+      const raw = baseValue + amplitude * Math.sin((2 * Math.PI * i) / count) + noise;
+      const value = Math.min(upperBound, Math.max(lowerBound, Math.round(raw * 100) / 100));
 
       return {
-        sensorId: sensor.id,
+        sensorId: req.sensor.id,
         timestamp,
-        profile: sensor.profile,
-        value: Math.round(value * 100) / 100,
+        profile: req.sensor.profile,
+        value,
       };
     });
 

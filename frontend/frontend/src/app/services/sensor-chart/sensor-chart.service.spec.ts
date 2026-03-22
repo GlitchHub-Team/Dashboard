@@ -27,11 +27,6 @@ describe('SensorChartService', () => {
     dataInterval: 60,
   };
 
-  const mockTimeInterval = {
-    from: new Date('2026-01-01T00:00:00.000Z'),
-    to: new Date('2026-01-02T00:00:00.000Z'),
-  };
-
   const mockHistoricResponse: HistoricResponse = {
     count: 2,
     resolution: 60,
@@ -75,7 +70,12 @@ describe('SensorChartService', () => {
   const historicRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
-    timeInterval: mockTimeInterval,
+    timeInterval: {
+      from: new Date('2026-01-01T00:00:00.000Z'),
+      to: new Date('2026-01-02T00:00:00.000Z'),
+    },
+    valuesInterval: { lowerBound: 0, upperBound: 100 },
+    dataPointsCounter: 250,
   };
 
   const liveRequest: ChartRequest = {
@@ -119,7 +119,7 @@ describe('SensorChartService', () => {
 
       service.startChart(historicRequest);
 
-      expect(historicApiMock.getHistoricData).toHaveBeenCalledWith(mockSensor, mockTimeInterval);
+      expect(historicApiMock.getHistoricData).toHaveBeenCalledWith(historicRequest);
       expect(service.historicReadings()).toEqual(mockAdaptedReadings);
       expect(service.resolution()).toBe(60);
       expect(service.loading()).toBe(false);

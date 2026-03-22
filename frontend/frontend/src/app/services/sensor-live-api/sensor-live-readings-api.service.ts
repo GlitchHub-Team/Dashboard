@@ -10,7 +10,7 @@ import { Sensor } from '../../models/sensor/sensor.model';
   providedIn: 'root',
 })
 export class SensorLiveReadingsApiService {
-  private readonly apiUrl = environment.apiUrl;
+  private readonly apiUrl = `${environment.wsUrl}`;
   private socket$: WebSocketSubject<RealTimeReading> | null = null;
 
   public connect(sensor: Sensor): Observable<RealTimeReading> {

@@ -1,0 +1,32 @@
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 450px;
+  padding-top: 8px;
+}
+
+.sensor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 8px 0 0 0;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.row mat-form-field {
+  flex: 1;
+}
