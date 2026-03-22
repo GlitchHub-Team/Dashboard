@@ -6,62 +6,10 @@ import (
 )
 
 // Request DTO ========================================================================================
-
-// Create ---------------------------------------------------------------------------------------------
-
 type CreateUserBodyDTO struct {
 	dto.EmailField
 	dto.UsernameField
 }
-
-// type CreateUserDTO struct {
-// 	dto.EmailField
-// 	dto.UsernameField
-// }
-
-// Delete ---------------------------------------------------------------------------------------------
-
-// type DeleteTenantUserDTO struct {
-// 	dto.TenantIdField
-// 	dto.UserIdField
-// }
-
-// type DeleteTenantAdminDTO struct {
-// 	dto.TenantIdField
-// 	dto.UserIdField
-// }
-
-// type DeleteSuperAdminDTO struct {
-// 	dto.UserIdField
-// }
-
-// Get single ---------------------------------------------------------------------------------------------
-// type GetTenantUserDTO struct {
-// 	dto.TenantIdField
-// 	dto.UserIdField
-// }
-
-// type GetTenantAdminDTO struct {
-// 	dto.TenantIdField
-// 	dto.UserIdField
-// }
-
-// type GetSuperAdminDTO struct {
-// 	dto.UserIdField
-// }
-
-// Get multiple ---------------------------------------------------------------------------------------
-// type GetTenantUsersByTenantQueryDTO struct {
-// 	dto.Pagination
-// }
-
-// type GetTenantAdminsByTenantQueryDTO struct {
-// 	dto.Pagination
-// }
-
-// type GetSuperAdminListQueryDTO struct {
-// 	dto.Pagination
-// }
 
 type GetUserListQueryDTO struct {
 	dto.Pagination

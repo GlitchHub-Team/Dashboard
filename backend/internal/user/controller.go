@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	// "fmt"
 	"net/http"
 
 	"backend/internal/common"
@@ -10,7 +9,6 @@ import (
 	"backend/internal/identity"
 	"backend/internal/tenant"
 
-	// "backend/internal/identity"
 	transportHttp "backend/internal/transport/http"
 
 	"github.com/gin-gonic/gin"

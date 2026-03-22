@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	// "backend/internal/tenant"
 	db_conn "backend/internal/common/db_connection"
 
 	"backend/internal/identity"
@@ -17,15 +16,6 @@ import (
 )
 
 // Entities ===========================================================================================
-type genericUserEntity struct {
-	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	Email     string `gorm:"unique;size:256;not null"`
-	Name      string `gorm:"size:128;not null"`
-	Password  string `gorm:"not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Confirmed bool
-}
 
 type TenantMemberEntity struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
