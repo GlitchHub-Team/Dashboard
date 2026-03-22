@@ -22,9 +22,8 @@ export class SensorRealTimeMockService {
         this.currentValue = Math.round(this.currentValue * 100) / 100;
 
         return {
-          sensorId: sensor.id,
           value: this.currentValue,
-          profile: sensor.profile,
+          timestamp: Date.now(),
         };
       }),
     );
