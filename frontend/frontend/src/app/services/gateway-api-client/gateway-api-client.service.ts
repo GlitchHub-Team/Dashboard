@@ -13,7 +13,7 @@ import { environment } from '../../../environments/environment';
 })
 export class GatewayApiClientService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/gateway`;
+  private readonly apiUrl = `${environment.apiUrl}`;
 
   public getGatewayListByTenant(
     tenantId: string,
@@ -22,9 +22,12 @@ export class GatewayApiClientService {
   ): Observable<PaginatedResponse<GatewayBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<GatewayBackend>>(`${this.apiUrl}/${tenantId}/list`, {
-      params,
-    });
+    return this.http.get<PaginatedResponse<GatewayBackend>>(
+      `${this.apiUrl}/tenant/${tenantId}/gateways`,
+      {
+        params,
+      },
+    );
   }
 
   public getGatewayList(
@@ -33,18 +36,14 @@ export class GatewayApiClientService {
   ): Observable<PaginatedResponse<GatewayBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<GatewayBackend>>(`${this.apiUrl}/list`, { params });
+    return this.http.get<PaginatedResponse<GatewayBackend>>(`${this.apiUrl}/gateways`, { params });
   }
 
   public addNewGateway(config: GatewayConfig): Observable<GatewayBackend> {
-    return this.http.post<GatewayBackend>(`${this.apiUrl}/add`, config);
+    return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway`, config);
   }
 
-  public deleteGateway(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
-  }
-
-  public sendCommandToGateway(): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/command`, {});
+  public deleteGateway(gatewayId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/gateway/${gatewayId}`);
   }
 }

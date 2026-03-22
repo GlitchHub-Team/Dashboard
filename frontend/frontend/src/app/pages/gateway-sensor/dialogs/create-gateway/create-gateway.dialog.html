@@ -32,7 +32,7 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close [disabled]="isSubmitting">Cancel</button>
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
   <button
     mat-raised-button
     color="primary"

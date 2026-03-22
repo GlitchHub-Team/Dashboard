@@ -13,7 +13,7 @@ export class GatewayApiAdapter extends GatewayAdapter {
       id: dto.gateway_id,
       name: dto.name,
       status: dto.status as Status,
-      interval: dto.intervals,
+      interval: dto.interval,
       tenantId: dto.tenant_id ?? undefined,
     };
   }

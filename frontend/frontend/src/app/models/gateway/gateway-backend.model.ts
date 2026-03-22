@@ -3,5 +3,5 @@ export interface GatewayBackend {
   tenant_id?: string;
   name: string;
   status: string;
-  intervals: number;
+  interval: number;
 }

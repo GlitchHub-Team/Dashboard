@@ -27,14 +27,14 @@ describe('GatewayService', () => {
         name: 'Gateway 1',
         tenant_id: 'tenant-1',
         status: 'active',
-        intervals: 60,
+        interval: 60,
       },
       {
         gateway_id: 'gw-2',
         name: 'Gateway 2',
         tenant_id: 'tenant-1',
         status: 'inactive',
-        intervals: 60,
+        interval: 60,
       },
     ],
   };
@@ -52,7 +52,7 @@ describe('GatewayService', () => {
     name: 'New Gateway',
     tenant_id: 'tenant-1',
     status: 'active',
-    intervals: 60,
+    interval: 60,
   };
   const mockNewGateway: Gateway = {
     id: 'gw-3',
@@ -68,7 +68,6 @@ describe('GatewayService', () => {
     getGatewayList: vi.fn(),
     addNewGateway: vi.fn(),
     deleteGateway: vi.fn(),
-    sendCommandToGateway: vi.fn(),
   };
 
   const adapterMock = {

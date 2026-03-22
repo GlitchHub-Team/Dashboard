@@ -60,4 +60,8 @@ export class CreateGatewayDialog {
       },
     });
   }
+
+  protected onCancel(): void {
+    this.dialogRef.close(false);
+  }
 }

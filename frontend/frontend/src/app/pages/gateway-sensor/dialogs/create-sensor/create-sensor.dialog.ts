@@ -73,12 +73,12 @@ export class CreateSensorDialog {
       },
       error: (err: ApiError) => {
         this.isSubmitting = false;
-        this.generalError = err.message || 'Failed to create sensor. Please try again.';
+        this.generalError = err.message ?? 'Failed to create sensor. Please try again.';
       },
     });
   }
 
-  onCancel(): void {
+  protected onCancel(): void {
     this.dialogRef.close(false);
   }
 }

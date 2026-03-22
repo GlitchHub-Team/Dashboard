@@ -20,14 +20,14 @@ describe('GatewayApiClientService', () => {
       name: 'Gateway 1',
       tenant_id: 'tenant-1',
       status: 'active',
-      intervals: 60,
+      interval: 60,
     },
     {
       gateway_id: 'gw-2',
       name: 'Gateway 2',
       tenant_id: 'tenant-1',
       status: 'inactive',
-      intervals: 120,
+      interval: 120,
     },
   ];
 
@@ -119,7 +119,7 @@ describe('GatewayApiClientService', () => {
       name: 'New Gateway',
       tenant_id: 'tenant-1',
       status: 'active',
-      intervals: 60,
+      interval: 60,
     };
 
     it('should send POST request with gateway config as body', () => {
@@ -159,26 +159,6 @@ describe('GatewayApiClientService', () => {
       });
 
       const req = httpMock.expectOne(`${apiUrl}/delete/gw-1`);
-      req.flush(null);
-    });
-  });
-
-  describe('sendCommandToGateway', () => {
-    it('should send POST request with empty body', () => {
-      service.sendCommandToGateway().subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}/command`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({});
-      req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
-      service.sendCommandToGateway().subscribe((result) => {
-        expect(result).toBeNull();
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/command`);
       req.flush(null);
     });
   });

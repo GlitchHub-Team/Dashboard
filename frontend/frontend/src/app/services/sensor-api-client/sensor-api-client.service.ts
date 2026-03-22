@@ -12,7 +12,7 @@ import { PaginatedResponse } from '../../models/paginated-response.model';
 })
 export class SensorApiClientService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/sensor`;
+  private readonly apiUrl = `${environment.apiUrl}`;
 
   public getSensorListByGateway(
     gatewayId: string,
@@ -21,9 +21,12 @@ export class SensorApiClientService {
   ): Observable<PaginatedResponse<SensorBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<SensorBackend>>(`${this.apiUrl}/${gatewayId}/list`, {
-      params,
-    });
+    return this.http.get<PaginatedResponse<SensorBackend>>(
+      `${this.apiUrl}/gateway/${gatewayId}/sensors`,
+      {
+        params,
+      },
+    );
   }
 
   public getSensorListByTenant(
@@ -34,7 +37,7 @@ export class SensorApiClientService {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
     return this.http.get<PaginatedResponse<SensorBackend>>(
-      `${this.apiUrl}/tenant/${tenantId}/list`,
+      `${this.apiUrl}/tenant/${tenantId}/sensors`,
       {
         params,
       },
@@ -42,10 +45,10 @@ export class SensorApiClientService {
   }
 
   public addNewSensor(config: SensorConfig): Observable<SensorBackend> {
-    return this.http.post<SensorBackend>(`${this.apiUrl}/add`, config);
+    return this.http.post<SensorBackend>(`${this.apiUrl}/sensor`, config);
   }
 
-  public deleteSensor(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
+  public deleteSensor(sensorId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/sensor/${sensorId}`);
   }
 }
