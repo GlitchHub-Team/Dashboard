@@ -1,8 +1,8 @@
 package user
 
 import (
-	"backend/internal/common/dto"
-	"backend/internal/identity"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
 )
 
 // Request DTO ========================================================================================

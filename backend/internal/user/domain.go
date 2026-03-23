@@ -1,11 +1,10 @@
 package user
 
 import (
+	"backend/internal/shared/identity"
+
 	"github.com/google/uuid"
-	"backend/internal/identity"
 )
-
-
 
 type User struct {
 	Id           uint
