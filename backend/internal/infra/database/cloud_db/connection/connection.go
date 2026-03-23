@@ -1,9 +1,9 @@
-package db_connection
+package connection
 
 import (
 	"fmt"
 
-	"backend/internal/config"
+	"backend/internal/shared/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

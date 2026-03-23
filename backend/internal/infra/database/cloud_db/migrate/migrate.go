@@ -3,18 +3,17 @@ package migrate
 import (
 	"fmt"
 
-	"backend/internal/config"
+	"backend/internal/shared/config"
 	"backend/internal/tenant"
 	"backend/internal/user"
 
-	// "backend/internal/user"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	// "fmt"
 )
 
-type DbMigrator interface {
+type Migrator interface {
 	Migrate() error
 }
 
@@ -29,7 +28,7 @@ func NewPostgreMigrator(
 	log *zap.Logger,
 	cfg *config.Config,
 	getTenantsRepo *tenant.TenantPostgreRepository,
-) DbMigrator {
+) Migrator {
 	return &PostgreMigrator{
 		log:            log,
 		cfg:            cfg,
@@ -49,7 +48,7 @@ func (migrator *PostgreMigrator) Migrate() error {
 		&user.TenantMemberEntity{},
 	}
 
-	migrator.log.Info("[Migrator] started")
+	migrator.log.Info("[Migrator] started on cloud DB")
 
 	db, err := gorm.Open(
 		postgres.Open(migrator.cfg.CloudDBUrl),
@@ -87,11 +86,10 @@ func (migrator *PostgreMigrator) Migrate() error {
 		if tenantId == "" {
 			continue
 		}
-		
+
 		schemaName := fmt.Sprintf("tenant_%v", tenantId)
 
 		err := db.Transaction(func(tx *gorm.DB) error {
-
 			if err := tx.Exec(fmt.Sprintf("set local search_path to \"%s\"", schemaName)).Error; err != nil {
 				return fmt.Errorf("failed to set search_path to %s: %v", schemaName, err)
 			}
