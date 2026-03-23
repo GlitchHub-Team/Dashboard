@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"backend/internal/common/dto"
-	"backend/internal/identity"
+	transportHttp "backend/internal/infra/transport/http"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
-	transportHttp "backend/internal/transport/http"
 	"backend/internal/user"
 	"backend/tests/user/mocks"
 

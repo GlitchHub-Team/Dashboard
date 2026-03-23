@@ -5,10 +5,10 @@ import (
 	"slices"
 	"testing"
 
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/internal/user"
-	tenantMocks "backend/tests/tenant/mocks"
+	tenantmocks "backend/tests/tenant/mocks"
 	"backend/tests/user/mocks"
 
 	"github.com/google/uuid"
@@ -17,14 +17,14 @@ import (
 
 type mockSetupFunc_GetUserService func(
 	getUserPort *mocks.MockGetUserPort,
-	getTenantPort *tenantMocks.MockGetTenantPort,
+	getTenantPort *tenantmocks.MockGetTenantPort,
 ) *gomock.Call
 
 func newStepTenantOk_GetUserService(
 	targetTenantId uuid.UUID, canImpersonate bool,
 ) mockSetupFunc_GetUserService {
 	return func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -38,7 +38,7 @@ func newStepTenantOk_GetUserService(
 
 func newStepTenantNotFound_GetUserService(targetTenantId uuid.UUID) mockSetupFunc_GetUserService {
 	return func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -49,7 +49,7 @@ func newStepTenantNotFound_GetUserService(targetTenantId uuid.UUID) mockSetupFun
 
 func newStepTenantError_GetUserService(targetTenantId uuid.UUID, mockError error) mockSetupFunc_GetUserService {
 	return func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -95,7 +95,7 @@ func TestService_GetTenantUser(t *testing.T) {
 
 	// Step 2: get user
 	step2GetUserOk := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
@@ -104,7 +104,7 @@ func TestService_GetTenantUser(t *testing.T) {
 	}
 
 	step2UserNotFoundFail := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
@@ -114,7 +114,7 @@ func TestService_GetTenantUser(t *testing.T) {
 
 	errMockStep2 := newMockError(2)
 	step2GetUserError := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
@@ -123,7 +123,7 @@ func TestService_GetTenantUser(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(gomock.Any(), gomock.Any()).
@@ -307,7 +307,7 @@ func TestService_GetTenantUser(t *testing.T) {
 			mockController := gomock.NewController(t)
 
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -379,7 +379,7 @@ func TestService_GetTenantAdmin(t *testing.T) {
 
 	// Step 2: get user
 	step2GetUserOk := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
@@ -388,7 +388,7 @@ func TestService_GetTenantAdmin(t *testing.T) {
 	}
 
 	step2UserNotFoundFail := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
@@ -398,7 +398,7 @@ func TestService_GetTenantAdmin(t *testing.T) {
 
 	errMockStep2 := newMockError(2)
 	step2GetUserError := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
@@ -407,7 +407,7 @@ func TestService_GetTenantAdmin(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(gomock.Any(), gomock.Any()).
@@ -554,7 +554,7 @@ func TestService_GetTenantAdmin(t *testing.T) {
 			mockController := gomock.NewController(t)
 
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -617,7 +617,7 @@ func TestService_GetSuperAdmin(t *testing.T) {
 
 	// Step 2: get user
 	step1GetUserOk := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
@@ -626,7 +626,7 @@ func TestService_GetSuperAdmin(t *testing.T) {
 	}
 
 	step1UserNotFoundFail := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
@@ -636,7 +636,7 @@ func TestService_GetSuperAdmin(t *testing.T) {
 
 	errMockStep1 := newMockError(2)
 	step1GetUserError := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
@@ -645,7 +645,7 @@ func TestService_GetSuperAdmin(t *testing.T) {
 	}
 
 	step1NeverCalled := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(gomock.Any()).
@@ -740,7 +740,7 @@ func TestService_GetSuperAdmin(t *testing.T) {
 			mockController := gomock.NewController(t)
 
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -832,7 +832,7 @@ func TestService_GetTenantUsersByTenant(t *testing.T) {
 	step1TenantError := newStepTenantError_GetUserService(targetTenantId, errMockStep1)
 
 	step2Case1Ok := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUsersByTenant(targetTenantId, targetPageCase1, targetLimitCase1).
@@ -841,7 +841,7 @@ func TestService_GetTenantUsersByTenant(t *testing.T) {
 	}
 
 	step2Case2Ok := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUsersByTenant(targetTenantId, targetPageCase2, targetLimitCase2).
@@ -851,7 +851,7 @@ func TestService_GetTenantUsersByTenant(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error in step 2")
 	step2GetUsersError := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUsersByTenant(targetTenantId, targetPageCase1, targetLimitCase1).
@@ -860,7 +860,7 @@ func TestService_GetTenantUsersByTenant(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUsersByTenant(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -1038,7 +1038,7 @@ func TestService_GetTenantUsersByTenant(t *testing.T) {
 			mockController := gomock.NewController(t)
 
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -1132,7 +1132,7 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 	step1TenantError := newStepTenantError_GetUserService(targetTenantId, errMockStep1)
 
 	step2Case1Ok := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdminsByTenant(targetTenantId, targetPageCase1, targetLimitCase1).
@@ -1141,7 +1141,7 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 	}
 
 	step2Case2Ok := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdminsByTenant(targetTenantId, targetPageCase2, targetLimitCase2).
@@ -1151,7 +1151,7 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error in step 2")
 	step2GetUsersError := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdminsByTenant(targetTenantId, targetPageCase1, targetLimitCase1).
@@ -1160,7 +1160,7 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdminsByTenant(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -1338,7 +1338,7 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 			mockController := gomock.NewController(t)
 
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -1422,7 +1422,7 @@ func TestService_GetSuperAdminList(t *testing.T) {
 	//
 
 	step1Case1Ok := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdminList(targetPageCase1, targetLimitCase1).
@@ -1431,7 +1431,7 @@ func TestService_GetSuperAdminList(t *testing.T) {
 	}
 
 	step1Case2Ok := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdminList(targetPageCase2, targetLimitCase2).
@@ -1441,7 +1441,7 @@ func TestService_GetSuperAdminList(t *testing.T) {
 
 	errMockStep1 := errors.New("unexpected error in step 1")
 	step1GetUsersError := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdminList(targetPageCase1, targetLimitCase1).
@@ -1450,7 +1450,7 @@ func TestService_GetSuperAdminList(t *testing.T) {
 	}
 
 	step1NeverCalled := func(
-		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdminList(gomock.Any(), gomock.Any()).
@@ -1560,7 +1560,7 @@ func TestService_GetSuperAdminList(t *testing.T) {
 			mockController := gomock.NewController(t)
 
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta

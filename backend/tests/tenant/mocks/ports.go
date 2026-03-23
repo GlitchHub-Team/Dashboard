@@ -6,7 +6,7 @@
 //	mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . GetTenantPort,GetTenantsPort
 //
 
-// Package mocks is a generated GoMock package.
+// package mocks is a generated GoMock package.
 package mocks
 
 import (
