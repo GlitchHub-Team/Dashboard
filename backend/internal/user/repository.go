@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	db_conn "backend/internal/common/db_connection"
+	cloud_db "backend/internal/infra/database/cloud_db/connection"
 
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -44,7 +44,7 @@ func (entity *TenantMemberEntity) fromUser(user User) {
 
 func (entity *TenantMemberEntity) toUser() (User, error) {
 	if entity.ID == 0 {
-		return User{}, nil
+		return User{}, ErrInvalidUser
 	}
 
 	tenantId, err := uuid.Parse(entity.TenantId)
@@ -114,7 +114,7 @@ func newUserPostgreRepository(
 
 func (repo *userPostgreRepository) SaveTenantMember(tenantMember *TenantMemberEntity) error {
 	err := repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
+		Scopes(cloud_db.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
 		Save(tenantMember).
 		Error
 	return err
@@ -130,7 +130,7 @@ func (repo *userPostgreRepository) DeleteTenantMember(tenantMember *TenantMember
 	}
 
 	err := repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
+		Scopes(cloud_db.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
 		Clauses(clause.Returning{}).
 		Delete(&tenantMember).
 		Error
@@ -139,7 +139,7 @@ func (repo *userPostgreRepository) DeleteTenantMember(tenantMember *TenantMember
 
 type userRepositoryGetUserBy struct {
 	Email  *string
-	userId *uint
+	UserId *uint
 }
 
 func (by *userRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
@@ -153,23 +153,41 @@ func (by *userRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
 		conditions = append(conditions, "email = ?")
 		params = append(params, *by.Email)
 	}
-	if by.userId != nil {
+	if by.UserId != nil {
 		conditions = append(conditions, "id = ?")
-		params = append(params, *by.userId)
+		params = append(params, *by.UserId)
 	}
 
 	return strings.Join(conditions, " AND "), params, nil
 }
 
-func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userRepositoryGetUserBy) (*TenantMemberEntity, error) {
-	var tenantMember *TenantMemberEntity
+func (repo *userPostgreRepository) GetTenantMember(tenantId string, by userRepositoryGetUserBy) (*TenantMemberEntity, error) {
 	where, params, err := by.getWhere()
 	if err != nil {
 		return &TenantMemberEntity{}, err
 	}
 
+	var tenantMember *TenantMemberEntity
+
 	err = repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Where(where, params...).
+		Find(&tenantMember).
+		Error
+	tenantMember.TenantId = tenantId
+	return tenantMember, err
+}
+
+func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userRepositoryGetUserBy) (*TenantMemberEntity, error) {
+	where, params, err := by.getWhere()
+	if err != nil {
+		return &TenantMemberEntity{}, err
+	}
+
+	var tenantMember *TenantMemberEntity
+
+	err = repo.db.
+		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_user").
 		Where(where, params...).
 		Find(&tenantMember).
@@ -184,7 +202,7 @@ func (repo *userPostgreRepository) GetTenantUsers(tenantId string, offset, limit
 	var err error
 
 	baseQuery := repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_user")
 
 	// Get count
@@ -213,7 +231,7 @@ func (repo *userPostgreRepository) GetTenantAdmin(tenantId string, by userReposi
 	}
 
 	err = repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin").
 		Where(where, params...).
 		Find(&tenantMember).
@@ -228,7 +246,7 @@ func (repo *userPostgreRepository) GetTenantAdmins(tenantId string, offset, limi
 	var err error
 
 	baseQuery := repo.db.
-		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin")
 
 	// Ottieni count
