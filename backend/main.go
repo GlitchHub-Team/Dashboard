@@ -17,14 +17,13 @@ import (
 	"backend/internal/alert"
 	"backend/internal/api_key"
 	"backend/internal/auth"
-	"backend/internal/common/db_connection"
-	"backend/internal/common/migrate"
-	"backend/internal/config"
+	"backend/internal/infra/database/cloud_db"
 	"backend/internal/email"
 	"backend/internal/gateway"
 	"backend/internal/historical_data"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
+	"backend/internal/shared/config"
 	"backend/internal/tenant"
 	"backend/internal/user"
 )
@@ -105,8 +104,7 @@ func main() {
 	fx.New(
 		// Moduli infrastrutturali
 		config.Module,
-		db_connection.Module,
-		migrate.Module,  // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
+		cloud_db.Module, // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
 		email.Module,
 
 		// Moduli funzionalità
