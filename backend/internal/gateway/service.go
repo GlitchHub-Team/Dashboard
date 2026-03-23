@@ -2,7 +2,7 @@ package gateway
 
 import (
 	"go.uber.org/zap"
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 )
 
 type CreateGatewayUseCase interface {
@@ -26,17 +26,18 @@ func NewCreateGatewayService(log *zap.Logger, saveGatewayPort SaveGatewayPort) C
 
 
 func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
-	s.log.Info("Created gateway with name" + command.Name)
+	// s.log.Info("Created gateway with name" + command.Name)
 
-	gateway := Gateway{
-		Id: uuid.New(),
-		Name: command.Name,
-		Status: GATEWAY_STATUS_ACTIVE,
-	}
+	// gateway := Gateway{
+	// 	Id: uuid.New(),
+	// 	Name: command.Name,
+	// 	Status: GATEWAY_STATUS_ACTIVE,
+	// }
 
-	// Logica di business...
+	// // Logica di business...
 
-	return gateway, nil
+	// return gateway, nil
+	return Gateway{}, nil
 }
 
 // Compile-time checks
