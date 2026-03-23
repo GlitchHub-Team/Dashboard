@@ -1,13 +1,14 @@
 package auth
 
-//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ConfirmTokenPort,ChangePasswordTokenPort
+import (
+	"backend/internal/user"
+
+	"github.com/google/uuid"
+)
+
+//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ConfirmAccountTokenPort,ChangePasswordTokenPort
 
 // ConfirmToken ============================================================================
-type ConfirmTokenPort interface {
-	NewConfirmAccountToken(userId uint) (string, error)
-	DeleteConfirmAccountToken(tokenId int) error
-	GetConfirmAccountTokenByUserId(userId uint) (*ConfirmToken, error)
-}
 
 type ConfirmTokenPostgreAdapter struct {
 	repository *confirmTokenPostgreRepository
@@ -15,48 +16,57 @@ type ConfirmTokenPostgreAdapter struct {
 
 func NewConfirmAccountTokenPostgreAdapter(
 	repository *confirmTokenPostgreRepository,
-) ConfirmTokenPort {
+) *ConfirmTokenPostgreAdapter {
 	return &ConfirmTokenPostgreAdapter{
 		repository: repository,
 	}
 }
 
-func (adapter *ConfirmTokenPostgreAdapter) NewConfirmAccountToken(userId uint) (string, error) {
+func (adapter *ConfirmTokenPostgreAdapter) NewConfirmAccountToken(tenantId *uuid.UUID, userId uint) (string, error) {
 	return "", nil
 }
 
-func (adapter *ConfirmTokenPostgreAdapter) DeleteConfirmAccountToken(tokenId int) error {
+func (adapter *ConfirmTokenPostgreAdapter) DeleteConfirmAccountToken(token string) error {
 	return nil
 }
 
-func (adapter *ConfirmTokenPostgreAdapter) GetConfirmAccountTokenByUserId(userId uint) (*ConfirmToken, error) {
-	return nil, nil
+func (adapter *ConfirmTokenPostgreAdapter) GetConfirmAccountTokenByUser(tenantId *uuid.UUID, userId uint) (
+	ConfirmAccountToken, error,
+) {
+	return ConfirmAccountToken{}, nil
+}
+
+func (adapter *ConfirmTokenPostgreAdapter) GetUserByConfirmAccountToken(token string) (user.User, error) {
+	return user.User{}, nil
+}
+
+func (adapter *ConfirmTokenPostgreAdapter) GetConfirmAccountToken(token string) (ConfirmAccountToken, error) {
+	return ConfirmAccountToken{}, nil
 }
 
 // Compile-time checks
-var _ ConfirmTokenPort = (*ConfirmTokenPostgreAdapter)(nil)
+var _ ConfirmAccountTokenPort = (*ConfirmTokenPostgreAdapter)(nil)
 
 // ChangePasswordToken ============================================================================
-type ChangePasswordTokenPort interface {
-	SaveChangePasswordToken(token ChangePasswordToken) (*ChangePasswordToken, error)
-	DeleteChangePasswordToken(tokenId int) error
-	GetChangePasswordTokenByUserId(userId uint) (*ChangePasswordToken, error)
-}
 
 type ChangePasswordTokenPostgreAdapter struct {
 	repository passwordTokenPostgreRepository
 }
 
-func (adapter *ChangePasswordTokenPostgreAdapter) SaveChangePasswordToken(token ChangePasswordToken) (*ChangePasswordToken, error) {
-	return nil, nil
+func (adapter *ChangePasswordTokenPostgreAdapter) SaveChangePasswordToken(token ForgotPasswordToken) (ForgotPasswordToken, error) {
+	return ForgotPasswordToken{}, nil
 }
 
-func (adapter *ChangePasswordTokenPostgreAdapter) DeleteChangePasswordToken(tokenId int) error {
+func (adapter *ChangePasswordTokenPostgreAdapter) DeleteChangePasswordToken(token ForgotPasswordToken) error {
 	return nil
 }
 
-func (adapter *ChangePasswordTokenPostgreAdapter) GetChangePasswordTokenByUserId(userId uint) (*ChangePasswordToken, error) {
-	return nil, nil
+func (adapter *ChangePasswordTokenPostgreAdapter) GetChangePasswordTokenByUser(tenantId *uuid.UUID, userId uint) (ForgotPasswordToken, error) {
+	return ForgotPasswordToken{}, nil
+}
+
+func (adapter *ChangePasswordTokenPostgreAdapter) GetChangePasswordToken(hashedTokenString string) (ForgotPasswordToken, error) {
+	return ForgotPasswordToken{}, nil
 }
 
 // Compile-time checks
