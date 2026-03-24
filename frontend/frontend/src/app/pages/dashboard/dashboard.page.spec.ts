@@ -3,9 +3,11 @@ import { signal, WritableSignal, Component, input, output } from '@angular/core'
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatIcon } from '@angular/material/icon';
 import { PageEvent } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
+import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { DashboardPage } from './dashboard.page';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
@@ -18,6 +20,8 @@ import { Status } from '../../models/gateway-sensor-status.enum';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
+import { UserSessionService } from '../../services/user-session/user-session.service';
+import { UserRole } from '../../models/user-role.enum';
 
 @Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
 class StubGatewayTable {
@@ -102,6 +106,9 @@ describe('DashboardPage (Unit)', () => {
 
   let dashboardServiceMock: any;
   let snackBarMock: { open: ReturnType<typeof vi.fn> };
+  let routerMock: { navigate: ReturnType<typeof vi.fn> };
+  let activatedRouteMock: { queryParams: Observable<Record<string, unknown>> };
+  let userSessionMock: { currentRole: WritableSignal<UserRole | null> };
 
   const getGatewayTable = () =>
     fixture.debugElement.query(By.directive(StubGatewayTable))
@@ -158,6 +165,9 @@ describe('DashboardPage (Unit)', () => {
     };
 
     snackBarMock = { open: vi.fn() };
+    routerMock = { navigate: vi.fn() };
+    activatedRouteMock = { queryParams: of({}) };
+    userSessionMock = { currentRole: signal<UserRole | null>(UserRole.TENANT_ADMIN) };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPage],
@@ -165,6 +175,9 @@ describe('DashboardPage (Unit)', () => {
         { provide: DashboardService, useValue: dashboardServiceMock },
         { provide: MatSnackBar, useValue: snackBarMock },
         { provide: MatDialog, useValue: {} },
+        { provide: Router, useValue: routerMock },
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: UserSessionService, useValue: userSessionMock },
       ],
     })
       .overrideComponent(DashboardPage, {

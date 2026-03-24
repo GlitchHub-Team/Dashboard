@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { TenantService } from '../../services/tenant/tenant.service';
@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-tenant-manager-page',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatDialogModule, TenantTableComponent, MatPaginatorModule],
+  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatPaginatorModule],
   templateUrl: './tenant-manager.page.html',
   styleUrl: './tenant-manager.page.css',
 })
@@ -34,28 +34,32 @@ export class TenantManagerPage implements OnInit {
   }
 
   onCreateTenant(): void {
-    this.dialog.open(TenantFormDialog, {
-      width: '500px',
-      data: null,
-    }).afterClosed().subscribe(() => {
-      this.tenantService.retrieveTenant();
-    });
+    this.dialog
+      .open(TenantFormDialog, {
+        width: '500px',
+        data: null,
+      })
+      .afterClosed()
+      .subscribe(() => {
+        this.tenantService.retrieveTenant();
+      });
   }
 
   onDeleteTenant(tenant: Tenant): void {
-    this.dialog.open(ConfirmDeleteDialog, {
+    this.dialog
+      .open(ConfirmDeleteDialog, {
         width: '400px',
         data: {
           title: 'Delete Tenant',
           message: `Sei sicuro di voler eliminare il tenant "${tenant.name}"?`,
         },
       })
-    .afterClosed()
-    .subscribe((confirmed) => {
-      if (confirmed) {
-        this.tenantService.removeTenant(tenant.name).subscribe();
-      }
-    });
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.tenantService.removeTenant(tenant.name).subscribe();
+        }
+      });
   }
 
   onPageChange(event: PageEvent): void {

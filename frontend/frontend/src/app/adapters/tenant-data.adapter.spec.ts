@@ -1,4 +1,4 @@
-import { TenantDataAdapter } from '../services/tenant/tenant-data.adapter';
+import { TenantDataAdapter } from './tenant-data.adapter';
 import { RawTenantConfig } from '../models/raw-tenant-config.model';
 import { Tenant } from '../models/tenant.model';
 

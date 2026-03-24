@@ -7,12 +7,14 @@ import { GatewayAdapter } from '../../adapters/gateway.adapter';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { ApiError } from '../../models/api-error.model';
+import { GatewayCommandApiClientService } from '../gateway-command-api-client/gateway-command-api-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GatewayService {
   private readonly gatewayApi = inject(GatewayApiClientService);
+  private readonly gatewayCommandApi = inject(GatewayCommandApiClientService);
   private readonly adapter = inject(GatewayAdapter);
 
   private readonly _gatewayList = signal<Gateway[]>([]);
@@ -91,6 +93,27 @@ export class GatewayService {
       }),
       finalize(() => this._loading.set(false)),
     );
+  }
+
+  public commissionGateway(id: string): Observable<Gateway> {
+    return this.gatewayCommandApi.commissionGateway(id).pipe(
+      map((dto) => this.adapter.fromDTO(dto)),
+      tap(() => this.refetchCurrentPage()),
+    );
+  }
+
+  public decommissionGateway(id: string): Observable<void> {
+    return this.gatewayCommandApi
+      .decommissionGateway(id)
+      .pipe(tap(() => this.refetchCurrentPage()));
+  }
+
+  public resetGateway(id: string): Observable<void> {
+    return this.gatewayCommandApi.resetGateway(id);
+  }
+
+  public rebootGateway(id: string): Observable<void> {
+    return this.gatewayCommandApi.rebootGateway(id);
   }
 
   public changePage(page: number, limit: number): void {

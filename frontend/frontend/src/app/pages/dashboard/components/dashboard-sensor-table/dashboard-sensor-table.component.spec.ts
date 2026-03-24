@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
@@ -52,7 +51,7 @@ describe('DashboardSensorTableComponent (Unit)', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [DashboardSensorTableComponent, NoopAnimationsModule],
+      imports: [DashboardSensorTableComponent],
       providers: [{ provide: MatDialog, useValue: dialogMock }],
     }).compileComponents();
 

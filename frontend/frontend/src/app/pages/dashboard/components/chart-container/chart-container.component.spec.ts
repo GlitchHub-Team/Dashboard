@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signal, WritableSignal, ComponentRef, Component, input, output } from '@angular/core';
+import { signal, WritableSignal, ComponentRef, Component, input } from '@angular/core';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
@@ -32,7 +32,9 @@ describe('ChartContainerComponent (Unit)', () => {
   let componentRef: ComponentRef<ChartContainerComponent>;
 
   let loadingSig: WritableSignal<boolean>;
-  let connectionStatusSig: WritableSignal<'connected' | 'connecting' | 'disconnected'>;
+  let connectionStatusSig: WritableSignal<
+    'connected' | 'connecting' | 'disconnected' | 'reconnecting'
+  >;
   let errorSig: WritableSignal<string | null>;
   let historicReadingsSig: WritableSignal<SensorReading[]>;
   let liveReadingsSig: WritableSignal<SensorReading[]>;
@@ -41,7 +43,7 @@ describe('ChartContainerComponent (Unit)', () => {
     historicReadings: WritableSignal<SensorReading[]>;
     liveReadings: WritableSignal<SensorReading[]>;
     loading: WritableSignal<boolean>;
-    connectionStatus: WritableSignal<'connected' | 'connecting' | 'disconnected'>;
+    connectionStatus: WritableSignal<'connected' | 'connecting' | 'disconnected' | 'reconnecting'>;
     error: WritableSignal<string | null>;
     startChart: ReturnType<typeof vi.fn>;
     stopChart: ReturnType<typeof vi.fn>;
@@ -75,7 +77,9 @@ describe('ChartContainerComponent (Unit)', () => {
     vi.resetAllMocks();
 
     loadingSig = signal(false);
-    connectionStatusSig = signal<'connected' | 'connecting' | 'disconnected'>('disconnected');
+    connectionStatusSig = signal<'connected' | 'connecting' | 'disconnected' | 'reconnecting'>(
+      'disconnected',
+    );
     errorSig = signal<string | null>(null);
     historicReadingsSig = signal<SensorReading[]>([]);
     liveReadingsSig = signal<SensorReading[]>([]);
@@ -174,6 +178,7 @@ describe('ChartContainerComponent (Unit)', () => {
       ['connected', 'Connected', 'status-connected'],
       ['connecting', 'Connecting...', 'status-connecting'],
       ['disconnected', 'Disconnected', 'status-disconnected'],
+      ['reconnecting', 'Reconnecting...', 'status-reconnecting'],
     ] as const)('should show "%s" label and class for realtime chart', (status, label, cls) => {
       setChartRequest(mockRealtimeRequest);
       connectionStatusSig.set(status);
@@ -276,7 +281,7 @@ describe('ChartContainerComponent (Unit)', () => {
       [mockRealtimeRequest, 'isLiveChart', true],
       [mockHistoricRequest, 'isLiveChart', false],
       [null, 'isLiveChart', false],
-    ] as const)('chartRequest=%s → %s() === %s', (req, prop, expected) => {
+    ] as const)('chartRequest=%s to %s() === %s', (req, prop, expected) => {
       setChartRequest(req);
       expect(component[prop]()).toBe(expected);
     });
@@ -285,10 +290,12 @@ describe('ChartContainerComponent (Unit)', () => {
       ['connected', 'statusLabel', 'Connected'],
       ['connecting', 'statusLabel', 'Connecting...'],
       ['disconnected', 'statusLabel', 'Disconnected'],
+      ['reconnecting', 'statusLabel', 'Reconnecting...'],
       ['connected', 'statusClass', 'status-connected'],
       ['connecting', 'statusClass', 'status-connecting'],
       ['disconnected', 'statusClass', 'status-disconnected'],
-    ] as const)('connectionStatus=%s → %s() === "%s"', (status, prop, expected) => {
+      ['reconnecting', 'statusClass', 'status-reconnecting'],
+    ] as const)('connectionStatus=%s to %s() === "%s"', (status, prop, expected) => {
       connectionStatusSig.set(status);
       expect(component[prop]()).toBe(expected);
     });

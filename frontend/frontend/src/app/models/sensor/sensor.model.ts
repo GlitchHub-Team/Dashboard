@@ -7,5 +7,5 @@ export interface Sensor {
   name: string;
   profile: SensorProfiles;
   status: Status;
-  dataInterval?: number;
+  dataInterval: number;
 }

@@ -22,6 +22,7 @@ describe('SensorService', () => {
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
       status: Status.ACTIVE,
+      dataInterval: 60,
     },
     {
       id: 's-2',
@@ -29,6 +30,7 @@ describe('SensorService', () => {
       name: 'Humidity',
       profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
       status: Status.INACTIVE,
+      dataInterval: 60,
     },
   ];
 
@@ -73,6 +75,7 @@ describe('SensorService', () => {
     name: 'Pressure',
     status: Status.ACTIVE,
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+    dataInterval: 60,
   };
   const mockConfig: SensorConfig = {
     gatewayId: 'gw-1',

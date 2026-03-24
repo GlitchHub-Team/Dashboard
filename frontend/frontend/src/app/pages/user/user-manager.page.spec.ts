@@ -1,134 +1,167 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { PageEvent } from '@angular/material/paginator';
+import { of, Subject } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UserManagerPage } from './user-manager.page';
 import { UserService } from '../../services/user/user.service';
 import { User } from '../../models/user.model';
 import { UserRole } from '../../models/user-role.enum';
 import { UserFormDialogComponent } from './dialogs/user-form.dialog';
-
-class MockUserService {
-  userList = signal<User[]>([]);
-  loading = signal(false);
-
-  retrieveUserCalledWith: { role: UserRole, tenantId?: string } | null = null;
-  addNewUserCalledWith: { config: { email: string; role: UserRole }, tenantId?: string } | null = null;
-  removeUserCalledWith: User | null = null;
-
-  retrieveUser(role: UserRole, tenantId?: string) {
-    this.retrieveUserCalledWith = { role, tenantId };
-  }
-
-  addNewUser(config: { email: string; role: UserRole }, tenantId?: string) {
-    this.addNewUserCalledWith = { config, tenantId };
-    return of(void 0);
-  }
-
-  removeUser(user: User) {
-    this.removeUserCalledWith = user;
-    return of(void 0);
-  }
-
-  reset() {
-    this.retrieveUserCalledWith = null;
-    this.addNewUserCalledWith = null;
-    this.removeUserCalledWith = null;
-  }
-}
-
-class MockDialog {
-  openCalled = false;
-  openArgs: { component?: unknown; config?: { width?: string; data?: unknown } } | null = null;
-  returnValue: unknown = true; // Valore di default simulato alla chiusura
-
-  open(component: unknown, config: { width?: string; data?: unknown }) {
-    this.openCalled = true;
-    this.openArgs = { component, config };
-    return {
-      afterClosed: () => of(this.returnValue),
-    };
-  }
-
-  reset() {
-    this.openCalled = false;
-    this.openArgs = null;
-    this.returnValue = true;
-  }
-}
+import { ConfirmDeleteDialog } from '../tenant/dialogs/confirm-delete.dialog';
 
 describe('UserManagerPage', () => {
   let component: UserManagerPage;
   let fixture: ComponentFixture<UserManagerPage>;
-  let userService: MockUserService;
-  let dialog: MockDialog;
+
+  let afterClosedSubject: Subject<unknown>;
+  let dialogMock: { open: ReturnType<typeof vi.fn> };
+
+  const routeContext = {
+    title: 'Test Users',
+    role: UserRole.TENANT_ADMIN,
+    tenantId: 'tenant-1',
+  };
+
+  const userServiceMock = {
+    userList: signal<User[]>([]),
+    total: signal(0),
+    pageIndex: signal(0),
+    limit: signal(10),
+    loading: signal(false),
+    retrieveUser: vi.fn(),
+    addNewUser: vi.fn().mockReturnValue(of(void 0)),
+    removeUser: vi.fn().mockReturnValue(of(void 0)),
+    changePage: vi.fn(),
+  };
 
   beforeEach(async () => {
-    userService = new MockUserService();
-    dialog = new MockDialog();
+    vi.clearAllMocks();
+
+    afterClosedSubject = new Subject();
+    dialogMock = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => afterClosedSubject.asObservable(),
+      }),
+    };
 
     await TestBed.configureTestingModule({
-      imports: [UserManagerPage, MatDialogModule, NoopAnimationsModule],
+      imports: [UserManagerPage],
       providers: [
-        { provide: UserService, useValue: userService },
-        { provide: MatDialog, useValue: dialog },
+        { provide: UserService, useValue: userServiceMock },
+        { provide: MatDialog, useValue: dialogMock },
         {
           provide: ActivatedRoute,
-          useValue: {
-            data: of({ userManagerContext: { title: 'Test Users', role: UserRole.TENANT_ADMIN } }),
-          },
+          useValue: { data: of({ userManagerContext: routeContext }) },
         },
       ],
     })
-      .overrideProvider(MatDialog, { useValue: dialog })
+      .overrideProvider(MatDialog, { useValue: dialogMock })
       .compileComponents();
 
     fixture = TestBed.createComponent(UserManagerPage);
     component = fixture.componentInstance;
-
-    // Reset dello stato dei mock
-    userService.reset();
-    dialog.reset();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should call retrieveUser on init with role from ActivatedRoute', () => {
+  it('should initialize context and retrieve users on init', () => {
     fixture.detectChanges();
-    expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
+
+    expect(component.context).toEqual(routeContext);
+    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
   });
 
-  it('should open the UserFormDialog on create and add the user if closed with data', () => {
-    fixture.detectChanges(); // Inizializza ngOnInit e il context
-    dialog.returnValue = { email: 'new@user.com' }; // Dati simulati dal form al suo salvataggio
-
+  it('should open create dialog with correct config', () => {
     component.onCreateUser();
 
-    expect(dialog.openCalled).toBe(true);
-    expect(dialog.openArgs?.component).toBe(UserFormDialogComponent);
-    expect(dialog.openArgs?.config?.width).toBe('400px');
-    
-    // Verifica se ha chiamato il servizio per creare l'utente e poi lo ha ricaricato
-    expect(userService.addNewUserCalledWith).toEqual({ config: { email: 'new@user.com', role: UserRole.TENANT_ADMIN }, tenantId: undefined });
-    expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
+    expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
+      width: '400px',
+      data: null,
+    });
   });
 
-  it('should open confirm dialog and remove user on confirmed delete', () => {
+  it('should create and refetch users when create dialog returns data', () => {
     fixture.detectChanges();
-    const userToDelete: User = { id: '1', email: 'delete@user.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' };
-    dialog.returnValue = true; // Simula la conferma dell'eliminazione
 
-    component.onDeleteUser(userToDelete);
+    component.onCreateUser();
+    afterClosedSubject.next({ email: 'new@user.com' });
 
-    expect(dialog.openCalled).toBe(true);
-    expect(userService.removeUserCalledWith).toBe(userToDelete);
-    
-    // Verifica ricaricamento della lista dopo la cancellazione
-    expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
+    expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
+      { email: 'new@user.com', role: UserRole.TENANT_ADMIN },
+      'tenant-1',
+    );
+    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
+  });
+
+  it('should not create user when create dialog is cancelled', () => {
+    fixture.detectChanges();
+
+    component.onCreateUser();
+    afterClosedSubject.next(null);
+
+    expect(userServiceMock.addNewUser).not.toHaveBeenCalled();
+  });
+
+  it('should open delete dialog with correct config', () => {
+    const user: User = {
+      id: '1',
+      email: 'delete@user.com',
+      role: UserRole.TENANT_ADMIN,
+      tenantId: 'tenant-1',
+    };
+
+    component.onDeleteUser(user);
+
+    expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
+      width: '400px',
+      data: {
+        title: 'Elimina Utente',
+        message: `Sei sicuro di voler eliminare "${user.email}"?`,
+      },
+    });
+  });
+
+  it.each([
+    { confirmed: true, shouldDelete: true },
+    { confirmed: false, shouldDelete: false },
+  ])('should handle delete confirmation: $confirmed', ({ confirmed, shouldDelete }) => {
+    fixture.detectChanges();
+    const user: User = {
+      id: '1',
+      email: 'delete@user.com',
+      role: UserRole.TENANT_ADMIN,
+      tenantId: 'tenant-1',
+    };
+
+    component.onDeleteUser(user);
+    afterClosedSubject.next(confirmed);
+
+    if (shouldDelete) {
+      expect(userServiceMock.removeUser).toHaveBeenCalledWith(user);
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
+      return;
+    }
+
+    expect(userServiceMock.removeUser).not.toHaveBeenCalled();
+  });
+
+  it('should call changePage with route context', () => {
+    fixture.detectChanges();
+    const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
+
+    component.onPageChange(event);
+
+    expect(userServiceMock.changePage).toHaveBeenCalledWith(
+      2,
+      25,
+      UserRole.TENANT_ADMIN,
+      'tenant-1',
+    );
   });
 });

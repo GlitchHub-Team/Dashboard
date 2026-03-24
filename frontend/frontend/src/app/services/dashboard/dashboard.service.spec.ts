@@ -139,7 +139,7 @@ describe('DashboardService', () => {
       permissionServiceMock.can.mockReturnValue(true);
       service.loadDashboard();
 
-      expect(gatewayServiceMock.getGatewaysByTenant).toHaveBeenCalledWith('tenant-01', 1, 20);
+      expect(gatewayServiceMock.getGatewaysByTenant).toHaveBeenCalledWith('tenant-01', 0, 10);
       expect(sensorServiceMock.getSensorsByTenant).not.toHaveBeenCalled();
     });
 
@@ -147,7 +147,7 @@ describe('DashboardService', () => {
       permissionServiceMock.can.mockReturnValue(false);
       service.loadDashboard();
 
-      expect(sensorServiceMock.getSensorsByTenant).toHaveBeenCalledWith('tenant-01', 2, 15);
+      expect(sensorServiceMock.getSensorsByTenant).toHaveBeenCalledWith('tenant-01', 0, 10);
       expect(gatewayServiceMock.getGatewaysByTenant).not.toHaveBeenCalled();
     });
   });

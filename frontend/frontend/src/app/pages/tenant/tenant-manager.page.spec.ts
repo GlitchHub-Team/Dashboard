@@ -1,104 +1,174 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { PageEvent } from '@angular/material/paginator';
+import { of, Subject } from 'rxjs';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { TenantManagerPage } from './tenant-manager.page';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { Tenant } from '../../models/tenant.model';
 import { TenantFormDialog } from './dialogs/tenant-form.dialog';
-
-class MockTenantService {
-  tenantList = signal<Tenant[]>([]);
-  loading = signal(false);
-  
-  retrieveTenantCalled = false;
-  removeTenantCalledWith = '';
-
-  retrieveTenant() {
-    this.retrieveTenantCalled = true;
-  }
-
-  removeTenant(name: string) {
-    this.removeTenantCalledWith = name;
-    return of(void 0);
-  }
-
-  reset() {
-    this.retrieveTenantCalled = false;
-    this.removeTenantCalledWith = '';
-  }
-}
-
-class MockDialog {
-  openCalled = false;
-  openArgs: { component?: unknown; config?: { width?: string; data?: unknown } } | null = null;
-
-  open(component: unknown, config: { width?: string; data?: unknown }) {
-    this.openCalled = true;
-    this.openArgs = { component, config };
-    return {
-      afterClosed: () => of(true) // Simula la conferma di default
-    };
-  }
-
-  reset() {
-    this.openCalled = false;
-    this.openArgs = null;
-  }
-}
+import { ConfirmDeleteDialog } from './dialogs/confirm-delete.dialog';
 
 describe('TenantManagerPage', () => {
   let component: TenantManagerPage;
   let fixture: ComponentFixture<TenantManagerPage>;
-  let tenantService: MockTenantService;
-  let dialog: MockDialog;
+
+  let afterClosedSubject: Subject<unknown>;
+  let dialogMock: { open: ReturnType<typeof vi.fn> };
+
+  const mockTenantService = {
+    tenantList: signal<Tenant[]>([]),
+    total: signal(0),
+    pageIndex: signal(0),
+    limit: signal(10),
+    loading: signal(false),
+    retrieveTenant: vi.fn(),
+    removeTenant: vi.fn(),
+    changePage: vi.fn(),
+  };
+
+  const mockRouter = {
+    navigate: vi.fn(),
+  };
+
+  const mockTenants: Tenant[] = [{ name: 'Tenant 1' }, { name: 'Tenant 2' }];
 
   beforeEach(async () => {
-    tenantService = new MockTenantService();
-    dialog = new MockDialog();
+    vi.clearAllMocks();
+
+    afterClosedSubject = new Subject();
+    dialogMock = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => afterClosedSubject.asObservable(),
+      }),
+    };
 
     await TestBed.configureTestingModule({
-      imports: [TenantManagerPage, MatDialogModule, NoopAnimationsModule],
+      imports: [TenantManagerPage],
       providers: [
-        { provide: TenantService, useValue: tenantService },
-        { provide: MatDialog, useValue: dialog },
+        { provide: TenantService, useValue: mockTenantService },
+        { provide: Router, useValue: mockRouter },
+        { provide: MatDialog, useValue: dialogMock },
       ],
-    })
-    .overrideProvider(MatDialog, { useValue: dialog })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TenantManagerPage);
     component = fixture.componentInstance;
-
-    // Reset dello stato dei mock
-    tenantService.reset();
-    dialog.reset();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should call retrieveTenant on init', () => {
-    fixture.detectChanges(); // ngOnInit viene chiamato qui
-    expect(tenantService.retrieveTenantCalled).toBe(true);
+  it('should fetch tenants on init', () => {
+    fixture.detectChanges();
+    expect(mockTenantService.retrieveTenant).toHaveBeenCalledTimes(1);
   });
 
-  it('should open the TenantFormDialog on create', () => {
+  it.each([
+    {
+      name: 'page title',
+      selector: 'h1',
+      expectedText: 'Tenant Management',
+      setup: () => undefined,
+    },
+    {
+      name: 'create button',
+      selector: 'button[mat-raised-button]',
+      expectedText: 'Aggiungi Tenant',
+      setup: () => undefined,
+    },
+    {
+      name: 'tenant table',
+      selector: 'app-tenant-table',
+      expectedText: null,
+      setup: () => mockTenantService.tenantList.set(mockTenants),
+    },
+    {
+      name: 'paginator',
+      selector: 'mat-paginator',
+      expectedText: null,
+      setup: () => undefined,
+    },
+  ])('should render $name', ({ selector, expectedText, setup }) => {
+    setup();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement.querySelector(selector);
+    expect(element).toBeTruthy();
+
+    if (expectedText) {
+      expect(element.textContent).toContain(expectedText);
+    }
+  });
+
+  it('should open create dialog with correct config', () => {
     component.onCreateTenant();
-    expect(dialog.openCalled).toBe(true);
-    expect(dialog.openArgs?.component).toBe(TenantFormDialog);
-    expect(dialog.openArgs?.config?.width).toBe('400px');
-    // Verifica che la lista venga ricaricata dopo la chiusura del dialog
-    expect(tenantService.retrieveTenantCalled).toBe(true);
+
+    expect(dialogMock.open).toHaveBeenCalledWith(TenantFormDialog, {
+      width: '500px',
+      data: null,
+    });
   });
 
-  it('should open confirm dialog and remove tenant on confirmed delete', () => {
-    const tenantToDelete: Tenant = { name: 'Test Tenant' };
-    component.onDeleteTenant(tenantToDelete);
-    expect(dialog.openCalled).toBe(true);
-    expect(tenantService.removeTenantCalledWith).toBe(tenantToDelete.name);
+  it('should refetch tenants after create dialog closes', () => {
+    component.onCreateTenant();
+    afterClosedSubject.next(true);
+
+    expect(mockTenantService.retrieveTenant).toHaveBeenCalled();
+  });
+
+  it('should open delete dialog with correct config', () => {
+    const tenant = mockTenants[0];
+
+    component.onDeleteTenant(tenant);
+
+    expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
+      width: '400px',
+      data: {
+        title: 'Delete Tenant',
+        message: `Sei sicuro di voler eliminare il tenant "${tenant.name}"?`,
+      },
+    });
+  });
+
+  it.each([
+    { confirmed: true, shouldDelete: true },
+    { confirmed: false, shouldDelete: false },
+  ])('should handle delete confirmation: $confirmed', ({ confirmed, shouldDelete }) => {
+    mockTenantService.removeTenant.mockReturnValue(of(void 0));
+    const tenant = mockTenants[0];
+
+    component.onDeleteTenant(tenant);
+    afterClosedSubject.next(confirmed);
+
+    if (shouldDelete) {
+      expect(mockTenantService.removeTenant).toHaveBeenCalledWith(tenant.name);
+      return;
+    }
+
+    expect(mockTenantService.removeTenant).not.toHaveBeenCalled();
+  });
+
+  it('should call changePage on page change', () => {
+    const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
+
+    component.onPageChange(event);
+
+    expect(mockTenantService.changePage).toHaveBeenCalledWith(2, 25);
+  });
+
+  it.each([
+    { tenant: mockTenants[0], tenantId: 'tenant-01' },
+    { tenant: mockTenants[1], tenantId: 'tenant-02' },
+  ])('should navigate to dashboard for $tenantId', ({ tenant, tenantId }) => {
+    component.onGoToDashboard(tenant);
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard'], {
+      queryParams: { tenantId },
+    });
   });
 });

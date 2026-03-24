@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs/internal/Observable';
 
 import { environment } from '../../../environments/environment';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
-import { Observable } from 'rxjs/internal/Observable';
 
 @Injectable({
   providedIn: 'root',
