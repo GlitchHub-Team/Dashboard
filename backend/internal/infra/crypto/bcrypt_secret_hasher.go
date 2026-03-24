@@ -24,6 +24,7 @@ NOTA: non rende il sistema necessariamente più sicuro, serve solo per avere un 
 di lunghezza <= 72 byte
 */
 func (h *BcryptHasher) preHash(plaintext string) []byte {
+	// return []byte(plaintext)
 	plainPreHashed := sha512.Sum512([]byte(plaintext))
 	return plainPreHashed[:]
 }

@@ -1,27 +1,31 @@
 package crypto
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
+	"backend/internal/shared/config"
 	sharedCrypto "backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 
 	// "github.com/google/uuid"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
 // NOTA: i nomi delle chiavi devono essere corti per rendere il JWT più piccolo possibile
-type jwtToken struct {
+type jwtObj struct {
 	Expiry   int64  `json:"exp"` // Unix timestamp (in SECONDI) della data di scadenza
 	TenantId string `json:"tid"` // Se vuoto, allora non vi è tenant id (caso super admin)
 	UserId   uint   `json:"uid"` // Id utente
 	Role     string `json:"rol"` // Super Admin: "sa", Tenant Admin: "ta", Tenant User: "tu"
 }
 
-func (token *jwtToken) ToClaims() (jwt.MapClaims, error) {
+func (token *jwtObj) ToClaims() (jwt.MapClaims, error) {
 	bytes, err := json.Marshal(token)
 	if err != nil {
 		return jwt.MapClaims{}, err
@@ -36,31 +40,43 @@ func (token *jwtToken) ToClaims() (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func jwtTokenFromClaims(claims jwt.MapClaims) (jwtToken, error) {
+func jwtTokenFromClaims(claims jwt.MapClaims) (jwtObj, error) {
 	bytes, err := json.Marshal(claims)
 	if err != nil {
-		return jwtToken{}, err
+		return jwtObj{}, err
 	}
 
-	var token jwtToken
+	var token jwtObj
 	err = json.Unmarshal(bytes, &token)
 	if err != nil {
-		return jwtToken{}, err
+		return jwtObj{}, err
 	}
 	return token, nil
 }
 
-type JWTTokenGenerator struct {
+type JWTManager struct {
 	secret        []byte
 	tokenDuration time.Duration
 }
 
 var ErrInvalidSigningMethod = errors.New("invalid signing method")
 
-var _ sharedCrypto.AuthTokenGenerator = (*JWTTokenGenerator)(nil)
+var _ sharedCrypto.AuthTokenManager = (*JWTManager)(nil)
 
-func NewJWTTokenGenerator() *JWTTokenGenerator {
-	return &JWTTokenGenerator{}
+func NewJWTManager(
+	cfg *config.Config,
+) (*JWTManager, error) {
+	encodedSecret := []byte(cfg.AuthTokenSecret)
+
+	secret := make([]byte, base64.RawURLEncoding.DecodedLen(len(encodedSecret)))
+	_, err := base64.RawURLEncoding.Decode(secret, encodedSecret)
+	if err != nil {
+		return nil, err
+	}
+	return &JWTManager{
+		secret:        secret,
+		tokenDuration: time.Second * time.Duration(cfg.AuthTokenDuration),
+	}, nil
 }
 
 const (
@@ -69,7 +85,7 @@ const (
 	JWT_TENANT_USER  = "tu"
 )
 
-func (JWTTokenGenerator) userRoleToString(role identity.UserRole) (
+func (JWTManager) userRoleToString(role identity.UserRole) (
 	roleString string, err error,
 ) {
 	switch role {
@@ -85,7 +101,7 @@ func (JWTTokenGenerator) userRoleToString(role identity.UserRole) (
 	return
 }
 
-func (JWTTokenGenerator) stringToUserRole(roleString string) (
+func (JWTManager) stringToUserRole(roleString string) (
 	role identity.UserRole, err error,
 ) {
 	switch roleString {
@@ -101,9 +117,9 @@ func (JWTTokenGenerator) stringToUserRole(roleString string) (
 	return
 }
 
-func (generator *JWTTokenGenerator) GenerateForRequester(requester identity.Requester) (string, error) {
+func (generator *JWTManager) GenerateForRequester(requester identity.Requester) (string, error) {
 	// jwtClaims := jwt.MapClaims{}
-	tokenObj := jwtToken{}
+	tokenObj := jwtObj{}
 
 	// 1. Check requester user id
 	if requester.RequesterUserId == 0 {
@@ -118,7 +134,7 @@ func (generator *JWTTokenGenerator) GenerateForRequester(requester identity.Requ
 	case identity.ROLE_TENANT_ADMIN, identity.ROLE_TENANT_USER:
 		tokenObj.TenantId = requester.RequesterTenantId.String()
 	default:
-		return "", identity.ErrUnknownRole
+		return "", fmt.Errorf("%v: '%v'", identity.ErrUnknownRole, requester.RequesterRole)
 	}
 
 	// 3. Check roleString
@@ -147,7 +163,7 @@ func (generator *JWTTokenGenerator) GenerateForRequester(requester identity.Requ
 	return token, nil
 }
 
-func (generator *JWTTokenGenerator) GetRequesterFromToken(tokenString string) (identity.Requester, error) {
+func (generator *JWTManager) GetRequesterFromToken(tokenString string) (identity.Requester, error) {
 	// 1. Parse token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

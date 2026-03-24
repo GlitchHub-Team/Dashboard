@@ -37,7 +37,7 @@ func (generator *MainTokenGenerator) GenerateToken() (string, string, error) {
 	// NOTA: rand.Read() manda programma in crash se non riesce a scrivere
 	rand.Read(token) //nolint:errcheck
 
-	var encodedToken []byte
+	encodedToken := make([]byte, generator.encoding.EncodedLen(byteNumber))
 	generator.encoding.Encode(encodedToken, token)
 	encodedTokenString := string(encodedToken)
 

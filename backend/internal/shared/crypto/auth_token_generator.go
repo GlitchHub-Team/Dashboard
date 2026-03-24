@@ -6,7 +6,7 @@ import (
 	"backend/internal/shared/identity"
 )
 
-type AuthTokenGenerator interface {
+type AuthTokenManager interface {
 	GenerateForRequester(requester identity.Requester) (string, error)
 	GetRequesterFromToken(token string) (identity.Requester, error)
 }

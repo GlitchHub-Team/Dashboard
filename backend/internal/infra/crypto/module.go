@@ -18,8 +18,8 @@ var Module = fx.Module(
 			fx.As(new(crypto.SecurityTokenGenerator)),
 		),
 		fx.Annotate(
-			NewJWTTokenGenerator,
-			fx.As(new(crypto.AuthTokenGenerator)),
+			NewJWTManager,
+			fx.As(new(crypto.AuthTokenManager)),
 		),
 	),
 )
