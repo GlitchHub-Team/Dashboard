@@ -37,7 +37,7 @@ class StubGatewayTable {
   sensorTotal = input<number>();
   sensorPageIndex = input<number>();
   sensorLimit = input<number>();
-  commandRequested = output<Gateway>();
+  commandRequested = output<boolean>();
   chartRequested = output<ChartRequest>();
   expandedGatewayChange = output<Gateway>();
   gatewayPageChange = output<PageEvent>();
@@ -344,11 +344,20 @@ describe('DashboardPage (Unit)', () => {
       expect(dashboardServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
     });
 
-    it('should open snackbar on commandRequested', () => {
+    it('should open snackbar when commandRequested emits true', () => {
       fixture.debugElement
         .query(By.directive(StubGatewayTable))
-        .triggerEventHandler('commandRequested', mockGateway);
-      expect(snackBarMock.open).toHaveBeenCalledWith('gw-1', 'Close', { duration: 2000 });
+        .triggerEventHandler('commandRequested', true);
+      expect(snackBarMock.open).toHaveBeenCalledWith('Command sent successfully', 'Close', {
+        duration: 3000,
+      });
+    });
+
+    it('should not open snackbar when commandRequested emits false', () => {
+      fixture.debugElement
+        .query(By.directive(StubGatewayTable))
+        .triggerEventHandler('commandRequested', false);
+      expect(snackBarMock.open).not.toHaveBeenCalled();
     });
 
     it('should call openChart on gateway table chartRequested', () => {

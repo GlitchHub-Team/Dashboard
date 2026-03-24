@@ -44,7 +44,7 @@
         <button
           mat-icon-button
           matTooltip="Send Command"
-          (click)="commandRequested.emit(gateway); $event.stopPropagation()"
+          (click)="onSendCommand(gateway); $event.stopPropagation()"
         >
           <mat-icon>terminal</mat-icon>
         </button>

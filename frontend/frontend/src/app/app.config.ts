@@ -29,6 +29,8 @@ import { SensorHistoricMockService } from './mocks/historic.service.mock';
 import { SensorRealTimeMockService } from './mocks/live.service.mock';
 import { SensorLiveReadingsApiService } from './services/sensor-live-api/sensor-live-readings-api.service';
 import { SensorHistoricApiService } from './services/sensor-historic-api/sensor-historic-api.service';
+import { GatewayCommandApiClientMockService } from './mocks/gateway-command-api-client.mock';
+import { GatewayCommandApiClientService } from './services/gateway-command-api-client/gateway-command-api-client.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -48,5 +50,6 @@ export const appConfig: ApplicationConfig = {
     { provide: GatewayApiClientService, useClass: GatewayApiClientServiceMock },
     { provide: SensorLiveReadingsApiService, useClass: SensorRealTimeMockService },
     { provide: SensorHistoricApiService, useClass: SensorHistoricMockService },
+    { provide: GatewayCommandApiClientService, useClass: GatewayCommandApiClientMockService },
   ],
 };

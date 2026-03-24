@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>
+  <mat-icon>terminal</mat-icon>
+  Gateway Command
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="commandForm" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Gateway</mat-label>
+      <input matInput [value]="data.gateway.name" disabled />
+      <mat-icon matPrefix>router</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Command</mat-label>
+      <mat-select formControlName="command">
+        @for (option of commands; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+      @if (commandForm.controls.command.hasError('required')) {
+        <mat-error>Please select a command</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="commandForm.invalid" (click)="onConfirm()">
+    Send
+  </button>
+</mat-dialog-actions>

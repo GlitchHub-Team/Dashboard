@@ -194,6 +194,7 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
         'tenantId',
         'name',
         'status',
+        'commands',
         'delete',
       ]);
     });
@@ -252,18 +253,6 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
         .queryAll(By.css('mat-cell button'))
         .filter((btn) => btn.nativeElement.textContent.includes('terminal'));
       expect(commandButtons.length).toBe(2);
-    });
-
-    it('should emit commandRequested when command button is clicked', () => {
-      const spy = vi.fn();
-      component.commandRequested.subscribe(spy);
-
-      const commandButton = fixture.debugElement
-        .queryAll(By.css('mat-cell button'))
-        .find((btn) => btn.nativeElement.textContent.includes('terminal'));
-      commandButton!.triggerEventHandler('click', { stopPropagation: vi.fn() });
-
-      expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
   });
 

@@ -1,5 +1,4 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -29,7 +28,6 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 })
 export class DashboardPage implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
-  private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -60,7 +58,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   protected readonly activeTenantId = signal<string | null>(null);
 
   public ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       const tenantId = params['tenantId'];
       this.activeTenantId.set(tenantId || null);
       this.dashboardService.loadDashboard(tenantId);
@@ -87,8 +85,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.dashboardService.changeSensorPage(event.pageIndex, event.pageSize);
   }
 
-  protected onCommandRequested(gateway: Gateway): void {
-    this.snackBar.open(gateway.id, 'Close', { duration: 2000 });
+  protected onCommandRequested(result: boolean): void {
+    if (result) {
+      this.snackBar.open('Command sent successfully', 'Close', {
+        duration: 3000,
+      });
+    }
   }
 
   protected onChartOpen(request: ChartRequest): void {
