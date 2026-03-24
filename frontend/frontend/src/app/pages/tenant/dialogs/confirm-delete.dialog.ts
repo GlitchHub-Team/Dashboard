@@ -12,16 +12,8 @@ export interface ConfirmDeleteDialogData {
   selector: 'app-confirm-delete-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule],
-  template: `
-    <h2 mat-dialog-title>{{ data?.title || 'Conferma Eliminazione' }}</h2>
-    <mat-dialog-content>
-      <p>{{ data?.message || 'Sei sicuro di voler procedere?' }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Annulla</button>
-      <button mat-raised-button color="warn" (click)="onConfirm()">Elimina</button>
-    </mat-dialog-actions>
-  `,
+  templateUrl: './confirm-delete.dialog.html',
+  styleUrl: './confirm-delete.dialog.css',
 })
 export class ConfirmDeleteDialog {
   public dialogRef = inject(MatDialogRef<ConfirmDeleteDialog>);

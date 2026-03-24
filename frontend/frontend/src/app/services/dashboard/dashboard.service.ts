@@ -38,19 +38,12 @@ export class DashboardService {
   public readonly sensorLoading = this.sensorService.loading;
   public readonly sensorError = this.sensorService.error;
 
-  public loadDashboard(): void {
+  public loadDashboard(tenantId?: string): void {
+    const targetTenantId = tenantId || 'tenant-01';
     if (this.canSendCommands()) {
-      this.gatewayService.getGatewaysByTenant(
-        'tenant-01',
-        this.gatewayPageIndex(),
-        this.gatewayLimit(),
-      );
+      this.gatewayService.getGatewaysByTenant(targetTenantId, 0, 10);
     } else {
-      this.sensorService.getSensorsByTenant(
-        'tenant-01',
-        this.sensorPageIndex(),
-        this.sensorLimit(),
-      );
+      this.sensorService.getSensorsByTenant(targetTenantId, 0, 10);
     }
   }
 

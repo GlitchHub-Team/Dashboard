@@ -12,5 +12,14 @@
       [loading]="loading()"
       (deleteRequested)="onDeleteUser($event)">
     </app-user-table>
+
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="limit()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      (page)="onPageChange($event)"
+      aria-label="Seleziona pagina">
+    </mat-paginator>
   </div>
 </div>

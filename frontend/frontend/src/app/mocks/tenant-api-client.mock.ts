@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { Tenant } from '../../models/tenant.model';
-import { RawTenantConfig } from '../../models/raw-tenant-config.model';
+import { Tenant } from '../models/tenant.model';
+import { RawTenantConfig } from '../models/raw-tenant-config.model';
 
 @Injectable({ providedIn: 'root' })
 export class TenantApiClientMockService {
@@ -11,8 +11,10 @@ export class TenantApiClientMockService {
     { name: 'Tenant 3' },
   ];
 
-  public getTenant(): Observable<Tenant[]> {
-    return of([...this.mockTenants]).pipe(delay(500));
+  public getTenant(page = 0, size = 10): Observable<{ items: Tenant[]; totalCount: number }> {
+    const totalCount = this.mockTenants.length;
+    const items = this.mockTenants.slice(page * size, (page + 1) * size);
+    return of({ items, totalCount }).pipe(delay(500));
   }
 
   public createTenant(config: RawTenantConfig): Observable<Tenant> {

@@ -1,10 +1,14 @@
-import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { DashboardService } from '../../services/dashboard/dashboard.service';
+import { UserSessionService } from '../../services/user-session/user-session.service';
+import { UserRole } from '../../models/user-role.enum';
 import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
 import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
@@ -18,6 +22,7 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
     DashboardSensorTableComponent,
     ChartContainerComponent,
     MatIcon,
+    MatButtonModule,
   ],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
@@ -26,6 +31,9 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly userSession = inject(UserSessionService);
 
   protected readonly gatewayList = this.dashboardService.gatewayList;
   protected readonly gatewayTotal = this.dashboardService.gatewayTotal;
@@ -46,8 +54,21 @@ export class DashboardPage implements OnInit, OnDestroy {
     () => this.dashboardService.gatewayError() ?? this.dashboardService.sensorError(),
   );
 
+  protected readonly currentRole = this.userSession.currentRole;
+  protected readonly UserRole = UserRole;
+
+  protected readonly activeTenantId = signal<string | null>(null);
+
   public ngOnInit(): void {
-    this.dashboardService.loadDashboard();
+    this.route.queryParams.subscribe(params => {
+      const tenantId = params['tenantId'];
+      this.activeTenantId.set(tenantId || null);
+      this.dashboardService.loadDashboard(tenantId);
+    });
+  }
+
+  protected onBackToTenants(): void {
+    this.router.navigate(['/tenant-management']);
   }
 
   public ngOnDestroy(): void {
