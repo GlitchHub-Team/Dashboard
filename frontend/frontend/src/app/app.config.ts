@@ -17,9 +17,9 @@ import { SensorLiveReadingApiAdapter } from './adapters/sensor-livel-reading-api
 // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
 import { AuthApiClientService } from './services/auth-api-client/auth-api-client.service';
 import { AuthServiceMock } from './mocks/auth.service.mock';
-import { TenantApiClientService } from './services/tenant/tenant-api-client.service';
+import { TenantApiClientService } from './services/tenant-api-client/tenant-api-client.service';
 import { TenantApiClientMockService } from './mocks/tenant-api-client.mock';
-import { UserApiClientService } from './services/user/user-api-client.service';
+import { UserApiClientService } from './services/user-api-client/user-api-client.service';
 import { UserApiClientMockService } from './mocks/user-api-client.mock';
 import { SensorApiClientServiceMock } from './mocks/sensor.service.mock';
 import { GatewayApiClientServiceMock } from './mocks/gateway.service.mock';

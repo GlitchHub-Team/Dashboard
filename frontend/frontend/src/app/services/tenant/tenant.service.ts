@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Tenant } from '../../models/tenant.model';
 import { RawTenantConfig } from '../../models/raw-tenant-config.model';
-import { TenantApiClientService } from './tenant-api-client.service';
+import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class TenantService {
@@ -66,9 +66,7 @@ export class TenantService {
     return new Observable((observer) => {
       this.tenantApiClient.deleteTenant(name).subscribe({
         next: () => {
-          this.tenantList.update((current: Tenant[]) =>
-            current.filter((t) => t.name !== name)
-          );
+          this.tenantList.update((current: Tenant[]) => current.filter((t) => t.name !== name));
           this.loading.set(false);
           observer.next();
           observer.complete();

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { TenantService } from './tenant.service';
-import { TenantApiClientService } from './tenant-api-client.service';
+import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
 import { Tenant } from '../../models/tenant.model';
 import { RawTenantConfig } from '../../models/raw-tenant-config.model';
 

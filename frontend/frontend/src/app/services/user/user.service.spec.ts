@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { UserService } from './user.service';
-import { UserApiClientService, UserConfig } from './user-api-client.service';
+import { UserApiClientService, UserConfig } from '../user-api-client/user-api-client.service';
 import { UserRole } from '../../models/user-role.enum';
 import { User } from '../../models/user.model';
 
