@@ -32,7 +32,13 @@ describe('LoginPage', () => {
   const mockRequest: LoginRequest = { email: 'user@example.com', password: 'secret123' };
   const mockResponse: AuthResponse = {
     token: 'jwt-token',
-    user: { id: '1', email: 'user@example.com', role: UserRole.SUPER_ADMIN, tenantId: 'tenant-1' },
+    user: {
+      id: '1',
+      username: 'user',
+      email: 'user@example.com',
+      role: UserRole.SUPER_ADMIN,
+      tenantId: 'tenant-1',
+    },
   };
 
   beforeEach(async () => {

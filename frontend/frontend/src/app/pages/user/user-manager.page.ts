@@ -38,6 +38,17 @@ export class UserManagerPage implements OnInit {
   public limit = this.userService.limit;
   public loading = this.userService.loading;
 
+  // Configurazione dinamica delle colonne: mostriamo il Tenant ID solo per i TENANT_ADMIN
+  public get columnConfig() {
+    const cols: { key: keyof User; label: string }[] = [
+      { key: 'username' as keyof User, label: 'Username' },
+      { key: 'email' as keyof User, label: 'Email' },
+    ];
+    if (this.context.role === UserRole.TENANT_ADMIN) {
+      cols.push({ key: 'tenantId' as keyof User, label: 'Tenant ID' });
+    }
+    return cols;
+  }
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(data => {
@@ -49,11 +60,17 @@ export class UserManagerPage implements OnInit {
   onCreateUser(): void {
     this.dialog.open(UserFormDialogComponent, {
       width: '400px',
-      data: null,
-    }).afterClosed().subscribe((result: User) => {
+      data: { user: null, role: this.context.role },
+    }).afterClosed().subscribe((result: { username: string; email: string; tenantId?: string } | undefined) => {
       if (result) {
-        const userConfig = { email: result.email, role: this.context.role };
-        this.userService.addNewUser(userConfig, this.context.tenantId).subscribe(() => {
+        const userConfig = { username: result.username, email: result.email, role: this.context.role };
+        
+        let tenantIdToPass = this.context.tenantId;
+        if (this.context.role === UserRole.TENANT_ADMIN && result.tenantId) {
+          tenantIdToPass = result.tenantId.toLowerCase().replace(' ', '-0'); // Adattamento per i mock
+        }
+
+        this.userService.addNewUser(userConfig, tenantIdToPass).subscribe(() => {
           this.userService.retrieveUser(this.context.role, this.context.tenantId);
         });
       }

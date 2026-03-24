@@ -1,17 +1,7 @@
 <div class="dashboard-layout">
   <div class="dashboard-left">
     @if (activeTenantId()) {
-      <div
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background-color: #e3f2fd;
-          padding: 1rem;
-          border-radius: 8px;
-          margin-bottom: 1rem;
-        "
-      >
+      <div class="info-banner tenant-banner">
         <span
           >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
         >
@@ -22,17 +12,7 @@
       </div>
     }
     @if (currentRole() === UserRole.SUPER_ADMIN && !activeTenantId()) {
-      <div
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background-color: #fff3e0;
-          padding: 1rem;
-          border-radius: 8px;
-          margin-bottom: 1rem;
-        "
-      >
+      <div class="info-banner warning-banner">
         <span>Per visualizzare i dati, devi selezionare un tenant.</span>
         <button mat-button color="primary" (click)="onBackToTenants()">
           <mat-icon>domain</mat-icon>

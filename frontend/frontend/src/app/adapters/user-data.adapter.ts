@@ -16,6 +16,7 @@ export class UserDataAdapter {
   public adapt(input: RawUserConfig): User {
     return {
       id: input.id || '',
+      username: input.username || '',
       email: input.email || '',
       role: input.role || '',
       tenantId: (input as { tenantId?: string }).tenantId || '',

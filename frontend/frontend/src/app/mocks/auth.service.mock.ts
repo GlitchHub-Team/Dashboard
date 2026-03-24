@@ -12,15 +12,33 @@ const MOCK_DELAY = 800;
 const MOCK_USERS: Record<string, { password: string; user: AuthResponse['user'] }> = {
   'super@test.com': {
     password: 'password',
-    user: { id: '1', email: 'super@test.com', role: UserRole.SUPER_ADMIN },
+    user: {
+      id: '1',
+      username: 'superadmin',
+      email: 'super@test.com',
+      role: UserRole.SUPER_ADMIN,
+      tenantId: 'tenant-1',
+    },
   },
   'admin@test.com': {
     password: 'password',
-    user: { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
+    user: {
+      id: '1',
+      username: 'admin',
+      email: 'admin@test.com',
+      role: UserRole.TENANT_ADMIN,
+      tenantId: 'tenant-1',
+    },
   },
   'user@test.com': {
     password: 'password',
-    user: { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
+    user: {
+      id: '2',
+      username: 'user',
+      email: 'user@test.com',
+      role: UserRole.TENANT_USER,
+      tenantId: 'tenant-1',
+    },
   },
 };
 

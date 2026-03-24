@@ -9,6 +9,7 @@ describe('UserSessionService', () => {
 
   const mockUser: User = {
     id: '1',
+    username: 'admin',
     email: 'admin@test.com',
     role: UserRole.SUPER_ADMIN,
     tenantId: 'tenant-1',
@@ -102,6 +103,7 @@ describe('UserSessionService', () => {
 
       const newUser: User = {
         id: '2',
+        username: 'testuser',
         email: 'user@test.com',
         role: UserRole.TENANT_USER,
         tenantId: 'tenant-2',

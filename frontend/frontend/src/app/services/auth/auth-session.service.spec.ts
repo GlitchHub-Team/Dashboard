@@ -63,6 +63,7 @@ describe('AuthSessionService', () => {
       user: {
         id: '1',
         email: 'user@example.com',
+        username: 'user',
         role: UserRole.SUPER_ADMIN,
         tenantId: 'tenant-1',
       },

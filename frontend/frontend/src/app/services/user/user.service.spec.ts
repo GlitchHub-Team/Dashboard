@@ -11,11 +11,24 @@ describe('UserService', () => {
   let service: UserService;
 
   const mockUsers: User[] = [
-    { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
-    { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
+    {
+      id: '1',
+      username: 'admin',
+      email: 'admin@test.com',
+      role: UserRole.TENANT_ADMIN,
+      tenantId: 'tenant-1',
+    },
+    {
+      id: '2',
+      username: 'user',
+      email: 'user@test.com',
+      role: UserRole.TENANT_USER,
+      tenantId: 'tenant-1',
+    },
   ];
   const newUser: User = {
     id: '3',
+    username: 'newuser',
     email: 'new@test.com',
     role: UserRole.TENANT_USER,
     tenantId: 'tenant-1',
@@ -132,6 +145,7 @@ describe('UserService', () => {
     it('should call deleteUser with id, role, and tenantId and set loading false on success', () => {
       const user: User = {
         id: '1',
+        username: 'testuser',
         email: 'test@test.com',
         role: UserRole.TENANT_USER,
         tenantId: 't1',
@@ -154,6 +168,7 @@ describe('UserService', () => {
       const error = new Error('Error deleting');
       const user: User = {
         id: '1',
+        username: 'testuser',
         email: 'test@test.com',
         role: UserRole.TENANT_USER,
         tenantId: 't1',

@@ -40,6 +40,7 @@ describe('AuthApiClientService', () => {
       const mockUser: User = {
         id: '1',
         email: 'test@example.com',
+        username: 'testuser',
         role: UserRole.TENANT_USER,
         tenantId: 'tenant-01',
       };

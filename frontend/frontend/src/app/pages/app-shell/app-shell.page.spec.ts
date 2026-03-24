@@ -40,6 +40,7 @@ describe('AppShellPage (Unit)', () => {
 
   const mockUser: User = {
     id: '1',
+    username: 'admin',
     email: 'admin@test.com',
     role: UserRole.SUPER_ADMIN,
     tenantId: 'tenant-1',
@@ -139,6 +140,7 @@ describe('AppShellPage (Unit)', () => {
     it('should update header bindings when user changes', () => {
       currentUserSignal.set({
         id: '2',
+        username: 'newuser',
         email: 'new@test.com',
         role: UserRole.TENANT_USER,
         tenantId: 'tenant-2',

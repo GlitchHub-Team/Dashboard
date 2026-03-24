@@ -82,7 +82,10 @@ describe('UserManagerPage', () => {
 
     expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
       width: '400px',
-      data: null,
+      data: {
+        user: null,
+        role: UserRole.TENANT_ADMIN,
+      },
     });
   });
 
@@ -112,6 +115,7 @@ describe('UserManagerPage', () => {
     const user: User = {
       id: '1',
       email: 'delete@user.com',
+      username: 'deleteuser',
       role: UserRole.TENANT_ADMIN,
       tenantId: 'tenant-1',
     };
@@ -135,6 +139,7 @@ describe('UserManagerPage', () => {
     const user: User = {
       id: '1',
       email: 'delete@user.com',
+      username: 'deleteuser',
       role: UserRole.TENANT_ADMIN,
       tenantId: 'tenant-1',
     };

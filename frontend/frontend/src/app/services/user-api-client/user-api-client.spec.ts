@@ -57,22 +57,47 @@ describe('UserApiClientService', () => {
 
   const rawPaginatedResponse: RawPaginatedResponse = {
     items: [
-      { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
-      { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
+      {
+        id: '1',
+        username: 'admin',
+        email: 'admin@test.com',
+        role: UserRole.TENANT_ADMIN,
+        tenantId: 'tenant-1',
+      },
+      {
+        id: '2',
+        username: 'user',
+        email: 'user@test.com',
+        role: UserRole.TENANT_USER,
+        tenantId: 'tenant-1',
+      },
     ],
     totalCount: 2,
   };
 
   const adaptedPaginatedResponse: { items: User[]; totalCount: number } = {
     items: [
-      { id: '1', email: 'admin@test.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' },
-      { id: '2', email: 'user@test.com', role: UserRole.TENANT_USER, tenantId: 'tenant-1' },
+      {
+        id: '1',
+        username: 'admin',
+        email: 'admin@test.com',
+        role: UserRole.TENANT_ADMIN,
+        tenantId: 'tenant-1',
+      },
+      {
+        id: '2',
+        username: 'user',
+        email: 'user@test.com',
+        role: UserRole.TENANT_USER,
+        tenantId: 'tenant-1',
+      },
     ],
     totalCount: 2,
   };
 
   const rawUser: RawUserConfig = {
     id: '3',
+    username: 'newuser',
     email: 'new@test.com',
     role: UserRole.TENANT_USER,
     tenantId: 'tenant-1',
@@ -81,6 +106,7 @@ describe('UserApiClientService', () => {
   const adaptedUser: User = {
     id: '3',
     email: 'new@test.com',
+    username: 'newuser',
     role: UserRole.TENANT_USER,
     tenantId: 'tenant-1',
   };
@@ -168,12 +194,14 @@ describe('UserApiClientService', () => {
         raw: {
           id: '1',
           email: 'super@test.com',
+          username: 'super',
           role: UserRole.SUPER_ADMIN,
           tenantId: '',
         } satisfies RawUserConfig,
         adapted: {
           id: '1',
           email: 'super@test.com',
+          username: 'super',
           role: UserRole.SUPER_ADMIN,
           tenantId: '',
         } satisfies User,
@@ -214,12 +242,14 @@ describe('UserApiClientService', () => {
         raw: {
           id: '10',
           email: 'super@test.com',
+          username: 'super',
           role: UserRole.SUPER_ADMIN,
           tenantId: '',
         } satisfies RawUserConfig,
         adapted: {
           id: '10',
           email: 'super@test.com',
+          username: 'super',
           role: UserRole.SUPER_ADMIN,
           tenantId: '',
         } satisfies User,
