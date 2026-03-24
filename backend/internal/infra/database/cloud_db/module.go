@@ -19,7 +19,7 @@ var Module = fx.Module(
 		func(migrator migrate.Migrator) {
 			err := migrator.Migrate()
 			if err != nil {
-				panic(fmt.Errorf("Migrator error: %v", err))
+				panic(fmt.Errorf("migrator error: %v", err))
 			}
 		},
 	),
