@@ -80,16 +80,7 @@ func executeControllerTest[InputT any, MockT any](
 	// 2. Inject identity con middleware inline
 	router.Use(func(ctx *gin.Context) {
 		if !tc.omitIdentity {
-			ctx.Set("requester_user_id", tc.requester.RequesterUserId)
-
-			if tc.requester.RequesterRole != identity.ROLE_SUPER_ADMIN {
-				if tc.requester.RequesterTenantId == nil {
-					panic("Requester passed to test router is tenant member with no tenant id")
-				}
-				ctx.Set("requester_tenant_id", tc.requester.RequesterTenantId.String())
-			}
-
-			ctx.Set("requester_role", string(tc.requester.RequesterRole))
+			ctx.Set("requester", tc.requester)
 		}
 		ctx.Next()
 	})
