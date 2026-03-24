@@ -6,45 +6,24 @@ import (
 	"backend/internal/shared/identity"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 var ErrMissingIdentity = errors.New("identity missing from request context")
 
 // TODO: inserisci questo in tutti i controller!
+/*
+Estrare il requester dal contesto di Gin.
+L'unico errore che ritorna è ErrMissingIdentity
+*/
 func ExtractRequester(ctx *gin.Context) (identity.Requester, error) {
-	userId, exists := ctx.Get("requester_user_id")
-	requesterUserId, ok := userId.(uint)
-	if !exists || !ok {
-		return identity.Requester{}, ErrMissingIdentity
-	}
-	
-
-	roleString, exists := ctx.Get("requester_role")
+	ctxRequester, exists := ctx.Get("requester")
 	if !exists {
 		return identity.Requester{}, ErrMissingIdentity
 	}
-
-	requesterRole := identity.UserRole(roleString.(string))
-
-	var tenantIdPtr *uuid.UUID
-
-	tenantIdString, exists := ctx.Get("requester_tenant_id")
-	if requesterRole == identity.ROLE_SUPER_ADMIN {
-		tenantIdPtr = nil
-	} else if exists {
-		tenantIdVal, err := uuid.Parse(tenantIdString.(string))
-		tenantIdPtr = &tenantIdVal
-		if err != nil {
-			return identity.Requester{}, err
-		}
-	} else {
+	requester, ok := ctxRequester.(identity.Requester)
+	if !ok {
 		return identity.Requester{}, ErrMissingIdentity
 	}
 
-	return identity.Requester{
-		RequesterUserId:   requesterUserId,
-		RequesterTenantId: tenantIdPtr,
-		RequesterRole:     requesterRole,
-	}, nil
+	return requester, nil
 }
