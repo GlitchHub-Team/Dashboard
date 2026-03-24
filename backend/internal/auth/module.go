@@ -11,6 +11,9 @@ var Module = fx.Module(
 
     // Metodi pubblici
     fx.Provide(
+        // Inbound ports
+        NewController,
+
         // Servizi
         fx.Annotate(
             NewAuthSessionService,
@@ -35,6 +38,10 @@ var Module = fx.Module(
             NewConfirmAccountTokenPostgreAdapter,
             fx.As(new(ConfirmAccountTokenPort)),
             fx.As(new(user.GenerateTokenPort)),
+        ),
+        fx.Annotate(
+            NewChangePasswordTokenPostgreAdapter,
+            fx.As(new(ChangePasswordTokenPort)),
         ),
     ),
 

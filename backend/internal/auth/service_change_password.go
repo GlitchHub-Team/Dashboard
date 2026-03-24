@@ -3,15 +3,15 @@ package auth
 import (
 	"backend/internal/shared/crypto"
 	"backend/internal/user"
-
-	"github.com/google/uuid"
 )
 
+//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ChangePasswordTokenPort,SendChangePasswordEmailPort
+
 type ChangePasswordTokenPort interface {
-	SaveChangePasswordToken(token ForgotPasswordToken) (ForgotPasswordToken, error)
+	NewChangePasswordToken(user user.User) (string, error)
 	DeleteChangePasswordToken(token ForgotPasswordToken) error
-	GetChangePasswordTokenByUser(tenantId *uuid.UUID, userId uint) (ForgotPasswordToken, error)
-	GetChangePasswordToken(hashedTokenString string) (ForgotPasswordToken, error)
+	GetChangePasswordToken(tokenString string) (ForgotPasswordToken, error)
+	GetUserByChangePasswordToken(tokenString string) (user.User, error)
 }
 
 type SendChangePasswordEmailPort interface {
@@ -22,7 +22,7 @@ type SendChangePasswordEmailPort interface {
 Service che gestisce i cambi password (che siano forgot password o richiesti da utenti loggati)
 */
 type ChangePasswordService struct {
-	tokenGenerator crypto.TokenGenerator
+	tokenGenerator crypto.SecurityTokenGenerator
 	hasher         crypto.SecretHasher // NOTA: dev'essere lo stesso hasher con cui si è creato il token
 
 	changePasswordTokenPort     ChangePasswordTokenPort
@@ -39,7 +39,7 @@ var (
 )
 
 func NewChangePasswordService(
-	tokenGenerator crypto.TokenGenerator,
+	tokenGenerator crypto.SecurityTokenGenerator,
 	hasher crypto.SecretHasher,
 	changePasswordTokenPort ChangePasswordTokenPort,
 	sendChangePasswordEmailPort SendChangePasswordEmailPort,
@@ -98,17 +98,7 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 	}
 
 	// 2. Crea token
-	tokenString, hashedTokenString, err := service.tokenGenerator.GenerateToken()
-	expiryDate := service.tokenGenerator.ExpiryFromNow()
-	if err != nil {
-		return err
-	}
-	_, err = service.changePasswordTokenPort.SaveChangePasswordToken(ForgotPasswordToken{
-		hashedToken: hashedTokenString,
-		tenantId:    cmd.TenantId,
-		userId:      userFound.Id,
-		expiryDate:  expiryDate,
-	})
+	tokenString, err := service.changePasswordTokenPort.NewChangePasswordToken(userFound)
 	if err != nil {
 		return err
 	}
@@ -122,6 +112,9 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 	return nil
 }
 
+/*
+Conferma la richiesta di cambio password dimenticata.
+*/
 func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPasswordCommand) error {
 	// 1. Get token
 	tokenObj, err := service.getValidToken(cmd.Token)
@@ -178,25 +171,34 @@ func (service *ChangePasswordService) ChangePassword(cmd ChangePasswordCommand) 
 		return err
 	}
 
-	// 2. Controlla password vecchia
-	err = service.hasher.CompareHashAndSecret(*userFound.PasswordHash, cmd.OldPassword)
+	// 2. Check conferma account
+	if !userFound.Confirmed {
+		return ErrAccountNotConfirmed
+	}
+
+	// 3. Controlla password vecchia
+	passwordHash := ""
+	if userFound.PasswordHash != nil {
+		passwordHash = *userFound.PasswordHash
+	}
+	err = service.hasher.CompareHashAndSecret(passwordHash, cmd.OldPassword)
 	if err != nil {
 		return ErrWrongCredentials
 	}
 
-	// 3. Genera nuovo hash
+	// 4. Genera nuovo hash
 	newHash, err := service.hasher.HashSecret(cmd.NewPassword)
 	if err != nil {
 		return err
 	}
 
-	// 4. Cambia password (controllo di dominio)
+	// 5. Cambia password (controllo di dominio)
 	err = userFound.SetPasswordHash(newHash)
 	if err != nil {
 		return err
 	}
 
-	// 5. Salva user
+	// 6. Salva user
 	_, err = service.saveUserPort.SaveUser(userFound)
 	if err != nil {
 		return err

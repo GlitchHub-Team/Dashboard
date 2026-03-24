@@ -1,12 +1,20 @@
 package auth
 
-import "backend/internal/infra/transport/http/dto"
+import (
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
+)
 
 // LOGIN/LOGOUT =======================================================================================
 type LoginUserDto struct {
 	dto.TenantIdField_NotRequired
 	dto.EmailField
 	dto.PasswordField
+	dto.UserRoleField
+}
+
+type LogoutUserDto struct {
+	identity.Requester
 }
 
 // type LogoutUserDto struct {
@@ -44,3 +52,11 @@ type ChangePasswordDto struct {
 	dto.ChangePasswordFields
 }
 
+// RESPONSE DTO ==============
+type LoginResponseDto struct {
+	JWT string `json:"jwt" binding:"required"`
+}
+
+type ResultDto struct {
+	Result string `json:"result" binding:"required"`
+}

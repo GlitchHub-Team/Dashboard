@@ -1,15 +1,19 @@
 package auth
 
 import (
-	"backend/internal/shared/identity"
 	"backend/internal/shared/crypto"
+	"backend/internal/shared/identity"
 	"backend/internal/user"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 /*
 Service che gestisce le sessioni utente (login/logout)
 */
 type SessionService struct {
+	log *zap.Logger
 	hasher      crypto.SecretHasher
 	getUserPort user.GetUserPort
 }
@@ -21,10 +25,12 @@ var (
 )
 
 func NewAuthSessionService(
+	log *zap.Logger,
 	hasher crypto.SecretHasher,
 	getUserPort user.GetUserPort,
 ) *SessionService {
 	return &SessionService{
+		log: log,
 		hasher:      hasher,
 		getUserPort: getUserPort,
 	}
@@ -34,13 +40,18 @@ func (service *SessionService) LoginUser(cmd LoginUserCommand) (
 	foundUser user.User, err error,
 ) {
 	// Get user
+	var tenantId uuid.UUID
+	if cmd.TenantId != nil {
+		tenantId = *cmd.TenantId
+	}
+
 	switch cmd.Role {
-	case identity.ROLE_TENANT_USER:
-		foundUser, err = service.getUserPort.GetTenantUserByEmail(*cmd.TenantId, cmd.Email)
-	case identity.ROLE_TENANT_ADMIN:
-		foundUser, err = service.getUserPort.GetTenantAdminByEmail(*cmd.TenantId, cmd.Email)
 	case identity.ROLE_SUPER_ADMIN:
 		foundUser, err = service.getUserPort.GetSuperAdminByEmail(cmd.Email)
+	case identity.ROLE_TENANT_ADMIN:
+		foundUser, err = service.getUserPort.GetTenantAdminByEmail(tenantId, cmd.Email)
+	case identity.ROLE_TENANT_USER:
+		foundUser, err = service.getUserPort.GetTenantUserByEmail(tenantId, cmd.Email)
 	default:
 		err = identity.ErrUnknownRole
 	}

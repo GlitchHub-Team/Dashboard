@@ -9,7 +9,7 @@ import (
 )
 
 type ForgotPasswordToken struct {
-	id          int
+	// id          int
 	hashedToken string
 	tenantId    *uuid.UUID
 	userId      uint
@@ -21,7 +21,7 @@ func (token *ForgotPasswordToken) IsExpired() bool {
 }
 
 type ConfirmAccountToken struct {
-	id          int
+	// id          int
 	hashedToken string
 	tenantId    *uuid.UUID
 	userId      uint

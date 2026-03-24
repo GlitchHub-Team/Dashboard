@@ -4,18 +4,18 @@ import (
 	"backend/internal/shared/crypto"
 	"backend/internal/user"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
+
+//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ConfirmAccountTokenPort
 
 // TODO: Non sono sicuro che i metodi NewConfirmAccountToken e GetConfirmAccountTokenByUserId
 // debbano prendere tenantId in input
 type ConfirmAccountTokenPort interface {
-	NewConfirmAccountToken(tenantId *uuid.UUID, userId uint) (string, error)
-	DeleteConfirmAccountToken(token string) error
-	GetConfirmAccountTokenByUser(tenantId *uuid.UUID, userId uint) (ConfirmAccountToken, error)
-	GetConfirmAccountToken(token string) (ConfirmAccountToken, error)
-	GetUserByConfirmAccountToken(token string) (user.User, error)
+	NewConfirmAccountToken(user user.User) (string, error)
+	DeleteConfirmAccountToken(token ConfirmAccountToken) error
+	GetConfirmAccountToken(tokenString string) (ConfirmAccountToken, error)
+	GetUserByConfirmAccountToken(tokenString string) (user.User, error)
 }
 
 /* Service che gestisce la conferma degli account */
@@ -61,7 +61,7 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	confirmedUser user.User, err error,
 ) {
 	// 1. Get token
-	_, err = service.getToken(cmd.Token)
+	tokenObj, err := service.getToken(cmd.Token)
 	if err != nil {
 		return user.User{}, err
 	}
@@ -96,7 +96,7 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	}
 
 	// 5. Delete token
-	err = service.confirmAccountTokenPort.DeleteConfirmAccountToken(cmd.Token)
+	err = service.confirmAccountTokenPort.DeleteConfirmAccountToken(tokenObj)
 	if err != nil {
 		service.log.Error("Cannot delete token", zap.String("token", cmd.Token), zap.Error(err))
 	}
