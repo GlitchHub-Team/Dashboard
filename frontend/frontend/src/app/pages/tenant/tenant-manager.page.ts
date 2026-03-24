@@ -4,10 +4,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { TenantService } from '../../services/tenant/tenant.service';
-import { TenantFormDialog } from './dialogs/tenant-form.dialog';
-import { TenantTableComponent } from './components/tenant-table.component';
-import { ConfirmDeleteDialog } from './dialogs/confirm-delete.dialog';
-import { Tenant } from '../../models/tenant.model';
+import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
+import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
+import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { Tenant } from '../../models/tenant/tenant.model';
 import { Router } from '@angular/router';
 
 @Component({

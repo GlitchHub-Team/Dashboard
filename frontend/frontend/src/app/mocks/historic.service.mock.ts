@@ -3,7 +3,7 @@ import { Observable, of, delay } from 'rxjs';
 import { ChartRequest } from '../models/chart/chart-request.model';
 import { HistoricResponse } from '../models/sensor-data/historic-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
-import { TimeInterval } from '../models/time-interval.model';
+import { TimeInterval } from '../models/chart/time-interval.model';
 
 @Injectable()
 export class SensorHistoricMockService {

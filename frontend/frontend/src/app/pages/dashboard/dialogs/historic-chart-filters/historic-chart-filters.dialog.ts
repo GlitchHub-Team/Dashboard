@@ -15,8 +15,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatIcon } from '@angular/material/icon';
 
 import { Sensor } from '../../../../models/sensor/sensor.model';
-import { TimeInterval } from '../../../../models/time-interval.model';
-import { ValuesInterval } from '../../../../models/values-interval.model';
+import { TimeInterval } from '../../../../models/chart/time-interval.model';
+import { ValuesInterval } from '../../../../models/chart/values-interval.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 

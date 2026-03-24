@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth/auth.guard';
 import { roleGuard } from './guards/role/role.guard';
 import { Permission } from './models/permission.enum';
-import { UserRole } from './models/user-role.enum';
+import { UserRole } from './models/user/user-role.enum';
 
 export const routes: Routes = [
   {

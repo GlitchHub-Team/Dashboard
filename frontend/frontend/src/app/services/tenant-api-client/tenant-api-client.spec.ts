@@ -5,8 +5,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TenantApiClientService } from './tenant-api-client.service';
 import { environment } from '../../../environments/environment';
 import { TenantDataAdapter, RawPaginatedTenantResponse } from '../../adapters/tenant-data.adapter';
-import { Tenant } from '../../models/tenant.model';
-import { RawTenantConfig } from '../../models/raw-tenant-config.model';
+import { Tenant } from '../../models/tenant/tenant.model';
+import { RawTenantConfig } from '../../models/tenant/raw-tenant-config.model';
 
 describe('TenantApiClientService', () => {
   let service: TenantApiClientService;

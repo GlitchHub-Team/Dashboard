@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Tenant } from '../models/tenant.model';
-import { RawTenantConfig } from '../models/raw-tenant-config.model';
+import { Tenant } from '../models/tenant/tenant.model';
+import { RawTenantConfig } from '../models/tenant/raw-tenant-config.model';
 
 export interface RawPaginatedTenantResponse {
   content?: RawTenantConfig[];
@@ -20,10 +20,13 @@ export class TenantDataAdapter {
   }
 
   public adaptArray(items: RawTenantConfig[]): Tenant[] {
-    return items ? items.map(item => this.adapt(item)) : [];
+    return items ? items.map((item) => this.adapt(item)) : [];
   }
 
-  public adaptPaginated(response: RawPaginatedTenantResponse): { items: Tenant[]; totalCount: number } {
+  public adaptPaginated(response: RawPaginatedTenantResponse): {
+    items: Tenant[];
+    totalCount: number;
+  } {
     return {
       items: this.adaptArray(response.content || response.items || response.data || []),
       totalCount: response.totalElements || response.totalCount || response.total || 0,

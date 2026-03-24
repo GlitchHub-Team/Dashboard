@@ -6,8 +6,8 @@ import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { TenantService } from '../../../services/tenant/tenant.service';
-import { RawTenantConfig } from '../../../models/raw-tenant-config.model';
+import { TenantService } from '../../../../services/tenant/tenant.service';
+import { RawTenantConfig } from '../../../../models/tenant/raw-tenant-config.model';
 
 @Component({
   selector: 'app-tenant-form-dialog',
@@ -24,7 +24,6 @@ import { RawTenantConfig } from '../../../models/raw-tenant-config.model';
   styleUrl: './tenant-form.dialog.css',
   providers: [TenantService],
 })
-
 export class TenantFormDialog {
   private readonly fb = inject(FormBuilder);
   private readonly tenantService = inject(TenantService);
@@ -68,7 +67,7 @@ export class TenantFormDialog {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        
+
         if (err.error && err.error.fieldErrors) {
           this.serverErrors.set(err.error.fieldErrors);
           Object.keys(err.error.fieldErrors).forEach((field) => {

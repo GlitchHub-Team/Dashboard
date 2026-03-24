@@ -21,7 +21,7 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { UserSessionService } from '../../services/user-session/user-session.service';
-import { UserRole } from '../../models/user-role.enum';
+import { UserRole } from '../../models/user/user-role.enum';
 
 @Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
 class StubGatewayTable {

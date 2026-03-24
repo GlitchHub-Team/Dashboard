@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { User } from '../models/user.model';
-import { RawUserConfig } from '../models/raw-user-config.model';
+import { User } from '../models/user/user.model';
+import { RawUserConfig } from '../models/user/raw-user-config.model';
 
 export interface RawPaginatedResponse {
   content?: RawUserConfig[];
@@ -11,7 +11,7 @@ export interface RawPaginatedResponse {
   total?: number;
 }
 
-@Injectable({ providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class UserDataAdapter {
   public adapt(input: RawUserConfig): User {
     return {
@@ -24,7 +24,7 @@ export class UserDataAdapter {
   }
 
   public adaptArray(items: RawUserConfig[]): User[] {
-    return items ? items.map(item => this.adapt(item)) : [];
+    return items ? items.map((item) => this.adapt(item)) : [];
   }
 
   // Adatta la risposta paginata dal backend

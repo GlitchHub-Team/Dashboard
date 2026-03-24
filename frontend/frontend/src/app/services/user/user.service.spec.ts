@@ -4,8 +4,8 @@ import { of, throwError } from 'rxjs';
 
 import { UserService } from './user.service';
 import { UserApiClientService, UserConfig } from '../user-api-client/user-api-client.service';
-import { UserRole } from '../../models/user-role.enum';
-import { User } from '../../models/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
+import { User } from '../../models/user/user.model';
 
 describe('UserService', () => {
   let service: UserService;

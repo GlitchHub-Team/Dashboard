@@ -4,8 +4,8 @@ import { of, throwError } from 'rxjs';
 
 import { TenantService } from './tenant.service';
 import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
-import { Tenant } from '../../models/tenant.model';
-import { RawTenantConfig } from '../../models/raw-tenant-config.model';
+import { Tenant } from '../../models/tenant/tenant.model';
+import { RawTenantConfig } from '../../models/tenant/raw-tenant-config.model';
 
 describe('TenantService', () => {
   let service: TenantService;

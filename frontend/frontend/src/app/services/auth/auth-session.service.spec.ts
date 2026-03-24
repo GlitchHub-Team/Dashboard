@@ -9,7 +9,7 @@ import { UserSessionService } from '../user-session/user-session.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
 import { ApiError } from '../../models/api-error.model';
-import { UserRole } from '../../models/user-role.enum';
+import { UserRole } from '../../models/user/user-role.enum';
 
 describe('AuthSessionService', () => {
   let service: AuthSessionService;

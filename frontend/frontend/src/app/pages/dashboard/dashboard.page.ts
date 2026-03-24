@@ -7,7 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
-import { UserRole } from '../../models/user-role.enum';
+import { UserRole } from '../../models/user/user-role.enum';
 import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
 import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';

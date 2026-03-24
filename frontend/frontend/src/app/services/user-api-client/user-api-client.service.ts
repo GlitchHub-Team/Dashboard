@@ -2,17 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { UserDataAdapter, RawPaginatedResponse } from '../../adapters/user-data.adapter';
-import { User } from '../../models/user.model';
-import { UserRole } from '../../models/user-role.enum';
+import { User } from '../../models/user/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
 import { environment } from '../../../environments/environment';
-import { RawUserConfig } from '../../models/raw-user-config.model';
+import { RawUserConfig } from '../../models/user/raw-user-config.model';
 
 export interface UserConfig {
   email: string;
   role: UserRole;
 }
 
-@Injectable({ providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class UserApiClientService {
   private readonly http = inject(HttpClient);
   private readonly userAdapter = inject(UserDataAdapter);
@@ -33,30 +33,31 @@ export class UserApiClientService {
     }
   }
 
-  public getUsers(role: UserRole, tenantId?: string, page = 0, size = 10): Observable<{ items: User[]; totalCount: number }> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+  public getUsers(
+    role: UserRole,
+    tenantId?: string,
+    page = 0,
+    size = 10,
+  ): Observable<{ items: User[]; totalCount: number }> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
 
     const url = this.getBaseUrl(role, tenantId, true);
 
-    return this.http.get<RawPaginatedResponse>(url, { params }).pipe(
-      map(response => this.userAdapter.adaptPaginated(response))
-    );
+    return this.http
+      .get<RawPaginatedResponse>(url, { params })
+      .pipe(map((response) => this.userAdapter.adaptPaginated(response)));
   }
 
   public getUser(id: string, role: UserRole, tenantId?: string): Observable<User> {
     const url = `${this.getBaseUrl(role, tenantId, false)}/${id}`;
-    return this.http.get<RawUserConfig>(url).pipe(
-      map(data => this.userAdapter.adapt(data))
-    );
+    return this.http.get<RawUserConfig>(url).pipe(map((data) => this.userAdapter.adapt(data)));
   }
 
   public createUser(config: UserConfig, tenantId?: string): Observable<User> {
     const url = this.getBaseUrl(config.role, tenantId, false);
-    return this.http.post<RawUserConfig>(url, config).pipe(
-      map(data => this.userAdapter.adapt(data))
-    );
+    return this.http
+      .post<RawUserConfig>(url, config)
+      .pipe(map((data) => this.userAdapter.adapt(data)));
   }
 
   public deleteUser(id: string, role: UserRole, tenantId?: string): Observable<void> {

@@ -6,9 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { User } from '../../../models/user.model';
-import { UserRole } from '../../../models/user-role.enum';
-import { TenantService } from '../../../services/tenant/tenant.service';
+import { User } from '../../../../models/user/user.model';
+import { UserRole } from '../../../../models/user/user-role.enum';
+import { TenantService } from '../../../../services/tenant/tenant.service';
 
 export interface UserFormDialogData {
   user: User | null;
@@ -47,7 +47,10 @@ export class UserFormDialogComponent {
       id: [this.data.user?.id || ''],
       username: [this.data.user?.username || '', [Validators.required]],
       email: [this.data.user?.email || '', [Validators.required, Validators.email]],
-      tenantId: [this.data.user?.tenantId || '', this.data.role === UserRole.TENANT_ADMIN ? [Validators.required] : []],
+      tenantId: [
+        this.data.user?.tenantId || '',
+        this.data.role === UserRole.TENANT_ADMIN ? [Validators.required] : [],
+      ],
     });
 
     if (this.data.role === UserRole.TENANT_ADMIN) {

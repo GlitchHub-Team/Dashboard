@@ -8,9 +8,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { TenantManagerPage } from './tenant-manager.page';
 import { TenantService } from '../../services/tenant/tenant.service';
-import { Tenant } from '../../models/tenant.model';
-import { TenantFormDialog } from './dialogs/tenant-form.dialog';
-import { ConfirmDeleteDialog } from './dialogs/confirm-delete.dialog';
+import { Tenant } from '../../models/tenant/tenant.model';
+import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
+import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 
 describe('TenantManagerPage', () => {
   let component: TenantManagerPage;

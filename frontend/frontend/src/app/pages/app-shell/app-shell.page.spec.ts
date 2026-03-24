@@ -11,8 +11,8 @@ import { UserSessionService } from '../../services/user-session/user-session.ser
 import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { PermissionService } from '../../services/permission/permission.service';
 import { ChangePasswordDialog } from './dialogs/change-password/change-password.dialog';
-import { UserRole } from '../../models/user-role.enum';
-import { User } from '../../models/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
+import { User } from '../../models/user/user.model';
 import { NavItem } from '../../models/nav_items/nav-item.model';
 import { Permission } from '../../models/permission.enum';
 

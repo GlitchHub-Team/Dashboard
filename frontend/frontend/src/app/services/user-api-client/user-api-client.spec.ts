@@ -5,9 +5,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { UserApiClientService, UserConfig } from './user-api-client.service';
 import { environment } from '../../../environments/environment';
 import { UserDataAdapter, RawPaginatedResponse } from '../../adapters/user-data.adapter';
-import { User } from '../../models/user.model';
-import { RawUserConfig } from '../../models/raw-user-config.model';
-import { UserRole } from '../../models/user-role.enum';
+import { User } from '../../models/user/user.model';
+import { RawUserConfig } from '../../models/user/raw-user-config.model';
+import { UserRole } from '../../models/user/user-role.enum';
 
 const GET_USERS_CASES = [
   {

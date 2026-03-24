@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Tenant } from '../../models/tenant.model';
-import { RawTenantConfig } from '../../models/raw-tenant-config.model';
+import { Tenant } from '../../models/tenant/tenant.model';
+import { RawTenantConfig } from '../../models/tenant/raw-tenant-config.model';
 import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
 
 @Injectable({ providedIn: 'root' })

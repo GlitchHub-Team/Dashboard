@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { PermissionService } from './permission.service';
 import { UserSessionService } from '../user-session/user-session.service';
-import { UserRole } from '../../models/user-role.enum';
+import { UserRole } from '../../models/user/user-role.enum';
 import { Permission } from '../../models/permission.enum';
 
 describe('PermissionService', () => {

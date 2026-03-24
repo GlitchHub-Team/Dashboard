@@ -1,6 +1,6 @@
 import { TenantDataAdapter } from './tenant-data.adapter';
-import { RawTenantConfig } from '../models/raw-tenant-config.model';
-import { Tenant } from '../models/tenant.model';
+import { RawTenantConfig } from '../models/tenant/raw-tenant-config.model';
+import { Tenant } from '../models/tenant/tenant.model';
 
 describe('TenantDataAdapter', () => {
   let adapter: TenantDataAdapter;

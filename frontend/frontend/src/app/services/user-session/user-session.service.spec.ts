@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 
 import { UserSessionService } from './user-session.service';
-import { User } from '../../models/user.model';
-import { UserRole } from '../../models/user-role.enum';
+import { User } from '../../models/user/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
 
 describe('UserSessionService', () => {
   let service: UserSessionService;

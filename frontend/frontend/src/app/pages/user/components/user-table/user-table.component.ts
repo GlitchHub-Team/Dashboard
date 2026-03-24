@@ -4,7 +4,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { User } from '../../../models/user.model';
+import { User } from '../../../../models/user/user.model';
 
 export interface ColumnConfig<T> {
   key: keyof T;
@@ -27,10 +27,13 @@ export class UserTableComponent {
   columnConfig = input<ColumnConfig<User>[]>([
     { key: 'id', label: 'Id' },
     { key: 'email', label: 'Email' },
-    { key: 'role', label: 'Ruolo' }
+    { key: 'role', label: 'Ruolo' },
   ]);
 
-  displayedColumns = computed(() => [...this.columnConfig().map(c => c.key as string), 'actions']);
+  displayedColumns = computed(() => [
+    ...this.columnConfig().map((c) => c.key as string),
+    'actions',
+  ]);
 
   onDelete(user: User): void {
     this.deleteRequested.emit(user);

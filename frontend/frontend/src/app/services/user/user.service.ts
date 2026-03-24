@@ -1,8 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { UserApiClientService, UserConfig } from '../user-api-client/user-api-client.service';
-import { UserRole } from '../../models/user-role.enum';
-import { User } from '../../models/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
+import { User } from '../../models/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {

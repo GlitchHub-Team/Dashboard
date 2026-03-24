@@ -5,8 +5,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { AuthApiClientService } from './auth-api-client.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
-import { User } from '../../models/user.model';
-import { UserRole } from '../../models/user-role.enum';
+import { User } from '../../models/user/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
 import { PasswordChange } from '../../models/auth/password-change.model';
 import { environment } from '../../../environments/environment';
 

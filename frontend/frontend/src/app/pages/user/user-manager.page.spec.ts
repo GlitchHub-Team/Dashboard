@@ -8,10 +8,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UserManagerPage } from './user-manager.page';
 import { UserService } from '../../services/user/user.service';
-import { User } from '../../models/user.model';
-import { UserRole } from '../../models/user-role.enum';
-import { UserFormDialogComponent } from './dialogs/user-form.dialog';
-import { ConfirmDeleteDialog } from '../tenant/dialogs/confirm-delete.dialog';
+import { User } from '../../models/user/user.model';
+import { UserRole } from '../../models/user/user-role.enum';
+import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
+import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 
 describe('UserManagerPage', () => {
   let component: UserManagerPage;
