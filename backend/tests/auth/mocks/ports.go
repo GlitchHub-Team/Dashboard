@@ -10,8 +10,9 @@
 package mocks
 
 import (
-	auth "backend/internal/auth"
 	reflect "reflect"
+
+	auth "backend/internal/auth"
 
 	gomock "go.uber.org/mock/gomock"
 )
