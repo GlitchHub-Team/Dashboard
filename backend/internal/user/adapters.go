@@ -6,20 +6,23 @@ import (
 	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 //go:generate mockgen -destination=../../tests/user/mocks/ports.go -package=mocks . SaveUserPort,DeleteUserPort,GetUserPort
 
 type UserPostgreAdapter struct {
+	log *zap.Logger
 	repo *userPostgreRepository
 }
 
-func NewUserPostgreAdapter(repository *userPostgreRepository) (
+func NewUserPostgreAdapter(log *zap.Logger, repository *userPostgreRepository) (
 	SaveUserPort,
 	DeleteUserPort,
 	GetUserPort,
 ) {
 	adapter := &UserPostgreAdapter{
+		log: log,
 		repo: repository,
 	}
 	return adapter, adapter, adapter
@@ -42,13 +45,13 @@ func (adapter *UserPostgreAdapter) SaveUser(user User) (User, error) {
 	case identity.ROLE_TENANT_USER, identity.ROLE_TENANT_ADMIN:
 
 		tenantMember := &TenantMemberEntity{}
-		tenantMember.fromUser(user)
+		tenantMember.FromUser(user)
 		err := adapter.repo.SaveTenantMember(tenantMember)
 		if err != nil {
 			return User{}, err
 		}
 
-		user, err := tenantMember.toUser()
+		user, err := tenantMember.ToUser()
 		return user, err
 
 	case identity.ROLE_SUPER_ADMIN:
@@ -85,7 +88,7 @@ func (adapter *UserPostgreAdapter) DeleteTenantUser(tenantId uuid.UUID, userId u
 	if err != nil {
 		return User{}, err
 	}
-	user, err := oldMember.toUser()
+	user, err := oldMember.ToUser()
 	return user, err
 }
 
@@ -101,7 +104,7 @@ func (adapter *UserPostgreAdapter) DeleteTenantAdmin(tenantId uuid.UUID, userId 
 	if err != nil {
 		return User{}, err
 	}
-	user, err := oldMember.toUser()
+	user, err := oldMember.ToUser()
 	return user, err
 }
 
@@ -121,6 +124,7 @@ func (adapter *UserPostgreAdapter) DeleteSuperAdmin(userId uint) (User, error) {
 }
 
 // Get ================================================================================================
+// TODO: fix what happens if i pass zero tenant id in GetTenantUser/-Admin (normal and by email)
 type GetUserPort interface {
 	GetUser(tenantId *uuid.UUID, userId uint) (User, error)
 	GetTenantUser(tenantId uuid.UUID, userId uint) (User, error)
@@ -158,7 +162,7 @@ func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (Us
 		}
 
 		if *tenantMember != (TenantMemberEntity{}) {
-			user, err = tenantMember.toUser()
+			user, err = tenantMember.ToUser()
 		} else {
 			user = User{}
 		}
@@ -190,7 +194,7 @@ func (adapter *UserPostgreAdapter) GetTenantUser(tenantId uuid.UUID, userId uint
 	if err != nil {
 		return User{}, err
 	}
-	user, err := tenantUser.toUser()
+	user, err := tenantUser.ToUser()
 	return user, err
 }
 
@@ -203,7 +207,7 @@ func (adapter *UserPostgreAdapter) GetTenantAdmin(tenantId uuid.UUID, userId uin
 	if err != nil {
 		return User{}, err
 	}
-	user, err := tenantAdmin.toUser()
+	user, err := tenantAdmin.ToUser()
 	return user, err
 }
 
@@ -231,7 +235,7 @@ func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email str
 		}
 
 		if *tenantMember != (TenantMemberEntity{}) {
-			user, err = tenantMember.toUser()
+			user, err = tenantMember.ToUser()
 		} else {
 			user = User{}
 		}
@@ -266,7 +270,7 @@ func (adapter *UserPostgreAdapter) GetTenantUserByEmail(tenantId uuid.UUID, emai
 
 	var user User
 	if *tenantUser != (TenantMemberEntity{}) {
-		user, err = tenantUser.toUser()
+		user, err = tenantUser.ToUser()
 	} else {
 		user, err = User{}, nil
 	}
@@ -283,7 +287,7 @@ func (adapter *UserPostgreAdapter) GetTenantAdminByEmail(tenantId uuid.UUID, ema
 	}
 
 	tenantAdmin.TenantId = tenantId.String()
-	user, err := tenantAdmin.toUser()
+	user, err := tenantAdmin.ToUser()
 	return user, err
 }
 
@@ -312,7 +316,7 @@ func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(
 	}
 
 	for _, entity := range entities {
-		tenantUser, err := entity.toUser()
+		tenantUser, err := entity.ToUser()
 		if err != nil {
 			return nil, 0, err
 		}
@@ -336,7 +340,7 @@ func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(
 	}
 
 	for _, entity := range entities {
-		tenantUser, err := entity.toUser()
+		tenantUser, err := entity.ToUser()
 		if err != nil {
 			return nil, 0, err
 		}

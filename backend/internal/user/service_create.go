@@ -5,14 +5,12 @@ import (
 
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
-
-	"github.com/google/uuid"
 )
 
 //go:generate mockgen -destination=../../tests/user/mocks/ports_create.go -package=mocks . GenerateTokenPort,SendConfirmAccountEmailPort
 
 type GenerateTokenPort interface {
-	NewConfirmAccountToken(tenantId *uuid.UUID, userId uint) (string, error)
+	NewConfirmAccountToken(user User) (string, error)
 }
 
 type SendConfirmAccountEmailPort interface {
@@ -88,7 +86,7 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 	}
 
 	// 5. Crea token di conferma
-	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user.TenantId, user.Id)
+	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user)
 	if err != nil {
 		return User{}, err
 	}
@@ -149,7 +147,7 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 	}
 
 	// 5. Crea token di conferma
-	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user.TenantId, user.Id)
+	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user)
 	if err != nil {
 		return User{}, err
 	}
@@ -198,7 +196,7 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 	}
 
 	// 3. Crea token di conferma
-	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(nil, user.Id)
+	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user)
 	if err != nil {
 		return User{}, err
 	}

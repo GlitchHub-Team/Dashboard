@@ -33,7 +33,8 @@ type TenantMemberEntity struct {
 
 func (TenantMemberEntity) TableName() string { return "tenant_members" }
 
-func (entity *TenantMemberEntity) fromUser(user User) {
+func (entity *TenantMemberEntity) FromUser(user User) {
+	entity.ID = user.Id
 	entity.Email = user.Email
 	entity.Name = user.Name
 	entity.Password = user.PasswordHash
@@ -42,7 +43,7 @@ func (entity *TenantMemberEntity) fromUser(user User) {
 	entity.Confirmed = user.Confirmed
 }
 
-func (entity *TenantMemberEntity) toUser() (User, error) {
+func (entity *TenantMemberEntity) ToUser() (User, error) {
 	if entity.ID == 0 {
 		return User{}, ErrInvalidUser
 	}
@@ -60,7 +61,7 @@ func (entity *TenantMemberEntity) toUser() (User, error) {
 		Name:         entity.Name,
 		Email:        entity.Email,
 		PasswordHash: entity.Password,
-		Role:         (identity.UserRole)(entity.Role),
+		Role:         identity.UserRole(entity.Role),
 		TenantId:     tenantIdPointer,
 		Confirmed:    entity.Confirmed,
 	}, err
@@ -83,6 +84,7 @@ func (entity *SuperAdminEntity) fromUser(user User) *SuperAdminEntity {
 	entity.Email = user.Email
 	entity.Name = user.Name
 	entity.Password = user.PasswordHash
+	entity.Confirmed = user.Confirmed
 	return entity
 }
 
@@ -92,6 +94,7 @@ func (entity *SuperAdminEntity) toUser() User {
 		Name:         entity.Name,
 		Email:        entity.Email,
 		PasswordHash: entity.Password,
+		Role:         identity.ROLE_SUPER_ADMIN,
 		Confirmed:    entity.Confirmed,
 	}
 }
