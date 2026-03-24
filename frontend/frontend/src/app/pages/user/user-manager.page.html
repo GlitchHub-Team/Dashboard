@@ -19,7 +19,7 @@
       [total]="total()"
       [pageIndex]="pageIndex()"
       [limit]="limit()"
-      [displayedColumns]="columnConfig()"
+      [targetRole]="context().role"
       (deleteRequested)="onDeleteUser($event)"
       (pageChange)="onPageChange($event)"
     >

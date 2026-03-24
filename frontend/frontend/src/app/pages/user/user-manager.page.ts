@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
@@ -43,17 +43,6 @@ export class UserManagerPage implements OnInit {
   protected readonly error = this.userService.error;
   protected readonly UserRole = UserRole;
 
-  protected readonly columnConfig = computed(() => {
-    const context = this.context();
-    const cols: string[] = ['username', 'email'];
-
-    if (context.role === UserRole.TENANT_ADMIN) {
-      cols.push('tenantId');
-    }
-
-    return cols;
-  });
-
   public ngOnInit(): void {
     this.activatedRoute.data.subscribe((data) => {
       this.context.set(data['userManagerContext'] || this.context());
@@ -74,12 +63,12 @@ export class UserManagerPage implements OnInit {
         if (result) {
           const userConfig: UserConfig = {
             email: result.email,
-            role: context.role,
+            username: result.username,
           };
 
           const tenantIdToPass = result.tenantId ?? context.tenantId;
 
-          this.userService.addNewUser(userConfig, tenantIdToPass).subscribe(() => {
+          this.userService.addNewUser(userConfig, tenantIdToPass, context.role).subscribe(() => {
             this.refreshUsers();
           });
         }

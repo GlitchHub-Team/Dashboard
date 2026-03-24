@@ -1,4 +1,4 @@
 export interface UserConfig {
   email: string;
-  role: string;
+  username: string;
 }

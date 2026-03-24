@@ -146,16 +146,15 @@ export class UserApiClientMockService {
     return of(user).pipe(delay(500));
   }
 
-  public createUser(config: UserConfig, tenantId?: string): Observable<UserBackend> {
+  public createUser(config: UserConfig, tenantId?: string, role?: string): Observable<UserBackend> {
     const newId = `user-${Math.floor(Math.random() * 10000)}`;
     const newTenantId = tenantId || 'mock-tenant-id';
 
     const newUser: UserBackend = {
       id: newId,
-      username:
-        (config as UserConfig & { username?: string }).username || config.email.split('@')[0],
+      username: config.username || config.email.split('@')[0],
       email: config.email,
-      role: config.role as UserRole,
+      role: role ?? UserRole.TENANT_USER,
       tenantId: newTenantId,
     };
     this.mockUsers.push(newUser);

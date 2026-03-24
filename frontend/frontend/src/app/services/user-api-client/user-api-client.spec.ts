@@ -169,8 +169,9 @@ describe('UserApiClientService', () => {
       {
         config: {
           email: 'super@test.com',
-          role: UserRole.SUPER_ADMIN,
+          username: 'super',
         } satisfies UserConfig,
+        role: UserRole.SUPER_ADMIN,
         tenantId: undefined,
         url: 'super_admin',
         response: {
@@ -184,32 +185,38 @@ describe('UserApiClientService', () => {
       {
         config: {
           email: 'new@test.com',
-          role: UserRole.TENANT_USER,
+          username: 'newuser',
         } satisfies UserConfig,
+        role: UserRole.TENANT_USER,
         tenantId: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user',
         response: userBackend,
       },
-    ])('should POST to $url and return dto response', ({ config, tenantId, url, response }) => {
-      let result: UserBackend | undefined;
-      service.createUser(config, tenantId).subscribe((user) => {
-        result = user;
-      });
+    ])(
+      'should POST to $url and return dto response',
+      ({ config, role, tenantId, url, response }) => {
+        let result: UserBackend | undefined;
+        service.createUser(config, tenantId, role).subscribe((user) => {
+          result = user;
+        });
 
-      const req = expectRequest('POST', `${apiUrl}/${url}`);
-      expect(req.request.body).toEqual(config);
-      req.flush(response);
+        const req = expectRequest('POST', `${apiUrl}/${url}`);
+        expect(req.request.body).toEqual(config);
+        req.flush(response);
 
-      expect(result).toEqual(response);
-    });
+        expect(result).toEqual(response);
+      },
+    );
 
     it('should throw when tenantId is missing for tenant-scoped creation', () => {
       const config: UserConfig = {
         email: 'new@test.com',
-        role: UserRole.TENANT_ADMIN,
+        username: 'newuser',
       };
 
-      expect(() => service.createUser(config)).toThrow('tenantId is required for TENANT_ADMIN');
+      expect(() => service.createUser(config, undefined, UserRole.TENANT_ADMIN)).toThrow(
+        'tenantId is required for TENANT_ADMIN',
+      );
     });
   });
 

@@ -42,7 +42,6 @@ describe('UserTableComponent (Unit)', () => {
     component = fixture.componentInstance;
 
     fixture.componentRef.setInput('users', mockUsers);
-    fixture.componentRef.setInput('displayedColumns', ['username', 'email', 'tenantId', 'actions']);
     fixture.componentRef.setInput('total', mockUsers.length);
     fixture.componentRef.setInput('pageIndex', 0);
     fixture.componentRef.setInput('limit', 10);
@@ -53,7 +52,6 @@ describe('UserTableComponent (Unit)', () => {
     it('should create with provided inputs', () => {
       expect(component).toBeTruthy();
       expect(component.users()).toEqual(mockUsers);
-      expect(component.displayedColumns()).toEqual(['username', 'email', 'tenantId', 'actions']);
       expect(component.total()).toBe(2);
       expect(component.pageIndex()).toBe(0);
       expect(component.limit()).toBe(10);
@@ -101,6 +99,7 @@ describe('UserTableComponent (Unit)', () => {
 
     it('should render user values in table cells', () => {
       setInput('loading', false);
+      setInput('targetRole', UserRole.TENANT_ADMIN);
 
       const cellTexts = fixture.debugElement
         .queryAll(By.css('mat-cell'))

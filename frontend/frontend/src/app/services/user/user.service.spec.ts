@@ -37,7 +37,7 @@ describe('UserService', () => {
   };
   const newUserConfig: UserConfig = {
     email: 'new@test.com',
-    role: UserRole.TENANT_USER,
+    username: 'newuser',
   };
 
   const userApiMock = {
@@ -136,15 +136,28 @@ describe('UserService', () => {
       userAdapterMock.fromDTO.mockReturnValue(newUser);
 
       let result: User | undefined;
-      service.addNewUser(newUserConfig, 'tenant-1').subscribe((user) => {
+      service.addNewUser(newUserConfig, 'tenant-1', UserRole.TENANT_ADMIN).subscribe((user) => {
         result = user;
       });
 
-      expect(userApiMock.createUser).toHaveBeenCalledWith(newUserConfig, 'tenant-1');
+      expect(userApiMock.createUser).toHaveBeenCalledWith(
+        newUserConfig,
+        'tenant-1',
+        UserRole.TENANT_ADMIN,
+      );
       expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(newUser);
       expect(result).toEqual(newUser);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
+    });
+
+    it('should call createUser without role when not provided', () => {
+      userApiMock.createUser.mockReturnValue(of(newUser));
+      userAdapterMock.fromDTO.mockReturnValue(newUser);
+
+      service.addNewUser(newUserConfig, 'tenant-1').subscribe();
+
+      expect(userApiMock.createUser).toHaveBeenCalledWith(newUserConfig, 'tenant-1', undefined);
     });
 
     it('should set loading false on create error', () => {
@@ -152,13 +165,17 @@ describe('UserService', () => {
       userApiMock.createUser.mockReturnValue(throwError(() => error));
 
       let thrownError: unknown;
-      service.addNewUser(newUserConfig, 'tenant-1').subscribe({
+      service.addNewUser(newUserConfig, 'tenant-1', UserRole.TENANT_ADMIN).subscribe({
         error: (err) => {
           thrownError = err;
         },
       });
 
-      expect(userApiMock.createUser).toHaveBeenCalledWith(newUserConfig, 'tenant-1');
+      expect(userApiMock.createUser).toHaveBeenCalledWith(
+        newUserConfig,
+        'tenant-1',
+        UserRole.TENANT_ADMIN,
+      );
       expect(thrownError).toBe(error);
       expect(service.loading()).toBe(false);
     });

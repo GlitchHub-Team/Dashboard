@@ -102,11 +102,12 @@ describe('UserManagerPage', () => {
     fixture.detectChanges();
 
     testApi.onCreateUser();
-    afterClosedSubject.next({ email: 'new@user.com', tenantId: 'tenant-01' });
+    afterClosedSubject.next({ email: 'new@user.com', username: 'newuser', tenantId: 'tenant-01' });
 
     expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
-      { email: 'new@user.com', role: UserRole.TENANT_ADMIN },
+      { email: 'new@user.com', username: 'newuser' },
       'tenant-01',
+      UserRole.TENANT_ADMIN,
     );
     expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
   });

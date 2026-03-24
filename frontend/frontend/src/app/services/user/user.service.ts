@@ -52,10 +52,10 @@ export class UserService {
     this.retrieveUser(role, tenantId);
   }
 
-  public addNewUser(config: UserConfig, tenantId?: string): Observable<User> {
+  public addNewUser(config: UserConfig, tenantId?: string, role?: string): Observable<User> {
     this.setLoadingState();
 
-    return this.userApi.createUser(config, tenantId).pipe(
+    return this.userApi.createUser(config, tenantId, role).pipe(
       map((dto) => this.adapter.fromDTO(dto)),
       tap({
         error: (err: ApiError) => {

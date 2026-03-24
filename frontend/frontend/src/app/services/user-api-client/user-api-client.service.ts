@@ -45,8 +45,8 @@ export class UserApiClientService {
     return this.http.get<UserBackend>(url);
   }
 
-  public createUser(config: UserConfig, tenantId?: string): Observable<UserBackend> {
-    const url = this.getBaseUrl(config.role as UserRole, tenantId, false);
+  public createUser(config: UserConfig, tenantId?: string, role?: string): Observable<UserBackend> {
+    const url = this.getBaseUrl(role as UserRole, tenantId, false);
     return this.http.post<UserBackend>(url, config);
   }
 
