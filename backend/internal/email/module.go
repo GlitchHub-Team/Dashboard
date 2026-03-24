@@ -12,9 +12,7 @@ import (
 func NewEmailAdapterFactory(
 	cfg *config.Config,
 	log *zap.Logger,
-) (
-	SendEmailPort,
-) {
+) SendEmailPort {
 	// NOTA: Si può avere solo un email sender alla vota, quindi è importante usare questo
 	// factory per crearlo
 	// Bisogna inserire tutte le dipendenze di tutti i possibili adapter

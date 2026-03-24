@@ -13,7 +13,7 @@ import (
 Service che gestisce le sessioni utente (login/logout)
 */
 type SessionService struct {
-	log *zap.Logger
+	log         *zap.Logger
 	hasher      crypto.SecretHasher
 	getUserPort user.GetUserPort
 }
@@ -30,7 +30,7 @@ func NewAuthSessionService(
 	getUserPort user.GetUserPort,
 ) *SessionService {
 	return &SessionService{
-		log: log,
+		log:         log,
 		hasher:      hasher,
 		getUserPort: getUserPort,
 	}

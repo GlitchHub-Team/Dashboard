@@ -1,9 +1,10 @@
 package middlewares
 
 import (
+	"net/http"
+
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )

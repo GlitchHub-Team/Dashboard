@@ -7,14 +7,14 @@ import (
 var Module = fx.Module(
 	"historical_data",
 
-    // Metodi pubblici
-    fx.Provide(
-        //..
-    ),
+	// Metodi pubblici
+	fx.Provide(
+	//..
+	),
 
-    // Metodi privati
-    fx.Provide(
-        fx.Private,
-        // ...
-   ),
+	// Metodi privati
+	fx.Provide(
+		fx.Private,
+		// ...
+	),
 )

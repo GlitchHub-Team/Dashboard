@@ -10,4 +10,4 @@ type gatewayPostgreRepository struct {
 
 func newGatewayPostgreRepository() gatewayPostgreRepository { return gatewayPostgreRepository{} }
 
-type gatewayEntity struct {}
+type gatewayEntity struct{}

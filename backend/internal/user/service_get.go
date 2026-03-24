@@ -5,8 +5,6 @@ import (
 	"backend/internal/tenant"
 )
 
-
-
 type GetUserService struct {
 	getUserPort   GetUserPort
 	getTenantPort tenant.GetTenantPort
@@ -28,7 +26,6 @@ func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPo
 }
 
 // Get single -----------------------------------------------------------------------------------------
-
 
 func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, error) {
 	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
@@ -79,7 +76,7 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 	// NOTA: rimosso static check per chiarezza
 	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
 	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
-	if !superAdminAccess && !tenantAdminAccess  { //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 	// 2) Get tenant admin
@@ -112,7 +109,6 @@ func (service *GetUserService) GetSuperAdmin(cmd GetSuperAdminCommand) (User, er
 }
 
 // Get multiple ---------------------------------------------------------------------------------------
-
 
 func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
 	tenantUsers []User, total uint, err error,

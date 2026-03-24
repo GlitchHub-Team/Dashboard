@@ -7,8 +7,8 @@ import (
 //go:generate mockgen -destination=../../tests/email/mocks/ports.go -package=mocks . SendEmailPort
 
 type SendEmailPort interface {
-	SendConfirmAccountEmail(toAddr string, token string,) error
-	SendChangePasswordEmail(toAddr string, token string,) error
+	SendConfirmAccountEmail(toAddr string, token string) error
+	SendChangePasswordEmail(toAddr string, token string) error
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -19,11 +19,11 @@ func NewSendEmailMailtrapAdapter() *SendEmailMailtrapAdapter {
 	return &SendEmailMailtrapAdapter{}
 }
 
-func (adapter *SendEmailMailtrapAdapter) SendConfirmAccountEmail(toAddr string, token string,) error {
+func (adapter *SendEmailMailtrapAdapter) SendConfirmAccountEmail(toAddr string, token string) error {
 	return nil
 }
 
-func (adapter *SendEmailMailtrapAdapter) SendChangePasswordEmail(toAddr string, token string,) error {
+func (adapter *SendEmailMailtrapAdapter) SendChangePasswordEmail(toAddr string, token string) error {
 	return nil
 }
 
@@ -39,7 +39,7 @@ func NewSendEmailTerminalAdapter(log *zap.Logger) *SendEmailTerminalAdapter {
 	return &SendEmailTerminalAdapter{log: log}
 }
 
-func (adapter *SendEmailTerminalAdapter) SendConfirmAccountEmail(toAddr string, token string,) error {
+func (adapter *SendEmailTerminalAdapter) SendConfirmAccountEmail(toAddr string, token string) error {
 	adapter.log.Debug(
 		"Invio mail di conferma account",
 		zap.String("to", toAddr),
@@ -48,7 +48,7 @@ func (adapter *SendEmailTerminalAdapter) SendConfirmAccountEmail(toAddr string, 
 	return nil
 }
 
-func (adapter *SendEmailTerminalAdapter) SendChangePasswordEmail(toAddr string, token string,) error {
+func (adapter *SendEmailTerminalAdapter) SendChangePasswordEmail(toAddr string, token string) error {
 	adapter.log.Debug(
 		"Invio mail di cambio password",
 		zap.String("to", toAddr),

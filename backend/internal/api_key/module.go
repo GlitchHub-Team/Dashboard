@@ -7,14 +7,14 @@ import (
 var Module = fx.Module(
 	"api_key",
 
-    // Metodi pubblici
-    fx.Provide(
-        //..
-    ),
+	// Metodi pubblici
+	fx.Provide(
+	//..
+	),
 
-    // Metodi privati
-    fx.Provide(
-        fx.Private,
-        // ...
-   ),
+	// Metodi privati
+	fx.Provide(
+		fx.Private,
+		// ...
+	),
 )

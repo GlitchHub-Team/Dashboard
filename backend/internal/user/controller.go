@@ -18,7 +18,6 @@ import (
 //go:generate mockgen -destination=../../tests/user/mocks/use_cases_delete.go -package=mocks . DeleteTenantUserUseCase,DeleteTenantAdminUseCase,DeleteSuperAdminUseCase
 //go:generate mockgen -destination=../../tests/user/mocks/use_cases_get.go -package=mocks . GetTenantUserUseCase,GetTenantAdminUseCase,GetSuperAdminUseCase,GetTenantUsersByTenantUseCase,GetTenantAdminsByTenantUseCase,GetSuperAdminListUseCase
 
-
 // Create ----------------------------------------------------------
 
 type CreateTenantUserUseCase interface {
@@ -72,7 +71,6 @@ type GetSuperAdminListUseCase interface {
 		superAdmins []User, total uint, err error,
 	)
 }
-
 
 /*
 Controller per il CRUD sugli utenti

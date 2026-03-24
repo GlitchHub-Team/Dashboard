@@ -22,7 +22,7 @@ type LogoutUserCommand struct {
 // Confirm account ------------------------------------
 type ConfirmAccountCommand struct {
 	// identity.Requester
-	Token string
+	Token       string
 	NewPassword string
 }
 

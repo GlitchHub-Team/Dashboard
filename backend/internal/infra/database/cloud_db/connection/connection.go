@@ -32,4 +32,3 @@ func WithTenantSchema(tenantId string, table Tabler) func(*gorm.DB) *gorm.DB {
 		)
 	}
 }
-

@@ -2,8 +2,9 @@ package cloud_db
 
 import (
 	"fmt"
-	"backend/internal/infra/database/cloud_db/migrate"
+
 	"backend/internal/infra/database/cloud_db/connection"
+	"backend/internal/infra/database/cloud_db/migrate"
 
 	"go.uber.org/fx"
 )

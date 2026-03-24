@@ -1,6 +1,5 @@
 package crypto
 
-
 type SecretHasher interface {
 	/* Ottieni hash di plaintext sottoforma di string*/
 	HashSecret(plaintext string) (string, error)

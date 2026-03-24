@@ -2,8 +2,10 @@ package auth
 
 import "errors"
 
-var ErrAccountNotConfirmed = errors.New("account not confirmed")
-var ErrWrongCredentials = errors.New("wrong credentials")
-var ErrTokenNotFound = errors.New("token not found")
-var ErrTokenExpired = errors.New("token expired")
-var ErrAccountAlreadyConfirmed = errors.New("account already confirmed")
+var (
+	ErrAccountNotConfirmed     = errors.New("account not confirmed")
+	ErrWrongCredentials        = errors.New("wrong credentials")
+	ErrTokenNotFound           = errors.New("token not found")
+	ErrTokenExpired            = errors.New("token expired")
+	ErrAccountAlreadyConfirmed = errors.New("account already confirmed")
+)
