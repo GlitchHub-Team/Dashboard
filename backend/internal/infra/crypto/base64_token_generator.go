@@ -5,34 +5,29 @@ import (
 	"encoding/base64"
 	"time"
 
+	"backend/internal/shared/crypto"
+
 	"backend/internal/shared/config"
 )
 
-type TokenGenerator interface {
-	/* Genera un token e la sua versione hashed */
-	GenerateToken() (encodedToken string, hashedToken string, err error)
-	
-	/* Ottieni la data di scadenza a partire da adesso */
-	ExpiryFromNow() time.Time
-}
-
 type MainTokenGenerator struct {
-	hasher             SecretHasher
+	hasher             crypto.SecretHasher
 	decodedTokenLength int
 	encoding           base64.Encoding
 	tokenDuration      time.Duration
 }
-var _ TokenGenerator = (*MainTokenGenerator)(nil)
+
+var _ crypto.SecurityTokenGenerator = (*MainTokenGenerator)(nil)
 
 func NewMainTokenGenerator(
-	hasher SecretHasher,
+	hasher crypto.SecretHasher,
 	cfg *config.Config,
 ) *MainTokenGenerator {
 	return &MainTokenGenerator{
 		hasher:             hasher,
 		decodedTokenLength: int(cfg.TokenLength),
 		encoding:           *base64.URLEncoding,
-		tokenDuration: time.Second * time.Duration(cfg.TokenDuration),
+		tokenDuration:      time.Second * time.Duration(cfg.TokenDuration),
 	}
 }
 
