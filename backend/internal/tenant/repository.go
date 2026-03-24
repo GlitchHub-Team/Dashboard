@@ -18,11 +18,10 @@ func (entity *TenantEntity) toTenant() (Tenant, error) {
 	tenantId, err := uuid.Parse(entity.ID)
 
 	return Tenant{
-		Id: tenantId,
-		Name: entity.Name,
+		Id:             tenantId,
+		Name:           entity.Name,
 		CanImpersonate: entity.CanImpersonate,
 	}, err
-
 }
 
 type TenantPostgreRepository struct {

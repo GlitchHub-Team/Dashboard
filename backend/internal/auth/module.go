@@ -7,15 +7,15 @@ import (
 var Module = fx.Module(
 	"auth",
 
-    // Metodi pubblici
-    fx.Provide(
-        NewConfirmAccountTokenPostgreAdapter,
-    ),
+	// Metodi pubblici
+	fx.Provide(
+		NewConfirmAccountTokenPostgreAdapter,
+	),
 
-    // Metodi privati
-    fx.Provide(
-        fx.Private,
-        newPasswordTokenPostgreRepository,
-        newConfirmTokenPostgreRepository,
-   ),
+	// Metodi privati
+	fx.Provide(
+		fx.Private,
+		newPasswordTokenPostgreRepository,
+		newConfirmTokenPostgreRepository,
+	),
 )

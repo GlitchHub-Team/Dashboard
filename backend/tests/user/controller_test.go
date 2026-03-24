@@ -30,10 +30,9 @@ import (
 // Funzioni comuni ------------------------------------------------------------------------------------
 
 /*
-	Passa questo struct nell'expectedResponse per verificare che ci sia un errore generico
+Passa questo struct nell'expectedResponse per verificare che ci sia un errore generico
 */
 type hasError struct{}
-
 
 func setupMockUseCase[MockT any](
 	constructor func(*gomock.Controller) *MockT,
@@ -160,7 +159,6 @@ func checkHttpResponse[T any](w *httptest.ResponseRecorder, expectedResponse T, 
 			}
 			return
 		}
-
 
 		// Check uguaglianza strutturato
 		if !reflect.DeepEqual(expectedObj, actualObj) {
@@ -2323,7 +2321,7 @@ func TestController_GetTenantUsers(t *testing.T) {
 	useCaseOk := func(mockUC *mocks.MockGetTenantUsersByTenantUseCase) *gomock.Call {
 		return mockUC.EXPECT().
 			GetTenantUsersByTenant(gomock.Any()).
-			Return([]user.User{expectedUser,}, uint(1), nil).
+			Return([]user.User{expectedUser}, uint(1), nil).
 			Times(1)
 	}
 
@@ -2333,7 +2331,6 @@ func TestController_GetTenantUsers(t *testing.T) {
 			Return(emptySlice, uint(0), nil).
 			Times(1)
 	}
-
 
 	useCaseNeverCalled := func(mockUC *mocks.MockGetTenantUsersByTenantUseCase) *gomock.Call {
 		return mockUC.EXPECT().
@@ -2433,7 +2430,7 @@ func TestController_GetTenantUsers(t *testing.T) {
 			setupSteps: []mockUseCaseSetupFunc[mocks.MockGetTenantUsersByTenantUseCase]{
 				useCaseNeverCalled,
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: hasError{},
 		},
 		{
@@ -2570,7 +2567,7 @@ func TestController_GetTenantAdmins(t *testing.T) {
 	useCaseOk := func(mockUC *mocks.MockGetTenantAdminsByTenantUseCase) *gomock.Call {
 		return mockUC.EXPECT().
 			GetTenantAdminsByTenant(gomock.Any()).
-			Return([]user.User{expectedUser,}, uint(1), nil).
+			Return([]user.User{expectedUser}, uint(1), nil).
 			Times(1)
 	}
 
@@ -2580,7 +2577,6 @@ func TestController_GetTenantAdmins(t *testing.T) {
 			Return(emptySlice, uint(0), nil).
 			Times(1)
 	}
-
 
 	useCaseNeverCalled := func(mockUC *mocks.MockGetTenantAdminsByTenantUseCase) *gomock.Call {
 		return mockUC.EXPECT().
@@ -2680,7 +2676,7 @@ func TestController_GetTenantAdmins(t *testing.T) {
 			setupSteps: []mockUseCaseSetupFunc[mocks.MockGetTenantAdminsByTenantUseCase]{
 				useCaseNeverCalled,
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: hasError{},
 		},
 		{
@@ -2757,7 +2753,7 @@ func TestController_GetTenantAdmins(t *testing.T) {
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, nil, nil,
-				nil, mockUseCase, nil, 
+				nil, mockUseCase, nil,
 			)
 
 			executeControllerTest(
@@ -2804,9 +2800,9 @@ func TestController_GetSuperAdmins(t *testing.T) {
 	}
 
 	expectedUser := user.User{
-		Id:        targetUserId,
-		Name:      targetUsername,
-		Email:     targetUserEmail,
+		Id:    targetUserId,
+		Name:  targetUsername,
+		Email: targetUserEmail,
 		// TenantId:  &targetTenantId,
 		Confirmed: targetConfirmed,
 		Role:      targetUserRole,
@@ -2817,7 +2813,7 @@ func TestController_GetSuperAdmins(t *testing.T) {
 	useCaseOk := func(mockUC *mocks.MockGetSuperAdminListUseCase) *gomock.Call {
 		return mockUC.EXPECT().
 			GetSuperAdminList(gomock.Any()).
-			Return([]user.User{expectedUser,}, uint(1), nil).
+			Return([]user.User{expectedUser}, uint(1), nil).
 			Times(1)
 	}
 
@@ -2827,7 +2823,6 @@ func TestController_GetSuperAdmins(t *testing.T) {
 			Return(emptySlice, uint(0), nil).
 			Times(1)
 	}
-
 
 	useCaseNeverCalled := func(mockUC *mocks.MockGetSuperAdminListUseCase) *gomock.Call {
 		return mockUC.EXPECT().
@@ -2903,7 +2898,7 @@ func TestController_GetSuperAdmins(t *testing.T) {
 			setupSteps: []mockUseCaseSetupFunc[mocks.MockGetSuperAdminListUseCase]{
 				useCaseNeverCalled,
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: hasError{},
 		},
 		{
@@ -2966,7 +2961,7 @@ func TestController_GetSuperAdmins(t *testing.T) {
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, nil, nil,
-				nil, nil, mockUseCase, 
+				nil, nil, mockUseCase,
 			)
 
 			executeControllerTest(

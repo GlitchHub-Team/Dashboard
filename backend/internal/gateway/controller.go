@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 )
 
-
 type GatewayController struct {
 	log *zap.Logger
 
@@ -28,8 +27,7 @@ func NewGatewayController(
 	}
 }
 
-func (c *GatewayController) CreateGateway(ctx *gin.Context, ) {
-
+func (c *GatewayController) CreateGateway(ctx *gin.Context) {
 	var dto createGatewayDTO
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -50,15 +48,13 @@ func (c *GatewayController) CreateGateway(ctx *gin.Context, ) {
 	}
 
 	response := gatewayResponseDTO{
-		Id:		gateway.Id.String(),
-		Name: 	gateway.Name,
+		Id:     gateway.Id.String(),
+		Name:   gateway.Name,
 		Status: string(gateway.Status),
 	}
 	ctx.JSON(http.StatusOK, response)
 }
 
-func (c *GatewayController) DeleteGateway(ctx *gin.Context, ) {
+func (c *GatewayController) DeleteGateway(ctx *gin.Context) {
 	// var command deleteGatewayDTO
 }
-
-

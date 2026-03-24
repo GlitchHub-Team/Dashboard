@@ -283,7 +283,6 @@ func (adapter *UserPostgreAdapter) GetSuperAdminList(page, limit int) (
 	return superAdmins, total, nil
 }
 
-
 // Compile-time checks
 var (
 	_ CreateUserPort = (*UserPostgreAdapter)(nil)

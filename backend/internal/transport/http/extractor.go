@@ -18,7 +18,6 @@ func ExtractRequester(ctx *gin.Context) (identity.Requester, error) {
 	if !exists || !ok {
 		return identity.Requester{}, ErrMissingIdentity
 	}
-	
 
 	roleString, exists := ctx.Get("requester_role")
 	if !exists {

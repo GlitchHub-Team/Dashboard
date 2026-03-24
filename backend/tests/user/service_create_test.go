@@ -204,7 +204,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 			Times(1)
 	}
 
-	// Step 6: rollback user 
+	// Step 6: rollback user
 	step6DeleteUserOk := func(
 		createUserPort *mocks.MockCreateUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *authMocks.MockConfirmTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
@@ -424,7 +424,6 @@ func TestService_CreateTenantUser(t *testing.T) {
 		},
 	}
 
-	
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			// NOTA: il controller di gomock va inizializzato qua dentro!
@@ -1098,7 +1097,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 			expectedError: identity.ErrUnauthorizedAccess,
 			expectedUser:  user.User{},
 		},
-	
+
 		// Test 1
 		{
 			name:  "Fail (step 1): unexpected error",

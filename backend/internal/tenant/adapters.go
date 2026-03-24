@@ -17,27 +17,25 @@ type GetTenantsPort interface {
 type GetTenantsPostgreAdapter struct {
 	repository *TenantPostgreRepository
 }
-func NewGetTenantsPostgreAdapter(repository *TenantPostgreRepository,) (GetTenantPort, GetTenantsPort) {
+
+func NewGetTenantsPostgreAdapter(repository *TenantPostgreRepository) (GetTenantPort, GetTenantsPort) {
 	adapter := &GetTenantsPostgreAdapter{
 		repository: repository,
 	}
 	return adapter, adapter
 }
 
-
 func (adapter *GetTenantsPostgreAdapter) mapTenantEntity(entity TenantEntity) (*Tenant, error) {
-
 	tenantId, err := uuid.Parse(entity.ID)
 	if err != nil {
 		return nil, err
 	}
 	return &Tenant{
-		Id: tenantId,
-		Name: entity.Name,
+		Id:             tenantId,
+		Name:           entity.Name,
 		CanImpersonate: entity.CanImpersonate,
 	}, nil
 }
-
 
 func (adapter *GetTenantsPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, error) {
 	tenantEntity, err := adapter.repository.GetTenant(tenantId.String())
@@ -67,4 +65,3 @@ func (adapter *GetTenantsPostgreAdapter) GetTenants() ([]Tenant, error) {
 
 	return tenants, nil
 }
-

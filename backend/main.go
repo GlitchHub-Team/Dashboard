@@ -81,7 +81,6 @@ func NewGinEngine(
 		public.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
 		public.GET("/super_admins", userController.GetSuperAdmins)
 
-		
 	}
 
 	log.Info("CONFIG DB URL:" + config.CloudDBUrl)
@@ -106,7 +105,7 @@ func main() {
 		// Moduli infrastrutturali
 		config.Module,
 		db_connection.Module,
-		migrate.Module,  // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
+		migrate.Module, // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
 		email.Module,
 
 		// Moduli funzionalità

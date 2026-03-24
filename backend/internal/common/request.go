@@ -45,7 +45,7 @@ func ValidationError(ctx *gin.Context, err error) bool {
 			errorFields[fieldError.Field()] = fieldError.Tag()
 		}
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid format",
+			"error":  "invalid format",
 			"fields": errorFields,
 		})
 		return true

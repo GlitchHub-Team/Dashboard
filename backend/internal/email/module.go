@@ -1,9 +1,9 @@
 package email
 
 import (
+	"backend/internal/config"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
-	"backend/internal/config"
 )
 
 func NewEmailAdapterFactory(

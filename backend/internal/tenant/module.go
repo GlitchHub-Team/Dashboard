@@ -7,15 +7,15 @@ import (
 var Module = fx.Module(
 	"tenant",
 
-    // Metodi pubblici
-    fx.Provide(
-        NewTenantPostgreRepository,
-        NewGetTenantsPostgreAdapter,
-    ),
+	// Metodi pubblici
+	fx.Provide(
+		NewTenantPostgreRepository,
+		NewGetTenantsPostgreAdapter,
+	),
 
-    // Metodi privati
-    fx.Provide(
-        fx.Private,
-        // ...
-   ),
+	// Metodi privati
+	fx.Provide(
+		fx.Private,
+		// ...
+	),
 )

@@ -224,7 +224,6 @@ func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
 		return
 	}
 
-
 	// Invio risposta
 	responseDto := NewUserResponseDTO(createdUser)
 	ctx.JSON(http.StatusOK, responseDto)
@@ -491,7 +490,7 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 		common.RequestUnauthorized(ctx, err)
 		return
 	}
-	
+
 	// Binding URI
 	var uriDto dto.TenantUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
@@ -536,7 +535,6 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 		common.RequestServerError(ctx, err)
 		return
 	}
-
 
 	// Invio risposta
 	responseDto := NewUserListResponseDTO(users, total)

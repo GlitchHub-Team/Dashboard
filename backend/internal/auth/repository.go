@@ -1,12 +1,12 @@
 package auth
 
-type passwordTokenPostgreRepository struct {}
+type passwordTokenPostgreRepository struct{}
 
 func newPasswordTokenPostgreRepository() *passwordTokenPostgreRepository {
 	return &passwordTokenPostgreRepository{}
 }
 
-type confirmTokenPostgreRepository struct {}
+type confirmTokenPostgreRepository struct{}
 
 func newConfirmTokenPostgreRepository() *confirmTokenPostgreRepository {
 	return &confirmTokenPostgreRepository{}

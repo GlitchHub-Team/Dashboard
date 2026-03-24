@@ -7,7 +7,6 @@ import (
 
 //go:generate mockgen -destination=../../tests/user/mocks/use_cases_get.go -package=mocks . GetTenantUserUseCase,GetTenantAdminUseCase,GetSuperAdminUseCase,GetTenantUsersByTenantUseCase,GetTenantAdminsByTenantUseCase,GetSuperAdminListUseCase
 
-
 type GetUserService struct {
 	getUserPort   GetUserPort
 	getTenantPort tenant.GetTenantPort
@@ -90,7 +89,7 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 	// NOTA: rimosso static check per chiarezza
 	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
 	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
-	if !superAdminAccess && !tenantAdminAccess  { //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 	// 2) Get tenant admin

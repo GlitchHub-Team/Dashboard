@@ -87,11 +87,10 @@ func (migrator *PostgreMigrator) Migrate() error {
 		if tenantId == "" {
 			continue
 		}
-		
+
 		schemaName := fmt.Sprintf("tenant_%v", tenantId)
 
 		err := db.Transaction(func(tx *gorm.DB) error {
-
 			if err := tx.Exec(fmt.Sprintf("set local search_path to \"%s\"", schemaName)).Error; err != nil {
 				return fmt.Errorf("failed to set search_path to %s: %v", schemaName, err)
 			}

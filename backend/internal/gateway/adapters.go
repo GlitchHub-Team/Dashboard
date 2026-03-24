@@ -38,17 +38,17 @@ func (adapter *GatewayPostgreAdapter) Remove(g Gateway) error {
 func (a *GatewayPostgreAdapter) GetById() error {
 	return nil
 }
+
 func (a *GatewayPostgreAdapter) GetByTenantId() error {
 	return nil
 }
+
 func (a *GatewayPostgreAdapter) GetAll() error {
 	return nil
 }
 
-
-
 var (
-	_ SaveGatewayPort = (*GatewayPostgreAdapter)(nil)
+	_ SaveGatewayPort   = (*GatewayPostgreAdapter)(nil)
 	_ RemoveGatewayPort = (*GatewayPostgreAdapter)(nil)
-	_ GetGatewayPort = (*GatewayPostgreAdapter)(nil)
+	_ GetGatewayPort    = (*GatewayPostgreAdapter)(nil)
 )

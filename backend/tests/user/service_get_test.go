@@ -1470,7 +1470,6 @@ func TestService_GetSuperAdminList(t *testing.T) {
 		RequesterRole:     identity.ROLE_TENANT_ADMIN,
 	}
 
-
 	// Tenant User ------------------------------------------------
 	tenantUserRequester := identity.Requester{
 		RequesterUserId:   targetUserId, // NOTA: importano tenant id e user id
@@ -1480,13 +1479,13 @@ func TestService_GetSuperAdminList(t *testing.T) {
 
 	// Input
 	baseInputCase1 := user.GetSuperAdminListCommand{
-		Page:     targetPageCase1,
-		Limit:    targetLimitCase1,
+		Page:  targetPageCase1,
+		Limit: targetLimitCase1,
 	}
 
 	baseInputCase2 := user.GetSuperAdminListCommand{
-		Page:     targetPageCase2,
-		Limit:    targetLimitCase2,
+		Page:  targetPageCase2,
+		Limit: targetLimitCase2,
 	}
 
 	inputWith := func(input user.GetSuperAdminListCommand, requester identity.Requester) user.GetSuperAdminListCommand {
@@ -1599,4 +1598,3 @@ func TestService_GetSuperAdminList(t *testing.T) {
 		})
 	}
 }
-

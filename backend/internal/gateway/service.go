@@ -1,15 +1,13 @@
 package gateway
 
 import (
-	"go.uber.org/zap"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type CreateGatewayUseCase interface {
-	CreateGateway(command CreateGatewayCommand) (Gateway, error) 
+	CreateGateway(command CreateGatewayCommand) (Gateway, error)
 }
-
-
 
 // CreateGatewayService ---------------------------------------------------------------------------
 type CreateGatewayService struct {
@@ -19,18 +17,17 @@ type CreateGatewayService struct {
 
 func NewCreateGatewayService(log *zap.Logger, saveGatewayPort SaveGatewayPort) CreateGatewayUseCase {
 	return &CreateGatewayService{
-		log: log,
+		log:             log,
 		saveGatewayPort: saveGatewayPort,
 	}
 }
-
 
 func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
 	s.log.Info("Created gateway with name" + command.Name)
 
 	gateway := Gateway{
-		Id: uuid.New(),
-		Name: command.Name,
+		Id:     uuid.New(),
+		Name:   command.Name,
 		Status: GATEWAY_STATUS_ACTIVE,
 	}
 
@@ -56,7 +53,6 @@ func NewDeleteGatewayService(removeGatewayPort RemoveGatewayPort) DeleteGatewayU
 		removeGatewayPort: removeGatewayPort,
 	}
 }
-
 
 func (s *DeleteGatewayService) DeleteGateway(command DeleteGatewayCommand) error {
 	return nil
