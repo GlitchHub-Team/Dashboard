@@ -1,7 +1,10 @@
 package email
 
 import (
-	"backend/internal/config"
+	"backend/internal/auth"
+	"backend/internal/shared/config"
+	"backend/internal/user"
+
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
@@ -9,7 +12,9 @@ import (
 func NewEmailAdapterFactory(
 	cfg *config.Config,
 	log *zap.Logger,
-) SendEmailPort {
+) (
+	SendEmailPort,
+) {
 	// NOTA: Si può avere solo un email sender alla vota, quindi è importante usare questo
 	// factory per crearlo
 	// Bisogna inserire tutte le dipendenze di tutti i possibili adapter
@@ -23,6 +28,10 @@ func NewEmailAdapterFactory(
 var Module = fx.Module(
 	"email",
 	fx.Provide(
-		NewEmailAdapterFactory,
+		fx.Annotate(
+			NewEmailAdapterFactory,
+			fx.As(new(user.SendConfirmAccountEmailPort)),
+			fx.As(new(auth.SendChangePasswordEmailPort)),
+		),
 	),
 )

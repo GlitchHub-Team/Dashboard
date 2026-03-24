@@ -1,11 +1,10 @@
 package user
 
 import (
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 )
 
-//go:generate mockgen -destination=../../tests/user/mocks/use_cases_get.go -package=mocks . GetTenantUserUseCase,GetTenantAdminUseCase,GetSuperAdminUseCase,GetTenantUsersByTenantUseCase,GetTenantAdminsByTenantUseCase,GetSuperAdminListUseCase
 
 type GetUserService struct {
 	getUserPort   GetUserPort
@@ -28,17 +27,7 @@ func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPo
 }
 
 // Get single -----------------------------------------------------------------------------------------
-type GetTenantUserUseCase interface {
-	GetTenantUser(cmd GetTenantUserCommand) (User, error)
-}
 
-type GetTenantAdminUseCase interface {
-	GetTenantAdmin(cmd GetTenantAdminCommand) (User, error)
-}
-
-type GetSuperAdminUseCase interface {
-	GetSuperAdmin(cmd GetSuperAdminCommand) (User, error)
-}
 
 func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, error) {
 	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
@@ -122,23 +111,7 @@ func (service *GetUserService) GetSuperAdmin(cmd GetSuperAdminCommand) (User, er
 }
 
 // Get multiple ---------------------------------------------------------------------------------------
-type GetTenantUsersByTenantUseCase interface {
-	GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
-		tenantUsers []User, total uint, err error,
-	)
-}
 
-type GetTenantAdminsByTenantUseCase interface {
-	GetTenantAdminsByTenant(cmd GetTenantAdminsByTenantCommand) (
-		tenantAdmins []User, total uint, err error,
-	)
-}
-
-type GetSuperAdminListUseCase interface {
-	GetSuperAdminList(cmd GetSuperAdminListCommand) (
-		superAdmins []User, total uint, err error,
-	)
-}
 
 func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
 	tenantUsers []User, total uint, err error,

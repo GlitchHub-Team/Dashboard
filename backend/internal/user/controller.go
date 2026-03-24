@@ -4,18 +4,79 @@ import (
 	"errors"
 	"net/http"
 
-	"backend/internal/common"
-	"backend/internal/common/dto"
-	"backend/internal/identity"
+	transportHttp "backend/internal/infra/transport/http"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
-
-	transportHttp "backend/internal/transport/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=../../tests/user/mocks/use_cases_create.go -package=mocks . CreateTenantUserUseCase,CreateTenantAdminUseCase,CreateSuperAdminUseCase
+//go:generate mockgen -destination=../../tests/user/mocks/use_cases_delete.go -package=mocks . DeleteTenantUserUseCase,DeleteTenantAdminUseCase,DeleteSuperAdminUseCase
+//go:generate mockgen -destination=../../tests/user/mocks/use_cases_get.go -package=mocks . GetTenantUserUseCase,GetTenantAdminUseCase,GetSuperAdminUseCase,GetTenantUsersByTenantUseCase,GetTenantAdminsByTenantUseCase,GetSuperAdminListUseCase
+
+
+// Create ----------------------------------------------------------
+
+type CreateTenantUserUseCase interface {
+	CreateTenantUser(cmd CreateTenantUserCommand) (User, error)
+}
+type CreateTenantAdminUseCase interface {
+	CreateTenantAdmin(cmd CreateTenantAdminCommand) (User, error)
+}
+type CreateSuperAdminUseCase interface {
+	CreateSuperAdmin(cmd CreateSuperAdminCommand) (User, error)
+}
+
+// Delete ----------------------------------------------------------
+
+type DeleteTenantUserUseCase interface {
+	DeleteTenantUser(cmd DeleteTenantUserCommand) (User, error)
+}
+type DeleteTenantAdminUseCase interface {
+	DeleteTenantAdmin(cmd DeleteTenantAdminCommand) (User, error)
+}
+type DeleteSuperAdminUseCase interface {
+	DeleteSuperAdmin(cmd DeleteSuperAdminCommand) (User, error)
+}
+
+// Get singolo -----------------------------------------------------
+
+type GetTenantUserUseCase interface {
+	GetTenantUser(cmd GetTenantUserCommand) (User, error)
+}
+type GetTenantAdminUseCase interface {
+	GetTenantAdmin(cmd GetTenantAdminCommand) (User, error)
+}
+type GetSuperAdminUseCase interface {
+	GetSuperAdmin(cmd GetSuperAdminCommand) (User, error)
+}
+
+// Get multiplo -----------------------------------------------------
+
+type GetTenantUsersByTenantUseCase interface {
+	GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
+		tenantUsers []User, total uint, err error,
+	)
+}
+type GetTenantAdminsByTenantUseCase interface {
+	GetTenantAdminsByTenant(cmd GetTenantAdminsByTenantCommand) (
+		tenantAdmins []User, total uint, err error,
+	)
+}
+type GetSuperAdminListUseCase interface {
+	GetSuperAdminList(cmd GetSuperAdminListCommand) (
+		superAdmins []User, total uint, err error,
+	)
+}
+
+
+/*
+Controller per il CRUD sugli utenti
+*/
 type Controller struct {
 	log *zap.Logger
 
@@ -84,15 +145,15 @@ func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -101,8 +162,8 @@ func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
 	// Binding JSON
 	var bodyDto CreateUserBodyDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -118,13 +179,13 @@ func (controller *Controller) CreateTenantUser(ctx *gin.Context) {
 	createdUser, err := controller.createTenantUserUseCase.CreateTenantUser(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserAlreadyExists) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -137,15 +198,15 @@ func (controller *Controller) CreateTenantAdmin(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -154,8 +215,8 @@ func (controller *Controller) CreateTenantAdmin(ctx *gin.Context) {
 	// Binding JSON
 	var bodyDto CreateUserBodyDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -171,13 +232,13 @@ func (controller *Controller) CreateTenantAdmin(ctx *gin.Context) {
 	createdUser, err := controller.createTenantAdminUseCase.CreateTenantAdmin(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserAlreadyExists) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -190,7 +251,7 @@ func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
@@ -198,8 +259,8 @@ func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
 
 	// Binding JSON
 	if err := ctx.ShouldBindJSON(&requestDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -214,13 +275,13 @@ func (controller *Controller) CreateSuperAdmin(ctx *gin.Context) {
 	createdUser, err := controller.createSuperAdminUseCase.CreateSuperAdmin(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserAlreadyExists) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -235,15 +296,15 @@ func (controller *Controller) DeleteTenantUser(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantMemberUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -259,13 +320,13 @@ func (controller *Controller) DeleteTenantUser(ctx *gin.Context) {
 	oldUser, err := controller.deleteTenantUserUseCase.DeleteTenantUser(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserNotFound) {
-			common.RequestNotFound(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -278,15 +339,15 @@ func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantMemberUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -302,13 +363,13 @@ func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
 	oldUser, err := controller.deleteTenantAdminUseCase.DeleteTenantAdmin(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserNotFound) {
-			common.RequestNotFound(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -321,15 +382,15 @@ func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.SuperAdminUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -343,10 +404,10 @@ func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
 	oldUser, err := controller.deleteSuperAdminUseCase.DeleteSuperAdmin(cmd)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, ErrUserNotFound)
+			transportHttp.RequestNotFound(ctx, ErrUserNotFound)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -361,15 +422,15 @@ func (controller *Controller) GetTenantUser(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantMemberUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -385,13 +446,13 @@ func (controller *Controller) GetTenantUser(ctx *gin.Context) {
 	user, err := controller.getTenantUserUseCase.GetTenantUser(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserNotFound) {
-			common.RequestNotFound(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -404,15 +465,15 @@ func (controller *Controller) GetTenantAdmin(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantMemberUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -428,34 +489,34 @@ func (controller *Controller) GetTenantAdmin(ctx *gin.Context) {
 	user, err := controller.getTenantAdminUseCase.GetTenantAdmin(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserNotFound) {
-			common.RequestNotFound(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
 	// Invio risposta
 	responseDto := NewUserResponseDTO(user)
-	common.RequestOk(ctx, responseDto)
+	transportHttp.RequestOk(ctx, responseDto)
 }
 
 func (controller *Controller) GetSuperAdmin(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.SuperAdminUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -469,16 +530,16 @@ func (controller *Controller) GetSuperAdmin(ctx *gin.Context) {
 	user, err := controller.getSuperAdminUseCase.GetSuperAdmin(cmd)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, ErrUserNotFound)
+			transportHttp.RequestNotFound(ctx, ErrUserNotFound)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
 	// Invio risposta
 	responseDto := NewUserResponseDTO(user)
-	common.RequestOk(ctx, responseDto)
+	transportHttp.RequestOk(ctx, responseDto)
 }
 
 // Get multiple =======================================================================================
@@ -487,15 +548,15 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -506,8 +567,8 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -526,13 +587,13 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 	}
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserNotFound) {
-			common.RequestNotFound(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -545,15 +606,15 @@ func (controller *Controller) GetTenantAdmins(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	// Binding URI
 	var uriDto dto.TenantUriDTO
 	if err := ctx.ShouldBindUri(&uriDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -564,8 +625,8 @@ func (controller *Controller) GetTenantAdmins(ctx *gin.Context) {
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -581,13 +642,13 @@ func (controller *Controller) GetTenantAdmins(ctx *gin.Context) {
 	users, total, err := controller.getTenantAdminsByTenantUseCase.GetTenantAdminsByTenant(cmd)
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestNotFound(ctx, tenant.ErrTenantNotFound)
+			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)
 			return
 		} else if errors.Is(err, ErrUserNotFound) {
-			common.RequestNotFound(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -600,7 +661,7 @@ func (controller *Controller) GetSuperAdmins(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
@@ -609,8 +670,8 @@ func (controller *Controller) GetSuperAdmins(ctx *gin.Context) {
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -624,10 +685,10 @@ func (controller *Controller) GetSuperAdmins(ctx *gin.Context) {
 	users, total, err := controller.getSuperAdminListUseCase.GetSuperAdminList(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		}
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 

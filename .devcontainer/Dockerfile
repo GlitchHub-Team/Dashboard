@@ -40,6 +40,8 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+COPY ".devcontainer/bin" "/home/vscode/.local/bin"
+
 ENV GOPATH=/home/vscode/go
 ENV PATH=/usr/local/go/bin:${GOPATH}/bin:${PATH}
 

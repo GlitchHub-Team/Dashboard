@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+go test -coverpkg=./... -coverprofile=coverage.out ./tests/...
+go tool cover -html=coverage.out -o coverage.html
