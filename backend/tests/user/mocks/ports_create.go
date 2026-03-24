@@ -10,9 +10,9 @@
 package mocks
 
 import (
+	user "backend/internal/user"
 	reflect "reflect"
 
-	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,18 +41,18 @@ func (m *MockGenerateTokenPort) EXPECT() *MockGenerateTokenPortMockRecorder {
 }
 
 // NewConfirmAccountToken mocks base method.
-func (m *MockGenerateTokenPort) NewConfirmAccountToken(tenantId *uuid.UUID, userId uint) (string, error) {
+func (m *MockGenerateTokenPort) NewConfirmAccountToken(arg0 user.User) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewConfirmAccountToken", tenantId, userId)
+	ret := m.ctrl.Call(m, "NewConfirmAccountToken", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NewConfirmAccountToken indicates an expected call of NewConfirmAccountToken.
-func (mr *MockGenerateTokenPortMockRecorder) NewConfirmAccountToken(tenantId, userId any) *gomock.Call {
+func (mr *MockGenerateTokenPortMockRecorder) NewConfirmAccountToken(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewConfirmAccountToken", reflect.TypeOf((*MockGenerateTokenPort)(nil).NewConfirmAccountToken), tenantId, userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewConfirmAccountToken", reflect.TypeOf((*MockGenerateTokenPort)(nil).NewConfirmAccountToken), arg0)
 }
 
 // MockSendConfirmAccountEmailPort is a mock of SendConfirmAccountEmailPort interface.
