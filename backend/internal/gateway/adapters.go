@@ -31,7 +31,6 @@ func (adapter *GatewayPostgreAdapter) Save(g Gateway) error {
 }
 
 func (adapter *GatewayPostgreAdapter) Remove(g Gateway) error {
-	// ...
 	return nil
 }
 

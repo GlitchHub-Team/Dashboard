@@ -21,7 +21,6 @@ func NewGatewayController(
 	deleteGatewayUseCase DeleteGatewayUseCase,
 ) *GatewayController {
 	return &GatewayController{
-		log,
 		createGatewayUseCase,
 		deleteGatewayUseCase,
 	}
@@ -57,4 +56,13 @@ func (c *GatewayController) CreateGateway(ctx *gin.Context) {
 
 func (c *GatewayController) DeleteGateway(ctx *gin.Context) {
 	// var command deleteGatewayDTO
+}
+
+func (this *GatewayController) CreateGateway(command createGatewayDTO) error {
+
+	return nil
+}
+
+func (this *GatewayController) DeleteGateway(command deleteGatewayDTO) error{
+	return nil
 }
