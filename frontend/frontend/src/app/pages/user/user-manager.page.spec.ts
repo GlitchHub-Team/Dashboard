@@ -16,14 +16,14 @@ class MockUserService {
   loading = signal(false);
 
   retrieveUserCalledWith: { role: UserRole, tenantId?: string } | null = null;
-  addNewUserCalledWith: { config: { email: string; role: UserRole }, tenantId?: string } | null = null;
+  addNewUserCalledWith: { config: { username: string; email: string; role: UserRole }, tenantId?: string } | null = null;
   removeUserCalledWith: User | null = null;
 
   retrieveUser(role: UserRole, tenantId?: string) {
     this.retrieveUserCalledWith = { role, tenantId };
   }
 
-  addNewUser(config: { email: string; role: UserRole }, tenantId?: string) {
+  addNewUser(config: { username: string; email: string; role: UserRole }, tenantId?: string) {
     this.addNewUserCalledWith = { config, tenantId };
     return of(void 0);
   }
@@ -105,22 +105,23 @@ describe('UserManagerPage', () => {
 
   it('should open the UserFormDialog on create and add the user if closed with data', () => {
     fixture.detectChanges(); // Inizializza ngOnInit e il context
-    dialog.returnValue = { email: 'new@user.com' }; // Dati simulati dal form al suo salvataggio
+    dialog.returnValue = { username: 'newuser', email: 'new@user.com', tenantId: 'Tenant 1' }; // Dati simulati dal form al suo salvataggio
 
     component.onCreateUser();
 
     expect(dialog.openCalled).toBe(true);
     expect(dialog.openArgs?.component).toBe(UserFormDialogComponent);
     expect(dialog.openArgs?.config?.width).toBe('400px');
+    expect(dialog.openArgs?.config?.data).toEqual({ user: null, role: UserRole.TENANT_ADMIN });
     
     // Verifica se ha chiamato il servizio per creare l'utente e poi lo ha ricaricato
-    expect(userService.addNewUserCalledWith).toEqual({ config: { email: 'new@user.com', role: UserRole.TENANT_ADMIN }, tenantId: undefined });
+    expect(userService.addNewUserCalledWith).toEqual({ config: { username: 'newuser', email: 'new@user.com', role: UserRole.TENANT_ADMIN }, tenantId: 'tenant-01' });
     expect(userService.retrieveUserCalledWith).toEqual({ role: UserRole.TENANT_ADMIN, tenantId: undefined });
   });
 
   it('should open confirm dialog and remove user on confirmed delete', () => {
     fixture.detectChanges();
-    const userToDelete: User = { id: '1', email: 'delete@user.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' };
+    const userToDelete: User = { id: '1', username: 'delete', email: 'delete@user.com', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' };
     dialog.returnValue = true; // Simula la conferma dell'eliminazione
 
     component.onDeleteUser(userToDelete);

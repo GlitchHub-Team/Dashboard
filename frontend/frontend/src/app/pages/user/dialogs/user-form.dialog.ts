@@ -4,8 +4,16 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { User } from '../../../models/user.model';
+import { UserRole } from '../../../models/user-role.enum';
+import { TenantService } from '../../../services/tenant/tenant.service';
+
+export interface UserFormDialogData {
+  user: User | null;
+  role: UserRole;
+}
 
 @Component({
   selector: 'app-user-form-dialog',
@@ -16,67 +24,35 @@ import { User } from '../../../models/user.model';
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
   ],
-  template: `
-    <h2 mat-dialog-title>{{ data ? 'Modifica' : 'Aggiungi' }} Utente</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Email</mat-label>
-          <input matInput formControlName="email" type="email" required />
-          @if (serverErrors()['email']) {
-            <mat-error>{{ serverErrors()['email'] }}</mat-error>
-          }
-        </mat-form-field>
-
-        @if (generalError()) {
-          <div class="error-text">
-            {{ generalError() }}
-          </div>
-        }
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Annulla</button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="onSave()"
-        [disabled]="form.invalid"
-      >
-        Salva
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [
-    `
-      .w-100 {
-        width: 100%;
-        margin-bottom: 0.5rem;
-      }
-      .error-text {
-        color: red;
-        margin-top: 0.5rem;
-        font-size: 0.875rem;
-      }
-    `,
-  ],
+  templateUrl: './user-form.dialog.html',
+  styleUrl: './user-form.dialog.css',
 })
 export class UserFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<UserFormDialogComponent>);
-  public data = inject<User | null>(MAT_DIALOG_DATA);
+  public data = inject<UserFormDialogData>(MAT_DIALOG_DATA);
+  private readonly tenantService = inject(TenantService);
 
   protected form: FormGroup;
   protected generalError = signal<string | null>(null);
   protected serverErrors = signal<Record<string, string>>({});
+  protected tenantList = this.tenantService.tenantList;
+  protected UserRole = UserRole;
 
   constructor() {
     this.form = this.fb.group({
-      id: [this.data?.id || ''],
-      email: [this.data?.email || '', [Validators.required, Validators.email]],
+      id: [this.data.user?.id || ''],
+      username: [this.data.user?.username || '', [Validators.required]],
+      email: [this.data.user?.email || '', [Validators.required, Validators.email]],
+      tenantId: [this.data.user?.tenantId || '', this.data.role === UserRole.TENANT_ADMIN ? [Validators.required] : []],
     });
+
+    if (this.data.role === UserRole.TENANT_ADMIN) {
+      this.tenantService.retrieveTenant();
+    }
 
     // Resetta gli errori quando l'utente digita qualcosa
     this.form.valueChanges.subscribe(() => {
