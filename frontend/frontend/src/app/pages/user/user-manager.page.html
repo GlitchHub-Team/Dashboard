@@ -19,6 +19,7 @@
       [total]="total()"
       [pageIndex]="pageIndex()"
       [limit]="limit()"
+      [displayedColumns]="columnConfig()"
       (deleteRequested)="onDeleteUser($event)"
       (pageChange)="onPageChange($event)"
     >

@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -29,10 +29,7 @@ export class UserTableComponent {
   public readonly limit = input<number>(10);
   public readonly deleteRequested = output<User>();
   public readonly pageChange = output<PageEvent>();
-
-  private readonly columns = ['username', 'email', 'tenantId'];
-
-  protected readonly displayedColumns = computed(() => [...this.columns, 'actions']);
+  public readonly displayedColumns = input<string[]>([]);
 
   protected onDelete(user: User): void {
     this.deleteRequested.emit(user);

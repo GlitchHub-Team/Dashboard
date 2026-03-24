@@ -45,13 +45,12 @@ export class UserManagerPage implements OnInit {
 
   protected readonly columnConfig = computed(() => {
     const context = this.context();
-    const cols: { key: keyof User; label: string }[] = [
-      { key: 'username' as keyof User, label: 'Username' },
-      { key: 'email' as keyof User, label: 'Email' },
-    ];
+    const cols: string[] = ['username', 'email'];
+
     if (context.role === UserRole.TENANT_ADMIN) {
-      cols.push({ key: 'tenantId' as keyof User, label: 'Tenant ID' });
+      cols.push('tenantId');
     }
+
     return cols;
   });
 
