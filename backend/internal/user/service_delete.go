@@ -1,25 +1,11 @@
 package user
 
 import (
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 )
 
-//go:generate mockgen -destination=../../tests/user/mocks/use_cases_delete.go -package=mocks . DeleteTenantUserUseCase,DeleteTenantAdminUseCase,DeleteSuperAdminUseCase
-
 // Delete User ====================================================================================
-type DeleteTenantUserUseCase interface {
-	DeleteTenantUser(cmd DeleteTenantUserCommand) (User, error)
-}
-
-type DeleteTenantAdminUseCase interface {
-	DeleteTenantAdmin(cmd DeleteTenantAdminCommand) (User, error)
-}
-
-type DeleteSuperAdminUseCase interface {
-	DeleteSuperAdmin(cmd DeleteSuperAdminCommand) (User, error)
-}
-
 type DeleteUserService struct {
 	deleteUserPort DeleteUserPort
 	getUserPort    GetUserPort

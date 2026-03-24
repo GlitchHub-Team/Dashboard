@@ -17,14 +17,15 @@ import (
 	"backend/internal/alert"
 	"backend/internal/api_key"
 	"backend/internal/auth"
-	"backend/internal/common/db_connection"
-	"backend/internal/common/migrate"
-	"backend/internal/config"
 	"backend/internal/email"
 	"backend/internal/gateway"
 	"backend/internal/historical_data"
+	"backend/internal/infra/crypto"
+	"backend/internal/infra/database/cloud_db"
+	httpMiddlewares "backend/internal/infra/transport/http/middlewares"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
+	"backend/internal/shared/config"
 	"backend/internal/tenant"
 	"backend/internal/user"
 )
@@ -39,9 +40,14 @@ func init() {
 func NewGinEngine(
 	lc fx.Lifecycle,
 	log *zap.Logger,
+
 	config *config.Config,
+
+	authzMiddleware *httpMiddlewares.AuthzMiddleware,
+
 	gatewayController *gateway.GatewayController,
 	userController *user.Controller,
+	authController *auth.Controller,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -60,27 +66,45 @@ func NewGinEngine(
 
 	public := router.Group("/api/v1")
 
+	private := router.Group("/api/v1")
+	private.Use(authzMiddleware.RequireAuthToken)
+
+	// Auth
 	{
-		// TODO: questo è solo un test
-		public.POST("/gateway", gatewayController.CreateGateway)
-		public.DELETE("/gateway/:id", gatewayController.DeleteGateway)
+		// Session
+		public.POST("/auth/login", authController.LoginUser)
+		private.POST("/auth/logout", authController.LogoutUser)
 
-		public.POST("/tenant/:tenant_id/tenant_user", userController.CreateTenantUser)
-		public.POST("/tenant/:tenant_id/tenant_admin", userController.CreateTenantAdmin)
-		public.POST("/super_admin", userController.CreateSuperAdmin)
+		// Conferma account
+		public.GET("/auth/confirm_account/verify_token/{token}", authController.VerifyConfirmAccountToken)
+		public.POST("/auth/confirm_account", authController.ConfirmAccount)
 
-		public.DELETE("/tenant/:tenant_id/tenant_user/:user_id", userController.DeleteTenantUser)
-		public.DELETE("/tenant/:tenant_id/tenant_admin/:user_id", userController.DeleteTenantAdmin)
-		public.DELETE("/super_admin/:user_id", userController.DeleteSuperAdmin)
+		// Password dimenticata
+		public.GET("/auth/forgot_password/verify_token/{token}", authController.VerifyForgotPasswordToken)
+		public.POST("/auth/forgot_password/request", authController.RequestForgotPasswordToken)
+		public.POST("/auth/forgot_password", authController.ConfirmForgotPasswordToken)
 
-		public.GET("/tenant/:tenant_id/tenant_user/:user_id", userController.GetTenantUser)
-		public.GET("/tenant/:tenant_id/tenant_admin/:user_id", userController.GetTenantAdmin)
-		public.GET("/super_admin/:user_id", userController.GetSuperAdmin)
+		// Cambia password
+		private.POST("/auth/change_password", authController.ChangePassword)
+	}
 
-		public.GET("/tenant/:tenant_id/tenant_users", userController.GetTenantUsers)
-		public.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
-		public.GET("/super_admins", userController.GetSuperAdmins)
+	// User
+	{
+		private.POST("/tenant/:tenant_id/tenant_user", userController.CreateTenantUser)
+		private.POST("/tenant/:tenant_id/tenant_admin", userController.CreateTenantAdmin)
+		private.POST("/super_admin", userController.CreateSuperAdmin)
 
+		private.DELETE("/tenant/:tenant_id/tenant_user/:user_id", userController.DeleteTenantUser)
+		private.DELETE("/tenant/:tenant_id/tenant_admin/:user_id", userController.DeleteTenantAdmin)
+		private.DELETE("/super_admin/:user_id", userController.DeleteSuperAdmin)
+
+		private.GET("/tenant/:tenant_id/tenant_user/:user_id", userController.GetTenantUser)
+		private.GET("/tenant/:tenant_id/tenant_admin/:user_id", userController.GetTenantAdmin)
+		private.GET("/super_admin/:user_id", userController.GetSuperAdmin)
+
+		private.GET("/tenant/:tenant_id/tenant_users", userController.GetTenantUsers)
+		private.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
+		private.GET("/super_admins", userController.GetSuperAdmins)
 	}
 
 	log.Info("CONFIG DB URL:" + config.CloudDBUrl)
@@ -88,7 +112,7 @@ func NewGinEngine(
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			log.Info("Starting HTTP server!")
-			go router.Run()
+			go router.Run() //nolint:errcheck
 			return nil
 		},
 		OnStop: func(context.Context) error {
@@ -104,9 +128,10 @@ func main() {
 	fx.New(
 		// Moduli infrastrutturali
 		config.Module,
-		db_connection.Module,
-		migrate.Module, // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
+		crypto.Module,
+		cloud_db.Module, // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
 		email.Module,
+		httpMiddlewares.Module,
 
 		// Moduli funzionalità
 		alert.Module,   // NOTA: Desiderabile

@@ -3,10 +3,10 @@ package user_test
 import (
 	"testing"
 
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/internal/user"
-	tenantMocks "backend/tests/tenant/mocks"
+	tenantmocks "backend/tests/tenant/mocks"
 	"backend/tests/user/mocks"
 
 	"github.com/google/uuid"
@@ -16,12 +16,12 @@ import (
 type mockSetupFunc_DeleteUserService func(
 	deleteUserPort *mocks.MockDeleteUserPort,
 	getUserPort *mocks.MockGetUserPort,
-	getTenantPort *tenantMocks.MockGetTenantPort,
+	getTenantPort *tenantmocks.MockGetTenantPort,
 ) *gomock.Call
 
 func newStepTenantOk_DeleteUserService(targetTenantId uuid.UUID, canImpersonate bool) mockSetupFunc_DeleteUserService {
 	return func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -35,7 +35,7 @@ func newStepTenantOk_DeleteUserService(targetTenantId uuid.UUID, canImpersonate 
 
 func newStepTenantNotFound_DeleteUserService(targetTenantId uuid.UUID) mockSetupFunc_DeleteUserService {
 	return func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -46,7 +46,7 @@ func newStepTenantNotFound_DeleteUserService(targetTenantId uuid.UUID) mockSetup
 
 func newStepTenantError_DeleteUserService(targetTenantId uuid.UUID, err error) mockSetupFunc_DeleteUserService {
 	return func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -87,7 +87,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 
 	// Step 2: get user
 	step2GetUserOk := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
@@ -96,7 +96,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 	}
 
 	step2GetUserFail := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
@@ -106,7 +106,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 
 	errMockStep2 := newMockError(2)
 	step2GetUserError := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
@@ -115,7 +115,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(gomock.Any(), gomock.Any()).
@@ -124,7 +124,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 
 	// Step 3: delete user
 	step3DeleteUserOk := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantUser(targetTenantId, targetUserId).
@@ -134,7 +134,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 
 	errMockStep3 := newMockError(3)
 	step3DeleteUserError := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantUser(targetTenantId, targetUserId).
@@ -301,7 +301,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 
 			mockDeletePort := mocks.NewMockDeleteUserPort(mockController)
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -370,7 +370,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 
 	// Step 2: get user
 	step2GetUserOk := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
@@ -379,7 +379,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 	}
 
 	step2GetUserFail := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
@@ -389,7 +389,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 
 	errMockStep2 := newMockError(2)
 	step2GetUserError := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
@@ -398,7 +398,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(gomock.Any(), gomock.Any()).
@@ -407,7 +407,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 
 	// Step 3: delete user
 	step3DeleteUserOk := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantAdmin(targetTenantId, targetUserId).
@@ -418,7 +418,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 	errMockStep3 := newMockError(3)
 
 	step3DeleteUserError := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantAdmin(targetTenantId, targetUserId).
@@ -585,7 +585,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 
 			mockDeletePort := mocks.NewMockDeleteUserPort(mockController)
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -650,7 +650,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 
 	// Step 1: get user
 	step1GetUserOk := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
@@ -659,7 +659,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 	}
 
 	step1GetExistingUserFail := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
@@ -669,7 +669,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 
 	errMockStep1 := newMockError(1)
 	step1GetUserError := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
@@ -678,7 +678,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 	}
 
 	step1NeverCalled := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(gomock.Any()).
@@ -687,7 +687,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 
 	// step 2: delete user
 	step2DeleteUserOk := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteSuperAdmin(targetUserId).
@@ -697,7 +697,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 
 	errMockStep2 := newMockError(2)
 	step2DeleteUserError := func(
-		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort,
+		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteSuperAdmin(targetUserId).
@@ -806,7 +806,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 
 			mockDeletePort := mocks.NewMockDeleteUserPort(mockController)
 			mockGetUserPort := mocks.NewMockGetUserPort(mockController)
-			mockGetTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
+			mockGetTenantPort := tenantmocks.NewMockGetTenantPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
