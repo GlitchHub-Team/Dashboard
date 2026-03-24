@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// TODO: refactor spostando funzioni di Request in backend/internal/transport/http
+var ErrPageNotFound = errors.New("page not found")
 
 func RequestError(ctx *gin.Context, err error) {
 	ctx.JSON(http.StatusBadRequest, gin.H{
