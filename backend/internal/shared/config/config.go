@@ -31,6 +31,17 @@ type Config struct {
 
 	// Durata di un token di sicurezza in secondi
 	TokenDuration stringInt `json:"TOKEN_DURATION"`
+
+	// Durata di un token di autenticazione in secondi
+	AuthTokenDuration stringInt `json:"AUTH_TOKEN_DURATION"`
+
+	/*
+	Secret per fare firma di token di autenticazione.
+	Dev'essere codificato in base 64 URL-SAFE SENZA PADDING (base64.RawURLEncoding) ed essere lungo 512 bit!
+
+	NOTA: Ha lunghezza 512 bit da decoded, la codifica base 64 ha lunghezza maggiore
+	*/
+	AuthTokenSecret string `json:"AUTH_TOKEN_SECRET"`
 }
 
 type stringInt int
