@@ -1,6 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,7 +18,6 @@ export interface UserFormDialogData {
   selector: 'app-user-form-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -31,41 +29,36 @@ export interface UserFormDialogData {
   styleUrl: './user-form.dialog.css',
 })
 export class UserFormDialogComponent {
-  private readonly fb = inject(FormBuilder);
+  private readonly formBuilder = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<UserFormDialogComponent>);
-  public data = inject<UserFormDialogData>(MAT_DIALOG_DATA);
+  protected readonly data = inject<UserFormDialogData>(MAT_DIALOG_DATA);
   private readonly tenantService = inject(TenantService);
 
-  protected form: FormGroup;
-  protected generalError = signal<string | null>(null);
-  protected serverErrors = signal<Record<string, string>>({});
-  protected tenantList = this.tenantService.tenantList;
-  protected UserRole = UserRole;
+  protected readonly tenantList = this.tenantService.tenantList;
+  protected readonly UserRole = UserRole;
+
+  private get isTenantAdminRole(): boolean {
+    return this.data.role === UserRole.TENANT_ADMIN;
+  }
+
+  protected readonly form = this.formBuilder.nonNullable.group({
+    username: [this.data.user?.username || '', [Validators.required]],
+    email: [this.data.user?.email || '', [Validators.required, Validators.email]],
+    tenantId: [this.data.user?.tenantId || '', this.isTenantAdminRole ? [Validators.required] : []],
+  });
 
   constructor() {
-    this.form = this.fb.group({
-      id: [this.data.user?.id || ''],
-      username: [this.data.user?.username || '', [Validators.required]],
-      email: [this.data.user?.email || '', [Validators.required, Validators.email]],
-      tenantId: [
-        this.data.user?.tenantId || '',
-        this.data.role === UserRole.TENANT_ADMIN ? [Validators.required] : [],
-      ],
-    });
-
-    if (this.data.role === UserRole.TENANT_ADMIN) {
+    if (this.isTenantAdminRole) {
       this.tenantService.retrieveTenant();
     }
-
-    // Resetta gli errori quando l'utente digita qualcosa
-    this.form.valueChanges.subscribe(() => {
-      this.serverErrors.set({});
-      this.generalError.set(null);
-    });
   }
 
   protected onSave(): void {
-    if (this.form.invalid) return;
+    if (!this.form.valid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
     this.dialogRef.close(this.form.value);
   }
 

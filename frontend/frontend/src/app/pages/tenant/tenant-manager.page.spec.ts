@@ -12,9 +12,17 @@ import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 
+interface TenantManagerPageTestApi {
+  onCreateTenant: () => void;
+  onDeleteTenant: (tenant: Tenant) => void;
+  onPageChange: (event: PageEvent) => void;
+  onGoToDashboard: (tenant: Tenant) => void;
+}
+
 describe('TenantManagerPage', () => {
   let component: TenantManagerPage;
   let fixture: ComponentFixture<TenantManagerPage>;
+  let testApi: TenantManagerPageTestApi;
 
   let afterClosedSubject: Subject<unknown>;
   let dialogMock: { open: ReturnType<typeof vi.fn> };
@@ -34,7 +42,10 @@ describe('TenantManagerPage', () => {
     navigate: vi.fn(),
   };
 
-  const mockTenants: Tenant[] = [{ name: 'Tenant 1' }, { name: 'Tenant 2' }];
+  const mockTenants: Tenant[] = [
+    { id: 'tenant-01', name: 'Tenant 1', canImpersonate: false },
+    { id: 'tenant-02', name: 'Tenant 2', canImpersonate: true },
+  ];
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -57,6 +68,7 @@ describe('TenantManagerPage', () => {
 
     fixture = TestBed.createComponent(TenantManagerPage);
     component = fixture.componentInstance;
+    testApi = component as unknown as TenantManagerPageTestApi;
   });
 
   it('should create', () => {
@@ -106,7 +118,7 @@ describe('TenantManagerPage', () => {
   });
 
   it('should open create dialog with correct config', () => {
-    component.onCreateTenant();
+    testApi.onCreateTenant();
 
     expect(dialogMock.open).toHaveBeenCalledWith(TenantFormDialog, {
       width: '500px',
@@ -115,7 +127,7 @@ describe('TenantManagerPage', () => {
   });
 
   it('should refetch tenants after create dialog closes', () => {
-    component.onCreateTenant();
+    testApi.onCreateTenant();
     afterClosedSubject.next(true);
 
     expect(mockTenantService.retrieveTenant).toHaveBeenCalled();
@@ -124,7 +136,7 @@ describe('TenantManagerPage', () => {
   it('should open delete dialog with correct config', () => {
     const tenant = mockTenants[0];
 
-    component.onDeleteTenant(tenant);
+    testApi.onDeleteTenant(tenant);
 
     expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
       width: '400px',
@@ -142,11 +154,11 @@ describe('TenantManagerPage', () => {
     mockTenantService.removeTenant.mockReturnValue(of(void 0));
     const tenant = mockTenants[0];
 
-    component.onDeleteTenant(tenant);
+    testApi.onDeleteTenant(tenant);
     afterClosedSubject.next(confirmed);
 
     if (shouldDelete) {
-      expect(mockTenantService.removeTenant).toHaveBeenCalledWith(tenant.name);
+      expect(mockTenantService.removeTenant).toHaveBeenCalledWith(tenant.id);
       return;
     }
 
@@ -156,7 +168,7 @@ describe('TenantManagerPage', () => {
   it('should call changePage on page change', () => {
     const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
 
-    component.onPageChange(event);
+    testApi.onPageChange(event);
 
     expect(mockTenantService.changePage).toHaveBeenCalledWith(2, 25);
   });
@@ -165,7 +177,7 @@ describe('TenantManagerPage', () => {
     { tenant: mockTenants[0], tenantId: 'tenant-01' },
     { tenant: mockTenants[1], tenantId: 'tenant-02' },
   ])('should navigate to dashboard for $tenantId', ({ tenant, tenantId }) => {
-    component.onGoToDashboard(tenant);
+    testApi.onGoToDashboard(tenant);
 
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard'], {
       queryParams: { tenantId },

@@ -9,8 +9,8 @@ import { httpErrorInterceptor } from './interceptors/error/http-error.intercepto
 import { GatewayAdapter } from './adapters/gateway.adapter';
 import { GatewayApiAdapter } from './adapters/gateway-api.adapter';
 import { SensorAdapter } from './adapters/sensor.adapter';
-import { SensorApiAdapter } from './adapters/sensor-api.adapter';
 import { SensorHistoricAdapter } from './adapters/sensor-historic.adapter';
+import { SensorApiAdapter } from './adapters/sensor-api.adapter';
 import { SensorLiveReadingAdapter } from './adapters/sensor-live-reading.adapter';
 import { SensorHistoricApiAdapter } from './adapters/sensor-historic-api.adapter';
 import { SensorLiveReadingApiAdapter } from './adapters/sensor-livel-reading-api.adapter';
@@ -31,6 +31,8 @@ import { SensorLiveReadingsApiService } from './services/sensor-live-api/sensor-
 import { SensorHistoricApiService } from './services/sensor-historic-api/sensor-historic-api.service';
 import { GatewayCommandApiClientMockService } from './mocks/gateway-command-api-client.mock';
 import { GatewayCommandApiClientService } from './services/gateway-command-api-client/gateway-command-api-client.service';
+import { UserAdapter } from './adapters/user.adapter';
+import { UserApiAdapter } from './adapters/user-api.adapter';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -42,6 +44,7 @@ export const appConfig: ApplicationConfig = {
     { provide: SensorAdapter, useClass: SensorApiAdapter },
     { provide: SensorHistoricAdapter, useClass: SensorHistoricApiAdapter },
     { provide: SensorLiveReadingAdapter, useClass: SensorLiveReadingApiAdapter },
+    { provide: UserAdapter, useClass: UserApiAdapter },
     // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
     { provide: AuthApiClientService, useClass: AuthServiceMock },
     { provide: TenantApiClientService, useClass: TenantApiClientMockService },

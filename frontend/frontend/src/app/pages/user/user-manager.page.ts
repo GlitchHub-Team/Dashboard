@@ -1,8 +1,8 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
+import { PageEvent } from '@angular/material/paginator';
+
 import { UserService } from '../../services/user/user.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { UserTableComponent } from './components/user-table/user-table.component';
@@ -10,6 +10,7 @@ import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/co
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
+import { UserConfig } from '../../models/user/user-config.model';
 
 interface UserManagerContext {
   title: string;
@@ -20,7 +21,7 @@ interface UserManagerContext {
 @Component({
   selector: 'app-user-manager-page',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatDialogModule, UserTableComponent, MatPaginatorModule],
+  imports: [MatButtonModule, MatDialogModule, UserTableComponent],
   templateUrl: './user-manager.page.html',
   styleUrl: './user-manager.page.css',
 })
@@ -29,62 +30,64 @@ export class UserManagerPage implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly activatedRoute = inject(ActivatedRoute);
 
-  // private readonly userSession = inject(UserSessionService); // Utile per gestire permessi o recuperare il Tenant ID corrente
-  public context: UserManagerContext = { title: 'User Management', role: UserRole.TENANT_ADMIN };
+  protected readonly context = signal<UserManagerContext>({
+    title: 'User Management',
+    role: UserRole.TENANT_ADMIN,
+  });
 
-  public users = this.userService.userList;
-  public total = this.userService.total;
-  public pageIndex = this.userService.pageIndex;
-  public limit = this.userService.limit;
-  public loading = this.userService.loading;
+  protected readonly users = this.userService.userList;
+  protected readonly total = this.userService.total;
+  protected readonly pageIndex = this.userService.pageIndex;
+  protected readonly limit = this.userService.limit;
+  protected readonly loading = this.userService.loading;
+  protected readonly error = this.userService.error;
+  protected readonly UserRole = UserRole;
 
-  // Configurazione dinamica delle colonne: mostriamo il Tenant ID solo per i TENANT_ADMIN
-  public get columnConfig() {
+  protected readonly columnConfig = computed(() => {
+    const context = this.context();
     const cols: { key: keyof User; label: string }[] = [
       { key: 'username' as keyof User, label: 'Username' },
       { key: 'email' as keyof User, label: 'Email' },
     ];
-    if (this.context.role === UserRole.TENANT_ADMIN) {
+    if (context.role === UserRole.TENANT_ADMIN) {
       cols.push({ key: 'tenantId' as keyof User, label: 'Tenant ID' });
     }
     return cols;
-  }
+  });
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.activatedRoute.data.subscribe((data) => {
-      this.context = data['userManagerContext'] || this.context;
-      this.userService.retrieveUser(this.context.role, this.context.tenantId);
+      this.context.set(data['userManagerContext'] || this.context());
+      this.refreshUsers();
     });
   }
 
-  onCreateUser(): void {
+  protected onCreateUser(): void {
+    const context = this.context();
+
     this.dialog
       .open(UserFormDialogComponent, {
         width: '400px',
-        data: { user: null, role: this.context.role },
+        data: { user: null, role: context.role },
       })
       .afterClosed()
-      .subscribe((result: { username: string; email: string; tenantId?: string } | undefined) => {
+      .subscribe((result: (UserConfig & { tenantId?: string }) | undefined) => {
         if (result) {
-          const userConfig = {
-            username: result.username,
+          const userConfig: UserConfig = {
             email: result.email,
-            role: this.context.role,
+            role: context.role,
           };
 
-          let tenantIdToPass = this.context.tenantId;
-          if (this.context.role === UserRole.TENANT_ADMIN && result.tenantId) {
-            tenantIdToPass = result.tenantId.toLowerCase().replace(' ', '-0'); // Adattamento per i mock
-          }
+          const tenantIdToPass = result.tenantId ?? context.tenantId;
 
           this.userService.addNewUser(userConfig, tenantIdToPass).subscribe(() => {
-            this.userService.retrieveUser(this.context.role, this.context.tenantId);
+            this.refreshUsers();
           });
         }
       });
   }
 
-  onDeleteUser(user: User): void {
+  protected onDeleteUser(user: User): void {
     this.dialog
       .open(ConfirmDeleteDialog, {
         width: '400px',
@@ -97,18 +100,20 @@ export class UserManagerPage implements OnInit {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.userService.removeUser(user).subscribe(() => {
-            this.userService.retrieveUser(this.context.role, this.context.tenantId);
+            this.refreshUsers();
           });
         }
       });
   }
 
-  onPageChange(event: PageEvent): void {
-    this.userService.changePage(
-      event.pageIndex,
-      event.pageSize,
-      this.context.role,
-      this.context.tenantId,
-    );
+  protected onPageChange(event: PageEvent): void {
+    const context = this.context();
+
+    this.userService.changePage(event.pageIndex, event.pageSize, context.role, context.tenantId);
+  }
+
+  private refreshUsers(): void {
+    const context = this.context();
+    this.userService.retrieveUser(context.role, context.tenantId);
   }
 }

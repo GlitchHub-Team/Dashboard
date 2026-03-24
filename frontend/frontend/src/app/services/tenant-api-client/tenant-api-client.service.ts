@@ -1,36 +1,30 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-import { Tenant } from '../../models/tenant/tenant.model';
-import { RawTenantConfig } from '../../models/tenant/raw-tenant-config.model';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+
 import { environment } from '../../../environments/environment';
-import { TenantDataAdapter, RawPaginatedTenantResponse } from '../../adapters/tenant-data.adapter';
+import { PaginatedResponse } from '../../models/paginated-response.model';
+import { TenantBackend } from '../../models/tenant/tenant-backend.model';
+import { TenantConfig } from '../../models/tenant/tenant-config.model';
 
-export interface TenantConfig {
-  name: string;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class TenantApiClientService {
   private readonly http = inject(HttpClient);
-  private readonly tenantAdapter = inject(TenantDataAdapter);
-  private readonly apiUrl = `${environment.apiUrl}/tenants`;
+  private readonly apiUrl = `${environment.apiUrl}`;
 
-  public getTenant(page = 0, size = 10): Observable<{ items: Tenant[]; totalCount: number }> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+  public getTenant(page: number, limit: number): Observable<PaginatedResponse<TenantBackend>> {
+    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http
-      .get<RawPaginatedTenantResponse>(this.apiUrl, { params })
-      .pipe(map((response) => this.tenantAdapter.adaptPaginated(response)));
+    return this.http.get<PaginatedResponse<TenantBackend>>(`${this.apiUrl}/tenants`, { params });
   }
 
-  public createTenant(config: TenantConfig): Observable<Tenant> {
-    return this.http
-      .post<RawTenantConfig>(this.apiUrl, config)
-      .pipe(map((data) => this.tenantAdapter.adapt(data)));
+  public createTenant(config: TenantConfig): Observable<TenantBackend> {
+    return this.http.post<TenantBackend>(`${this.apiUrl}/tenant`, config);
   }
 
   public deleteTenant(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/tenant/${id}`);
   }
 }

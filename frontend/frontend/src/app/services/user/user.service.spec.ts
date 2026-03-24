@@ -3,9 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { UserService } from './user.service';
-import { UserApiClientService, UserConfig } from '../user-api-client/user-api-client.service';
+import { UserApiClientService } from '../user-api-client/user-api-client.service';
 import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
+import { UserConfig } from '../../models/user/user-config.model';
+import { UserAdapter } from '../../adapters/user.adapter';
 
 describe('UserService', () => {
   let service: UserService;
@@ -44,10 +46,25 @@ describe('UserService', () => {
     deleteUser: vi.fn(),
   };
 
+  const userAdapterMock = {
+    fromDTO: vi.fn(),
+    fromPaginatedDTO: vi.fn(),
+  };
+
+  const rawPaginatedResponse = {
+    count: 2,
+    total: 2,
+    data: mockUsers,
+  };
+
   beforeEach(() => {
     vi.resetAllMocks();
     TestBed.configureTestingModule({
-      providers: [UserService, { provide: UserApiClientService, useValue: userApiMock }],
+      providers: [
+        UserService,
+        { provide: UserApiClientService, useValue: userApiMock },
+        { provide: UserAdapter, useValue: userAdapterMock },
+      ],
     });
     service = TestBed.inject(UserService);
   });
@@ -64,11 +81,13 @@ describe('UserService', () => {
 
   describe('retrieveUser', () => {
     it('should retrieve users and update the list', () => {
-      userApiMock.getUsers.mockReturnValue(of({ items: mockUsers, totalCount: 2 }));
+      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
+      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
       service.retrieveUser(UserRole.TENANT_ADMIN);
 
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, undefined, 0, 10);
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 0, 10, undefined);
+      expect(userAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(rawPaginatedResponse);
       expect(service.loading()).toBe(false);
       expect(service.userList()).toEqual(mockUsers);
       expect(service.total()).toBe(2);
@@ -76,16 +95,17 @@ describe('UserService', () => {
     });
 
     it('should retrieve users with tenantId when provided', () => {
-      userApiMock.getUsers.mockReturnValue(of({ items: mockUsers, totalCount: 2 }));
+      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
+      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
       service.retrieveUser(UserRole.TENANT_USER, 'tenant-1');
 
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 'tenant-1', 0, 10);
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 0, 10, 'tenant-1');
     });
 
     it.each([
       { error: new Error('Failed to fetch'), expected: 'Failed to fetch' },
-      { error: { message: '' } as Error, expected: 'Errore nel recupero degli utenti' },
+      { error: {} as Error, expected: 'Failed to load users' },
     ])('should handle retrieval errors', ({ error, expected }) => {
       userApiMock.getUsers.mockReturnValue(throwError(() => error));
 
@@ -99,19 +119,21 @@ describe('UserService', () => {
 
   describe('changePage', () => {
     it('should update pagination and retrieve users with new page values', () => {
-      userApiMock.getUsers.mockReturnValue(of({ items: mockUsers, totalCount: 2 }));
+      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
+      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
       service.changePage(2, 25, UserRole.TENANT_USER, 'tenant-1');
 
       expect(service.pageIndex()).toBe(2);
       expect(service.limit()).toBe(25);
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 'tenant-1', 2, 25);
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 2, 25, 'tenant-1');
     });
   });
 
   describe('addNewUser', () => {
     it('should call createUser and set loading false on success', () => {
       userApiMock.createUser.mockReturnValue(of(newUser));
+      userAdapterMock.fromDTO.mockReturnValue(newUser);
 
       let result: User | undefined;
       service.addNewUser(newUserConfig, 'tenant-1').subscribe((user) => {
@@ -119,6 +141,7 @@ describe('UserService', () => {
       });
 
       expect(userApiMock.createUser).toHaveBeenCalledWith(newUserConfig, 'tenant-1');
+      expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(newUser);
       expect(result).toEqual(newUser);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();

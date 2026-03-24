@@ -1,19 +1,21 @@
 <h2 mat-dialog-title>{{ data.user ? 'Modifica' : 'Aggiungi' }} Utente</h2>
 <mat-dialog-content>
-  <form [formGroup]="form">
+  <form [formGroup]="form" class="dialog-form">
     <mat-form-field appearance="outline" class="w-100">
       <mat-label>Username</mat-label>
       <input matInput formControlName="username" type="text" required />
-      @if (serverErrors()['username']) {
-        <mat-error>{{ serverErrors()['username'] }}</mat-error>
+      @if (form.controls.username.hasError('required')) {
+        <mat-error>Username is required</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="w-100">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" type="email" required />
-      @if (serverErrors()['email']) {
-        <mat-error>{{ serverErrors()['email'] }}</mat-error>
+      @if (form.controls.email.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      } @else if (form.controls.email.hasError('email')) {
+        <mat-error>Enter a valid email</mat-error>
       }
     </mat-form-field>
 
@@ -21,31 +23,20 @@
       <mat-form-field appearance="outline" class="w-100">
         <mat-label>Tenant</mat-label>
         <mat-select formControlName="tenantId" required>
-          @for (tenant of tenantList(); track tenant.name) {
-            <mat-option [value]="tenant.name">{{ tenant.name }}</mat-option>
+          @for (tenant of tenantList(); track tenant.id) {
+            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
           }
         </mat-select>
-        @if (serverErrors()['tenantId']) {
-          <mat-error>{{ serverErrors()['tenantId'] }}</mat-error>
+        @if (form.controls.tenantId.hasError('required')) {
+          <mat-error>Tenant is required</mat-error>
         }
       </mat-form-field>
-    }
-
-    @if (generalError()) {
-      <div class="error-text">
-        {{ generalError() }}
-      </div>
     }
   </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Annulla</button>
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="onSave()"
-    [disabled]="form.invalid"
-  >
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="form.invalid">
     Salva
   </button>
 </mat-dialog-actions>

@@ -1,14 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Router } from '@angular/router';
+
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tenant-manager-page',
@@ -22,30 +23,31 @@ export class TenantManagerPage implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
 
-  tenants = this.tenantService.tenantList;
-  total = this.tenantService.total;
-  pageIndex = this.tenantService.pageIndex;
-  limit = this.tenantService.limit;
-  loading = this.tenantService.loading;
+  protected readonly tenants = this.tenantService.tenantList;
+  protected readonly total = this.tenantService.total;
+  protected readonly pageIndex = this.tenantService.pageIndex;
+  protected readonly limit = this.tenantService.limit;
+  protected readonly loading = this.tenantService.loading;
 
-  // non appena l'utente naviga su questa pagina, l'applicazione richiede automaticamente i dati dei tenant per poterli poi mostrare a schermo
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.tenantService.retrieveTenant();
   }
 
-  onCreateTenant(): void {
+  protected onCreateTenant(): void {
     this.dialog
       .open(TenantFormDialog, {
         width: '500px',
         data: null,
       })
       .afterClosed()
-      .subscribe(() => {
-        this.tenantService.retrieveTenant();
+      .subscribe((created) => {
+        if (created) {
+          this.tenantService.retrieveTenant();
+        }
       });
   }
 
-  onDeleteTenant(tenant: Tenant): void {
+  protected onDeleteTenant(tenant: Tenant): void {
     this.dialog
       .open(ConfirmDeleteDialog, {
         width: '400px',
@@ -57,18 +59,16 @@ export class TenantManagerPage implements OnInit {
       .afterClosed()
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.tenantService.removeTenant(tenant.name).subscribe();
+          this.tenantService.removeTenant(tenant.id).subscribe();
         }
       });
   }
 
-  onPageChange(event: PageEvent): void {
+  protected onPageChange(event: PageEvent): void {
     this.tenantService.changePage(event.pageIndex, event.pageSize);
   }
 
-  onGoToDashboard(tenant: Tenant): void {
-    // Adattamento per i mock: trasforma "Tenant 1" in "tenant-01"
-    const mockTenantId = tenant.name.toLowerCase().replace(' ', '-0');
-    this.router.navigate(['/dashboard'], { queryParams: { tenantId: mockTenantId } });
+  protected onGoToDashboard(tenant: Tenant): void {
+    this.router.navigate(['/dashboard'], { queryParams: { tenantId: tenant.id } });
   }
 }

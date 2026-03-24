@@ -1,5 +1,4 @@
-export interface Tenant {
-  id: string;
+export interface TenantConfig {
   name: string;
   canImpersonate: boolean;
 }

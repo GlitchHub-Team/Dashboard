@@ -1,44 +1,34 @@
 import { Component, input, output, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Tenant } from '../../../../models/tenant/tenant.model';
-
-export interface ColumnConfig<T> {
-  key: keyof T;
-  label: string;
-}
 
 @Component({
   selector: 'app-tenant-table',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [MatProgressSpinner, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
   templateUrl: './tenant-table.component.html',
   styleUrl: './tenant-table.component.css',
 })
 export class TenantTableComponent {
-  tenants = input.required<Tenant[]>();
-  loading = input<boolean>(false);
+  public readonly tenants = input.required<Tenant[]>();
+  public readonly loading = input<boolean>(false);
 
-  // Accetta la configurazione dall'esterno (con un valore di default sensato)
-  columnConfig = input<ColumnConfig<Tenant>[]>([{ key: 'name', label: 'Nome' }]);
+  public readonly deleteRequested = output<Tenant>();
+  public readonly dashboardRequested = output<Tenant>();
 
-  deleteRequested = output<Tenant>();
-  dashboardRequested = output<Tenant>();
+  private readonly columns = ['id', 'name'];
 
-  // Calcola automaticamente le colonne da mostrare unendo le chiavi dinamiche a "actions"
-  displayedColumns = computed(() => [
-    ...this.columnConfig().map((c) => c.key as string),
-    'actions',
-  ]);
+  protected readonly displayedColumns = computed(() => [...this.columns, 'actions']);
 
-  onDelete(tenant: Tenant): void {
+  protected onDelete(tenant: Tenant): void {
     this.deleteRequested.emit(tenant);
   }
 
-  onGoToDashboard(tenant: Tenant): void {
+  protected onGoToDashboard(tenant: Tenant): void {
     this.dashboardRequested.emit(tenant);
   }
 }

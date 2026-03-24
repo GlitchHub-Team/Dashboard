@@ -1,82 +1,98 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { inject, Injectable, signal } from '@angular/core';
+import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
+
+import { TenantApiAdapter } from '../../adapters/tenant-api.adapter';
+import { ApiError } from '../../models/api-error.model';
 import { Tenant } from '../../models/tenant/tenant.model';
-import { RawTenantConfig } from '../../models/tenant/raw-tenant-config.model';
+import { TenantConfig } from '../../models/tenant/tenant-config.model';
 import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class TenantService {
-  private readonly tenantApiClient = inject(TenantApiClientService);
+  private readonly tenantApi = inject(TenantApiClientService);
+  private readonly adapter = inject(TenantApiAdapter);
 
-  public readonly loading = signal<boolean>(false);
-  public readonly error = signal<string | null>(null);
-  public readonly tenantList = signal<Tenant[]>([]);
-  public readonly total = signal<number>(0);
-  public readonly pageIndex = signal<number>(0);
-  public readonly limit = signal<number>(10);
+  private readonly _loading = signal(false);
+  private readonly _error = signal<string | null>(null);
+  private readonly _tenantList = signal<Tenant[]>([]);
+  private readonly _total = signal(0);
+  private readonly _pageIndex = signal(0);
+  private readonly _limit = signal(10);
 
-  retrieveTenant(): void {
-    this.loading.set(true);
-    this.error.set(null);
+  public readonly loading = this._loading.asReadonly();
+  public readonly error = this._error.asReadonly();
+  public readonly tenantList = this._tenantList.asReadonly();
+  public readonly total = this._total.asReadonly();
+  public readonly pageIndex = this._pageIndex.asReadonly();
+  public readonly limit = this._limit.asReadonly();
 
-    this.tenantApiClient.getTenant(this.pageIndex(), this.limit()).subscribe({
-      next: (res) => {
-        this.tenantList.set(res.items);
-        this.total.set(res.totalCount);
-        this.loading.set(false);
-      },
-      error: (err: Error) => {
-        this.error.set(err.message || 'Failed to fetch tenants');
-        this.loading.set(false);
-      },
-    });
+  public retrieveTenant(): void {
+    this.setGettingTenantsState();
+
+    this.tenantApi
+      .getTenant(this._pageIndex(), this._limit())
+      .pipe(
+        map((response) => this.adapter.fromPaginatedDTO(response)),
+        tap((result) => {
+          this._tenantList.set(result.data);
+          this._total.set(result.total);
+        }),
+        catchError((err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to fetch tenants');
+          return EMPTY;
+        }),
+        finalize(() => this._loading.set(false)),
+      )
+      .subscribe();
   }
 
-  changePage(pageIndex: number, limit: number): void {
-    this.pageIndex.set(pageIndex);
-    this.limit.set(limit);
+  public changePage(pageIndex: number, limit: number): void {
+    this._pageIndex.set(pageIndex);
+    this._limit.set(limit);
     this.retrieveTenant();
   }
 
-  addNewTenant(config: RawTenantConfig): Observable<Tenant> {
-    this.loading.set(true);
-    this.error.set(null);
+  public addNewTenant(config: TenantConfig): Observable<Tenant> {
+    this.setLoadingState();
 
-    return new Observable((observer) => {
-      this.tenantApiClient.createTenant(config).subscribe({
-        next: (tenant: Tenant) => {
-          this.tenantList.update((current) => [...current, tenant]);
-          this.loading.set(false);
-          observer.next(tenant);
-          observer.complete();
+    return this.tenantApi.createTenant(config).pipe(
+      map((dto) => this.adapter.fromDTO(dto)),
+      tap({
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to create tenant');
         },
-        error: (err: Error) => {
-          this.error.set(err.message || 'Failed to create tenant');
-          this.loading.set(false);
-          observer.error(err);
-        },
-      });
-    });
+      }),
+      finalize(() => this._loading.set(false)),
+    );
   }
 
-  removeTenant(name: string): Observable<void> {
-    this.loading.set(true);
-    this.error.set(null);
+  public removeTenant(id: string): Observable<void> {
+    this.setLoadingState();
 
-    return new Observable((observer) => {
-      this.tenantApiClient.deleteTenant(name).subscribe({
-        next: () => {
-          this.tenantList.update((current: Tenant[]) => current.filter((t) => t.name !== name));
-          this.loading.set(false);
-          observer.next();
-          observer.complete();
-        },
-        error: (err: Error) => {
-          this.error.set(err.message || 'Failed to delete tenant');
-          this.loading.set(false);
-          observer.error(err);
-        },
-      });
-    });
+    return this.tenantApi.deleteTenant(id).pipe(
+      tap(() => this.refetchCurrentPage()),
+      catchError((err: ApiError) => {
+        this._error.set(err.message ?? 'Failed to delete tenant');
+        return EMPTY;
+      }),
+      finalize(() => this._loading.set(false)),
+    );
+  }
+
+  private refetchCurrentPage(): void {
+    this.changePage(this._pageIndex(), this._limit());
+  }
+
+  private setGettingTenantsState(): void {
+    this._tenantList.set([]);
+    this._loading.set(true);
+    this._error.set(null);
+  }
+
+  private setLoadingState(): void {
+    this._loading.set(true);
+    this._error.set(null);
   }
 }

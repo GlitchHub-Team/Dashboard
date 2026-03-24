@@ -13,9 +13,16 @@ import { UserRole } from '../../models/user/user-role.enum';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 
+interface UserManagerPageTestApi {
+  onCreateUser: () => void;
+  onDeleteUser: (user: User) => void;
+  onPageChange: (event: PageEvent) => void;
+}
+
 describe('UserManagerPage', () => {
   let component: UserManagerPage;
   let fixture: ComponentFixture<UserManagerPage>;
+  let testApi: UserManagerPageTestApi;
 
   let afterClosedSubject: Subject<unknown>;
   let dialogMock: { open: ReturnType<typeof vi.fn> };
@@ -32,6 +39,7 @@ describe('UserManagerPage', () => {
     pageIndex: signal(0),
     limit: signal(10),
     loading: signal(false),
+    error: signal<string | null>(null),
     retrieveUser: vi.fn(),
     addNewUser: vi.fn().mockReturnValue(of(void 0)),
     removeUser: vi.fn().mockReturnValue(of(void 0)),
@@ -64,6 +72,7 @@ describe('UserManagerPage', () => {
 
     fixture = TestBed.createComponent(UserManagerPage);
     component = fixture.componentInstance;
+    testApi = component as unknown as UserManagerPageTestApi;
   });
 
   it('should create', () => {
@@ -73,12 +82,12 @@ describe('UserManagerPage', () => {
   it('should initialize context and retrieve users on init', () => {
     fixture.detectChanges();
 
-    expect(component.context).toEqual(routeContext);
+    expect((component as unknown as { context: () => unknown }).context()).toEqual(routeContext);
     expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
   });
 
   it('should open create dialog with correct config', () => {
-    component.onCreateUser();
+    testApi.onCreateUser();
 
     expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
       width: '400px',
@@ -92,12 +101,12 @@ describe('UserManagerPage', () => {
   it('should create and refetch users when create dialog returns data', () => {
     fixture.detectChanges();
 
-    component.onCreateUser();
-    afterClosedSubject.next({ email: 'new@user.com' });
+    testApi.onCreateUser();
+    afterClosedSubject.next({ email: 'new@user.com', tenantId: 'tenant-01' });
 
     expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
       { email: 'new@user.com', role: UserRole.TENANT_ADMIN },
-      'tenant-1',
+      'tenant-01',
     );
     expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
   });
@@ -105,7 +114,7 @@ describe('UserManagerPage', () => {
   it('should not create user when create dialog is cancelled', () => {
     fixture.detectChanges();
 
-    component.onCreateUser();
+    testApi.onCreateUser();
     afterClosedSubject.next(null);
 
     expect(userServiceMock.addNewUser).not.toHaveBeenCalled();
@@ -120,7 +129,7 @@ describe('UserManagerPage', () => {
       tenantId: 'tenant-1',
     };
 
-    component.onDeleteUser(user);
+    testApi.onDeleteUser(user);
 
     expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
       width: '400px',
@@ -144,7 +153,7 @@ describe('UserManagerPage', () => {
       tenantId: 'tenant-1',
     };
 
-    component.onDeleteUser(user);
+    testApi.onDeleteUser(user);
     afterClosedSubject.next(confirmed);
 
     if (shouldDelete) {
@@ -160,7 +169,7 @@ describe('UserManagerPage', () => {
     fixture.detectChanges();
     const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
 
-    component.onPageChange(event);
+    testApi.onPageChange(event);
 
     expect(userServiceMock.changePage).toHaveBeenCalledWith(
       2,

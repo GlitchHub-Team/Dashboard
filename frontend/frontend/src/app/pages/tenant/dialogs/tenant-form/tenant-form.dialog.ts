@@ -1,13 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+
+import { ApiError } from '../../../../models/api-error.model';
+import { TenantConfig } from '../../../../models/tenant/tenant-config.model';
 import { TenantService } from '../../../../services/tenant/tenant.service';
-import { RawTenantConfig } from '../../../../models/tenant/raw-tenant-config.model';
 
 @Component({
   selector: 'app-tenant-form-dialog',
@@ -19,68 +21,56 @@ import { RawTenantConfig } from '../../../../models/tenant/raw-tenant-config.mod
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatCheckboxModule,
   ],
   templateUrl: './tenant-form.dialog.html',
   styleUrl: './tenant-form.dialog.css',
-  providers: [TenantService],
 })
 export class TenantFormDialog {
-  private readonly fb = inject(FormBuilder);
   private readonly tenantService = inject(TenantService);
   private readonly dialogRef = inject(MatDialogRef<TenantFormDialog>);
-  public data = inject<RawTenantConfig | null>(MAT_DIALOG_DATA);
+  protected readonly data = inject<TenantConfig | null>(MAT_DIALOG_DATA);
 
-  protected formBuilder: FormGroup;
-  public loading = signal(false);
-  protected generalError = signal<string | null>(null);
-  protected serverErrors = signal<Record<string, string>>({});
+  protected readonly tenantForm = inject(FormBuilder).nonNullable.group({
+    name: ['', [Validators.required]],
+    canImpersonate: [false],
+  });
+
+  protected isSubmitting = false;
+  protected generalError = '';
 
   constructor() {
-    this.formBuilder = this.fb.group({
-      name: ['', [Validators.required]],
-    });
-
     if (this.data) {
-      this.formBuilder.patchValue(this.data);
+      this.tenantForm.patchValue(this.data);
+    }
+  }
+
+  protected onSave(): void {
+    if (!this.tenantForm.valid) {
+      this.tenantForm.markAllAsTouched();
+      return;
     }
 
-    // Resetta gli errori quando l'utente digita qualcosa
-    this.formBuilder.valueChanges.subscribe(() => {
-      this.serverErrors.set({});
-      this.generalError.set(null);
-    });
-  }
+    this.isSubmitting = true;
+    this.generalError = '';
 
-  onSave(): void {
-    if (this.formBuilder.invalid) return;
-
-    this.loading.set(true);
-    this.serverErrors.set({});
-    this.generalError.set(null);
-
-    const config: RawTenantConfig = this.formBuilder.value;
+    const config: TenantConfig = {
+      name: this.tenantForm.value.name!,
+      canImpersonate: this.tenantForm.value.canImpersonate ?? false,
+    };
 
     this.tenantService.addNewTenant(config).subscribe({
-      next: (tenant: unknown) => {
-        this.loading.set(false);
-        this.dialogRef.close(tenant);
+      next: () => {
+        this.dialogRef.close(true);
       },
-      error: (err: HttpErrorResponse) => {
-        this.loading.set(false);
-
-        if (err.error && err.error.fieldErrors) {
-          this.serverErrors.set(err.error.fieldErrors);
-          Object.keys(err.error.fieldErrors).forEach((field) => {
-            this.formBuilder.get(field)?.setErrors({ serverError: true });
-          });
-        } else {
-          this.generalError.set(err.message || 'Failed to save tenant');
-        }
+      error: (err: ApiError) => {
+        this.generalError = err.message ?? 'Failed to save tenant';
+        this.isSubmitting = false;
       },
     });
   }
 
-  onCancel(): void {
-    this.dialogRef.close();
+  protected onCancel(): void {
+    this.dialogRef.close(false);
   }
 }

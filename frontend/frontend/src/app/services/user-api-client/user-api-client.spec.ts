@@ -2,12 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { UserApiClientService, UserConfig } from './user-api-client.service';
+import { UserApiClientService } from './user-api-client.service';
 import { environment } from '../../../environments/environment';
-import { UserDataAdapter, RawPaginatedResponse } from '../../adapters/user-data.adapter';
-import { User } from '../../models/user/user.model';
-import { RawUserConfig } from '../../models/user/raw-user-config.model';
+import { UserBackend } from '../../models/user/user-backend.model';
+import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
+import { PaginatedResponse } from '../../models/paginated-response.model';
 
 const GET_USERS_CASES = [
   {
@@ -50,13 +50,10 @@ describe('UserApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const adapterMock = {
-    adaptPaginated: vi.fn(),
-    adapt: vi.fn(),
-  };
-
-  const rawPaginatedResponse: RawPaginatedResponse = {
-    items: [
+  const paginatedUserResponse: PaginatedResponse<UserBackend> = {
+    count: 2,
+    total: 2,
+    data: [
       {
         id: '1',
         username: 'admin',
@@ -72,41 +69,12 @@ describe('UserApiClientService', () => {
         tenantId: 'tenant-1',
       },
     ],
-    totalCount: 2,
   };
 
-  const adaptedPaginatedResponse: { items: User[]; totalCount: number } = {
-    items: [
-      {
-        id: '1',
-        username: 'admin',
-        email: 'admin@test.com',
-        role: UserRole.TENANT_ADMIN,
-        tenantId: 'tenant-1',
-      },
-      {
-        id: '2',
-        username: 'user',
-        email: 'user@test.com',
-        role: UserRole.TENANT_USER,
-        tenantId: 'tenant-1',
-      },
-    ],
-    totalCount: 2,
-  };
-
-  const rawUser: RawUserConfig = {
+  const userBackend: UserBackend = {
     id: '3',
     username: 'newuser',
     email: 'new@test.com',
-    role: UserRole.TENANT_USER,
-    tenantId: 'tenant-1',
-  };
-
-  const adaptedUser: User = {
-    id: '3',
-    email: 'new@test.com',
-    username: 'newuser',
     role: UserRole.TENANT_USER,
     tenantId: 'tenant-1',
   };
@@ -118,14 +86,8 @@ describe('UserApiClientService', () => {
   };
 
   beforeEach(() => {
-    vi.resetAllMocks();
-
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: UserDataAdapter, useValue: adapterMock },
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(UserApiClientService);
@@ -142,12 +104,10 @@ describe('UserApiClientService', () => {
 
   describe('getUsers', () => {
     it.each(GET_USERS_CASES)(
-      'should send GET request for $role to $url with page=$page and size=$size',
+      'should send GET request for $role to $url',
       ({ role, tenantId, page, size, url }) => {
-        adapterMock.adaptPaginated.mockReturnValue(adaptedPaginatedResponse);
-
-        service.getUsers(role, tenantId, page, size).subscribe((response) => {
-          expect(response).toEqual(adaptedPaginatedResponse);
+        service.getUsers(role, page, size, tenantId).subscribe((response) => {
+          expect(response).toEqual(paginatedUserResponse);
         });
 
         const req = httpMock.expectOne(
@@ -157,29 +117,14 @@ describe('UserApiClientService', () => {
             request.params.get('size') === `${size}`,
         );
         expect(req.request.method).toBe('GET');
-        req.flush(rawPaginatedResponse);
+        req.flush(paginatedUserResponse);
       },
     );
-
-    it('should map the paginated response through UserDataAdapter', () => {
-      adapterMock.adaptPaginated.mockReturnValue(adaptedPaginatedResponse);
-
-      let result: { items: User[]; totalCount: number } | undefined;
-      service.getUsers(UserRole.SUPER_ADMIN).subscribe((response) => {
-        result = response;
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/super_admins?page=0&size=10`);
-      req.flush(rawPaginatedResponse);
-
-      expect(adapterMock.adaptPaginated).toHaveBeenCalledWith(rawPaginatedResponse);
-      expect(result).toEqual(adaptedPaginatedResponse);
-    });
 
     it.each(TENANT_ID_ERROR_CASES)(
       'should throw when tenantId is missing for $role',
       ({ role, error }) => {
-        expect(() => service.getUsers(role)).toThrow(error);
+        expect(() => service.getUsers(role, 0, 10)).toThrow(error);
       },
     );
   });
@@ -191,42 +136,31 @@ describe('UserApiClientService', () => {
         role: UserRole.SUPER_ADMIN,
         tenantId: undefined,
         url: 'super_admin/1',
-        raw: {
+        response: {
           id: '1',
           email: 'super@test.com',
           username: 'super',
           role: UserRole.SUPER_ADMIN,
           tenantId: '',
-        } satisfies RawUserConfig,
-        adapted: {
-          id: '1',
-          email: 'super@test.com',
-          username: 'super',
-          role: UserRole.SUPER_ADMIN,
-          tenantId: '',
-        } satisfies User,
+        } satisfies UserBackend,
       },
       {
         id: '3',
         role: UserRole.TENANT_USER,
         tenantId: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user/3',
-        raw: rawUser,
-        adapted: adaptedUser,
+        response: userBackend,
       },
-    ])('should GET $url and map the response', ({ id, role, tenantId, url, raw, adapted }) => {
-      adapterMock.adapt.mockReturnValue(adapted);
-
-      let result: User | undefined;
+    ])('should GET $url and return dto response', ({ id, role, tenantId, url, response }) => {
+      let result: UserBackend | undefined;
       service.getUser(id, role, tenantId).subscribe((user) => {
         result = user;
       });
 
       const req = expectRequest('GET', `${apiUrl}/${url}`);
-      req.flush(raw);
+      req.flush(response);
 
-      expect(adapterMock.adapt).toHaveBeenCalledWith(raw);
-      expect(result).toEqual(adapted);
+      expect(result).toEqual(response);
     });
   });
 
@@ -239,20 +173,13 @@ describe('UserApiClientService', () => {
         } satisfies UserConfig,
         tenantId: undefined,
         url: 'super_admin',
-        raw: {
+        response: {
           id: '10',
           email: 'super@test.com',
           username: 'super',
           role: UserRole.SUPER_ADMIN,
           tenantId: '',
-        } satisfies RawUserConfig,
-        adapted: {
-          id: '10',
-          email: 'super@test.com',
-          username: 'super',
-          role: UserRole.SUPER_ADMIN,
-          tenantId: '',
-        } satisfies User,
+        } satisfies UserBackend,
       },
       {
         config: {
@@ -261,23 +188,19 @@ describe('UserApiClientService', () => {
         } satisfies UserConfig,
         tenantId: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user',
-        raw: rawUser,
-        adapted: adaptedUser,
+        response: userBackend,
       },
-    ])('should POST to $url and map the response', ({ config, tenantId, url, raw, adapted }) => {
-      adapterMock.adapt.mockReturnValue(adapted);
-
-      let result: User | undefined;
+    ])('should POST to $url and return dto response', ({ config, tenantId, url, response }) => {
+      let result: UserBackend | undefined;
       service.createUser(config, tenantId).subscribe((user) => {
         result = user;
       });
 
       const req = expectRequest('POST', `${apiUrl}/${url}`);
       expect(req.request.body).toEqual(config);
-      req.flush(raw);
+      req.flush(response);
 
-      expect(adapterMock.adapt).toHaveBeenCalledWith(raw);
-      expect(result).toEqual(adapted);
+      expect(result).toEqual(response);
     });
 
     it('should throw when tenantId is missing for tenant-scoped creation', () => {

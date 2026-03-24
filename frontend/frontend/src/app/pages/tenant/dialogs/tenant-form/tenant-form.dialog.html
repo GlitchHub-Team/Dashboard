@@ -1,16 +1,17 @@
 <h2 mat-dialog-title>Aggiungi Tenant</h2>
 <mat-dialog-content>
-  <form [formGroup]="formBuilder">
+  <form [formGroup]="tenantForm">
     <mat-form-field appearance="outline" class="w-100">
       <mat-label>Nome</mat-label>
       <input matInput formControlName="name" required />
-      @if (serverErrors()['name']) {
-        <mat-error>{{ serverErrors()['name'] }}</mat-error>
+      @if (tenantForm.get('name')?.hasError('required')) {
+        <mat-error>Nome obbligatorio</mat-error>
       }
     </mat-form-field>
-    @if (generalError()) {
+    <mat-checkbox formControlName="canImpersonate">Allow Impersonation</mat-checkbox>
+    @if (generalError) {
       <div class="error-text">
-        {{ generalError() }}
+        {{ generalError }}
       </div>
     }
   </form>
@@ -21,7 +22,7 @@
     mat-raised-button
     color="primary"
     (click)="onSave()"
-    [disabled]="formBuilder.invalid || loading()"
+    [disabled]="tenantForm.invalid || isSubmitting"
   >
     Salva
   </button>

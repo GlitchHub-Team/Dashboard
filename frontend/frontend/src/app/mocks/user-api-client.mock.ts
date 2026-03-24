@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { User } from '../models/user/user.model';
-import { UserConfig } from '../services/user-api-client/user-api-client.service';
+import { UserConfig } from '../models/user/user-config.model';
 import { UserRole } from '../models/user/user-role.enum';
+import { UserBackend } from '../models/user/user-backend.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserApiClientMockService {
-  private mockUsers: User[] = [
+  private mockUsers: UserBackend[] = [
     {
       id: 'user-5741',
       username: 'admin',
@@ -116,10 +117,10 @@ export class UserApiClientMockService {
 
   public getUsers(
     role: UserRole,
-    tenantId?: string,
     page = 0,
     size = 10,
-  ): Observable<{ items: User[]; totalCount: number }> {
+    tenantId?: string,
+  ): Observable<PaginatedResponse<UserBackend>> {
     let filteredUsers = [...this.mockUsers];
     if (role) {
       filteredUsers = filteredUsers.filter((user) => user.role === role);
@@ -127,12 +128,12 @@ export class UserApiClientMockService {
     if (tenantId) {
       filteredUsers = filteredUsers.filter((user) => user.tenantId === tenantId);
     }
-    const totalCount = filteredUsers.length;
-    const items = filteredUsers.slice(page * size, (page + 1) * size);
-    return of({ items, totalCount }).pipe(delay(500));
+    const total = filteredUsers.length;
+    const data = filteredUsers.slice(page * size, (page + 1) * size);
+    return of({ count: data.length, total, data }).pipe(delay(500));
   }
 
-  public getUser(id: string, role: UserRole, tenantId?: string): Observable<User> {
+  public getUser(id: string, role: UserRole, tenantId?: string): Observable<UserBackend> {
     const user = this.mockUsers.find(
       (u) =>
         u.id === id &&
@@ -145,23 +146,23 @@ export class UserApiClientMockService {
     return of(user).pipe(delay(500));
   }
 
-  public createUser(config: UserConfig, tenantId?: string): Observable<User> {
+  public createUser(config: UserConfig, tenantId?: string): Observable<UserBackend> {
     const newId = `user-${Math.floor(Math.random() * 10000)}`;
     const newTenantId = tenantId || 'mock-tenant-id';
 
-    const newUser: User = {
+    const newUser: UserBackend = {
       id: newId,
       username:
         (config as UserConfig & { username?: string }).username || config.email.split('@')[0],
       email: config.email,
-      role: config.role,
+      role: config.role as UserRole,
       tenantId: newTenantId,
     };
     this.mockUsers.push(newUser);
     return of(newUser).pipe(delay(500));
   }
 
-  public deleteUser(id: string): Observable<void> {
+  public deleteUser(id: string, _role: UserRole, _tenantId?: string): Observable<void> {
     this.mockUsers = this.mockUsers.filter((u) => u.id !== id);
     return of(void 0).pipe(delay(500));
   }

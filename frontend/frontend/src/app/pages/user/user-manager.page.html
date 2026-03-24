@@ -1,26 +1,27 @@
 <div class="manager-container">
   <div class="manager-header">
-    <h1>{{ context.title }}</h1>
+    <h1>{{ context().title }}</h1>
     <button mat-raised-button color="primary" (click)="onCreateUser()" [disabled]="loading()">
       + Aggiungi Utente
     </button>
   </div>
 
   <div class="manager-content">
+    @if (error()) {
+      <div class="error-banner">
+        <span>{{ error() }}</span>
+      </div>
+    }
+
     <app-user-table
       [users]="users()"
       [loading]="loading()"
-      [columnConfig]="columnConfig"
-      (deleteRequested)="onDeleteUser($event)">
-    </app-user-table>
-
-    <mat-paginator
-      [length]="total()"
-      [pageSize]="limit()"
+      [total]="total()"
       [pageIndex]="pageIndex()"
-      [pageSizeOptions]="[5, 10, 25, 100]"
-      (page)="onPageChange($event)"
-      aria-label="Seleziona pagina">
-    </mat-paginator>
+      [limit]="limit()"
+      (deleteRequested)="onDeleteUser($event)"
+      (pageChange)="onPageChange($event)"
+    >
+    </app-user-table>
   </div>
 </div>

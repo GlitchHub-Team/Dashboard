@@ -1,60 +1,92 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
-import { UserApiClientService, UserConfig } from '../user-api-client/user-api-client.service';
+import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
+import { UserApiClientService } from '../user-api-client/user-api-client.service';
+import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
+import { ApiError } from '../../models/api-error.model';
+import { UserAdapter } from '../../adapters/user.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly userApi = inject(UserApiClientService);
+  private readonly adapter = inject(UserAdapter);
 
-  public readonly loading = signal<boolean>(false);
-  public readonly error = signal<string | null>(null);
-  public readonly userList = signal<User[]>([]);
-  public readonly total = signal<number>(0);
-  public readonly pageIndex = signal<number>(0);
-  public readonly limit = signal<number>(10);
+  private readonly _loading = signal(false);
+  private readonly _error = signal<string | null>(null);
+  private readonly _userList = signal<User[]>([]);
+  private readonly _total = signal(0);
+  private readonly _pageIndex = signal(0);
+  private readonly _limit = signal(10);
+
+  public readonly loading = this._loading.asReadonly();
+  public readonly error = this._error.asReadonly();
+  public readonly userList = this._userList.asReadonly();
+  public readonly total = this._total.asReadonly();
+  public readonly pageIndex = this._pageIndex.asReadonly();
+  public readonly limit = this._limit.asReadonly();
 
   public retrieveUser(role: UserRole, tenantId?: string): void {
-    this.loading.set(true);
-    this.error.set(null);
+    this.setGettingUsersState();
 
-    this.userApi.getUsers(role, tenantId, this.pageIndex(), this.limit()).subscribe({
-      next: (res) => {
-        this.userList.set(res.items);
-        this.total.set(res.totalCount);
-        this.loading.set(false);
-      },
-      error: (err: Error) => {
-        this.error.set(err.message || 'Errore nel recupero degli utenti');
-        this.loading.set(false);
-      },
-    });
+    this.userApi
+      .getUsers(role, this._pageIndex(), this._limit(), tenantId)
+      .pipe(
+        map((response) => this.adapter.fromPaginatedDTO(response)),
+        tap((result) => {
+          this._userList.set(result.data);
+          this._total.set(result.total);
+        }),
+        catchError((err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to load users');
+          return EMPTY;
+        }),
+        finalize(() => this._loading.set(false)),
+      )
+      .subscribe();
   }
 
   public changePage(pageIndex: number, limit: number, role: UserRole, tenantId?: string): void {
-    this.pageIndex.set(pageIndex);
-    this.limit.set(limit);
+    this._pageIndex.set(pageIndex);
+    this._limit.set(limit);
     this.retrieveUser(role, tenantId);
   }
 
   public addNewUser(config: UserConfig, tenantId?: string): Observable<User> {
-    this.loading.set(true);
+    this.setLoadingState();
+
     return this.userApi.createUser(config, tenantId).pipe(
+      map((dto) => this.adapter.fromDTO(dto)),
       tap({
-        next: () => this.loading.set(false),
-        error: () => this.loading.set(false),
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to create user');
+        },
       }),
+      finalize(() => this._loading.set(false)),
     );
   }
 
   public removeUser(user: User): Observable<void> {
-    this.loading.set(true);
+    this.setLoadingState();
+
     return this.userApi.deleteUser(user.id, user.role, user.tenantId).pipe(
       tap({
-        next: () => this.loading.set(false),
-        error: () => this.loading.set(false),
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to delete user');
+        },
       }),
+      finalize(() => this._loading.set(false)),
     );
+  }
+
+  private setGettingUsersState(): void {
+    this._userList.set([]);
+    this._loading.set(true);
+    this._error.set(null);
+  }
+
+  private setLoadingState(): void {
+    this._loading.set(true);
+    this._error.set(null);
   }
 }
