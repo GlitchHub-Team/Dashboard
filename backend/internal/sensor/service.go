@@ -8,7 +8,7 @@ type SensorService struct {
 	getGatewayPort gateway.GetGatewayPort
 }
 
-type GetSensorByGatewayCommand struct {}
+type GetSensorByGatewayCommand struct{}
 
 func (service *SensorService) GetSensorByGateway(command GetSensorByGatewayCommand) {
 	service.getGatewayPort.GetAll()
