@@ -10,8 +10,9 @@
 package mocks
 
 import (
-	user "backend/internal/user"
 	reflect "reflect"
+
+	user "backend/internal/user"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
