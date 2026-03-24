@@ -51,7 +51,7 @@ type ChangePasswordUseCase interface {
 
 type Controller struct {
 	log *zap.Logger
-	
+
 	authTokenManager crypto.AuthTokenManager
 
 	loginUserUseCase  LoginUserUseCase
@@ -83,7 +83,7 @@ func NewController(
 	changePasswordUseCase ChangePasswordUseCase,
 ) *Controller {
 	return &Controller{
-		log: log,
+		log:              log,
 		authTokenManager: authTokenManager,
 
 		loginUserUseCase:  loginUserUseCase,
@@ -349,12 +349,12 @@ func (controller *Controller) ChangePassword(ctx *gin.Context) {
 
 	// 2. Esegui comando
 	err = controller.changePasswordUseCase.ChangePassword(ChangePasswordCommand{
-		Requester: requester,
+		Requester:   requester,
 		OldPassword: bodyDto.OldPassword,
 		NewPassword: bodyDto.NewPassword,
 	})
 	if err != nil {
-		if errors.Is(err, ErrWrongCredentials) || errors.Is(err, ErrAccountNotConfirmed){
+		if errors.Is(err, ErrWrongCredentials) || errors.Is(err, ErrAccountNotConfirmed) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
 		}

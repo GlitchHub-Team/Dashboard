@@ -1,6 +1,7 @@
 package gateway
 
 // Request
+/*
 type createGatewayDTO struct {
 	Name string `json:"name" binding:"required"`
 }
@@ -45,3 +46,4 @@ type commissionGatewayResponseDTO struct {
 	TenantName  string `json:"tenant_name"`
 	Certificate string `json:"certificate"`
 }
+*/

@@ -27,8 +27,7 @@ func NewGatewayController(
 	}
 }
 
-func (c *GatewayController) CreateGateway(ctx *gin.Context, ) {
-
+func (c *GatewayController) CreateGateway(ctx *gin.Context) {
 	// var dto createGatewayDTO
 	// if err := ctx.ShouldBindJSON(&dto); err != nil {
 	// 	ctx.JSON(http.StatusBadRequest, gin.H{

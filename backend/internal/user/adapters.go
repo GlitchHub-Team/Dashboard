@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -destination=../../tests/user/mocks/ports.go -package=mocks . SaveUserPort,DeleteUserPort,GetUserPort
 
 type UserPostgreAdapter struct {
-	log *zap.Logger
+	log  *zap.Logger
 	repo *userPostgreRepository
 }
 
@@ -22,7 +22,7 @@ func NewUserPostgreAdapter(log *zap.Logger, repository *userPostgreRepository) (
 	GetUserPort,
 ) {
 	adapter := &UserPostgreAdapter{
-		log: log,
+		log:  log,
 		repo: repository,
 	}
 	return adapter, adapter, adapter
@@ -135,7 +135,6 @@ type GetUserPort interface {
 	GetTenantUserByEmail(tenantId uuid.UUID, email string) (User, error)
 	GetTenantAdminByEmail(tenantId uuid.UUID, email string) (User, error)
 	GetSuperAdminByEmail(email string) (User, error)
-	
 
 	GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int) (
 		tenantUsers []User, total uint, err error,
@@ -148,10 +147,9 @@ type GetUserPort interface {
 	)
 }
 
-
 func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (User, error) {
 	var user User
-	getUserBy := userRepositoryGetUserBy{UserId: &userId, }
+	getUserBy := userRepositoryGetUserBy{UserId: &userId}
 	// Tenant User / Tenant Admin
 	if tenantId != nil {
 		tenantMember, err := adapter.repo.GetTenantMember(
@@ -168,7 +166,7 @@ func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (Us
 		}
 
 		return user, err
-	}  
+	}
 
 	// Super Admin
 	superAdmin, err := adapter.repo.GetSuperAdmin(getUserBy)
@@ -222,13 +220,13 @@ func (adapter *UserPostgreAdapter) GetSuperAdmin(userId uint) (User, error) {
 	return user, err
 }
 
-func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email string) (User, error,) {
+func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email string) (User, error) {
 	var user User
 	// Tenant User / Tenant Admin
 	if tenantId != nil {
 		tenantMember, err := adapter.repo.GetTenantMember(
-			tenantId.String(), 
-			userRepositoryGetUserBy{Email: &email,},
+			tenantId.String(),
+			userRepositoryGetUserBy{Email: &email},
 		)
 		if err != nil {
 			return User{}, err
@@ -241,10 +239,10 @@ func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email str
 		}
 
 		return user, err
-	}  
+	}
 
 	// Super Admin
-	superAdmin, err := adapter.repo.GetSuperAdmin(userRepositoryGetUserBy{Email: &email,})
+	superAdmin, err := adapter.repo.GetSuperAdmin(userRepositoryGetUserBy{Email: &email})
 	if err != nil {
 		return User{}, err
 	}

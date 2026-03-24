@@ -2,8 +2,9 @@ package cloud_db
 
 import (
 	"fmt"
-	"backend/internal/infra/database/cloud_db/migrate"
+
 	"backend/internal/infra/database/cloud_db/connection"
+	"backend/internal/infra/database/cloud_db/migrate"
 
 	"go.uber.org/fx"
 )
@@ -18,7 +19,7 @@ var Module = fx.Module(
 		func(migrator migrate.Migrator) {
 			err := migrator.Migrate()
 			if err != nil {
-				panic(fmt.Errorf("Migrator error: %v", err))
+				panic(fmt.Errorf("migrator error: %v", err))
 			}
 		},
 	),

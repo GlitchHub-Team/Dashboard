@@ -1,9 +1,10 @@
 package user_test
 
 import (
-	"backend/internal/user"
 	"errors"
 	"testing"
+
+	"backend/internal/user"
 )
 
 func TestUser_SetPasswordHash(t *testing.T) {
@@ -46,5 +47,4 @@ func TestUser_SetPasswordHash(t *testing.T) {
 			}
 		},
 	)
-
 }

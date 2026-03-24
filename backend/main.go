@@ -40,9 +40,9 @@ func init() {
 func NewGinEngine(
 	lc fx.Lifecycle,
 	log *zap.Logger,
-	
+
 	config *config.Config,
-	
+
 	authzMiddleware *httpMiddlewares.AuthzMiddleware,
 
 	gatewayController *gateway.GatewayController,
@@ -106,13 +106,13 @@ func NewGinEngine(
 		private.GET("/tenant/:tenant_id/tenant_admins", userController.GetTenantAdmins)
 		private.GET("/super_admins", userController.GetSuperAdmins)
 	}
-	
+
 	log.Info("CONFIG DB URL:" + config.CloudDBUrl)
 
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			log.Info("Starting HTTP server!")
-			go router.Run()
+			go router.Run() //nolint:errcheck
 			return nil
 		},
 		OnStop: func(context.Context) error {

@@ -15,8 +15,6 @@ import (
 	auth "backend/internal/auth"
 	user "backend/internal/user"
 
-	auth "backend/internal/auth"
-
 	gomock "go.uber.org/mock/gomock"
 )
 

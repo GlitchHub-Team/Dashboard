@@ -15,7 +15,7 @@ import (
 type ConfirmTokenEntity struct {
 	Token string `gorm:"primaryKey;index:,type:hash"`
 
-	TenantId *string              `gorm:"size:36"`
+	TenantId *string             `gorm:"size:36"`
 	Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
 
 	UserId uint                    `gorm:"not null"`
@@ -25,16 +25,16 @@ type ConfirmTokenEntity struct {
 	ExpiresAt time.Time
 }
 
-func newConfirmTokenEntityFromDomain(tokenObj ConfirmAccountToken) (ConfirmTokenEntity) {
+func newConfirmTokenEntityFromDomain(tokenObj ConfirmAccountToken) ConfirmTokenEntity {
 	var tenantId *string
 	if tokenObj.tenantId != nil {
 		str := tokenObj.tenantId.String()
 		tenantId = &str
 	}
 	return ConfirmTokenEntity{
-		Token: tokenObj.hashedToken,
-		TenantId: tenantId,
-		UserId: tokenObj.userId,
+		Token:     tokenObj.hashedToken,
+		TenantId:  tenantId,
+		UserId:    tokenObj.userId,
 		ExpiresAt: tokenObj.expiryDate,
 	}
 }
@@ -46,9 +46,9 @@ func (entity *ConfirmTokenEntity) ToConfirmToken() (ConfirmAccountToken, error) 
 	}
 	return ConfirmAccountToken{
 		hashedToken: entity.Token,
-		tenantId: &tenantId,
-		userId: entity.UserId,
-		expiryDate: entity.ExpiresAt,
+		tenantId:    &tenantId,
+		userId:      entity.UserId,
+		expiryDate:  entity.ExpiresAt,
 	}, nil
 }
 
@@ -66,12 +66,12 @@ func newConfirmTokenPostgreRepository(db *gorm.DB) *confirmTokenPostgreRepositor
 	}
 }
 
-func (repo *confirmTokenPostgreRepository) SaveToken(entity *ConfirmTokenEntity) (err error,) {
+func (repo *confirmTokenPostgreRepository) SaveToken(entity *ConfirmTokenEntity) (err error) {
 	err = repo.db.Save(entity).Error
 	return
 }
 
-func (repo *confirmTokenPostgreRepository) DeleteToken(entity *ConfirmTokenEntity) (err error,) {
+func (repo *confirmTokenPostgreRepository) DeleteToken(entity *ConfirmTokenEntity) (err error) {
 	err = repo.db.Delete(entity).Error
 	return
 }
@@ -97,13 +97,12 @@ func (repo *confirmTokenPostgreRepository) GetTokenWithUser(tokenString string) 
 	return
 }
 
-
 // Forgot Password ====================================================================================
 
 type ForgotPasswordTokenEntity struct {
 	Token string `gorm:"primaryKey;index:,type:hash"`
 
-	TenantId *string              `gorm:"size:36;not null"`
+	TenantId *string             `gorm:"size:36;not null"`
 	Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
 
 	UserId uint                    `gorm:"not null"`
@@ -113,17 +112,16 @@ type ForgotPasswordTokenEntity struct {
 	ExpiresAt time.Time
 }
 
-
-func newForgotPasswordTokenEntityFromDomain(tokenObj ForgotPasswordToken) (ForgotPasswordTokenEntity) {
+func newForgotPasswordTokenEntityFromDomain(tokenObj ForgotPasswordToken) ForgotPasswordTokenEntity {
 	var tenantId *string
 	if tokenObj.tenantId != nil {
 		str := tokenObj.tenantId.String()
 		tenantId = &str
 	}
 	return ForgotPasswordTokenEntity{
-		Token: tokenObj.hashedToken,
-		TenantId: tenantId,
-		UserId: tokenObj.userId,
+		Token:     tokenObj.hashedToken,
+		TenantId:  tenantId,
+		UserId:    tokenObj.userId,
 		ExpiresAt: tokenObj.expiryDate,
 	}
 }
@@ -135,9 +133,9 @@ func (entity *ForgotPasswordTokenEntity) ToConfirmToken() (ForgotPasswordToken, 
 	}
 	return ForgotPasswordToken{
 		hashedToken: entity.Token,
-		tenantId: &tenantId,
-		userId: entity.UserId,
-		expiryDate: entity.ExpiresAt,
+		tenantId:    &tenantId,
+		userId:      entity.UserId,
+		expiryDate:  entity.ExpiresAt,
 	}, nil
 }
 
@@ -154,12 +152,12 @@ func newPasswordTokenPostgreRepository(db *gorm.DB) *passwordTokenPostgreReposit
 	}
 }
 
-func (repo *passwordTokenPostgreRepository) SaveToken(entity *ForgotPasswordTokenEntity) (err error,) {
+func (repo *passwordTokenPostgreRepository) SaveToken(entity *ForgotPasswordTokenEntity) (err error) {
 	err = repo.db.Save(entity).Error
 	return
 }
 
-func (repo *passwordTokenPostgreRepository) DeleteToken(entity *ForgotPasswordTokenEntity) (err error,) {
+func (repo *passwordTokenPostgreRepository) DeleteToken(entity *ForgotPasswordTokenEntity) (err error) {
 	err = repo.db.Delete(entity).Error
 	return
 }
@@ -184,4 +182,3 @@ func (repo *passwordTokenPostgreRepository) GetTokenWithUser(tokenString string)
 		Error
 	return
 }
-
