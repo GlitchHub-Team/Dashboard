@@ -10,6 +10,7 @@ services:
       - ..:/workspaces/app:cached
     command: sleep infinity
     environment:
+      DASHBOARD_CREDS_PATH: dashboard.creds
       TEST_CREDS_PATH: admin_test.creds
       CA_PEM_PATH: ca.pem
     depends_on:

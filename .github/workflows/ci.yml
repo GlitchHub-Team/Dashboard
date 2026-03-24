@@ -38,12 +38,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Go
-        if: ${{ hashFiles('go.mod') != '' || hashFiles('backend/go.mod') != '' }}
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.26.0"
-
-      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.26.0"
@@ -81,7 +75,7 @@ jobs:
 
           mkdir -p backend
 
-          printf '%s\n' "${{ secrets.DASHBOARD_CREDS }}" > backend/data_consumer.creds
+          printf '%s\n' "${{ secrets.DASHBOARD_CREDS }}" > backend/dashboard.creds
           printf '%s\n' "${{ secrets.TEST_CREDS }}" > backend/admin_test.creds
 
           chmod 600 backend/dashboard.creds backend/admin_test.creds
