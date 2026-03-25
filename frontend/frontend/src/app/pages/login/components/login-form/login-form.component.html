@@ -39,6 +39,20 @@
     }
   </mat-form-field>
 
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Tenant</mat-label>
+    <mat-select formControlName="tenantId">
+      @for (tenant of displayedTenants(); track tenant.id) {
+        <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+      }
+    </mat-select>
+    @if (loginForm.controls.tenantId; as ctrl) {
+      @if (ctrl.invalid && ctrl.touched) {
+        <mat-error>Tenant is required.</mat-error>
+      }
+    }
+  </mat-form-field>
+
   <button mat-flat-button color="primary" type="submit" class="full-width" [disabled]="loading()">
     @if (loading()) {
       <mat-icon class="spin">sync</mat-icon>

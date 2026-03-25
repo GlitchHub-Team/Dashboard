@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { ForgotPasswordResponse } from '../../../../models/auth/forgot-password.model';
 
 @Component({
   selector: 'app-reset-password-form',
@@ -33,7 +34,7 @@ export class ResetPasswordFormComponent {
   public generalError = input<string | null>(null);
   public success = input(false);
 
-  public submitReset = output<string>();
+  public submitReset = output<ForgotPasswordResponse>();
   public goToLogin = output<void>();
   public dismissError = output<void>();
 
@@ -51,7 +52,12 @@ export class ResetPasswordFormComponent {
       return;
     }
 
-    this.submitReset.emit(this.resetPasswordForm.controls.newPassword.value);
+    const forgotPasswordResponse: ForgotPasswordResponse = {
+      token: '',
+      newPassword: this.resetPasswordForm.controls.newPassword.value!,
+    };
+
+    this.submitReset.emit(forgotPasswordResponse);
   }
 
   private passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {

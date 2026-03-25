@@ -1,0 +1,10 @@
+<div class="confirm-account-container">
+  <h1>Conferma Account</h1>
+
+  <app-confirm-account-form
+    [loading]="loading()"
+    [generalError]="genenralError()"
+    (submitConfirmAccount)="onConfirmAccount($event)"
+    (dismissError)="onDismissError()"
+  />
+</div>

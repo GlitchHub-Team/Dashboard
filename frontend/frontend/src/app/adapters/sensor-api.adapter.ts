@@ -3,8 +3,8 @@ import { SensorAdapter } from './sensor.adapter';
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { Sensor } from '../models/sensor/sensor.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
-import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
-import { Status } from '../models/gateway-sensor-status.enum';
+import { statusMapper } from '../utils/status.utils';
+import { sensorProfilesMapper } from '../utils/sensor-profile.utils';
 
 @Injectable()
 export class SensorApiAdapter extends SensorAdapter {
@@ -13,8 +13,8 @@ export class SensorApiAdapter extends SensorAdapter {
       id: dto.sensor_id,
       gatewayId: dto.gateway_id,
       name: dto.sensor_name,
-      status: dto.status as Status,
-      profile: dto.profile as SensorProfiles,
+      status: statusMapper.fromBackend(dto.status),
+      profile: sensorProfilesMapper.fromBackend(dto.profile),
       dataInterval: dto.sensor_interval,
     };
   }

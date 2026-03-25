@@ -5,14 +5,22 @@ import { By } from '@angular/platform-browser';
 
 import { LoginFormComponent } from './login-form.component';
 import { LoginRequest } from '../../../../models/auth/login-request.model';
+import { TenantService } from '../../../../services/tenant/tenant.service';
+import { signal } from '@angular/core';
 
 describe('LoginFormComponent', () => {
   let component: LoginFormComponent;
   let fixture: ComponentFixture<LoginFormComponent>;
 
+  const tenantServiceMock = {
+    retrieveTenant: vi.fn(),
+    tenantList: signal([]).asReadonly(),
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LoginFormComponent, ReactiveFormsModule],
+      providers: [{ provide: TenantService, useValue: tenantServiceMock }],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
@@ -27,6 +35,10 @@ describe('LoginFormComponent', () => {
       expect(component['loginForm'].valid).toBe(false);
       expect(component.loading()).toBe(false);
       expect(component.generalError()).toBeNull();
+    });
+
+    it('should call retrieveTenant on init', () => {
+      expect(tenantServiceMock.retrieveTenant).toHaveBeenCalled();
     });
 
     it('should render the form but not the progress bar or error banner', () => {
@@ -74,19 +86,22 @@ describe('LoginFormComponent', () => {
 
   describe('form validation', () => {
     it.each([
-      ['empty fields', '', ''],
-      ['email only', 'user@example.com', ''],
-      ['password only', '', 'secret123'],
-      ['invalid email format', 'not-an-email', 'secret123'],
-    ])('should be invalid with %s', (_, email, password) => {
+      ['empty fields', '', '', ''],
+      ['email only', 'user@example.com', '', ''],
+      ['password only', '', 'secret123', ''],
+      ['email and password, no tenantId', 'user@example.com', 'secret123', ''],
+      ['invalid email format', 'not-an-email', 'secret123', 'tenant-01'],
+    ])('should be invalid with %s', (_, email, password, tenantId) => {
       component['loginForm'].controls.email.setValue(email);
       component['loginForm'].controls.password.setValue(password);
+      component['loginForm'].controls.tenantId.setValue(tenantId);
       expect(component['loginForm'].valid).toBe(false);
     });
 
-    it('should be valid with valid email and password', () => {
+    it('should be valid with valid email, password, and tenantId', () => {
       component['loginForm'].controls.email.setValue('user@example.com');
       component['loginForm'].controls.password.setValue('secret123');
+      component['loginForm'].controls.tenantId.setValue('tenant-01');
       expect(component['loginForm'].valid).toBe(true);
     });
   });
@@ -125,9 +140,14 @@ describe('LoginFormComponent', () => {
 
       component['loginForm'].controls.email.setValue('user@example.com');
       component['loginForm'].controls.password.setValue('secret123');
+      component['loginForm'].controls.tenantId.setValue('tenant-01');
       submitForm();
 
-      const expected: LoginRequest = { email: 'user@example.com', password: 'secret123' };
+      const expected: LoginRequest = {
+        email: 'user@example.com',
+        password: 'secret123',
+        tenantId: 'tenant-01',
+      };
       expect(emitSpy).toHaveBeenCalledWith(expected);
     });
 
@@ -148,6 +168,7 @@ describe('LoginFormComponent', () => {
 
       component['loginForm'].controls.email.setValue('bad-email');
       component['loginForm'].controls.password.setValue('secret123');
+      component['loginForm'].controls.tenantId.setValue('tenant-01');
       submitForm();
 
       expect(emitSpy).not.toHaveBeenCalled();

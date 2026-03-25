@@ -3,21 +3,22 @@ import { of, throwError, noop } from 'rxjs';
 
 import { AuthActionsService } from './auth-actions.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
-import { UserSessionService } from '../user-session/user-session.service';
 import { ApiError } from '../../models/api-error.model';
 import { PasswordChange } from '../../models/auth/password-change.model';
+import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
+import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
+import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
 
 describe('AuthActionsService', () => {
   let service: AuthActionsService;
 
   const authApiClientMock = {
-    forgotPassword: vi.fn(),
-    requestPasswordChange: vi.fn(),
+    forgotPasswordRequest: vi.fn(),
     confirmPasswordChange: vi.fn(),
-  };
-
-  const userSessionMock = {
-    currentUser: vi.fn(),
+    verifyForgotPasswordToken: vi.fn(),
+    confirmPasswordReset: vi.fn(),
+    verifyAccountToken: vi.fn(),
+    confirmAccountCreation: vi.fn(),
   };
 
   beforeEach(() => {
@@ -27,7 +28,6 @@ describe('AuthActionsService', () => {
       providers: [
         AuthActionsService,
         { provide: AuthApiClientService, useValue: authApiClientMock },
-        { provide: UserSessionService, useValue: userSessionMock },
       ],
     });
 
@@ -44,26 +44,26 @@ describe('AuthActionsService', () => {
   });
 
   describe('forgotPassword', () => {
-    const email = 'user@example.com';
+    const mockRequest: ForgotPasswordRequest = { email: 'user@example.com', tenantId: 'tenant-01' };
 
-    it('should call forgotPassword with email, clear loading, and leave error null on success', () => {
-      authApiClientMock.forgotPassword.mockReturnValue(of(undefined));
-      service.forgotPassword(email).subscribe();
+    it('should call forgotPasswordRequest with the request object, clear loading, and leave error null on success', () => {
+      authApiClientMock.forgotPasswordRequest.mockReturnValue(of(undefined));
+      service.forgotPassword(mockRequest).subscribe();
 
-      expect(authApiClientMock.forgotPassword).toHaveBeenCalledWith(email);
+      expect(authApiClientMock.forgotPasswordRequest).toHaveBeenCalledWith(mockRequest);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
 
     it('should clear previous error before a new request', () => {
-      authApiClientMock.forgotPassword.mockReturnValue(
+      authApiClientMock.forgotPasswordRequest.mockReturnValue(
         throwError(() => ({ status: 500, message: 'fail' }) as ApiError),
       );
-      service.forgotPassword(email).subscribe({ error: noop });
+      service.forgotPassword(mockRequest).subscribe({ error: noop });
       expect(service.error()).toBe('fail');
 
-      authApiClientMock.forgotPassword.mockReturnValue(of(undefined));
-      service.forgotPassword(email).subscribe();
+      authApiClientMock.forgotPasswordRequest.mockReturnValue(of(undefined));
+      service.forgotPassword(mockRequest).subscribe();
       expect(service.error()).toBeNull();
     });
 
@@ -71,56 +71,8 @@ describe('AuthActionsService', () => {
       [{ status: 500, message: 'Email service down' } as ApiError, 'Email service down'],
       [{ status: 500 } as ApiError, 'Failed to send reset email'],
     ])('should set error on failure (message=%s)', (apiError, expected) => {
-      authApiClientMock.forgotPassword.mockReturnValue(throwError(() => apiError));
-      service.forgotPassword(email).subscribe({ error: noop });
-
-      expect(service.error()).toBe(expected);
-      expect(service.loading()).toBe(false);
-    });
-  });
-
-  describe('requestPasswordChange', () => {
-    const mockUser = {
-      id: 'user-42',
-      email: 'user@example.com',
-      role: 'admin',
-      tenantId: 'tenant-1',
-    };
-
-    it('should call requestPasswordChange with user id on success', () => {
-      userSessionMock.currentUser.mockReturnValue(mockUser);
-      authApiClientMock.requestPasswordChange.mockReturnValue(of(undefined));
-
-      service.requestPasswordChange().subscribe();
-
-      expect(authApiClientMock.requestPasswordChange).toHaveBeenCalledWith('user-42');
-      expect(service.loading()).toBe(false);
-    });
-
-    it.each([
-      ['null user', null],
-      ['user with no id', { ...mockUser, id: '' }],
-    ])('should emit 401 and not call API when %s', (_, user) => {
-      userSessionMock.currentUser.mockReturnValue(user);
-
-      service.requestPasswordChange().subscribe({
-        error: (err: ApiError) => {
-          expect(err.status).toBe(401);
-        },
-      });
-
-      expect(authApiClientMock.requestPasswordChange).not.toHaveBeenCalled();
-      expect(service.loading()).toBe(false);
-    });
-
-    it.each([
-      [{ status: 500, message: 'Server error' } as ApiError, 'Server error'],
-      [{ status: 500 } as ApiError, 'Failed to request password change'],
-    ])('should set error on API failure (message=%s)', (apiError, expected) => {
-      userSessionMock.currentUser.mockReturnValue(mockUser);
-      authApiClientMock.requestPasswordChange.mockReturnValue(throwError(() => apiError));
-
-      service.requestPasswordChange().subscribe({ error: noop });
+      authApiClientMock.forgotPasswordRequest.mockReturnValue(throwError(() => apiError));
+      service.forgotPassword(mockRequest).subscribe({ error: noop });
 
       expect(service.error()).toBe(expected);
       expect(service.loading()).toBe(false);
@@ -128,7 +80,7 @@ describe('AuthActionsService', () => {
   });
 
   describe('confirmPasswordChange', () => {
-    const mockData: PasswordChange = { token: 'reset-token', newPassword: 'newSecret456' };
+    const mockData: PasswordChange = { oldPassword: 'oldSecret123', newPassword: 'newSecret456' };
 
     it('should call confirmPasswordChange, set result=true, and clear loading on success', () => {
       authApiClientMock.confirmPasswordChange.mockReturnValue(of(undefined));
@@ -168,16 +120,88 @@ describe('AuthActionsService', () => {
     });
   });
 
+  describe('confirmPasswordReset', () => {
+    const mockReq: ForgotPasswordResponse = { token: 'reset-token', newPassword: 'newSecret456' };
+
+    it('should call confirmPasswordReset and clear loading on success', () => {
+      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(true));
+      authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
+
+      service.confirmPasswordReset(mockReq).subscribe();
+
+      expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
+      expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
+    });
+
+    it('should clear previous error before a new request', () => {
+      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(true));
+      authApiClientMock.confirmPasswordReset.mockReturnValue(
+        throwError(() => ({ status: 500, message: 'fail' }) as ApiError),
+      );
+      service.confirmPasswordReset(mockReq).subscribe({ error: noop });
+      expect(service.error()).toBe('fail');
+
+      authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
+      service.confirmPasswordReset(mockReq).subscribe();
+      expect(service.error()).toBeNull();
+    });
+
+    it.each([
+      [{ status: 400, message: 'Token expired' } as ApiError, 'Token expired'],
+      [{ status: 400 } as ApiError, 'Failed to reset password'],
+    ])('should set error on API failure (message=%s)', (apiError, expected) => {
+      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(true));
+      authApiClientMock.confirmPasswordReset.mockReturnValue(throwError(() => apiError));
+
+      service.confirmPasswordReset(mockReq).subscribe({ error: noop });
+
+      expect(service.error()).toBe(expected);
+      expect(service.loading()).toBe(false);
+    });
+  });
+
+  describe('confirmAccount', () => {
+    const mockReq: ConfirmAccountResponse = { token: 'account-token', newPassword: 'newSecret456' };
+
+    it('should call confirmAccountCreation and clear loading on success', () => {
+      authApiClientMock.verifyAccountToken.mockReturnValue(of(true));
+      authApiClientMock.confirmAccountCreation.mockReturnValue(of(undefined));
+
+      service.confirmAccount(mockReq).subscribe();
+
+      expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
+      expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
+    });
+
+    it.each([
+      [
+        { status: 400, message: 'Account already confirmed' } as ApiError,
+        'Account already confirmed',
+      ],
+      [{ status: 400 } as ApiError, 'Failed to confirm account'],
+    ])('should set error on API failure (message=%s)', (apiError, expected) => {
+      authApiClientMock.verifyAccountToken.mockReturnValue(of(true));
+      authApiClientMock.confirmAccountCreation.mockReturnValue(throwError(() => apiError));
+
+      service.confirmAccount(mockReq).subscribe({ error: noop });
+
+      expect(service.error()).toBe(expected);
+      expect(service.loading()).toBe(false);
+    });
+  });
+
   describe('clearMessages', () => {
     it('should clear both error and passwordChangeResult', () => {
-      authApiClientMock.forgotPassword.mockReturnValue(
+      authApiClientMock.forgotPasswordRequest.mockReturnValue(
         throwError(() => ({ status: 500, message: 'some error' }) as ApiError),
       );
-      service.forgotPassword('x').subscribe({ error: noop });
+      service.forgotPassword({ email: 'x@example.com' }).subscribe({ error: noop });
       expect(service.error()).toBe('some error');
 
       authApiClientMock.confirmPasswordChange.mockReturnValue(of(undefined));
-      service.confirmPasswordChange({ token: 'x', newPassword: 'y' }).subscribe();
+      service.confirmPasswordChange({ oldPassword: 'old', newPassword: 'new' }).subscribe();
       expect(service.passwordChangeResult()).toBe(true);
 
       service.clearMessages();

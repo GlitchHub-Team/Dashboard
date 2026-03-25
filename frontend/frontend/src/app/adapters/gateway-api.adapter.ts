@@ -4,7 +4,7 @@ import { GatewayAdapter } from './gateway.adapter';
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { Gateway } from '../models/gateway/gateway.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
-import { Status } from '../models/gateway-sensor-status.enum';
+import { statusMapper } from '../utils/status.utils';
 
 @Injectable()
 export class GatewayApiAdapter extends GatewayAdapter {
@@ -12,7 +12,7 @@ export class GatewayApiAdapter extends GatewayAdapter {
     return {
       id: dto.gateway_id,
       name: dto.name,
-      status: dto.status as Status,
+      status: statusMapper.fromBackend(dto.status),
       interval: dto.interval,
       tenantId: dto.tenant_id ?? undefined,
     };

@@ -4,6 +4,9 @@ import { Observable, of, delay, throwError, timer, switchMap } from 'rxjs';
 import { LoginRequest } from '../models/auth/login-request.model';
 import { AuthResponse } from '../models/auth/auth-response.model';
 import { PasswordChange } from '../models/auth/password-change.model';
+import { ForgotPasswordRequest } from '../models/auth/forgot-password-request.model';
+import { ForgotPasswordResponse } from '../models/auth/forgot-password.model';
+import { ConfirmAccountResponse } from '../models/auth/confirm-account.model';
 import { ApiError } from '../models/api-error.model';
 import { UserRole } from '../models/user/user-role.enum';
 
@@ -62,19 +65,29 @@ export class AuthServiceMock {
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  forgotPassword(email: string): Observable<void> {
-    if (!MOCK_USERS[email]) {
+  forgotPassword(req: ForgotPasswordRequest): Observable<void> {
+    if (!MOCK_USERS[req.email]) {
       return this.delayedError({ status: 404, message: 'Email not found' });
     }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  requestPasswordChange(_userId: string): Observable<void> {
+  confirmPasswordChange(data: PasswordChange): Observable<void> {
+    if (!data.oldPassword) {
+      return this.delayedError({ status: 400, message: 'Old password is required' });
+    }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  confirmPasswordChange(data: PasswordChange): Observable<void> {
-    if (!data.token || data.token === 'expired-token') {
+  confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
+    if (!req.token || req.token === 'expired-token') {
+      return this.delayedError({ status: 400, message: 'Invalid or expired token' });
+    }
+    return of(undefined).pipe(delay(MOCK_DELAY));
+  }
+
+  confirmAccount(req: ConfirmAccountResponse): Observable<void> {
+    if (!req.token || req.token === 'expired-token') {
       return this.delayedError({ status: 400, message: 'Invalid or expired token' });
     }
     return of(undefined).pipe(delay(MOCK_DELAY));

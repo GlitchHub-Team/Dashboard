@@ -4,7 +4,6 @@ import { Injectable, signal } from '@angular/core';
   providedIn: 'root',
 })
 export class TokenStorageService {
-  // TODO: Che token viene ritornato dal backend? Viene usato come token di sessione?
   private readonly TOKEN_KEY = '';
   private _isValid = signal<boolean>(this.isTokenValid());
 

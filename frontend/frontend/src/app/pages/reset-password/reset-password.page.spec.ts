@@ -6,7 +6,7 @@ import { of, EMPTY } from 'rxjs';
 
 import { ResetPasswordPage } from './reset-password.page';
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
-import { PasswordChange } from '../../models/auth/password-change.model';
+import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 
 describe('ResetPasswordPage', () => {
   let component: ResetPasswordPage;
@@ -19,7 +19,7 @@ describe('ResetPasswordPage', () => {
   let passwordChangeResultSignal: WritableSignal<boolean | null>;
 
   let authActionsServiceMock: {
-    confirmPasswordChange: ReturnType<typeof vi.fn>;
+    confirmPasswordReset: ReturnType<typeof vi.fn>;
     clearMessages: ReturnType<typeof vi.fn>;
     loading: ReturnType<WritableSignal<boolean>['asReadonly']>;
     error: ReturnType<WritableSignal<string | null>['asReadonly']>;
@@ -46,7 +46,7 @@ describe('ResetPasswordPage', () => {
     passwordChangeResultSignal = signal<boolean | null>(null);
 
     authActionsServiceMock = {
-      confirmPasswordChange: vi.fn(),
+      confirmPasswordReset: vi.fn(),
       clearMessages: vi.fn(),
       loading: loadingSignal.asReadonly(),
       error: errorSignal.asReadonly(),
@@ -91,36 +91,36 @@ describe('ResetPasswordPage', () => {
   });
 
   describe('onSubmitReset', () => {
-    it('should call confirmPasswordChange with password and token', () => {
-      authActionsServiceMock.confirmPasswordChange.mockReturnValue(of(undefined));
+    const mockResponse: ForgotPasswordResponse = {
+      token: 'reset-token',
+      newPassword: 'newSecret123',
+    };
 
-      const expectedData: PasswordChange = {
-        newPassword: 'newSecret123',
-        token: 'TODO',
-      };
+    it('should call confirmPasswordReset with the emitted ForgotPasswordResponse', () => {
+      authActionsServiceMock.confirmPasswordReset.mockReturnValue(of(undefined));
 
-      resetFormDebug.triggerEventHandler('submitReset', 'newSecret123');
+      resetFormDebug.triggerEventHandler('submitReset', mockResponse);
       fixture.detectChanges();
 
-      expect(authActionsServiceMock.confirmPasswordChange).toHaveBeenCalledWith(expectedData);
+      expect(authActionsServiceMock.confirmPasswordReset).toHaveBeenCalledWith(mockResponse);
     });
 
     it('should subscribe to the observable', () => {
-      authActionsServiceMock.confirmPasswordChange.mockReturnValue(of(undefined));
+      authActionsServiceMock.confirmPasswordReset.mockReturnValue(of(undefined));
 
-      resetFormDebug.triggerEventHandler('submitReset', 'newSecret123');
+      resetFormDebug.triggerEventHandler('submitReset', mockResponse);
       fixture.detectChanges();
 
-      expect(authActionsServiceMock.confirmPasswordChange).toHaveBeenCalledTimes(1);
+      expect(authActionsServiceMock.confirmPasswordReset).toHaveBeenCalledTimes(1);
     });
 
     it('should not error when service returns EMPTY', () => {
-      authActionsServiceMock.confirmPasswordChange.mockReturnValue(EMPTY);
+      authActionsServiceMock.confirmPasswordReset.mockReturnValue(EMPTY);
 
-      resetFormDebug.triggerEventHandler('submitReset', 'newSecret123');
+      resetFormDebug.triggerEventHandler('submitReset', mockResponse);
       fixture.detectChanges();
 
-      expect(authActionsServiceMock.confirmPasswordChange).toHaveBeenCalledTimes(1);
+      expect(authActionsServiceMock.confirmPasswordReset).toHaveBeenCalledTimes(1);
     });
   });
 

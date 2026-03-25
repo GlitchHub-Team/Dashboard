@@ -6,6 +6,9 @@ import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
 import { PasswordChange } from '../../models/auth/password-change.model';
 import { environment } from '../../../environments/environment';
+import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
+import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
+import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 
 @Injectable({
   providedIn: 'root',
@@ -23,15 +26,31 @@ export class AuthApiClientService {
     return this.http.post<void>(`${this.apiUrl}/logout`, { userId });
   }
 
-  public forgotPassword(email: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/forgot-password`, { email });
+  // API DOG - Password Dimenticata
+  public verifyForgotPasswordToken(token: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/forgot_password/verify_token/${token}`, {});
   }
 
-  public requestPasswordChange(userId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/request-password-change`, { userId });
+  // Serve anche il tenantId
+  public forgotPasswordRequest(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/forgot_password/request`, forgotPasswordRequest);
   }
 
+  public confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/forgot_password`, req);
+  }
+
+  // API DOG - Cambia password (serve old e new password)
   public confirmPasswordChange(data: PasswordChange): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/confirm-password-change`, data);
+    return this.http.post<void>(`${this.apiUrl}/change_password`, data);
+  }
+
+  // API DOG - Conferma account
+  public verifyAccountToken(token: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/confirm_account/verify_token/${token}`, {});
+  }
+
+  public confirmAccountCreation(req: ConfirmAccountResponse): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/confirm_account`, req);
   }
 }

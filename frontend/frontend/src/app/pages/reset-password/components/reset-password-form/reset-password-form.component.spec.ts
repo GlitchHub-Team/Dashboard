@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 
 import { ResetPasswordFormComponent } from './reset-password-form.component';
+import { ForgotPasswordResponse } from '../../../../models/auth/forgot-password.model';
 
 describe('ResetPasswordFormComponent', () => {
   let component: ResetPasswordFormComponent;
@@ -158,7 +159,7 @@ describe('ResetPasswordFormComponent', () => {
   });
 
   describe('onSubmit', () => {
-    it('should emit submitReset with password when form is valid', () => {
+    it('should emit submitReset with ForgotPasswordResponse when form is valid', () => {
       const emitSpy = vi.fn();
       component.submitReset.subscribe(emitSpy);
 
@@ -166,7 +167,8 @@ describe('ResetPasswordFormComponent', () => {
       component['resetPasswordForm'].controls.confirmNewPassword.setValue('secret123');
       submitForm();
 
-      expect(emitSpy).toHaveBeenCalledWith('secret123');
+      const expected: ForgotPasswordResponse = { token: '', newPassword: 'secret123' };
+      expect(emitSpy).toHaveBeenCalledWith(expected);
     });
 
     it('should not emit and should mark both fields touched when form is invalid', () => {

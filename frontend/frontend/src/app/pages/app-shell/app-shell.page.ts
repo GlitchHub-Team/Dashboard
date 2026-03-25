@@ -40,7 +40,6 @@ export class AppShellPage {
 
   protected onLogout(): void {
     this.authSessionService.logout();
-    this.router.navigate(['/login']);
   }
 
   protected onChangePassword(): void {

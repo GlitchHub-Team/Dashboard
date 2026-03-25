@@ -3,7 +3,7 @@ import { UserAdapter } from './user.adapter';
 import { UserBackend } from '../models/user/user-backend.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
 import { User } from '../models/user/user.model';
-import { UserRole } from '../models/user/user-role.enum';
+import { userRoleMapper } from '../utils/user-role.utils';
 
 @Injectable({ providedIn: 'root' })
 export class UserApiAdapter extends UserAdapter {
@@ -12,7 +12,7 @@ export class UserApiAdapter extends UserAdapter {
       id: dto.id,
       username: dto.username,
       email: dto.email,
-      role: dto.role as UserRole,
+      role: userRoleMapper.fromBackend(dto.role),
       tenantId: dto.tenantId || '',
     };
   }

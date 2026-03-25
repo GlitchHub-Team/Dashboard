@@ -7,8 +7,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
+import { TenantService } from '../../../../services/tenant/tenant.service';
 
 @Component({
   selector: 'app-forgot-password.dialog',
@@ -21,6 +23,7 @@ import { AuthActionsService } from '../../../../services/auth/auth-actions.servi
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    MatSelectModule,
   ],
   templateUrl: './forgot-password.dialog.html',
   styleUrl: './forgot-password.dialog.css',
@@ -29,16 +32,21 @@ export class ForgotPasswordDialog {
   private readonly formBuilder = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<ForgotPasswordDialog>);
   private readonly authActionsService = inject(AuthActionsService);
+  private readonly tenantService = inject(TenantService);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly displayedTenants = this.tenantService.tenantList;
 
   protected readonly forgotPasswordForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
+    tenantId: ['', Validators.required],
   });
 
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;
 
   constructor() {
+    this.tenantService.retrieveTenant();
     this.setupAutoClear();
   }
 
@@ -48,8 +56,13 @@ export class ForgotPasswordDialog {
       return;
     }
 
+    const forgotPasswordRequest = {
+      email: this.forgotPasswordForm.controls.email.value!,
+      tenantId: this.forgotPasswordForm.controls.tenantId.value!,
+    };
+
     this.authActionsService
-      .forgotPassword(this.forgotPasswordForm.controls.email.value)
+      .forgotPassword(forgotPasswordRequest)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.dialogRef.close(true),

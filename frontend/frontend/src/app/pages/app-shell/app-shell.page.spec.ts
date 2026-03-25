@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal, WritableSignal, Component, input, output } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 
@@ -36,7 +36,6 @@ class StubRouterOutlet {}
 describe('AppShellPage (Unit)', () => {
   let component: AppShellPage;
   let fixture: ComponentFixture<AppShellPage>;
-  let router: Router;
 
   const mockUser: User = {
     id: '1',
@@ -89,9 +88,6 @@ describe('AppShellPage (Unit)', () => {
         add: { imports: [StubHeader, StubSideBar, StubRouterOutlet] },
       })
       .compileComponents();
-
-    router = TestBed.inject(Router);
-    vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     rebuildComponent();
   });
@@ -232,22 +228,9 @@ describe('AppShellPage (Unit)', () => {
     const triggerLogout = (f: ComponentFixture<AppShellPage>) =>
       f.debugElement.query(By.directive(StubHeader)).triggerEventHandler('logoutRequested');
 
-    it('should call logout and navigate to /login', () => {
+    it('should call logout', () => {
       triggerLogout(fixture);
       expect(authSessionServiceMock.logout).toHaveBeenCalledOnce();
-      expect(router.navigate).toHaveBeenCalledWith(['/login']);
-    });
-
-    it('should call logout before navigation', () => {
-      const callOrder: string[] = [];
-      authSessionServiceMock.logout.mockImplementation(() => callOrder.push('logout'));
-      vi.spyOn(router, 'navigate').mockImplementation(() => {
-        callOrder.push('navigate');
-        return Promise.resolve(true);
-      });
-
-      triggerLogout(fixture);
-      expect(callOrder).toEqual(['logout', 'navigate']);
     });
   });
 

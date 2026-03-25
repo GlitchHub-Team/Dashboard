@@ -32,14 +32,14 @@ export class GatewayApiClientServiceMock {
           gateway_id: 'gateway-03',
           tenant_id: 'tenant-01',
           name: 'Ward B Gateway',
-          status: 'active',
+          status: 'inactive',
           interval: 60,
         },
         {
           gateway_id: 'gateway-04',
           tenant_id: 'tenant-01',
           name: 'Ward C Gateway',
-          status: 'active',
+          status: 'inactive',
           interval: 60,
         },
         {
@@ -60,7 +60,7 @@ export class GatewayApiClientServiceMock {
           gateway_id: 'gateway-07',
           tenant_id: 'tenant-01',
           name: 'Neurology Gateway',
-          status: 'active',
+          status: 'inactive',
           interval: 60,
         },
         {
@@ -179,7 +179,7 @@ export class GatewayApiClientServiceMock {
           gateway_id: 'gateway-24',
           tenant_id: 'tenant-01',
           name: 'Pharmacy Gateway',
-          status: 'active',
+          status: 'inactive',
           interval: 60,
         },
         {

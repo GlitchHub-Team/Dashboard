@@ -5,8 +5,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 
 import { LoginRequest } from '../../../../models/auth/login-request.model';
+import { TenantService } from '../../../../services/tenant/tenant.service';
 
 @Component({
   selector: 'app-login-form',
@@ -18,12 +20,14 @@ import { LoginRequest } from '../../../../models/auth/login-request.model';
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    MatSelectModule,
   ],
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.css',
 })
 export class LoginFormComponent {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly tenantService = inject(TenantService);
 
   public loading = input(false);
   public generalError = input<string | null>(null);
@@ -32,10 +36,17 @@ export class LoginFormComponent {
   public forgotPassword = output<void>();
   public dismissError = output<void>();
 
+  protected readonly displayedTenants = this.tenantService.tenantList;
+
   protected loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
+    tenantId: ['', Validators.required],
   });
+
+  constructor() {
+    this.tenantService.retrieveTenant();
+  }
 
   protected onSubmit(): void {
     if (!this.loginForm.valid) {
@@ -43,6 +54,12 @@ export class LoginFormComponent {
       return;
     }
 
-    this.submitLogin.emit(this.loginForm.getRawValue());
+    const loginRequest: LoginRequest = {
+      email: this.loginForm.get('email')?.value || '',
+      password: this.loginForm.get('password')?.value || '',
+      tenantId: this.loginForm.get('tenantId')?.value || undefined,
+    };
+
+    this.submitLogin.emit(loginRequest);
   }
 }

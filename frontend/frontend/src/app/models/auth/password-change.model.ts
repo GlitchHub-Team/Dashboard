@@ -1,4 +1,5 @@
+// TODO: da dove la prendo la old password
 export interface PasswordChange {
-  token: string;
+  oldPassword: string;
   newPassword: string;
 }

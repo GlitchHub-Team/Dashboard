@@ -38,7 +38,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideNativeDateAdapter(),
-    provideHttpClient(withInterceptors([authInterceptor, httpErrorInterceptor])),
+    provideHttpClient(withInterceptors([httpErrorInterceptor, authInterceptor])),
     importProvidersFrom(MatDialogModule),
     { provide: GatewayAdapter, useClass: GatewayApiAdapter },
     { provide: SensorAdapter, useClass: SensorApiAdapter },

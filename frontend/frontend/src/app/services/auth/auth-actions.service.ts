@@ -1,17 +1,18 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, throwError, tap, catchError, finalize, EMPTY } from 'rxjs';
+import { Observable, tap, catchError, finalize, EMPTY } from 'rxjs';
 
 import { ApiError } from '../../models/api-error.model';
 import { PasswordChange } from '../../models/auth/password-change.model';
-import { UserSessionService } from '../user-session/user-session.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
+import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
+import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
+import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthActionsService {
   private readonly authApiClient = inject(AuthApiClientService);
-  private readonly userSession = inject(UserSessionService);
 
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -21,36 +22,12 @@ export class AuthActionsService {
   public readonly error = this._error.asReadonly();
   public readonly passwordChangeResult = this._passwordChangeResult.asReadonly();
 
-  public forgotPassword(email: string): Observable<void> {
+  public forgotPassword(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
     this.setLoadingState();
 
-    return this.authApiClient.forgotPassword(email).pipe(
+    return this.authApiClient.forgotPasswordRequest(forgotPasswordRequest).pipe(
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to send reset email');
-        return EMPTY;
-      }),
-      finalize(() => this._loading.set(false)),
-    );
-  }
-
-  public requestPasswordChange(): Observable<void> {
-    const user = this.userSession.currentUser();
-
-    if (!user?.id) {
-      return throwError(
-        () =>
-          ({
-            status: 401,
-            message: 'User not authenticated',
-          }) as ApiError,
-      );
-    }
-
-    this.setLoadingState();
-
-    return this.authApiClient.requestPasswordChange(user.id).pipe(
-      catchError((err: ApiError) => {
-        this._error.set(err.message ?? 'Failed to request password change');
         return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
@@ -70,6 +47,42 @@ export class AuthActionsService {
       }),
       finalize(() => this._loading.set(false)),
     );
+  }
+
+  public confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
+    this.setLoadingState();
+
+    if (this.authApiClient.verifyForgotPasswordToken(req.token)) {
+      return this.authApiClient.confirmPasswordReset(req).pipe(
+        catchError((err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to reset password');
+          return EMPTY;
+        }),
+        finalize(() => this._loading.set(false)),
+      );
+    } else {
+      this._error.set('Invalid or expired token');
+      this._loading.set(false);
+      return EMPTY;
+    }
+  }
+
+  public confirmAccount(req: ConfirmAccountResponse): Observable<void> {
+    this.setLoadingState();
+
+    if (this.authApiClient.verifyAccountToken(req.token)) {
+      return this.authApiClient.confirmAccountCreation(req).pipe(
+        catchError((err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to confirm account');
+          return EMPTY;
+        }),
+        finalize(() => this._loading.set(false)),
+      );
+    } else {
+      this._error.set('Invalid or expired token');
+      this._loading.set(false);
+      return EMPTY;
+    }
   }
 
   public clearMessages(): void {

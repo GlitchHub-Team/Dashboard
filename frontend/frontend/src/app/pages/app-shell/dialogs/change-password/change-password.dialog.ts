@@ -1,12 +1,6 @@
 import { Component, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {
-  FormBuilder,
-  Validators,
-  ReactiveFormsModule,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,7 +10,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
 import { PasswordChange } from '../../../../models/auth/password-change.model';
-import { TokenStorageService } from '../../../../services/token-storage/token-storage.service';
 
 @Component({
   selector: 'app-change-password-dialog',
@@ -35,19 +28,15 @@ import { TokenStorageService } from '../../../../services/token-storage/token-st
 })
 export class ChangePasswordDialog {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly tokenStorageService = inject(TokenStorageService);
   private readonly dialogRef = inject(MatDialogRef<ChangePasswordDialog>);
   private readonly authActionsService = inject(AuthActionsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected form = this.formBuilder.nonNullable.group(
-    {
-      oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required]],
-      confirmNewPassword: ['', [Validators.required]],
-    },
-    { validators: this.passwordsMatchValidator },
-  );
+  protected form = this.formBuilder.nonNullable.group({
+    oldPassword: ['', [Validators.required]],
+    newPassword: ['', [Validators.required]],
+    confirmNewPassword: ['', [Validators.required]],
+  });
 
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;
@@ -63,7 +52,7 @@ export class ChangePasswordDialog {
     }
 
     const data: PasswordChange = {
-      token: this.tokenStorageService.getToken() ?? '',
+      oldPassword: this.form.controls.oldPassword.value,
       newPassword: this.form.controls.newPassword.value,
     };
 
@@ -106,15 +95,5 @@ export class ChangePasswordDialog {
           }
         });
     }
-  }
-
-  private passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
-    const password = control.get('newPassword')?.value;
-    const confirm = control.get('confirmNewPassword')?.value;
-
-    if (password && confirm && password !== confirm) {
-      return { passwordMismatch: true };
-    }
-    return null;
   }
 }

@@ -21,7 +21,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Heart Rate Monitor A',
           sensor_interval: 60,
-          profile: SensorProfiles.HEART_RATE_SERVICE,
+          profile: 'heart_rate_service',
           status: 'active',
         },
         {
@@ -29,7 +29,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Thermometer A',
           sensor_interval: 60,
-          profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+          profile: 'health_thermometer_service',
           status: 'active',
         },
         {
@@ -37,7 +37,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor A',
           sensor_interval: 60,
-          profile: SensorProfiles.CUSTOM_ECG_SERVICE,
+          profile: 'custom_ecg_service',
           status: 'active',
         },
         {
@@ -45,7 +45,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Pulse Oximeter A',
           sensor_interval: 60,
-          profile: SensorProfiles.PULSE_OXIMETER_SERVICE,
+          profile: 'pulse_oximeter_service',
           status: 'active',
         },
         {
@@ -53,7 +53,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Environment Sensor A',
           sensor_interval: 60,
-          profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+          profile: 'environmental_sensing_service',
           status: 'active',
         },
         {
@@ -61,7 +61,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Heart Rate Monitor B',
           sensor_interval: 60,
-          profile: SensorProfiles.HEART_RATE_SERVICE,
+          profile: 'heart_rate_service',
           status: 'active',
         },
         {
@@ -69,7 +69,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Thermometer B',
           sensor_interval: 60,
-          profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+          profile: 'health_thermometer_service',
           status: 'active',
         },
         {
@@ -77,7 +77,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor B',
           sensor_interval: 60,
-          profile: SensorProfiles.CUSTOM_ECG_SERVICE,
+          profile: 'custom_ecg_service',
           status: 'active',
         },
         {
@@ -85,7 +85,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Pulse Oximeter B',
           sensor_interval: 60,
-          profile: SensorProfiles.PULSE_OXIMETER_SERVICE,
+          profile: 'pulse_oximeter_service',
           status: 'active',
         },
         {
@@ -93,7 +93,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Environment Sensor B',
           sensor_interval: 60,
-          profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+          profile: 'environmental_sensing_service',
           status: 'active',
         },
         {
@@ -101,7 +101,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Heart Rate Monitor C',
           sensor_interval: 60,
-          profile: SensorProfiles.HEART_RATE_SERVICE,
+          profile: 'heart_rate_service',
           status: 'active',
         },
         {
@@ -109,7 +109,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Thermometer C',
           sensor_interval: 60,
-          profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+          profile: 'health_thermometer_service',
           status: 'active',
         },
         {
@@ -117,7 +117,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor C',
           sensor_interval: 60,
-          profile: SensorProfiles.CUSTOM_ECG_SERVICE,
+          profile: 'custom_ecg_service',
           status: 'active',
         },
         {
@@ -125,7 +125,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Pulse Oximeter C',
           sensor_interval: 60,
-          profile: SensorProfiles.PULSE_OXIMETER_SERVICE,
+          profile: 'pulse_oximeter_service',
           status: 'active',
         },
         {
@@ -133,7 +133,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'Environment Sensor C',
           sensor_interval: 60,
-          profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+          profile: 'environmental_sensing_service',
           status: 'active',
         },
       ],
@@ -146,7 +146,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Heart Rate',
           sensor_interval: 60,
-          profile: SensorProfiles.HEART_RATE_SERVICE,
+          profile: 'heart_rate_service',
           status: 'active',
         },
         {
@@ -154,7 +154,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Pulse Oximeter',
           sensor_interval: 60,
-          profile: SensorProfiles.PULSE_OXIMETER_SERVICE,
+          profile: 'pulse_oximeter_service',
           status: 'active',
         },
         {
@@ -162,7 +162,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Thermometer',
           sensor_interval: 60,
-          profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+          profile: 'health_thermometer_service',
           status: 'active',
         },
         {
@@ -170,7 +170,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-02',
           sensor_name: 'ICU ECG',
           sensor_interval: 60,
-          profile: SensorProfiles.CUSTOM_ECG_SERVICE,
+          profile: 'custom_ecg_service',
           status: 'active',
         },
         {
@@ -178,7 +178,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Environment',
           sensor_interval: 60,
-          profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+          profile: 'environmental_sensing_service',
           status: 'active',
         },
       ],
@@ -192,7 +192,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-04',
           sensor_name: 'Ward C Heart Rate',
           sensor_interval: 60,
-          profile: SensorProfiles.HEART_RATE_SERVICE,
+          profile: 'heart_rate_service',
           status: 'active',
         },
       ],

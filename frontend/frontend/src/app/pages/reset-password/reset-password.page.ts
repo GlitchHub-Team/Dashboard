@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
 import { ResetPasswordFormComponent } from './components/reset-password-form/reset-password-form.component';
-import { PasswordChange } from '../../models/auth/password-change.model';
+import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 
 @Component({
   selector: 'app-reset-password-page',
@@ -21,14 +21,9 @@ export class ResetPasswordPage {
   // TODO: Da dove lo prendiamo il token? Dall'URL?
   //private readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
 
-  protected onSubmitReset(newPassword: string): void {
-    const data: PasswordChange = {
-      newPassword,
-      token: 'TODO',
-    };
-
+  protected onSubmitReset(forgotPasswordResponse: ForgotPasswordResponse): void {
     this.authActionsService
-      .confirmPasswordChange(data)
+      .confirmPasswordReset(forgotPasswordResponse)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
