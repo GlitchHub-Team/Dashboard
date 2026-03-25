@@ -1,6 +1,7 @@
 import { Component, inject, DestroyRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
 import { ResetPasswordFormComponent } from './components/reset-password-form/reset-password-form.component';
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
@@ -17,13 +18,15 @@ export class ResetPasswordPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-
-  // TODO: Da dove lo prendiamo il token? Dall'URL?
-  //private readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
+  private readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
 
   protected onSubmitReset(forgotPasswordResponse: ForgotPasswordResponse): void {
+    const requestWithToken: ForgotPasswordResponse = {
+      ...forgotPasswordResponse,
+      token: this.token,
+    };
     this.authActionsService
-      .confirmPasswordReset(forgotPasswordResponse)
+      .confirmPasswordReset(requestWithToken)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }

@@ -15,6 +15,11 @@ export const routes: Routes = [
       import('./pages/reset-password/reset-password.page').then((m) => m.ResetPasswordPage),
   },
   {
+    path: 'confirm-account',
+    loadComponent: () =>
+      import('./pages/confirm-account/confirm-account.page').then((m) => m.ConfirmAccountPage),
+  },
+  {
     path: '',
     // Usare entrambe le guards, altrimenti si entra in un circolo vizioso (da canAny() manda a dashboard, ma
     // se non si è autenticati authGuard fallisce lo stesso). Se fallisce authGuard, non viene neanche valutato
