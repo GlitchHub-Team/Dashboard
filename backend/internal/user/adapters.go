@@ -303,7 +303,7 @@ func (adapter *UserPostgreAdapter) GetSuperAdminByEmail(email string) (User, err
 	return user, err
 }
 
-func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int,) (
+func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int) (
 	tenantUsers []User, total uint, err error,
 ) {
 	tenantUsers = make([]User, 0)
@@ -329,7 +329,7 @@ func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(tenantId uuid.UUID, pa
 	return tenantUsers, total, nil
 }
 
-func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(tenantId uuid.UUID, page, limit int,) (
+func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(tenantId uuid.UUID, page, limit int) (
 	tenantAdmins []User, total uint, err error,
 ) {
 	tenantAdmins = make([]User, 0)
@@ -376,7 +376,6 @@ func (adapter *UserPostgreAdapter) GetSuperAdminList(page, limit int) (
 	}
 	return
 }
-
 
 func (adapter *UserPostgreAdapter) CountTenantAdminsByTenant(tenantId uuid.UUID) (total uint, err error) {
 	tot, err := adapter.repo.CountTenantAdminsByTenant(tenantId.String())

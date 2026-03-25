@@ -368,7 +368,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 	errMockStep1 := newMockError(1)
 	step1TenantError := newStepTenantError_DeleteUserService(targetTenantId, errMockStep1)
 
-	// Step 2: get user 
+	// Step 2: get user
 	step2GetUserOk := func(
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
 	) *gomock.Call {
@@ -771,7 +771,6 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 			Times(1)
 	}
 
-
 	// step 4: delete user
 	step3DeleteUserOk := func(
 		deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantmocks.MockGetTenantPort,
@@ -896,7 +895,6 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 			expectedError: errMockStep2,
 			expectedUser:  user.User{},
 		},
-
 
 		// Step 3
 		{

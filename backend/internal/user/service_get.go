@@ -6,9 +6,9 @@ import (
 )
 
 /*
-	Servizio usato per ottenere informazioni su uno o più utenti.
+Servizio usato per ottenere informazioni su uno o più utenti.
 
-	Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
 */
 type GetUserService struct {
 	getUserPort   GetUserPort

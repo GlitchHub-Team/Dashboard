@@ -129,7 +129,6 @@ func (service *DeleteUserService) DeleteSuperAdmin(cmd DeleteSuperAdminCommand) 
 		return User{}, ErrCannotDeleteLastAdmin
 	}
 
-
 	// 3. Elimina user
 	oldUser, err := service.deleteUserPort.DeleteSuperAdmin(cmd.UserId)
 	return oldUser, err

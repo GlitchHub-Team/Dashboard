@@ -18,9 +18,9 @@ type SendConfirmAccountEmailPort interface {
 }
 
 /*
-	Servizio di creazione utente.
+Servizio di creazione utente.
 
-	Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
 */
 type CreateUserService struct {
 	createUserPort          SaveUserPort
