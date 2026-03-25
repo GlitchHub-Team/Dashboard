@@ -13,10 +13,10 @@ import (
 
 type UserPostgreAdapter struct {
 	log  *zap.Logger
-	repo *userPostgreRepository
+	repo *tenantMemberPgRepository
 }
 
-func NewUserPostgreAdapter(log *zap.Logger, repository *userPostgreRepository) (
+func NewUserPostgreAdapter(log *zap.Logger, repository *tenantMemberPgRepository) (
 	SaveUserPort,
 	DeleteUserPort,
 	GetUserPort,
