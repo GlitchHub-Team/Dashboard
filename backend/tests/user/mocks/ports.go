@@ -10,9 +10,8 @@
 package mocks
 
 import (
-	reflect "reflect"
-
 	user "backend/internal/user"
+	reflect "reflect"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -148,6 +147,36 @@ func NewMockGetUserPort(ctrl *gomock.Controller) *MockGetUserPort {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockGetUserPort) EXPECT() *MockGetUserPortMockRecorder {
 	return m.recorder
+}
+
+// CountSuperAdmins mocks base method.
+func (m *MockGetUserPort) CountSuperAdmins() (uint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountSuperAdmins")
+	ret0, _ := ret[0].(uint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountSuperAdmins indicates an expected call of CountSuperAdmins.
+func (mr *MockGetUserPortMockRecorder) CountSuperAdmins() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountSuperAdmins", reflect.TypeOf((*MockGetUserPort)(nil).CountSuperAdmins))
+}
+
+// CountTenantAdminsByTenant mocks base method.
+func (m *MockGetUserPort) CountTenantAdminsByTenant(tenantId uuid.UUID) (uint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountTenantAdminsByTenant", tenantId)
+	ret0, _ := ret[0].(uint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountTenantAdminsByTenant indicates an expected call of CountTenantAdminsByTenant.
+func (mr *MockGetUserPortMockRecorder) CountTenantAdminsByTenant(tenantId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountTenantAdminsByTenant", reflect.TypeOf((*MockGetUserPort)(nil).CountTenantAdminsByTenant), tenantId)
 }
 
 // GetSuperAdmin mocks base method.

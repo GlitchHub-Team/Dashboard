@@ -17,6 +17,11 @@ type SendConfirmAccountEmailPort interface {
 	SendConfirmAccountEmail(toAddr string, token string) error
 }
 
+/*
+	Servizio di creazione utente.
+
+	Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+*/
 type CreateUserService struct {
 	createUserPort          SaveUserPort
 	deleteUserPort          DeleteUserPort
