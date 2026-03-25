@@ -39,7 +39,7 @@ func newStepTenantNotFound_DeleteUserService(targetTenantId uuid.UUID) mockSetup
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
-			Return(tenant.Tenant{}, tenant.ErrTenantNotFound).
+			Return(tenant.Tenant{}, nil).
 			Times(1)
 	}
 }
@@ -100,7 +100,7 @@ func TestService_DeleteTenantUser(t *testing.T) {
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantUser(targetTenantId, targetUserId).
-			Return(user.User{}, user.ErrUserNotFound).
+			Return(user.User{}, nil).
 			Times(1)
 	}
 
@@ -383,7 +383,7 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetTenantAdmin(targetTenantId, targetUserId).
-			Return(user.User{}, user.ErrUserNotFound).
+			Return(user.User{}, nil).
 			Times(1)
 	}
 
@@ -719,7 +719,7 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetSuperAdmin(targetUserId).
-			Return(user.User{}, user.ErrUserNotFound).
+			Return(user.User{}, nil).
 			Times(1)
 	}
 
