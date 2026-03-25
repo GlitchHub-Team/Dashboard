@@ -5,6 +5,11 @@ import (
 	"backend/internal/tenant"
 )
 
+/*
+Servizio usato per ottenere informazioni su uno o più utenti.
+
+Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+*/
 type GetUserService struct {
 	getUserPort   GetUserPort
 	getTenantPort tenant.GetTenantPort
@@ -14,6 +19,7 @@ func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPo
 	GetTenantUserUseCase,
 	GetTenantAdminUseCase,
 	GetSuperAdminUseCase,
+
 	GetTenantUsersByTenantUseCase,
 	GetTenantAdminsByTenantUseCase,
 	GetSuperAdminListUseCase,

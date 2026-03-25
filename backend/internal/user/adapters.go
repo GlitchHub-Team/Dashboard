@@ -145,6 +145,9 @@ type GetUserPort interface {
 	GetSuperAdminList(page, limit int) (
 		superAdmins []User, total uint, err error,
 	)
+
+	CountTenantAdminsByTenant(tenantId uuid.UUID) (total uint, err error)
+	CountSuperAdmins() (total uint, err error)
 }
 
 func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (User, error) {
@@ -300,23 +303,25 @@ func (adapter *UserPostgreAdapter) GetSuperAdminByEmail(email string) (User, err
 	return user, err
 }
 
-func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(
-	tenantId uuid.UUID, page, limit int,
-) (tenantUsers []User, total uint, err error) {
+func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int) (
+	tenantUsers []User, total uint, err error,
+) {
+	tenantUsers = make([]User, 0)
 	offset, err := pagination.PageLimitToOffset(page, limit)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
-	entities, total, err := adapter.repo.GetTenantUsers(tenantId.String(), offset, limit)
+	entities, tot, err := adapter.repo.GetTenantUsers(tenantId.String(), offset, limit)
+	total = uint(tot)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
 	for _, entity := range entities {
 		tenantUser, err := entity.ToUser()
 		if err != nil {
-			return nil, 0, err
+			return make([]User, 0), 0, err
 		}
 		tenantUsers = append(tenantUsers, tenantUser)
 	}
@@ -324,46 +329,68 @@ func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(
 	return tenantUsers, total, nil
 }
 
-func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(
-	tenantId uuid.UUID, page, limit int,
-) (tenantAdmins []User, total uint, err error) {
+func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(tenantId uuid.UUID, page, limit int) (
+	tenantAdmins []User, total uint, err error,
+) {
+	tenantAdmins = make([]User, 0)
 	offset, err := pagination.PageLimitToOffset(page, limit)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
-	entities, total, err := adapter.repo.GetTenantAdmins(tenantId.String(), offset, limit)
+	entities, tot, err := adapter.repo.GetTenantAdmins(tenantId.String(), offset, limit)
+	total = uint(tot)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
 	for _, entity := range entities {
 		tenantUser, err := entity.ToUser()
 		if err != nil {
-			return nil, 0, err
+			return make([]User, 0), 0, err
 		}
 		tenantAdmins = append(tenantAdmins, tenantUser)
 	}
 
-	return tenantAdmins, total, nil
+	return
 }
 
 func (adapter *UserPostgreAdapter) GetSuperAdminList(page, limit int) (
 	superAdmins []User, total uint, err error,
 ) {
+	superAdmins = make([]User, 0)
 	offset, err := pagination.PageLimitToOffset(page, limit)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
-	entities, total, err := adapter.repo.GetSuperAdmins(offset, limit)
+	entities, tot, err := adapter.repo.GetSuperAdmins(offset, limit)
+	total = uint(tot)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
 	for _, entity := range entities {
 		tenantUser := entity.toUser()
 		superAdmins = append(superAdmins, tenantUser)
 	}
-	return superAdmins, total, nil
+	return
+}
+
+func (adapter *UserPostgreAdapter) CountTenantAdminsByTenant(tenantId uuid.UUID) (total uint, err error) {
+	tot, err := adapter.repo.CountTenantAdminsByTenant(tenantId.String())
+	total = uint(tot)
+	if err != nil {
+		return 0, err
+	}
+	return total, err
+}
+
+func (adapter *UserPostgreAdapter) CountSuperAdmins() (total uint, err error) {
+	tot, err := adapter.repo.CountSuperAdmins()
+	total = uint(tot)
+	if err != nil {
+		return 0, err
+	}
+	return
 }

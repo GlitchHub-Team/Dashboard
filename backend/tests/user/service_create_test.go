@@ -44,7 +44,7 @@ func newStepTenantNotFound_CreateUserService(targetTenantId uuid.UUID) mockSetup
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
-			Return(tenant.Tenant{}, tenant.ErrTenantNotFound).
+			Return(tenant.Tenant{}, nil).
 			Times(1)
 	}
 }
