@@ -10,12 +10,16 @@ import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
 
-const COMMAND_CASES = [
-  ['commission', 'commissionGateway'],
-  ['decommission', 'decommissionGateway'],
-  ['restart', 'resetGateway'],
-  ['reboot', 'rebootGateway'],
-] as const;
+const COMMAND_CASES: [
+  string,
+  'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway',
+  string[],
+][] = [
+  ['commission', 'commissionGateway', ['gw-1', '']],
+  ['decommission', 'decommissionGateway', ['gw-1']],
+  ['restart', 'resetGateway', ['gw-1']],
+  ['reboot', 'rebootGateway', ['gw-1']],
+];
 
 describe('GatewayCommandsDialog (Unit)', () => {
   let fixture: ComponentFixture<GatewayCommandsDialog>;
@@ -119,18 +123,18 @@ describe('GatewayCommandsDialog (Unit)', () => {
   describe('command execution', () => {
     it.each(COMMAND_CASES)(
       '%s: should call %s with gateway id and close with true on success',
-      (command, method) => {
+      (command, method, args) => {
         gatewayServiceMock[method].mockReturnValue(of(void 0));
         selectCommand(command);
         sendBtn().nativeElement.click();
-        expect(gatewayServiceMock[method]).toHaveBeenCalledWith('gw-1');
+        expect(gatewayServiceMock[method]).toHaveBeenCalledWith(...args);
         expect(dialogRefMock.close).toHaveBeenCalledWith(true);
       },
     );
 
     it.each(COMMAND_CASES)(
       '%s: should set generalError and close with false on error',
-      (command, method) => {
+      (command, method, _args) => {
         gatewayServiceMock[method].mockReturnValue(
           throwError(() => ({ message: `${command} failed` }) as ApiError),
         );

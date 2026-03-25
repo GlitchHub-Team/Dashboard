@@ -95,8 +95,8 @@ export class GatewayService {
     );
   }
 
-  public commissionGateway(id: string): Observable<Gateway> {
-    return this.gatewayCommandApi.commissionGateway(id).pipe(
+  public commissionGateway(id: string, tenantId: string): Observable<Gateway> {
+    return this.gatewayCommandApi.commissionGateway(id, tenantId).pipe(
       map((dto) => this.adapter.fromDTO(dto)),
       tap(() => this.refetchCurrentPage()),
     );

@@ -16,7 +16,6 @@ export class GatewayApiClientServiceMock {
       [
         {
           gateway_id: 'gateway-01',
-          tenant_id: 'tenant-01',
           name: 'Main Lobby Gateway',
           status: 'active',
           interval: 60,
@@ -60,7 +59,7 @@ export class GatewayApiClientServiceMock {
           gateway_id: 'gateway-07',
           tenant_id: 'tenant-01',
           name: 'Neurology Gateway',
-          status: 'inactive',
+          status: 'active',
           interval: 60,
         },
         {

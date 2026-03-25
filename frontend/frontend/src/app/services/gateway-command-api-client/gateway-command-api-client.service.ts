@@ -12,8 +12,10 @@ export class GatewayCommandApiClientService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}`;
 
-  public commissionGateway(gatewayId: string): Observable<GatewayBackend> {
-    return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway/${gatewayId}/commission`, {});
+  public commissionGateway(gatewayId: string, tenantId: string): Observable<GatewayBackend> {
+    return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway/${gatewayId}/commission`, {
+      tenant_id: tenantId,
+    });
   }
 
   public decommissionGateway(gatewayId: string): Observable<void> {

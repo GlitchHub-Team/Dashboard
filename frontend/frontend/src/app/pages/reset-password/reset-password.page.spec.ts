@@ -33,13 +33,14 @@ describe('ResetPasswordPage', () => {
   const activatedRouteMock = {
     snapshot: {
       queryParamMap: {
-        get: vi.fn().mockReturnValue(null),
+        get: vi.fn().mockReturnValue('reset-token'),
       },
     },
   };
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue('reset-token');
 
     loadingSignal = signal(false);
     errorSignal = signal<string | null>(null);
