@@ -135,9 +135,16 @@ describe('DashboardService', () => {
   });
 
   describe('loadDashboard', () => {
+    it('should do nothing when no tenantId is provided', () => {
+      service.loadDashboard();
+
+      expect(gatewayServiceMock.getGatewaysByTenant).not.toHaveBeenCalled();
+      expect(sensorServiceMock.getSensorsByTenant).not.toHaveBeenCalled();
+    });
+
     it('should call getGatewaysByTenant when canSendCommands is true', () => {
       permissionServiceMock.can.mockReturnValue(true);
-      service.loadDashboard();
+      service.loadDashboard('tenant-01');
 
       expect(gatewayServiceMock.getGatewaysByTenant).toHaveBeenCalledWith('tenant-01', 0, 10);
       expect(sensorServiceMock.getSensorsByTenant).not.toHaveBeenCalled();
@@ -145,7 +152,7 @@ describe('DashboardService', () => {
 
     it('should call getSensorsByTenant when canSendCommands is false', () => {
       permissionServiceMock.can.mockReturnValue(false);
-      service.loadDashboard();
+      service.loadDashboard('tenant-01');
 
       expect(sensorServiceMock.getSensorsByTenant).toHaveBeenCalledWith('tenant-01', 0, 10);
       expect(gatewayServiceMock.getGatewaysByTenant).not.toHaveBeenCalled();

@@ -5,7 +5,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { AuthApiClientService } from './auth-api-client.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
-import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { PasswordChange } from '../../models/auth/password-change.model';
 import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
@@ -39,15 +38,13 @@ describe('AuthApiClientService', () => {
 
   describe('login', () => {
     it('should POST credentials to /auth/login', () => {
-      const mockRequest: LoginRequest = { email: 'test@example.com', password: 'password' };
-      const mockUser: User = {
-        id: '1',
+      const mockRequest: LoginRequest = {
         email: 'test@example.com',
-        username: 'testuser',
-        role: UserRole.TENANT_USER,
+        password: 'password',
+        userRole: UserRole.TENANT_USER,
         tenantId: 'tenant-01',
       };
-      const mockResponse: AuthResponse = { user: mockUser, token: 'mock-token' };
+      const mockResponse: AuthResponse = { token: 'mock-token' };
 
       service.login(mockRequest).subscribe((response) => {
         expect(response).toEqual(mockResponse);
@@ -62,15 +59,13 @@ describe('AuthApiClientService', () => {
 
   describe('logout', () => {
     it('should POST userId to /auth/logout', () => {
-      const userId = '1';
-
-      service.logout(userId).subscribe((response) => {
+      service.logout().subscribe((response) => {
         expect(response).toBeNull();
       });
 
       const req = httpMock.expectOne(`${apiUrl}/logout`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ userId });
+      expect(req.request.body).toEqual({});
       req.flush(null);
     });
   });
@@ -185,7 +180,12 @@ describe('AuthApiClientService', () => {
 
   describe('error handling', () => {
     it('should propagate HTTP errors on login', () => {
-      const mockRequest: LoginRequest = { email: 'test@example.com', password: 'password' };
+      const mockRequest: LoginRequest = {
+        email: 'test@example.com',
+        password: 'password',
+        userRole: UserRole.TENANT_USER,
+        tenantId: 'tenant-01',
+      };
       const mockError = { status: 401, statusText: 'Unauthorized' };
 
       service.login(mockRequest).subscribe({
@@ -202,10 +202,9 @@ describe('AuthApiClientService', () => {
     });
 
     it('should propagate server errors on logout', () => {
-      const userId = '1';
       const mockError = { status: 500, statusText: 'Internal Server Error' };
 
-      service.logout(userId).subscribe({
+      service.logout().subscribe({
         next: () => expect.unreachable('expected an error'),
         error: (error) => {
           expect(error.status).toBe(500);

@@ -9,39 +9,34 @@ import { ForgotPasswordResponse } from '../models/auth/forgot-password.model';
 import { ConfirmAccountResponse } from '../models/auth/confirm-account.model';
 import { ApiError } from '../models/api-error.model';
 import { UserRole } from '../models/user/user-role.enum';
+import { userRoleMapper } from '../utils/user-role.utils';
 
 const MOCK_DELAY = 800;
 
-const MOCK_USERS: Record<string, { password: string; user: AuthResponse['user'] }> = {
+interface MockUser {
+  password: string;
+  userId: string;
+  role: string;
+  tenantId?: string;
+}
+
+const MOCK_USERS: Record<string, MockUser> = {
   'super@test.com': {
     password: 'password',
-    user: {
-      id: '1',
-      username: 'superadmin',
-      email: 'super@test.com',
-      role: UserRole.SUPER_ADMIN,
-      tenantId: 'tenant-1',
-    },
+    userId: '1',
+    role: 'super_admin',
   },
   'admin@test.com': {
     password: 'password',
-    user: {
-      id: '1',
-      username: 'admin',
-      email: 'admin@test.com',
-      role: UserRole.TENANT_ADMIN,
-      tenantId: 'tenant-1',
-    },
+    userId: '2',
+    role: 'tenant_admin',
+    tenantId: 'tenant-1',
   },
   'user@test.com': {
     password: 'password',
-    user: {
-      id: '2',
-      username: 'user',
-      email: 'user@test.com',
-      role: UserRole.TENANT_USER,
-      tenantId: 'tenant-1',
-    },
+    userId: '3',
+    role: 'tenant_user',
+    tenantId: 'tenant-1',
   },
 };
 
@@ -50,18 +45,20 @@ export class AuthServiceMock {
   login(req: LoginRequest): Observable<AuthResponse> {
     const entry = MOCK_USERS[req.email];
 
-    if (entry && entry.password === req.password) {
-      const response: AuthResponse = {
-        user: entry.user,
-        token: this.fakeToken(entry.user.email, entry.user.role),
-      };
-      return of(response).pipe(delay(MOCK_DELAY));
+    if (
+      entry &&
+      entry.password === req.password &&
+      entry.role === req.userRole &&
+      (entry.tenantId === req.tenantId || !entry.tenantId)
+    ) {
+      const token = this.buildJwt(entry.userId, entry.role, entry.tenantId);
+      return of({ token }).pipe(delay(MOCK_DELAY));
     }
 
     return this.delayedError({ status: 401, message: 'Invalid email or password' });
   }
 
-  logout(_userId: string): Observable<void> {
+  logout(): Observable<void> {
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
@@ -93,19 +90,20 @@ export class AuthServiceMock {
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  private delayedError(error: ApiError): Observable<never> {
-    return timer(MOCK_DELAY).pipe(switchMap(() => throwError(() => error)));
-  }
-
-  private fakeToken(email: string, role: UserRole): string {
-    const header = btoa(JSON.stringify({ alg: 'none' }));
+  private buildJwt(userId: string, role: string, tenantId?: string): string {
+    const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }));
     const payload = btoa(
       JSON.stringify({
-        email,
-        role,
+        userId,
+        userRole: role,
+        tenantId,
         exp: Math.floor(Date.now() / 1000) + 3600,
       }),
     );
-    return `${header}.${payload}.fake`;
+    return `${header}.${payload}.mock`;
+  }
+
+  private delayedError(error: ApiError): Observable<never> {
+    return timer(MOCK_DELAY).pipe(switchMap(() => throwError(() => error)));
   }
 }

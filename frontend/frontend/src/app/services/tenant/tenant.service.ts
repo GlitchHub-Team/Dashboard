@@ -28,11 +28,25 @@ export class TenantService {
   public readonly pageIndex = this._pageIndex.asReadonly();
   public readonly limit = this._limit.asReadonly();
 
-  public retrieveTenant(): void {
+  public getTenant(id: string): Observable<Tenant> {
+    this.setLoadingState();
+
+    return this.tenantApi.getTenant(id).pipe(
+      map((dto) => this.adapter.fromDTO(dto)),
+      tap({
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to fetch tenant');
+        },
+      }),
+      finalize(() => this._loading.set(false)),
+    );
+  }
+
+  public retrieveTenants(): void {
     this.setGettingTenantsState();
 
     this.tenantApi
-      .getTenant(this._pageIndex(), this._limit())
+      .getTenants(this.pageIndex(), this.limit())
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
@@ -51,7 +65,7 @@ export class TenantService {
   public changePage(pageIndex: number, limit: number): void {
     this._pageIndex.set(pageIndex);
     this._limit.set(limit);
-    this.retrieveTenant();
+    this.retrieveTenants();
   }
 
   public addNewTenant(config: TenantConfig): Observable<Tenant> {

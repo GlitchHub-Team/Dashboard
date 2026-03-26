@@ -8,7 +8,7 @@ import { Permission } from '../../models/permission.enum';
 describe('PermissionService', () => {
   let service: PermissionService;
 
-  const userSessionMock = { currentRole: vi.fn() };
+  const userSessionMock = { currentUser: vi.fn() };
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -24,7 +24,7 @@ describe('PermissionService', () => {
 
   describe('can', () => {
     it('should return false when role is null', () => {
-      userSessionMock.currentRole.mockReturnValue(null);
+      userSessionMock.currentUser.mockReturnValue(null);
       expect(service.can(Permission.DASHBOARD_ACCESS)).toBe(false);
     });
 
@@ -48,14 +48,14 @@ describe('PermissionService', () => {
       [UserRole.SUPER_ADMIN, Permission.APIKEY_MANAGEMENT, true],
       [UserRole.SUPER_ADMIN, Permission.TENANT_USER_MANAGEMENT, false],
     ])('%s / %s => %s', (role: UserRole, permission: Permission, expected: boolean) => {
-      userSessionMock.currentRole.mockReturnValue(role);
+      userSessionMock.currentUser.mockReturnValue({ role });
       expect(service.can(permission)).toBe(expected);
     });
   });
 
   describe('canAny', () => {
     it('should return false when role is null', () => {
-      userSessionMock.currentRole.mockReturnValue(null);
+      userSessionMock.currentUser.mockReturnValue(null);
       expect(service.canAny([Permission.DASHBOARD_ACCESS])).toBe(false);
     });
 
@@ -80,14 +80,14 @@ describe('PermissionService', () => {
       ],
       [UserRole.SUPER_ADMIN, [], false, 'empty array'],
     ])('%s: %s => %s (%s)', (role: UserRole, permissions: Permission[], expected: boolean) => {
-      userSessionMock.currentRole.mockReturnValue(role);
+      userSessionMock.currentUser.mockReturnValue({ role });
       expect(service.canAny(permissions)).toBe(expected);
     });
   });
 
   describe('canAll', () => {
     it('should return false when role is null', () => {
-      userSessionMock.currentRole.mockReturnValue(null);
+      userSessionMock.currentUser.mockReturnValue(null);
       expect(service.canAll([Permission.DASHBOARD_ACCESS])).toBe(false);
     });
 
@@ -107,7 +107,7 @@ describe('PermissionService', () => {
         'one missing',
       ],
     ])('%s: %s => %s (%s)', (role: UserRole, permissions: Permission[], expected: boolean) => {
-      userSessionMock.currentRole.mockReturnValue(role);
+      userSessionMock.currentUser.mockReturnValue({ role });
       expect(service.canAll(permissions)).toBe(expected);
     });
   });

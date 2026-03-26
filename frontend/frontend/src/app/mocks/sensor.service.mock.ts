@@ -201,11 +201,11 @@ export class SensorApiClientServiceMock {
   ]);
 
   private readonly tenantGatewayMap: Record<string, string[]> = {
-    'tenant-01': ['gateway-01', 'gateway-02'],
-    'tenant-02': ['gateway-04'],
-    'tenant-03': [],
-    'tenant-04': [],
-    'tenant-05': [],
+    'tenant-1': ['gateway-01', 'gateway-02'],
+    'tenant-2': ['gateway-04'],
+    'tenant-3': [],
+    'tenant-4': [],
+    'tenant-5': [],
   };
 
   public getSensorListByGateway(

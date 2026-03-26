@@ -30,7 +30,7 @@ export class TenantManagerPage implements OnInit {
   protected readonly loading = this.tenantService.loading;
 
   public ngOnInit(): void {
-    this.tenantService.retrieveTenant();
+    this.tenantService.retrieveTenants();
   }
 
   protected onCreateTenant(): void {
@@ -42,7 +42,7 @@ export class TenantManagerPage implements OnInit {
       .afterClosed()
       .subscribe((created) => {
         if (created) {
-          this.tenantService.retrieveTenant();
+          this.tenantService.retrieveTenants();
         }
       });
   }

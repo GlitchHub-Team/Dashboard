@@ -31,10 +31,12 @@ export class AuthSessionService {
   public login(req: LoginRequest): Observable<AuthResponse> {
     this.setLoadingState();
 
+    // Fa la richiesta di login e, in caso di successo, salva il token JWT
+    // e inizializza la sessione utente
     return this.authApiClient.login(req).pipe(
       tap((response) => {
         this.tokenStorage.saveToken(response.token);
-        this.userSession.initSession(response.user);
+        this.userSession.initSession(response.token);
       }),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Login failed');
@@ -44,17 +46,13 @@ export class AuthSessionService {
     );
   }
 
+  // In ogni caso di logout, sia che la chiamata al backend vada a buon fine o fallisca,
+  // vogliamo pulire la sessione e reindirizzare al login
   public logout(): void {
-    const user = this.userSession.currentUser();
-
-    if (user?.id) {
-      this.authApiClient.logout(user.id).subscribe({
-        next: () => this.clearAndRedirect(),
-        error: () => this.clearAndRedirect(),
-      });
-    } else {
-      this.clearAndRedirect();
-    }
+    this.authApiClient.logout().subscribe({
+      next: () => this.clearAndRedirect(),
+      error: () => this.clearAndRedirect(),
+    });
   }
 
   public clearError(): void {

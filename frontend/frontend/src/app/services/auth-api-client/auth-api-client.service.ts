@@ -18,12 +18,13 @@ export class AuthApiClientService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/auth`;
 
+  // Si aspetta di ricevere solo il token JWT
   public login(req: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, req);
   }
 
-  public logout(userId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/logout`, { userId });
+  public logout(): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/logout`, {});
   }
 
   // API DOG - Password Dimenticata
@@ -50,7 +51,7 @@ export class AuthApiClientService {
     return this.http.get<boolean>(`${this.apiUrl}/confirm_account/verify_token/${token}`, {});
   }
 
-  public confirmAccountCreation(req: ConfirmAccountResponse): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/confirm_account`, req);
+  public confirmAccountCreation(req: ConfirmAccountResponse): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/confirm_account`, req);
   }
 }

@@ -1,24 +1,34 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 
-import { User } from '../../models/user/user.model';
-import { UserRole } from '../../models/user/user-role.enum';
+import { UserSession } from '../../models/auth/user-session.model';
+import { TokenStorageService } from '../token-storage/token-storage.service';
+import { userRoleMapper } from '../../utils/user-role.utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserSessionService {
-  private _currentUser = signal<User | null>(this.loadFromStorage());
+  private tokenStorage = inject(TokenStorageService);
+  private _currentUser = signal<UserSession | null>(null);
 
   public readonly currentUser = this._currentUser.asReadonly();
-  public readonly currentRole = computed<UserRole | null>(() => this.currentUser()?.role || null);
-  // TODO: Meglio far in modo che appaia il nome del Tenant
-  public readonly currentTenant = computed<string | null>(
-    () => this.currentUser()?.tenantId || null,
-  );
 
-  public initSession(user: User): void {
-    sessionStorage.setItem('currentUser', JSON.stringify(user));
-    this._currentUser.set(user);
+  constructor() {
+    this.restoreSession();
+  }
+
+  // Dai campi del JWT costruisce la sessione utente e la salva
+  // sia nello stato che nel sessionStorage.
+  // Il JWT dovrebbe contenere info su userId, userRole e tenantId (quando non SUPER_ADMIN)
+  public initSession(token: string): void {
+    const session = this.decodeToken(token);
+    if (!session) {
+      console.warn('Failed to decode JWT');
+      return;
+    }
+
+    this._currentUser.set(session);
+    sessionStorage.setItem('currentUser', JSON.stringify(session));
   }
 
   public clearSession(): void {
@@ -26,10 +36,40 @@ export class UserSessionService {
     this._currentUser.set(null);
   }
 
-  private loadFromStorage(): User | null {
+  private restoreSession(): void {
+    const stored = this.loadFromStorage();
+    if (stored) {
+      this._currentUser.set(stored);
+      return;
+    }
+
+    const token = this.tokenStorage.getToken();
+    if (token && this.tokenStorage.isTokenValid()) {
+      this.initSession(token);
+    } else {
+      this.clearSession();
+    }
+  }
+
+  // Mappa i campi del JWT alla struttura UserSession.
+  // Se il token non è valido o mancano campi, ritorna null
+  private decodeToken(token: string): UserSession | null {
     try {
-      const userData = sessionStorage.getItem('currentUser');
-      return userData ? (JSON.parse(userData) as User) : null;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return {
+        userId: payload.userId,
+        role: userRoleMapper.fromBackend(payload.userRole),
+        tenantId: payload.tenantId,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private loadFromStorage(): UserSession | null {
+    try {
+      const data = sessionStorage.getItem('currentUser');
+      return data ? (JSON.parse(data) as UserSession) : null;
     } catch {
       return null;
     }

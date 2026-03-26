@@ -22,7 +22,7 @@ describe('UserFormDialogComponent', () => {
 
   let dialogRefMock: { close: ReturnType<typeof vi.fn> };
   let tenantServiceMock: {
-    retrieveTenant: ReturnType<typeof vi.fn>;
+    retrieveTenants: ReturnType<typeof vi.fn>;
     tenantList: ReturnType<ReturnType<typeof signal>['asReadonly']>;
   };
 
@@ -59,7 +59,7 @@ describe('UserFormDialogComponent', () => {
     vi.clearAllMocks();
     dialogRefMock = { close: vi.fn() };
     tenantServiceMock = {
-      retrieveTenant: vi.fn(),
+      retrieveTenants: vi.fn(),
       tenantList: signal(tenantList).asReadonly(),
     };
   });
@@ -74,7 +74,7 @@ describe('UserFormDialogComponent', () => {
         email: 'john.doe@example.com',
         tenantId: 'tenant-1',
       });
-      expect(tenantServiceMock.retrieveTenant).not.toHaveBeenCalled();
+      expect(tenantServiceMock.retrieveTenants).not.toHaveBeenCalled();
     });
 
     it('should initialize empty form when user is null', async () => {
@@ -87,10 +87,10 @@ describe('UserFormDialogComponent', () => {
       });
     });
 
-    it('should call retrieveTenant for TENANT_ADMIN role', async () => {
+    it('should call retrieveTenants for TENANT_ADMIN role', async () => {
       await createComponent({ user: null, role: UserRole.TENANT_ADMIN });
 
-      expect(tenantServiceMock.retrieveTenant).toHaveBeenCalledTimes(1);
+      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -18,6 +18,7 @@ export class ResetPasswordPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  // Token recuperato dall'URL
   private readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
 
   protected onSubmitReset(forgotPasswordResponse: ForgotPasswordResponse): void {
@@ -25,6 +26,8 @@ export class ResetPasswordPage {
       ...forgotPasswordResponse,
       token: this.token,
     };
+    // La conferma del reset password non logga l'utente, quindi rimane sulla pagina di reset password
+    // anche dopo la conferma, mostrando un messaggio di successo e un pulsante per tornare al login
     this.authActionsService
       .confirmPasswordReset(requestWithToken)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -32,6 +35,7 @@ export class ResetPasswordPage {
   }
 
   protected onGoToLogin(): void {
+    this.authActionsService.clearMessages();
     this.router.navigate(['/login']);
   }
 

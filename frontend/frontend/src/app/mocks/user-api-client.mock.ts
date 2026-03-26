@@ -10,6 +10,26 @@ import { userRoleMapper } from '../utils/user-role.utils';
 export class UserApiClientMockService {
   private mockUsers: UserBackend[] = [
     {
+      id: '1',
+      username: 'Tullio',
+      email: 'super@test.com',
+      role: 'super_admin',
+    },
+    {
+      id: '2',
+      username: 'Stefano',
+      email: 'admin@test.com',
+      role: 'tenant_admin',
+      tenantId: 'tenant-1',
+    },
+    {
+      id: '3',
+      username: 'Tullio x Stefano',
+      email: 'user@test.com',
+      role: 'tenant_user',
+      tenantId: 'tenant-1',
+    },
+    {
       id: 'user-5741',
       username: 'admin',
       email: 'admin@example.com',

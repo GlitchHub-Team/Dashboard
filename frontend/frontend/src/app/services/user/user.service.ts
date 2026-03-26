@@ -26,6 +26,20 @@ export class UserService {
   public readonly pageIndex = this._pageIndex.asReadonly();
   public readonly limit = this._limit.asReadonly();
 
+  public getUser(userId: string, role: UserRole, tenantId?: string): Observable<User> {
+    this._loading.set(true);
+
+    return this.userApi.getUser(userId, role, tenantId).pipe(
+      map((dto) => this.adapter.fromDTO(dto)),
+      tap({
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to load user');
+        },
+      }),
+      finalize(() => this._loading.set(false)),
+    );
+  }
+
   public retrieveUser(role: UserRole, tenantId?: string): void {
     this.setGettingUsersState();
 

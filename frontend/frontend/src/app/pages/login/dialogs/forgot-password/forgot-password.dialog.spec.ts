@@ -25,7 +25,7 @@ describe('ForgotPasswordDialog', () => {
   const dialogRefMock = { close: vi.fn() };
 
   const tenantServiceMock = {
-    retrieveTenant: vi.fn(),
+    retrieveTenants: vi.fn(),
     tenantList: signal([]).asReadonly(),
   };
 
@@ -84,8 +84,8 @@ describe('ForgotPasswordDialog', () => {
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeFalsy();
     });
 
-    it('should call retrieveTenant on init', () => {
-      expect(tenantServiceMock.retrieveTenant).toHaveBeenCalled();
+    it('should call retrieveTenants on init', () => {
+      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalled();
     });
   });
 

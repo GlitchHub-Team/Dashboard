@@ -1,6 +1,12 @@
 import { Component, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -32,11 +38,15 @@ export class ChangePasswordDialog {
   private readonly authActionsService = inject(AuthActionsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected form = this.formBuilder.nonNullable.group({
-    oldPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required]],
-    confirmNewPassword: ['', [Validators.required]],
-  });
+  // Cambiare la password da loggato richiede solo la vecchia password e la nuova password
+  protected form = this.formBuilder.nonNullable.group(
+    {
+      oldPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required]],
+      confirmNewPassword: ['', [Validators.required]],
+    },
+    { validators: this.passwordsMatchValidator },
+  );
 
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;
@@ -56,11 +66,15 @@ export class ChangePasswordDialog {
       newPassword: this.form.controls.newPassword.value,
     };
 
+    // Il token passato è il JWT dell'utente loggato, che viene recuperato automaticamente dall'AuthInterceptor
     this.authActionsService
       .confirmPasswordChange(data)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.authActionsService.clearMessages();
+          this.dialogRef.close(true);
+        },
       });
   }
 
@@ -82,6 +96,16 @@ export class ChangePasswordDialog {
     }
 
     return 'Invalid value';
+  }
+
+  private passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const newPassword = control.get('newPassword')?.value;
+    const confirmNewPassword = control.get('confirmNewPassword')?.value;
+
+    if (newPassword && confirmNewPassword && newPassword !== confirmNewPassword) {
+      return { passwordMismatch: true };
+    }
+    return null;
   }
 
   private setupAutoClear(): void {

@@ -122,7 +122,7 @@ describe('ConfirmAccountPage', () => {
       confirmFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
       fixture.detectChanges();
 
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
     it('should not navigate when service returns EMPTY', () => {

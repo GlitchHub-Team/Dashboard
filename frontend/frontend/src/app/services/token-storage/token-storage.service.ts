@@ -9,6 +9,7 @@ export class TokenStorageService {
 
   public readonly isValid = this._isValid.asReadonly();
 
+  // Salva il token JWT e aggiorna lo stato di validità
   public saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     this._isValid.set(this.isTokenValid());

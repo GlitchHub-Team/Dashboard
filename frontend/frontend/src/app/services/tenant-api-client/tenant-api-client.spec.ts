@@ -48,8 +48,20 @@ describe('TenantApiClientService', () => {
   });
 
   describe('getTenant', () => {
+    it('should send GET request to fetch tenant by id', () => {
+      service.getTenant('tenant-01').subscribe((tenant) => {
+        expect(tenant).toEqual(paginatedTenantResponse.data[0]);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
+      expect(req.request.method).toBe('GET');
+      req.flush(paginatedTenantResponse.data[0]);
+    });
+  });
+
+  describe('getTenants', () => {
     it('should send GET request with page and limit query params', () => {
-      service.getTenant(1, 20).subscribe((response) => {
+      service.getTenants(1, 20).subscribe((response) => {
         expect(response).toEqual(paginatedTenantResponse);
       });
 

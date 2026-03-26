@@ -33,7 +33,7 @@ describe('TenantManagerPage', () => {
     pageIndex: signal(0),
     limit: signal(10),
     loading: signal(false),
-    retrieveTenant: vi.fn(),
+    retrieveTenants: vi.fn(),
     removeTenant: vi.fn(),
     changePage: vi.fn(),
   };
@@ -77,7 +77,7 @@ describe('TenantManagerPage', () => {
 
   it('should fetch tenants on init', () => {
     fixture.detectChanges();
-    expect(mockTenantService.retrieveTenant).toHaveBeenCalledTimes(1);
+    expect(mockTenantService.retrieveTenants).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -130,7 +130,7 @@ describe('TenantManagerPage', () => {
     testApi.onCreateTenant();
     afterClosedSubject.next(true);
 
-    expect(mockTenantService.retrieveTenant).toHaveBeenCalled();
+    expect(mockTenantService.retrieveTenants).toHaveBeenCalled();
   });
 
   it('should open delete dialog with correct config', () => {

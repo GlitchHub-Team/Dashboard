@@ -46,7 +46,7 @@ export class ForgotPasswordDialog {
   protected readonly generalError = this.authActionsService.error;
 
   constructor() {
-    this.tenantService.retrieveTenant();
+    this.tenantService.retrieveTenants();
     this.setupAutoClear();
   }
 
@@ -56,6 +56,7 @@ export class ForgotPasswordDialog {
       return;
     }
 
+    // Confeziona e invia la richiesta di reset password, chiude il dialog alla risposta positiva
     const forgotPasswordRequest = {
       email: this.forgotPasswordForm.controls.email.value!,
       tenantId: this.forgotPasswordForm.controls.tenantId.value!,
@@ -93,7 +94,7 @@ export class ForgotPasswordDialog {
     return 'Invalid value';
   }
 
-  // Clear general error when user starts typing
+  // Pulisce errori quando l'utente digita nei campi
   private setupAutoClear(): void {
     for (const key of Object.keys(this.forgotPasswordForm.controls)) {
       this.forgotPasswordForm

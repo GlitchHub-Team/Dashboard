@@ -14,7 +14,11 @@ export class TenantApiClientService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}`;
 
-  public getTenant(page: number, limit: number): Observable<PaginatedResponse<TenantBackend>> {
+  public getTenant(id: string): Observable<TenantBackend> {
+    return this.http.get<TenantBackend>(`${this.apiUrl}/tenant/${id}`);
+  }
+
+  public getTenants(page: number, limit: number): Observable<PaginatedResponse<TenantBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
     return this.http.get<PaginatedResponse<TenantBackend>>(`${this.apiUrl}/tenants`, { params });
