@@ -3,7 +3,7 @@ import { Observable, of, delay } from 'rxjs';
 import { UserConfig } from '../models/user/user-config.model';
 import { UserRole } from '../models/user/user-role.enum';
 import { UserBackend } from '../models/user/user-backend.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedUserResponse } from '../models/user/paginated-user-response.model';
 import { userRoleMapper } from '../utils/user-role.utils';
 
 @Injectable({ providedIn: 'root' })
@@ -141,7 +141,7 @@ export class UserApiClientMockService {
     page = 0,
     size = 10,
     tenantId?: string,
-  ): Observable<PaginatedResponse<UserBackend>> {
+  ): Observable<PaginatedUserResponse<UserBackend>> {
     const roleString = userRoleMapper.toBackend(role);
     let filteredUsers = [...this.mockUsers];
     if (role) {
@@ -151,8 +151,8 @@ export class UserApiClientMockService {
       filteredUsers = filteredUsers.filter((user) => user.tenant_id === tenantId);
     }
     const total = filteredUsers.length;
-    const data = filteredUsers.slice(page * size, (page + 1) * size);
-    return of({ count: data.length, total, data }).pipe(delay(500));
+    const users = filteredUsers.slice(page * size, (page + 1) * size);
+    return of({ count: users.length, total, users }).pipe(delay(500));
   }
 
   public getUser(id: string, role: UserRole, tenantId?: string): Observable<UserBackend> {

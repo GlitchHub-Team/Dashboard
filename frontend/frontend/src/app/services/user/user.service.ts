@@ -48,7 +48,7 @@ export class UserService {
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._userList.set(result.data);
+          this._userList.set(result.users);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {

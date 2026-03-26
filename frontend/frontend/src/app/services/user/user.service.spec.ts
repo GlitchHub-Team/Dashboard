@@ -54,7 +54,7 @@ describe('UserService', () => {
   const rawPaginatedResponse = {
     count: 2,
     total: 2,
-    data: mockUsers,
+    users: mockUsers,
   };
 
   beforeEach(() => {

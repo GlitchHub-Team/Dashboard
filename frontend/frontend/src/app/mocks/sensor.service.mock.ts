@@ -5,7 +5,7 @@ import { delay } from 'rxjs/operators';
 
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../models/sensor/sensor-config.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
 
 @Injectable({
@@ -212,7 +212,7 @@ export class SensorApiClientServiceMock {
     gatewayId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<SensorBackend>> {
+  ): Observable<PaginatedSensorResponse<SensorBackend>> {
     const all = this.mockSensors.get(gatewayId) ?? [];
     return of(this.paginate(all, page, limit)).pipe(delay(600));
   }
@@ -221,7 +221,7 @@ export class SensorApiClientServiceMock {
     tenantId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<SensorBackend>> {
+  ): Observable<PaginatedSensorResponse<SensorBackend>> {
     const gatewayIds = this.tenantGatewayMap[tenantId] ?? [];
     const all = gatewayIds.flatMap((id) => this.mockSensors.get(id) ?? []);
     return of(this.paginate(all, page, limit)).pipe(delay(800));
@@ -273,14 +273,14 @@ export class SensorApiClientServiceMock {
     return of(undefined).pipe(delay(400));
   }
 
-  private paginate<T>(items: T[], page: number, limit: number): PaginatedResponse<T> {
+  private paginate<T>(items: T[], page: number, limit: number): PaginatedSensorResponse<T> {
     const start = page * limit;
-    const data = items.slice(start, start + limit);
+    const sensors = items.slice(start, start + limit);
 
     return {
-      count: data.length,
+      count: sensors.length,
       total: items.length,
-      data,
+      sensors,
     };
   }
 }

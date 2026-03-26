@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedTenantResponse } from '../models/tenant/paginated-tenant-response.model';
 import { TenantBackend } from '../models/tenant/tenant-backend.model';
 import { TenantConfig } from '../models/tenant/tenant-config.model';
 
@@ -21,10 +21,10 @@ export class TenantApiClientMockService {
     return of(tenant!).pipe(delay(500));
   }
 
-  public getTenants(page = 0, limit = 10): Observable<PaginatedResponse<TenantBackend>> {
+  public getTenants(page = 0, limit = 10): Observable<PaginatedTenantResponse<TenantBackend>> {
     const total = this.mockTenants.length;
-    const data = this.mockTenants.slice(page * limit, (page + 1) * limit);
-    return of({ count: data.length, total, data }).pipe(delay(500));
+    const tenants = this.mockTenants.slice(page * limit, (page + 1) * limit);
+    return of({ count: tenants.length, total, tenants }).pipe(delay(500));
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {

@@ -8,7 +8,7 @@ import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 import { ApiError } from '../../models/api-error.model';
 import { Status } from '../../models/gateway-sensor-status.enum';
 
@@ -34,10 +34,10 @@ describe('SensorService', () => {
     },
   ];
 
-  const mockBackendResponse: PaginatedResponse<SensorBackend> = {
+  const mockBackendResponse: PaginatedSensorResponse<SensorBackend> = {
     count: 2,
     total: 10,
-    data: [
+    sensors: [
       {
         sensor_id: 's-1',
         gateway_id: 'gw-1',
@@ -57,9 +57,13 @@ describe('SensorService', () => {
     ],
   };
 
-  const mockAdaptedResponse: PaginatedResponse<Sensor> = { count: 2, total: 10, data: mockSensors };
-  const emptyBackend: PaginatedResponse<SensorBackend> = { count: 0, total: 0, data: [] };
-  const emptyAdapted: PaginatedResponse<Sensor> = { count: 0, total: 0, data: [] };
+  const mockAdaptedResponse: PaginatedSensorResponse<Sensor> = {
+    count: 2,
+    total: 10,
+    sensors: mockSensors,
+  };
+  const emptyBackend: PaginatedSensorResponse<SensorBackend> = { count: 0, total: 0, sensors: [] };
+  const emptyAdapted: PaginatedSensorResponse<Sensor> = { count: 0, total: 0, sensors: [] };
 
   const mockNewBackend: SensorBackend = {
     sensor_id: 's-3',

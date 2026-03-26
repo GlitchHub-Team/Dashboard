@@ -43,7 +43,7 @@ export class GatewayService {
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._gatewayList.set(result.data);
+          this._gatewayList.set(result.gateways);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {
@@ -66,7 +66,7 @@ export class GatewayService {
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._gatewayList.set(result.data);
+          this._gatewayList.set(result.gateways);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {

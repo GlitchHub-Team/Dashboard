@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 import { TenantBackend } from '../../models/tenant/tenant-backend.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';
 
@@ -18,10 +18,15 @@ export class TenantApiClientService {
     return this.http.get<TenantBackend>(`${this.apiUrl}/tenant/${id}`);
   }
 
-  public getTenants(page: number, limit: number): Observable<PaginatedResponse<TenantBackend>> {
+  public getTenants(
+    page: number,
+    limit: number,
+  ): Observable<PaginatedTenantResponse<TenantBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<TenantBackend>>(`${this.apiUrl}/tenants`, { params });
+    return this.http.get<PaginatedTenantResponse<TenantBackend>>(`${this.apiUrl}/tenants`, {
+      params,
+    });
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {

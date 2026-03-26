@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,10 +18,10 @@ export class SensorApiClientService {
     gatewayId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<SensorBackend>> {
+  ): Observable<PaginatedSensorResponse<SensorBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<SensorBackend>>(
+    return this.http.get<PaginatedSensorResponse<SensorBackend>>(
       `${this.apiUrl}/gateway/${gatewayId}/sensors`,
       {
         params,
@@ -33,10 +33,10 @@ export class SensorApiClientService {
     tenantId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<SensorBackend>> {
+  ): Observable<PaginatedSensorResponse<SensorBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<SensorBackend>>(
+    return this.http.get<PaginatedSensorResponse<SensorBackend>>(
       `${this.apiUrl}/tenant/${tenantId}/sensors`,
       {
         params,

@@ -5,7 +5,7 @@ import { of, throwError } from 'rxjs';
 import { TenantService } from './tenant.service';
 import { TenantApiAdapter } from '../../adapters/tenant-api.adapter';
 import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 import { ApiError } from '../../models/api-error.model';
 import { TenantBackend } from '../../models/tenant/tenant-backend.model';
 import { Tenant } from '../../models/tenant/tenant.model';
@@ -19,10 +19,10 @@ describe('TenantService', () => {
     { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
   ];
 
-  const paginatedBackendResponse: PaginatedResponse<TenantBackend> = {
+  const paginatedBackendResponse: PaginatedTenantResponse<TenantBackend> = {
     count: 2,
     total: 2,
-    data: tenantBackendList,
+    tenants: tenantBackendList,
   };
 
   const mappedTenants: Tenant[] = [
@@ -33,7 +33,7 @@ describe('TenantService', () => {
   const mappedPaginatedResponse = {
     count: 2,
     total: 2,
-    data: mappedTenants,
+    tenants: mappedTenants,
   };
 
   const mockConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };

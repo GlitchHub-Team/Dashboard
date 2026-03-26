@@ -4,7 +4,7 @@ import { delay, Observable, of, throwError } from 'rxjs';
 
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../models/gateway/gateway-config.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedGatewayResponse } from '../models/gateway/paginated-gateway-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -250,7 +250,7 @@ export class GatewayApiClientServiceMock {
     tenantId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<GatewayBackend>> {
+  ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
     const all = this.mockGateways.get(tenantId) ?? [];
     return of(this.paginate(all, page, limit)).pipe(delay(800));
   }
@@ -258,7 +258,7 @@ export class GatewayApiClientServiceMock {
   public getGatewayList(
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<GatewayBackend>> {
+  ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
     const all = Array.from(this.mockGateways.values()).flat();
     return of(this.paginate(all, page, limit)).pipe(delay(800));
   }
@@ -310,14 +310,14 @@ export class GatewayApiClientServiceMock {
     return of(undefined).pipe(delay(400));
   }
 
-  private paginate<T>(items: T[], page: number, limit: number): PaginatedResponse<T> {
+  private paginate<T>(items: T[], page: number, limit: number): PaginatedGatewayResponse<T> {
     const start = page * limit;
-    const data = items.slice(start, start + limit);
+    const gateways = items.slice(start, start + limit);
 
     return {
-      count: data.length,
+      count: gateways.length,
       total: items.length,
-      data,
+      gateways,
     };
   }
 }

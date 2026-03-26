@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserRole } from '../../models/user/user-role.enum';
 import { environment } from '../../../environments/environment';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedUserResponse } from '../../models/user/paginated-user-response.model';
 import { UserBackend } from '../../models/user/user-backend.model';
 import { UserConfig } from '../../models/user/user-config.model';
 
@@ -32,12 +32,12 @@ export class UserApiClientService {
     page: number,
     size: number,
     tenantId?: string,
-  ): Observable<PaginatedResponse<UserBackend>> {
+  ): Observable<PaginatedUserResponse<UserBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
 
     const url = this.getBaseUrl(role, tenantId, true);
 
-    return this.http.get<PaginatedResponse<UserBackend>>(url, { params });
+    return this.http.get<PaginatedUserResponse<UserBackend>>(url, { params });
   }
 
   public getUser(id: string, role: UserRole, tenantId?: string): Observable<UserBackend> {

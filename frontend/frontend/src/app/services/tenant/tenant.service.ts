@@ -50,7 +50,7 @@ export class TenantService {
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._tenantList.set(result.data);
+          this._tenantList.set(result.tenants);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {

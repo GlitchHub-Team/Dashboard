@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { TenantApiClientService } from './tenant-api-client.service';
 import { environment } from '../../../environments/environment';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 import { TenantBackend } from '../../models/tenant/tenant-backend.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';
 
@@ -14,10 +14,10 @@ describe('TenantApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const paginatedTenantResponse: PaginatedResponse<TenantBackend> = {
+  const paginatedTenantResponse: PaginatedTenantResponse<TenantBackend> = {
     count: 2,
     total: 2,
-    data: [
+    tenants: [
       { tenant_id: 'tenant-01', name: 'Tenant 1', can_impersonate: false },
       { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
     ],
@@ -50,12 +50,12 @@ describe('TenantApiClientService', () => {
   describe('getTenant', () => {
     it('should send GET request to fetch tenant by id', () => {
       service.getTenant('tenant-01').subscribe((tenant) => {
-        expect(tenant).toEqual(paginatedTenantResponse.data[0]);
+        expect(tenant).toEqual(paginatedTenantResponse.tenants[0]);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
       expect(req.request.method).toBe('GET');
-      req.flush(paginatedTenantResponse.data[0]);
+      req.flush(paginatedTenantResponse.tenants[0]);
     });
   });
 

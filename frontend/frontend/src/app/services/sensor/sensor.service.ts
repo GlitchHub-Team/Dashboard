@@ -43,7 +43,7 @@ export class SensorService {
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._sensorList.set(result.data);
+          this._sensorList.set(result.sensors);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {
@@ -67,7 +67,7 @@ export class SensorService {
       .pipe(
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._sensorList.set(result.data);
+          this._sensorList.set(result.sensors);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {

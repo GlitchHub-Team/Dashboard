@@ -6,7 +6,7 @@ import { GatewayApiClientService } from './gateway-api-client.service';
 import { environment } from '../../../environments/environment';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
 
 describe('GatewayApiClientService', () => {
   let service: GatewayApiClientService;
@@ -31,10 +31,10 @@ describe('GatewayApiClientService', () => {
     },
   ];
 
-  const mockPaginatedResponse: PaginatedResponse<GatewayBackend> = {
+  const mockPaginatedResponse: PaginatedGatewayResponse<GatewayBackend> = {
     count: 2,
     total: 10,
-    data: mockGateways,
+    gateways: mockGateways,
   };
 
   beforeEach(() => {
@@ -73,9 +73,9 @@ describe('GatewayApiClientService', () => {
       service.getGatewayListByTenant('tenant-1', 0, 10).subscribe((response) => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
-        expect(response.data.length).toBe(2);
-        expect(response.data[0].gateway_id).toBe('gw-1');
-        expect(response.data[1].gateway_id).toBe('gw-2');
+        expect(response.gateways.length).toBe(2);
+        expect(response.gateways[0].gateway_id).toBe('gw-1');
+        expect(response.gateways[1].gateway_id).toBe('gw-2');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/gateways?page=0&limit=10`);
@@ -100,7 +100,7 @@ describe('GatewayApiClientService', () => {
       service.getGatewayList(2, 25).subscribe((response) => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
-        expect(response.data.length).toBe(2);
+        expect(response.gateways.length).toBe(2);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateways?page=2&limit=25`);

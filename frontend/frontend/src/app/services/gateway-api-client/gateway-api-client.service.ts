@@ -1,11 +1,10 @@
-// services/gateway-api-client/gateway-api-client.service.ts
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -19,10 +18,10 @@ export class GatewayApiClientService {
     tenantId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<GatewayBackend>> {
+  ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<GatewayBackend>>(
+    return this.http.get<PaginatedGatewayResponse<GatewayBackend>>(
       `${this.apiUrl}/tenant/${tenantId}/gateways`,
       {
         params,
@@ -33,10 +32,12 @@ export class GatewayApiClientService {
   public getGatewayList(
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<GatewayBackend>> {
+  ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
     const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<GatewayBackend>>(`${this.apiUrl}/gateways`, { params });
+    return this.http.get<PaginatedGatewayResponse<GatewayBackend>>(`${this.apiUrl}/gateways`, {
+      params,
+    });
   }
 
   public addNewGateway(config: GatewayConfig): Observable<GatewayBackend> {

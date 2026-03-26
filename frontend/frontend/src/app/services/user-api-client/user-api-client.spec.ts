@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { UserBackend } from '../../models/user/user-backend.model';
 import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedUserResponse } from '../../models/user/paginated-user-response.model';
 
 const GET_USERS_CASES = [
   {
@@ -50,10 +50,10 @@ describe('UserApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const paginatedUserResponse: PaginatedResponse<UserBackend> = {
+  const paginatedUserResponse: PaginatedUserResponse<UserBackend> = {
     count: 2,
     total: 2,
-    data: [
+    users: [
       {
         id: '1',
         username: 'admin',

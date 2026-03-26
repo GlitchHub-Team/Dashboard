@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { SensorAdapter } from './sensor.adapter';
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { Sensor } from '../models/sensor/sensor.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
 import { statusMapper } from '../utils/status.utils';
 import { sensorProfilesMapper } from '../utils/sensor-profile.utils';
+import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-response.model';
 
 @Injectable()
 export class SensorApiAdapter extends SensorAdapter {
@@ -19,11 +19,13 @@ export class SensorApiAdapter extends SensorAdapter {
     };
   }
 
-  fromPaginatedDTO(response: PaginatedResponse<SensorBackend>): PaginatedResponse<Sensor> {
+  fromPaginatedDTO(
+    response: PaginatedSensorResponse<SensorBackend>,
+  ): PaginatedSensorResponse<Sensor> {
     return {
       count: response.count,
       total: response.total,
-      data: response.data.map((dto) => this.fromDTO(dto)),
+      sensors: response.sensors.map((dto) => this.fromDTO(dto)),
     };
   }
 }
