@@ -27,6 +27,7 @@ export class AuthActionsService {
   public readonly error = this._error.asReadonly();
   public readonly passwordChangeResult = this._passwordChangeResult.asReadonly();
 
+  // Manda la mail per il reset della password (quindi utente non loggato)
   public forgotPassword(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
     this.setLoadingState();
 
@@ -39,6 +40,7 @@ export class AuthActionsService {
     );
   }
 
+  // Cambia la password (utente loggato)
   public confirmPasswordChange(data: PasswordChange): Observable<void> {
     this.setLoadingState();
     this._passwordChangeResult.set(null);
@@ -54,6 +56,7 @@ export class AuthActionsService {
     );
   }
 
+  // Cambia la password (utente non loggato, reset password)
   public confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
     this.setLoadingState();
 
@@ -74,6 +77,7 @@ export class AuthActionsService {
     );
   }
 
+  // Conferma la creazione dell'account (dopo che l'utente ha cliccato sul link di conferma ricevuto via mail)
   public confirmAccount(req: ConfirmAccountResponse): Observable<AuthResponse> {
     this.setLoadingState();
 

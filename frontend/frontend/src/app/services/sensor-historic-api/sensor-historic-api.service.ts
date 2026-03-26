@@ -13,6 +13,8 @@ export class SensorHistoricApiService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}`;
 
+  // Setta tutti i parametri necessari per la richiesta di dati storici
+  // TODO: Il time andrà settato come DATE TIME, da rivedere anche sulla parte di UI
   public getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
     const params = new HttpParams()
       .set('from_time', req.timeInterval!.from.toISOString())

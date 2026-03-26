@@ -41,6 +41,7 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayListByTenant(tenantId, page, limit)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._gatewayList.set(result.gateways);
@@ -64,6 +65,7 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayList(page, limit)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._gatewayList.set(result.gateways);
@@ -108,10 +110,12 @@ export class GatewayService {
       .pipe(tap(() => this.refetchCurrentPage()));
   }
 
+  // Comando di reset completo del gateway allo stato iniziale
   public resetGateway(id: string): Observable<void> {
     return this.gatewayCommandApi.resetGateway(id);
   }
 
+  // Comando di riavvio del gateway
   public rebootGateway(id: string): Observable<void> {
     return this.gatewayCommandApi.rebootGateway(id);
   }

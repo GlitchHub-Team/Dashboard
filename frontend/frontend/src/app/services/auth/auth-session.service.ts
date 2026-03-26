@@ -23,7 +23,6 @@ export class AuthSessionService {
 
   public readonly loading = this._loading.asReadonly();
   public readonly error = this._error.asReadonly();
-  // TODO: Da rivedere per come utilizziamo il token che viene (forse) inviato dal backend
   public readonly isAuthenticated = computed(
     () => this.tokenStorage.isValid() && this.userSession.currentUser() !== null,
   );

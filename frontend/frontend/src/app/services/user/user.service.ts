@@ -46,6 +46,7 @@ export class UserService {
     this.userApi
       .getUsers(role, this._pageIndex(), this._limit(), tenantId)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da UserBackend a User)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._userList.set(result.users);

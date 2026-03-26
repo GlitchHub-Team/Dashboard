@@ -41,6 +41,7 @@ export class SensorService {
     this.sensorApi
       .getSensorListByGateway(gatewayId, page, limit)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._sensorList.set(result.sensors);
@@ -65,6 +66,7 @@ export class SensorService {
     this.sensorApi
       .getSensorListByTenant(tenantId, page, limit)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._sensorList.set(result.sensors);
@@ -79,7 +81,6 @@ export class SensorService {
       .subscribe();
   }
 
-  // TODO: Metodi chiamati dai dialog non devono gestire stato perchè lo gestisce il dialog
   public addNewSensor(config: SensorConfig): Observable<Sensor> {
     return this.sensorApi.addNewSensor(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
   }

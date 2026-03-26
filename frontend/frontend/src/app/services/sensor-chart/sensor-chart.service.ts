@@ -25,6 +25,7 @@ export class SensorChartService {
   private readonly _historicReadings = signal<SensorReading[]>([]);
   private readonly _liveReadings = signal<SensorReading[]>([]);
   private readonly _loading = signal(false);
+  // Status scelti in maniera arbitraria
   private readonly _connectionStatus = signal<
     'connected' | 'connecting' | 'disconnected' | 'reconnecting'
   >('disconnected');
@@ -46,6 +47,7 @@ export class SensorChartService {
     }
   }
 
+  // Cleanup di tutte le connessioni/grafici
   public stopChart(): void {
     this.subscription?.unsubscribe();
     this.subscription = null;
@@ -58,6 +60,7 @@ export class SensorChartService {
 
     this.subscription = this.historicService.getHistoricData(req).subscribe({
       next: (response) => {
+        // Adapting della response al formato utilizzato dal grafico
         const historicData = this.historicAdapter.fromResponse(response);
         this._historicReadings.set(historicData.readings);
       },
@@ -75,6 +78,7 @@ export class SensorChartService {
     this.subscription = this.liveReadingsService
       .connect(req.sensor)
       .pipe(
+        // Se cade la connessione, ritenta 3 volte con 3s di delay di riconnettersi
         retry({
           count: 3,
           delay: (_, retryCount) => {
@@ -85,10 +89,12 @@ export class SensorChartService {
         }),
       )
       .subscribe({
+        // Ogni volta che arriva una nuova lettura, la adatta e la aggiunge alla lista di quelle visualizzate
         next: (raw) => {
           this._connectionStatus.set('connected');
           const reading = this.liveReadingsAdapter.fromDTO(raw);
           this._liveReadings.update((readings) => {
+            // Mantiene solo le ultime MAX_LIVE_READINGS letture per evitare di sovraccaricare il grafico
             const updated = [...readings, reading];
             return updated.length > this.MAX_LIVE_READINGS
               ? updated.slice(updated.length - this.MAX_LIVE_READINGS)

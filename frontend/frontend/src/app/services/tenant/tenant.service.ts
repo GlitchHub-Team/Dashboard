@@ -48,6 +48,7 @@ export class TenantService {
     this.tenantApi
       .getTenants(this.pageIndex(), this.limit())
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._tenantList.set(result.tenants);

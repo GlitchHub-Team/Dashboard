@@ -11,6 +11,7 @@ import { UserConfig } from '../../models/user/user-config.model';
 export class UserApiClientService {
   private readonly http = inject(HttpClient);
 
+  // Costruire l'URL in base al ruolo passato come context, e differenzia tra recuperare multipli utenti o un singolo utente
   private getBaseUrl(role: UserRole, tenantId?: string, isPlural = false): string {
     const baseUrl = environment.apiUrl;
     switch (role) {
