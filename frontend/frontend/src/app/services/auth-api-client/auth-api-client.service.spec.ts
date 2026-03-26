@@ -71,7 +71,7 @@ describe('AuthApiClientService', () => {
   });
 
   describe('verifyForgotPasswordToken', () => {
-    it('should GET to /auth/forgot_password/verify_token/:token and return boolean', () => {
+    it('should GET to /auth/forgot_password/verify_token/:token and return true when result is true', () => {
       const token = 'reset-token';
 
       service.verifyForgotPasswordToken(token).subscribe((response) => {
@@ -80,7 +80,18 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token/${token}`);
       expect(req.request.method).toBe('GET');
-      req.flush(true);
+      req.flush({ result: true });
+    });
+
+    it('should return false when result is false', () => {
+      const token = 'reset-token';
+
+      service.verifyForgotPasswordToken(token).subscribe((response) => {
+        expect(response).toBe(false);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token/${token}`);
+      req.flush({ result: false });
     });
   });
 
@@ -147,7 +158,7 @@ describe('AuthApiClientService', () => {
   });
 
   describe('verifyAccountToken', () => {
-    it('should GET to /auth/confirm_account/verify_token/:token and return boolean', () => {
+    it('should GET to /auth/confirm_account/verify_token/:token and return true when result is true', () => {
       const token = 'account-token';
 
       service.verifyAccountToken(token).subscribe((response) => {
@@ -156,7 +167,18 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/${token}`);
       expect(req.request.method).toBe('GET');
-      req.flush(true);
+      req.flush({ result: true });
+    });
+
+    it('should return false when result is false', () => {
+      const token = 'account-token';
+
+      service.verifyAccountToken(token).subscribe((response) => {
+        expect(response).toBe(false);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/${token}`);
+      req.flush({ result: false });
     });
   });
 

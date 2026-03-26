@@ -196,7 +196,7 @@ describe('UserApiClientService', () => {
       'should POST to $url and return dto response',
       ({ config, role, tenantId, url, response }) => {
         let result: UserBackend | undefined;
-        service.createUser(config, tenantId, role).subscribe((user) => {
+        service.createUser(config, role, tenantId).subscribe((user) => {
           result = user;
         });
 
@@ -214,7 +214,7 @@ describe('UserApiClientService', () => {
         username: 'newuser',
       };
 
-      expect(() => service.createUser(config, undefined, UserRole.TENANT_ADMIN)).toThrow(
+      expect(() => service.createUser(config, UserRole.TENANT_ADMIN, undefined)).toThrow(
         'tenantId is required for TENANT_ADMIN',
       );
     });
@@ -248,7 +248,7 @@ describe('UserApiClientService', () => {
     });
 
     it('should throw when tenantId is missing for tenant-scoped deletion', () => {
-      expect(() => service.deleteUser('1', UserRole.TENANT_USER)).toThrow(
+      expect(() => service.deleteUser('1', UserRole.TENANT_USER, undefined)).toThrow(
         'tenantId is required for TENANT_USER',
       );
     });

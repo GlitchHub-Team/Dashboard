@@ -106,8 +106,8 @@ describe('UserManagerPage', () => {
 
     expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
       { email: 'new@user.com', username: 'newuser' },
-      'tenant-01',
       UserRole.TENANT_ADMIN,
+      'tenant-01',
     );
     expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
   });

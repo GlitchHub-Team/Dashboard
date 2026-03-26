@@ -136,14 +136,14 @@ describe('UserService', () => {
       userAdapterMock.fromDTO.mockReturnValue(newUser);
 
       let result: User | undefined;
-      service.addNewUser(newUserConfig, 'tenant-1', UserRole.TENANT_ADMIN).subscribe((user) => {
+      service.addNewUser(newUserConfig, UserRole.TENANT_ADMIN, 'tenant-1').subscribe((user) => {
         result = user;
       });
 
       expect(userApiMock.createUser).toHaveBeenCalledWith(
         newUserConfig,
-        'tenant-1',
         UserRole.TENANT_ADMIN,
+        'tenant-1',
       );
       expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(newUser);
       expect(result).toEqual(newUser);
@@ -151,21 +151,12 @@ describe('UserService', () => {
       expect(service.error()).toBeNull();
     });
 
-    it('should call createUser without role when not provided', () => {
-      userApiMock.createUser.mockReturnValue(of(newUser));
-      userAdapterMock.fromDTO.mockReturnValue(newUser);
-
-      service.addNewUser(newUserConfig, 'tenant-1').subscribe();
-
-      expect(userApiMock.createUser).toHaveBeenCalledWith(newUserConfig, 'tenant-1', undefined);
-    });
-
     it('should set loading false on create error', () => {
       const error = new Error('Error creating');
       userApiMock.createUser.mockReturnValue(throwError(() => error));
 
       let thrownError: unknown;
-      service.addNewUser(newUserConfig, 'tenant-1', UserRole.TENANT_ADMIN).subscribe({
+      service.addNewUser(newUserConfig, UserRole.TENANT_ADMIN, 'tenant-1').subscribe({
         error: (err) => {
           thrownError = err;
         },
@@ -173,8 +164,8 @@ describe('UserService', () => {
 
       expect(userApiMock.createUser).toHaveBeenCalledWith(
         newUserConfig,
-        'tenant-1',
         UserRole.TENANT_ADMIN,
+        'tenant-1',
       );
       expect(thrownError).toBe(error);
       expect(service.loading()).toBe(false);
