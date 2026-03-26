@@ -11,3 +11,5 @@ var ErrUnauthorized = errors.New("unauthorized: You do not have permission to pe
 var ErrInvalidTenantID = errors.New("invalid tenant ID: Tenant ID must be a valid UUID")
 
 var ErrGetListPort = errors.New("unexpected error from GetTenants port")
+
+var ErrTenantAlreadyExists = errors.New("tenant already exists")

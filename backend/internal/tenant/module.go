@@ -5,23 +5,14 @@ import (
 )
 
 var Module = fx.Module(
-	"tenant",
-
-    // Metodi pubblici
+    "tenant",
     fx.Provide(
-        // controller
         NewTenantController,
-
-        //UseCase
         NewCreateTenantService,
-      
-        //Outbound Port
         NewTenantPostgreAdapter,
     ),
-
-    // Metodi privati
     fx.Provide(
         fx.Private,
-        
-   ),
+        NewTenantPostgreRepository,
+    ),
 )

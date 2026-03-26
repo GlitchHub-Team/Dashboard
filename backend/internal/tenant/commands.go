@@ -1,8 +1,9 @@
 package tenant
 
 import (
-	"github.com/google/uuid"
 	"backend/internal/identity"
+
+	"github.com/google/uuid"
 )
 
 type CreateTenantCommand struct {

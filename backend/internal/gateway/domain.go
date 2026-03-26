@@ -21,3 +21,13 @@ type Gateway struct {
 	IntervalLimit int64
 	
 }
+
+func (g Gateway) IsZero() bool {
+	return g == (Gateway{})
+}
+
+func (g Gateway) IsCommissioned() bool {
+	return g.TenantId != nil
+}
+
+func (g *Gateway) GetId() uuid.UUID { return g.Id }

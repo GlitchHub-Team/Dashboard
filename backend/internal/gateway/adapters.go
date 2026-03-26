@@ -1,5 +1,9 @@
 package gateway
 
+type GatewayPostgreAdapter struct {
+	repository gatewayPostgreRepository
+}
+
 type SaveGatewayPort interface {
 	Save(g Gateway) error
 }
@@ -9,13 +13,9 @@ type RemoveGatewayPort interface {
 }
 
 type GetGatewayPort interface {
-	GetById() error
-	GetByTenantId() error
-	GetAll() error
-}
-
-type GatewayPostgreAdapter struct {
-	repository gatewayPostgreRepository
+	GetById(gatewayId string) error
+	GetByTenantId(tenantId string) error
+	GetAll() ([]Gateway, error)
 }
 
 func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
@@ -26,29 +26,28 @@ func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) (SaveGatewayP
 }
 
 func (adapter *GatewayPostgreAdapter) Save(g Gateway) error {
-	// ...
+	
 	return nil
 }
 
 func (adapter *GatewayPostgreAdapter) Remove(g Gateway) error {
-	// ...
 	return nil
 }
 
-func (a *GatewayPostgreAdapter) GetById() error {
-	return nil
-}
-func (a *GatewayPostgreAdapter) GetByTenantId() error {
-	return nil
-}
-func (a *GatewayPostgreAdapter) GetAll() error {
+func (a *GatewayPostgreAdapter) GetById(gatewayId string) error {
 	return nil
 }
 
+func (a *GatewayPostgreAdapter) GetByTenantId(tenantId string) error {
+	return nil
+}
 
+func (a *GatewayPostgreAdapter) GetAll() ([]Gateway, error) {
+	return nil, nil
+}
 
 var (
-	_ SaveGatewayPort = (*GatewayPostgreAdapter)(nil)
+	_ SaveGatewayPort   = (*GatewayPostgreAdapter)(nil)
 	_ RemoveGatewayPort = (*GatewayPostgreAdapter)(nil)
-	_ GetGatewayPort = (*GatewayPostgreAdapter)(nil)
+	_ GetGatewayPort    = (*GatewayPostgreAdapter)(nil)
 )

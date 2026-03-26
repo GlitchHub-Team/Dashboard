@@ -64,9 +64,7 @@ func NewTenantPostgreAdapter(repository *tenantPostgreRepository) (
 
 // CREATE =============================================================================================
 
-type CreateTenantPort interface {
-	CreateTenant(tenant Tenant) (Tenant, error)
-}
+
 
 func (adapter *TenantPostgreAdapter) CreateTenant(tenant Tenant) (Tenant, error) {
 	entity := &TenantEntity{}

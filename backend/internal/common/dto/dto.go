@@ -29,9 +29,22 @@ type UserRoleField struct {
 
 // Tenant
 type TenantIdField struct {
-	TenantId string `uri:"tenant_id" form:"tenant_id" json:"tenant_id" binding:"uuid4,required"`
+	TenantId string `uri:"tenant_id" form:"tenant_id" json:"tenant_id" binding:"required"`
 }
 
 type TenantNameField struct {
-	TenantMane string `uri:"tenant_name" form:"tenant_name" json:"tenant_name" binding:"required"`
+	TenantName string `uri:"tenant_name" form:"tenant_name" json:"tenant_name" binding:"required"`
+}
+
+// Gateway
+type GatewayIdField struct {
+	GatewayId string `uri:"gateway_id" form:"gateway_id" json:"gateway_id" binding:"uuid4,required"`
+}
+
+type GatewayNameField struct {
+	GatewayName string `uri:"gateway_name" form:"gateway_name" json:"gateway_name" binding:"required"`
+}
+
+type GatewayCertificateField struct {
+	Certificate string `uri:"certificate" form:"certificate" json:"certificate" binding:"required"`
 }

@@ -1,5 +1,10 @@
 package tenant
 
+//go:generate mockgen -destination=../../tests/tenant/mocks/use_cases_crud.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetTenantByUserUseCase
+
+type CreateTenantPort interface {
+	CreateTenant(tenant Tenant) (Tenant, error)
+}
 type CreateTenantUseCase interface {
 	CreateTenant(cmd CreateTenantCommand) (Tenant, error)
 }
@@ -19,6 +24,7 @@ type GetTenantListUseCase interface {
 type GetTenantByUserUseCase interface {
 	GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error)
 }
+
 
 type TenantService struct {
 	createTenantPort    CreateTenantPort
@@ -46,7 +52,6 @@ func NewCreateTenantService(
 }
 
 func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, error) {
-	
 	if !cmd.Requester.IsSuperAdmin() {
 		return Tenant{}, ErrUnauthorized
 	}
@@ -109,13 +114,11 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 }
 
 func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, error) {
-
 	if !cmd.Requester.IsSuperAdmin() {
 		return nil, ErrUnauthorized
 	}
 
 	tenants, err := service.getTenantsPort.GetTenants()
-
 	if err != nil {
 		return nil, err
 	}
@@ -130,19 +133,19 @@ func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant,
 }
 
 func (service *TenantService) GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error) {
-	tenant, err := service.getTenantByUserPort.GetTenantByUser(cmd.UserId)
-	if err != nil {
-		return Tenant{}, err
-	}
 
-	if tenant.IsZero() {
-		return Tenant{}, ErrTenantNotFound
-	}
+    tenant, err := service.getTenantByUserPort.GetTenantByUser(cmd.UserId)
+    if err != nil {
+        return Tenant{}, err
+    }
 
-	if !cmd.Requester.IsSuperAdmin() && !cmd.Requester.CanTenantAdminAccess(tenant.Id) {
-		return Tenant{}, ErrUnauthorized
-	}
+    if tenant.IsZero() {
+        return Tenant{}, ErrTenantNotFound
+    }
 
+    if !cmd.Requester.IsSuperAdmin() && !cmd.Requester.CanTenantAdminAccess(tenant.Id) {
+        return Tenant{}, ErrUnauthorized
+    }
 
-	return tenant, nil
+    return tenant, nil
 }

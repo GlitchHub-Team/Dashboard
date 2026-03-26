@@ -1,10 +1,58 @@
 package gateway
 
+import "github.com/google/uuid"
+
 type CreateGatewayCommand struct {
 	Name string
-	Test int
+	Test int //??
 }
 
 type DeleteGatewayCommand struct {
-	
+	GatewayId uuid.UUID
+}
+
+type GetGatewayByIdCommand struct {
+	GatewayId uuid.UUID
+}
+
+type GetGatewayListCommand struct {
+	Page int
+	Size int
+}
+
+type GetGatewaysByTenantCommand struct {
+	TenantId uuid.UUID
+//	Page     int
+//	Size     int
+}
+
+type CommissionGatewayCommand struct{
+	GatewayId uuid.UUID
+	TenantId uuid.UUID
+	GatewayCertificate string
+}
+
+type DecommissionGatewayCommand struct{
+	GatewayId uuid.UUID
+}
+
+type InterruptGatewayCommand struct{
+	GatewayId uuid.UUID
+}
+
+type ResumeGatewayCommand struct{
+	GatewayId uuid.UUID
+}
+
+type ResetGatewayCommand struct{
+	GatewayId uuid.UUID
+}
+
+type RebootGatewayCommand struct{
+	GatewayId uuid.UUID
+}
+
+type SetGatewayIntervalLimitCommand struct{
+	GatewayId uuid.UUID
+	IntervalLimit int
 }

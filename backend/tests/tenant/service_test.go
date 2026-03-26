@@ -164,7 +164,7 @@ func TestDeleteTenant(t *testing.T) {
 	type mockSetupFunc func(
 		deletePort *mocks.MockDeleteTenantPort,
 		getPort *mocks.MockGetTenantPort,
-	)*gomock.Call
+	) *gomock.Call
 
 	type testCase struct {
 		name           string
@@ -174,77 +174,99 @@ func TestDeleteTenant(t *testing.T) {
 		expectedError  error
 	}
 
+	step1GetTenantNotFound := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{}, nil).Times(1)
+	}
+
+	stepGetTenantNonImpersonable := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{
+			Id:             targetTenantID,
+			Name:           targetTenantName,
+			CanImpersonate: false,
+		}, nil).Times(1)
+	}
+
 	//  1) SUCCESS ====================================================================================
-    stepGetTenantOK := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
-        return getPort.EXPECT().GetTenant(targetTenantID).Return(expectedTenant, nil).Times(1)
-    }
+	stepGetTenantOK := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return getPort.EXPECT().GetTenant(targetTenantID).Return(expectedTenant, nil).Times(1)
+	}
 
-    stepDeleteTenantOK := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
-        return deletePort.EXPECT().DeleteTenant(targetTenantID).Return(expectedTenant, nil).Times(1) 
-    }
+	stepDeleteTenantOK := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return deletePort.EXPECT().DeleteTenant(targetTenantID).Return(expectedTenant, nil).Times(1)
+	}
 
-    //  2) GET NOT FOUND ==============================================================================
-    step1GetTenantNotFound := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
-        return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{}, tenant.ErrTenantNotFound).Times(1)
-    }
+	// 3) GET ERROR ===================================================================================
+	errGetPort := errors.New("unexpected db error on get")
+	stepGetTenantPortError := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{}, errGetPort).Times(1)
+	}
 
-    // 3) GET ERROR ===================================================================================
-    errGetPort := errors.New("unexpected db error on get")
-    stepGetTenantPortError := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
-        return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{}, errGetPort).Times(1)
-    }
+	// 4) DELETE ERROR ================================================================================
+	errDeletePort := errors.New("unexpected db error on delete")
+	stepDeleteTenantPortError := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return deletePort.EXPECT().DeleteTenant(targetTenantID).Return(tenant.Tenant{}, errDeletePort).Times(1)
+	}
 
-    // 4) DELETE ERROR ================================================================================
-    errDeletePort := errors.New("unexpected db error on delete")
-    stepDeleteTenantPortError := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
-        return deletePort.EXPECT().DeleteTenant(targetTenantID).Return(tenant.Tenant{}, errDeletePort).Times(1)
-    }
-
-    // 5) NOT SUPER ADMIN =============================================================================
-    stepNotSuperAdmin := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
-        return getPort.EXPECT().GetTenant(targetTenantID).Return(expectedTenant, nil).Times(1)
-    }
+	// 5) NOT SUPER ADMIN =============================================================================
+	stepNotSuperAdmin := func(deletePort *mocks.MockDeleteTenantPort, getPort *mocks.MockGetTenantPort) *gomock.Call {
+		return getPort.EXPECT().GetTenant(targetTenantID).Return(expectedTenant, nil).Times(1)
+	}
 
 	cases := []testCase{
-        {
-            name:           "Success: tenant deleted successfully",
-            input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
-            setupSteps:     []mockSetupFunc{stepGetTenantOK, stepDeleteTenantOK}, 
-            expectedTenant: expectedTenant,
-            expectedError:  nil,
-        },
-        {
-            name:           "Fail: tenant not found",
-            input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
-            setupSteps:     []mockSetupFunc{step1GetTenantNotFound},
-            expectedTenant: tenant.Tenant{},
-            expectedError:  tenant.ErrTenantNotFound,
-        },
-        {
-            name:           "Fail: unexpected error from GetTenant port",
-            input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
-            setupSteps:     []mockSetupFunc{stepGetTenantPortError},
-            expectedTenant: tenant.Tenant{},
-            expectedError:  errGetPort,
-        },
-        {
-            name:           "Fail: unexpected error from DeleteTenant port",
-            input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
-            setupSteps:     []mockSetupFunc{stepGetTenantOK, stepDeleteTenantPortError}, 
-            expectedTenant: tenant.Tenant{},
-            expectedError:  errDeletePort,
-        },
-        {
-            name: "Fail: requester is not superadmin",
-            input: tenant.DeleteTenantCommand{
-                TenantId:  targetTenantID,
-                Requester: identity.Requester{},
-            },
-            setupSteps:     []mockSetupFunc{stepNotSuperAdmin},
-            expectedTenant: tenant.Tenant{},
-            expectedError:  tenant.ErrUnauthorized,
-        },
-    }
+		{
+			name:           "Success: tenant deleted successfully",
+			input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
+			setupSteps:     []mockSetupFunc{stepGetTenantOK, stepDeleteTenantOK},
+			expectedTenant: expectedTenant,
+			expectedError:  nil,
+		},
+		{
+			name:           "Fail: tenant not found",
+			input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
+			setupSteps:     []mockSetupFunc{step1GetTenantNotFound},
+			expectedTenant: tenant.Tenant{},
+			expectedError:  tenant.ErrTenantNotFound,
+		},
+		{
+			name:           "Fail: unexpected error from GetTenant port",
+			input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
+			setupSteps:     []mockSetupFunc{stepGetTenantPortError},
+			expectedTenant: tenant.Tenant{},
+			expectedError:  errGetPort,
+		},
+		{
+			name:           "Fail: unexpected error from DeleteTenant port",
+			input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
+			setupSteps:     []mockSetupFunc{stepGetTenantOK, stepDeleteTenantPortError},
+			expectedTenant: tenant.Tenant{},
+			expectedError:  errDeletePort,
+		},
+		{
+			name: "Fail: requester is not superadmin",
+			input: tenant.DeleteTenantCommand{
+				TenantId:  targetTenantID,
+				Requester: identity.Requester{},
+			},
+			setupSteps:     []mockSetupFunc{stepNotSuperAdmin},
+			expectedTenant: tenant.Tenant{},
+			expectedError:  tenant.ErrUnauthorized,
+		},
+
+		{
+			name:           "Fail: tenant not found (IsZero)",
+			input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
+			setupSteps:     []mockSetupFunc{step1GetTenantNotFound},
+			expectedTenant: tenant.Tenant{},
+			expectedError:  tenant.ErrTenantNotFound,
+		},
+		{
+			name:           "Fail: tenant cannot be impersonated",
+			input:          tenant.DeleteTenantCommand{TenantId: targetTenantID, Requester: superAdminRequester},
+			setupSteps:     []mockSetupFunc{stepGetTenantNonImpersonable},
+			expectedTenant: tenant.Tenant{},
+			expectedError:  tenant.ErrImpersonationFailded,
+		},
+	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -278,11 +300,14 @@ func TestDeleteTenant(t *testing.T) {
 	}
 }
 
-
 func TestGetTenant(t *testing.T) {
 	targetTenantID := uuid.New()
 	targetTenantName := "Stefano"
 	superAdminRequester := identity.Requester{RequesterRole: identity.ROLE_SUPER_ADMIN}
+	authorizedTenantAdminRequester := identity.Requester{
+    RequesterRole:     identity.ROLE_TENANT_ADMIN,
+    RequesterTenantId: &targetTenantID,
+}
 
 	expectedTenant := tenant.Tenant{
 		Id:             targetTenantID,
@@ -292,7 +317,7 @@ func TestGetTenant(t *testing.T) {
 
 	type mockSetupFunc func(
 		getPort *mocks.MockGetTenantPort,
-	)*gomock.Call
+	) *gomock.Call
 
 	type testCase struct {
 		name           string
@@ -303,18 +328,18 @@ func TestGetTenant(t *testing.T) {
 	}
 
 	// 1) ==============================================================================================
-	stepGetTenantOK := func(getPort *mocks.MockGetTenantPort)*gomock.Call {
+	stepGetTenantOK := func(getPort *mocks.MockGetTenantPort) *gomock.Call {
 		return getPort.EXPECT().GetTenant(targetTenantID).Return(expectedTenant, nil).Times(1)
 	}
 
 	// 2) ==============================================================================================
-	stepGetTenantNotFound := func(getPort *mocks.MockGetTenantPort)*gomock.Call {
+	stepGetTenantNotFound := func(getPort *mocks.MockGetTenantPort) *gomock.Call {
 		return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{}, nil).Times(1)
 	}
 
 	// 3) ==============================================================================================
 	errGetPort := errors.New("unexpected db error on get")
-	stepGetTenantPortError := func(getPort *mocks.MockGetTenantPort)*gomock.Call {
+	stepGetTenantPortError := func(getPort *mocks.MockGetTenantPort) *gomock.Call {
 		return getPort.EXPECT().GetTenant(targetTenantID).Return(tenant.Tenant{}, errGetPort).Times(1)
 	}
 
@@ -362,6 +387,13 @@ func TestGetTenant(t *testing.T) {
 			expectedTenant: tenant.Tenant{},
 			expectedError:  tenant.ErrUnauthorized,
 		},
+		{
+			name:           "Success: tenant retrieved by authorized Tenant Admin",
+			input:          tenant.GetTenantCommand{TenantId: targetTenantID, Requester: authorizedTenantAdminRequester},
+			setupSteps:     []mockSetupFunc{stepGetTenantOK},
+			expectedTenant: expectedTenant,
+			expectedError:  nil,
+		},
 	}
 
 	for _, tc := range cases {
@@ -395,7 +427,6 @@ func TestGetTenant(t *testing.T) {
 	}
 }
 
-
 func TestGetTenantLisit(t *testing.T) {
 	targetTenantID := uuid.New()
 	targetTenantName := "Stefano"
@@ -423,13 +454,13 @@ func TestGetTenantLisit(t *testing.T) {
 		return getListPort.EXPECT().GetTenants().Return([]tenant.Tenant{expectedTenant}, nil).Times(1)
 	}
 
-	errGetListPort := errors.New("unexpected db error on get list") 
+	errGetListPort := errors.New("unexpected db error on get list")
 	stepGetTenantListPortError := func(getListPort *mocks.MockGetTenantsPort) *gomock.Call {
 		return getListPort.EXPECT().GetTenants().Return(nil, errGetListPort).Times(1)
 	}
 
 	stepGetTenantListNotCalled := func(getListPort *mocks.MockGetTenantsPort) *gomock.Call {
-		return nil 
+		return nil
 	}
 
 	stepGetTenantListWithNonImpersonable := func(getListPort *mocks.MockGetTenantsPort) *gomock.Call {
@@ -474,57 +505,61 @@ func TestGetTenantLisit(t *testing.T) {
 	}
 
 	for _, tc := range caseTest {
-    t.Run(tc.name, func(t *testing.T) {
-        mockController := gomock.NewController(t)
+		t.Run(tc.name, func(t *testing.T) {
+			mockController := gomock.NewController(t)
 
-        mockGetListPort := mocks.NewMockGetTenantsPort(mockController)
+			mockGetListPort := mocks.NewMockGetTenantsPort(mockController)
 
-        var expectedCalls []any
-        for _, step := range tc.setupSteps {
-            call := step(mockGetListPort)
-            if call != nil {
-                expectedCalls = append(expectedCalls, call)
-            }
-        }
-        if len(expectedCalls) > 0 {
-            gomock.InOrder(expectedCalls...)
-        }
+			var expectedCalls []any
+			for _, step := range tc.setupSteps {
+				call := step(mockGetListPort)
+				if call != nil {
+					expectedCalls = append(expectedCalls, call)
+				}
+			}
+			if len(expectedCalls) > 0 {
+				gomock.InOrder(expectedCalls...)
+			}
 
-        _, _, _, getListUseCase, _ := tenant.NewCreateTenantService(
-            nil,
-            nil,
-            nil,
-            mockGetListPort,
-            nil,
-        )
+			_, _, _, getListUseCase, _ := tenant.NewCreateTenantService(
+				nil,
+				nil,
+				nil,
+				mockGetListPort,
+				nil,
+			)
 
-        retrievedTenantList, err := getListUseCase.GetTenantList(tc.input)
+			retrievedTenantList, err := getListUseCase.GetTenantList(tc.input)
 
-        if !errors.Is(err, tc.expectedError) {
-            t.Errorf("expected error %v, got %v", tc.expectedError, err)
-        }
+			if !errors.Is(err, tc.expectedError) {
+				t.Errorf("expected error %v, got %v", tc.expectedError, err)
+			}
 
-        if len(retrievedTenantList) != len(tc.expectedTenantList) {
-            t.Errorf("expected tenant list length %v, got %v", len(tc.expectedTenantList), len(retrievedTenantList))
-        } else {
-            for i, ten := range retrievedTenantList {
-                if ten != tc.expectedTenantList[i] {
-                    t.Errorf("expected tenant %v at index %d, got %v", tc.expectedTenantList[i], i, ten)
-                }
-            }
-        }
-    })
+			if len(retrievedTenantList) != len(tc.expectedTenantList) {
+				t.Errorf("expected tenant list length %v, got %v", len(tc.expectedTenantList), len(retrievedTenantList))
+			} else {
+				for i, ten := range retrievedTenantList {
+					if ten != tc.expectedTenantList[i] {
+						t.Errorf("expected tenant %v at index %d, got %v", tc.expectedTenantList[i], i, ten)
+					}
+				}
+			}
+		})
 	}
 }
 
 func TestGetTenantByUser(t *testing.T) {
-
 	targetTenantID := uuid.New()
 	userId := uuid.New()
-	
+
 	superAdminRequester := identity.Requester{RequesterRole: identity.ROLE_SUPER_ADMIN}
 
-	unauthorizedRequester := identity.Requester{} 
+	unauthorizedRequester := identity.Requester{}
+
+	authorizedTenantAdminRequester := identity.Requester{
+    RequesterRole:     identity.ROLE_TENANT_ADMIN,
+    RequesterTenantId: &targetTenantID, 
+}
 
 	expectedTenant := tenant.Tenant{
 		Id:             targetTenantID,
@@ -585,6 +620,13 @@ func TestGetTenantByUser(t *testing.T) {
 			setupSteps:     []mockSetupFunc{stepGetTenantByUserOK}, // Il DB ritorna il tenant, ma il service blocca l'utente
 			expectedTenant: tenant.Tenant{},
 			expectedError:  tenant.ErrUnauthorized,
+		},
+		{
+			name:           "Success: tenant retrieved by authorized Tenant Admin",
+			input:          tenant.GetTenantByUserCommand{UserId: userId, Requester: authorizedTenantAdminRequester},
+			setupSteps:     []mockSetupFunc{stepGetTenantByUserOK},
+			expectedTenant: expectedTenant,
+			expectedError:  nil,
 		},
 	}
 
