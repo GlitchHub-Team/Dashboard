@@ -26,9 +26,9 @@ describe('UserSessionService', () => {
   };
 
   const mockToken = buildJwt({
-    userId: '1',
-    userRole: 'super_admin',
-    tenantId: 'tenant-1',
+    uid: '1',
+    rol: 'sa',
+    tid: 'tenant-1',
   });
 
   beforeEach(() => {
@@ -116,9 +116,9 @@ describe('UserSessionService', () => {
       service.initSession(mockToken);
 
       const newToken = buildJwt({
-        userId: '2',
-        userRole: 'tenant_user',
-        tenantId: 'tenant-2',
+        uid: '2',
+        rol: 'tu',
+        tid: 'tenant-2',
       });
       service.initSession(newToken);
 

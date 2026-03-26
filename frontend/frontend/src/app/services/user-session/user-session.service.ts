@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 
 import { UserSession } from '../../models/auth/user-session.model';
 import { TokenStorageService } from '../token-storage/token-storage.service';
-import { userRoleMapper } from '../../utils/user-role.utils';
+import { userRoleMapperJWT } from '../../utils/user-role-jwt.utils';
 
 @Injectable({
   providedIn: 'root',
@@ -57,9 +57,9 @@ export class UserSessionService {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return {
-        userId: payload.userId,
-        role: userRoleMapper.fromBackend(payload.userRole),
-        tenantId: payload.tenantId,
+        userId: payload.uid.toString(),
+        role: userRoleMapperJWT.fromBackend(payload.rol),
+        tenantId: payload.tid || undefined,
       };
     } catch {
       return null;

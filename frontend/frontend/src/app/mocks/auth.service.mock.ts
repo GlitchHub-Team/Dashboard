@@ -8,8 +8,8 @@ import { ForgotPasswordRequest } from '../models/auth/forgot-password-request.mo
 import { ForgotPasswordResponse } from '../models/auth/forgot-password.model';
 import { ConfirmAccountResponse } from '../models/auth/confirm-account.model';
 import { ApiError } from '../models/api-error.model';
-import { UserRole } from '../models/user/user-role.enum';
 import { userRoleMapper } from '../utils/user-role.utils';
+import { userRoleMapperJWT } from '../utils/user-role-jwt.utils';
 
 const MOCK_DELAY = 800;
 
@@ -94,9 +94,9 @@ export class AuthServiceMock {
     const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }));
     const payload = btoa(
       JSON.stringify({
-        userId,
-        userRole: role,
-        tenantId,
+        uid: userId,
+        rol: userRoleMapperJWT.toBackend(userRoleMapper.fromBackend(role)), // Oscenità assurda ma dovrebbe funzionare
+        tid: tenantId,
         exp: Math.floor(Date.now() / 1000) + 3600,
       }),
     );

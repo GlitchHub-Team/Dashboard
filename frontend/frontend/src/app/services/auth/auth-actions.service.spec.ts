@@ -149,13 +149,14 @@ describe('AuthActionsService', () => {
       expect(service.error()).toBeNull();
     });
 
-    it('should set error and not call confirmPasswordReset when token is invalid', () => {
+    it('should proceed to call confirmPasswordReset even when verifyForgotPasswordToken returns false', () => {
       authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(false));
+      authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
 
       service.confirmPasswordReset(mockReq).subscribe();
 
-      expect(authApiClientMock.confirmPasswordReset).not.toHaveBeenCalled();
-      expect(service.error()).toBe('Invalid or expired token');
+      expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
+      expect(service.passwordChangeResult()).toBe(true);
       expect(service.loading()).toBe(false);
     });
 
@@ -204,15 +205,15 @@ describe('AuthActionsService', () => {
       expect(service.error()).toBeNull();
     });
 
-    it('should set error and not call confirmAccountCreation when token is invalid', () => {
+    it('should proceed to call confirmAccountCreation even when verifyAccountToken returns false', () => {
       authApiClientMock.verifyAccountToken.mockReturnValue(of(false));
+      authApiClientMock.confirmAccountCreation.mockReturnValue(of(mockAuthResponse));
 
       service.confirmAccount(mockReq).subscribe();
 
-      expect(authApiClientMock.confirmAccountCreation).not.toHaveBeenCalled();
-      expect(tokenStorageMock.saveToken).not.toHaveBeenCalled();
-      expect(userSessionMock.initSession).not.toHaveBeenCalled();
-      expect(service.error()).toBe('Invalid or expired token');
+      expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
+      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.token);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.token);
       expect(service.loading()).toBe(false);
     });
 

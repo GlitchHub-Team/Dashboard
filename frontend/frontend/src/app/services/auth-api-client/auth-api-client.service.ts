@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
@@ -29,7 +29,9 @@ export class AuthApiClientService {
 
   // API DOG - Password Dimenticata
   public verifyForgotPasswordToken(token: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/forgot_password/verify_token/${token}`, {});
+    return this.http
+      .get<{ result: boolean }>(`${this.apiUrl}/forgot_password/verify_token/${token}`, {})
+      .pipe(map((response) => response.result));
   }
 
   // Serve anche il tenantId
@@ -48,7 +50,9 @@ export class AuthApiClientService {
 
   // API DOG - Conferma account
   public verifyAccountToken(token: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/confirm_account/verify_token/${token}`, {});
+    return this.http
+      .get<{ result: boolean }>(`${this.apiUrl}/confirm_account/verify_token/${token}`, {})
+      .pipe(map((response) => response.result));
   }
 
   public confirmAccountCreation(req: ConfirmAccountResponse): Observable<AuthResponse> {

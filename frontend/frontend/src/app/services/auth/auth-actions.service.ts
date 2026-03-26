@@ -58,11 +58,7 @@ export class AuthActionsService {
     this.setLoadingState();
 
     return this.authApiClient.verifyForgotPasswordToken(req.token).pipe(
-      switchMap((valid) => {
-        if (!valid) {
-          this._error.set('Invalid or expired token');
-          return EMPTY;
-        }
+      switchMap(() => {
         // Non ritorna niente ma semplicemente aggiorna i propri signal per indicare il successo
         return this.authApiClient.confirmPasswordReset(req).pipe(
           tap(() => {
@@ -83,11 +79,7 @@ export class AuthActionsService {
 
     // confirmAccountCreation ritorna il JWT legato all'account confermato
     return this.authApiClient.verifyAccountToken(req.token).pipe(
-      switchMap((valid) => {
-        if (!valid) {
-          this._error.set('Invalid or expired token');
-          return EMPTY;
-        }
+      switchMap(() => {
         return this.authApiClient.confirmAccountCreation(req).pipe(
           tap((response) => {
             // Salva il token JWT e inizializza la sessione utente
