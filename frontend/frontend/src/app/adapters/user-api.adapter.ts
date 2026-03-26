@@ -13,7 +13,7 @@ export class UserApiAdapter extends UserAdapter {
       username: dto.username,
       email: dto.email,
       role: userRoleMapper.fromBackend(dto.role),
-      tenantId: dto.tenantId || '',
+      tenantId: dto.tenant_id || '',
     };
   }
 

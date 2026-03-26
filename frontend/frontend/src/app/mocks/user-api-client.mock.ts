@@ -20,119 +20,119 @@ export class UserApiClientMockService {
       username: 'Stefano',
       email: 'admin@test.com',
       role: 'tenant_admin',
-      tenantId: 'tenant-1',
+      tenant_id: 'tenant-1',
     },
     {
       id: '3',
       username: 'Tullio x Stefano',
       email: 'user@test.com',
       role: 'tenant_user',
-      tenantId: 'tenant-1',
+      tenant_id: 'tenant-1',
     },
     {
       id: 'user-5741',
       username: 'admin',
       email: 'admin@example.com',
       role: 'tenant_admin',
-      tenantId: 'tenant 1',
+      tenant_id: 'tenant 1',
     },
     {
       id: 'user-3592',
       username: 'editor',
       email: 'editor@example.com',
       role: 'tenant_user',
-      tenantId: 'tenant 1',
+      tenant_id: 'tenant 1',
     },
     {
       id: 'user-3876',
       username: 'viewer',
       email: 'viewer@example.com',
       role: 'super_admin',
-      tenantId: 'tenant 2',
+      tenant_id: 'tenant 2',
     },
     {
       id: 'user-4160',
       username: 'alice.smith',
       email: 'alice.smith@tenant-1.com',
       role: 'tenant_user',
-      tenantId: 'tenant 1',
+      tenant_id: 'tenant 1',
     },
     {
       id: 'user-5386',
       username: 'bob.jones',
       email: 'bob.jones@tenant-1.com',
       role: 'tenant_user',
-      tenantId: 'tenant 1',
+      tenant_id: 'tenant 1',
     },
     {
       id: 'user-6397',
       username: 'charlie.brown',
       email: 'charlie.brown@tenant-2.com',
       role: 'tenant_admin',
-      tenantId: 'tenant 2',
+      tenant_id: 'tenant 2',
     },
     {
       id: 'user-7351',
       username: 'diana.prince',
       email: 'diana.prince@tenant-2.com',
       role: 'tenant_user',
-      tenantId: 'tenant 2',
+      tenant_id: 'tenant 2',
     },
     {
       id: 'user-8888',
       username: 'eve.davis',
       email: 'eve.davis@tenant-3.com',
       role: 'tenant_admin',
-      tenantId: 'tenant 3',
+      tenant_id: 'tenant 3',
     },
     {
       id: 'user-9765',
       username: 'frank.miller',
       email: 'frank.miller@tenant-3.com',
       role: 'tenant_user',
-      tenantId: 'tenant 3',
+      tenant_id: 'tenant 3',
     },
     {
       id: 'user-1027',
       username: 'grace.hopper',
       email: 'grace.hopper@tenant-3.com',
       role: 'tenant_user',
-      tenantId: 'tenant 3',
+      tenant_id: 'tenant 3',
     },
     {
       id: 'user-1136',
       username: 'heidi.klum',
       email: 'heidi.klum@tenant-1.com',
       role: 'tenant_admin',
-      tenantId: 'tenant 1',
+      tenant_id: 'tenant 1',
     },
     {
       id: 'user-1283',
       username: 'ivan.drago',
       email: 'ivan.drago@tenant-2.com',
       role: 'tenant_user',
-      tenantId: 'tenant 2',
+      tenant_id: 'tenant 2',
     },
     {
       id: 'user-1390',
       username: 'judy.garland',
       email: 'judy.garland@tenant-3.com',
       role: 'tenant_user',
-      tenantId: 'tenant 3',
+      tenant_id: 'tenant 3',
     },
     {
       id: 'user-1482',
       username: 'kevin.bacon',
       email: 'kevin.bacon@tenant-1.com',
       role: 'tenant_user',
-      tenantId: 'tenant 1',
+      tenant_id: 'tenant 1',
     },
     {
       id: 'user-1516',
       username: 'laura.croft',
       email: 'laura.croft@tenant-2.com',
       role: 'tenant_admin',
-      tenantId: 'tenant 2',
+      tenant_id: 'tenant 2',
     },
   ];
 
@@ -148,7 +148,7 @@ export class UserApiClientMockService {
       filteredUsers = filteredUsers.filter((user) => user.role === roleString);
     }
     if (tenantId) {
-      filteredUsers = filteredUsers.filter((user) => user.tenantId === tenantId);
+      filteredUsers = filteredUsers.filter((user) => user.tenant_id === tenantId);
     }
     const total = filteredUsers.length;
     const data = filteredUsers.slice(page * size, (page + 1) * size);
@@ -161,7 +161,7 @@ export class UserApiClientMockService {
       (u) =>
         u.id === id &&
         u.role === roleString &&
-        (role === UserRole.SUPER_ADMIN || u.tenantId === tenantId),
+        (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId),
     );
     if (!user) {
       throw new Error('User not found');
@@ -169,7 +169,11 @@ export class UserApiClientMockService {
     return of(user).pipe(delay(500));
   }
 
-  public createUser(config: UserConfig, tenantId?: string, role?: string): Observable<UserBackend> {
+  public createUser(
+    config: UserConfig,
+    role: UserRole,
+    tenantId?: string,
+  ): Observable<UserBackend> {
     const newId = `user-${Math.floor(Math.random() * 10000)}`;
     const newTenantId = tenantId || 'mock-tenant-id';
 
@@ -177,8 +181,8 @@ export class UserApiClientMockService {
       id: newId,
       username: config.username || config.email.split('@')[0],
       email: config.email,
-      role: role ?? userRoleMapper.toBackend(UserRole.TENANT_USER),
-      tenantId: newTenantId,
+      role: userRoleMapper.toBackend(role),
+      tenant_id: newTenantId,
     };
     this.mockUsers.push(newUser);
     return of(newUser).pipe(delay(500));
@@ -191,7 +195,7 @@ export class UserApiClientMockService {
         !(
           u.id === id &&
           u.role === roleString &&
-          (role === UserRole.SUPER_ADMIN || u.tenantId === tenantId)
+          (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId)
         ),
     );
     return of(void 0).pipe(delay(500));

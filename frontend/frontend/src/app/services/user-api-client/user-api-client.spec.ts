@@ -59,14 +59,14 @@ describe('UserApiClientService', () => {
         username: 'admin',
         email: 'admin@test.com',
         role: UserRole.TENANT_ADMIN,
-        tenantId: 'tenant-1',
+        tenant_id: 'tenant-1',
       },
       {
         id: '2',
         username: 'user',
         email: 'user@test.com',
         role: UserRole.TENANT_USER,
-        tenantId: 'tenant-1',
+        tenant_id: 'tenant-1',
       },
     ],
   };
@@ -76,7 +76,7 @@ describe('UserApiClientService', () => {
     username: 'newuser',
     email: 'new@test.com',
     role: UserRole.TENANT_USER,
-    tenantId: 'tenant-1',
+    tenant_id: 'tenant-1',
   };
 
   const expectRequest = (method: string, url: string) => {
@@ -134,26 +134,26 @@ describe('UserApiClientService', () => {
       {
         id: '1',
         role: UserRole.SUPER_ADMIN,
-        tenantId: undefined,
+        tenant_id: undefined,
         url: 'super_admin/1',
         response: {
           id: '1',
           email: 'super@test.com',
           username: 'super',
           role: UserRole.SUPER_ADMIN,
-          tenantId: '',
+          tenant_id: '',
         } satisfies UserBackend,
       },
       {
         id: '3',
         role: UserRole.TENANT_USER,
-        tenantId: 'tenant-1',
+        tenant_id: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user/3',
         response: userBackend,
       },
-    ])('should GET $url and return dto response', ({ id, role, tenantId, url, response }) => {
+    ])('should GET $url and return dto response', ({ id, role, tenant_id, url, response }) => {
       let result: UserBackend | undefined;
-      service.getUser(id, role, tenantId).subscribe((user) => {
+      service.getUser(id, role, tenant_id).subscribe((user) => {
         result = user;
       });
 
@@ -179,7 +179,7 @@ describe('UserApiClientService', () => {
           email: 'super@test.com',
           username: 'super',
           role: UserRole.SUPER_ADMIN,
-          tenantId: '',
+          tenant_id: '',
         } satisfies UserBackend,
       },
       {

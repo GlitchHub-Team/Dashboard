@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
 
 import { UserService } from '../../services/user/user.service';
+import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { UserTableComponent } from './components/user-table/user-table.component';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
@@ -27,6 +28,7 @@ interface UserManagerContext {
 })
 export class UserManagerPage implements OnInit {
   private readonly userService = inject(UserService);
+  private readonly userSession = inject(UserSessionService);
   private readonly dialog = inject(MatDialog);
   private readonly activatedRoute = inject(ActivatedRoute);
 
@@ -66,9 +68,10 @@ export class UserManagerPage implements OnInit {
             username: result.username,
           };
 
-          const tenantIdToPass = result.tenantId ?? context.tenantId;
+          const tenantIdToPass =
+            result.tenantId || context.tenantId || this.userSession.currentUser()?.tenantId;
 
-          this.userService.addNewUser(userConfig, tenantIdToPass, context.role).subscribe(() => {
+          this.userService.addNewUser(userConfig, context.role, tenantIdToPass).subscribe(() => {
             this.refreshUsers();
           });
         }

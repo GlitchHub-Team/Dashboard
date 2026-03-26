@@ -3,5 +3,5 @@ export interface UserBackend {
   username: string;
   email: string;
   role: string;
-  tenantId?: string;
+  tenant_id?: string;
 }
