@@ -18,13 +18,19 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Gestione Tenant User',
     icon: 'people',
     route: '/user-management/tenant-users',
-    permission: [Permission.TENANT_USER_MANAGEMENT],
+    permission: Permission.TENANT_USER_MANAGEMENT,
   },
   {
     label: 'Gestione Tenant Admin',
     icon: 'people',
     route: '/user-management/tenant-admins',
-    permission: [Permission.TENANT_ADMIN_MANAGEMENT],
+    permission: Permission.TENANT_ADMIN_MANAGEMENT,
+  },
+  {
+    label: 'Gestione Super Admin',
+    icon: 'people',
+    route: '/user-management/super-admins',
+    permission: Permission.SUPER_ADMIN_MANAGEMENT,
   },
   {
     label: 'Gestione Tenant',

@@ -64,6 +64,16 @@ export const routes: Routes = [
           import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),
       },
       {
+        path: 'user-management/super-admins',
+        canActivate: [roleGuard],
+        data: {
+          permissions: [Permission.SUPER_ADMIN_MANAGEMENT],
+          userManagerContext: { title: 'Gestione Super Admin', role: UserRole.SUPER_ADMIN },
+        },
+        loadComponent: () =>
+          import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),
+      },
+      {
         path: 'dashboard',
         canActivate: [roleGuard],
         data: { permissions: [Permission.DASHBOARD_ACCESS] },

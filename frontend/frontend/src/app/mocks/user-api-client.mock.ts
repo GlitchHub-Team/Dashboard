@@ -31,6 +31,13 @@ export class UserApiClientMockService {
       tenantId: 'tenant 2',
     },
     {
+      id: 'user-6779',
+      username: 'supersuper',
+      email: 'supersuper@example.com',
+      role: 'super_admin',
+      tenantId: 'tenant 1',
+    },
+    {
       id: 'user-4160',
       username: 'alice.smith',
       email: 'alice.smith@tenant-1.com',
