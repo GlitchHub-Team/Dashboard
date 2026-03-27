@@ -64,7 +64,7 @@ describe('LoginPage', () => {
   it('should create and render shell, heading, and login form', () => {
     expect(component).toBeTruthy();
     expect(fixture.debugElement.query(By.css('.login-container'))).toBeTruthy();
-    expect(fixture.debugElement.query(By.css('h1')).nativeElement.textContent).toContain('Login');
+    expect(fixture.debugElement.query(By.css('h1')).nativeElement.textContent).toContain('Accedi');
     expect(loginFormDebug).toBeTruthy();
   });
 

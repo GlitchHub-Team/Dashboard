@@ -90,7 +90,7 @@ describe('TenantManagerPage', () => {
     {
       name: 'create button',
       selector: 'button[mat-raised-button]',
-      expectedText: 'Aggiungi Tenant',
+      expectedText: 'Aggiungi Nuovo Tenant',
       setup: () => undefined,
     },
     {

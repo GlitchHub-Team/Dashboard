@@ -73,10 +73,10 @@ describe('ForgotPasswordDialog', () => {
       expect(fixture.debugElement.query(By.css('form'))).toBeTruthy();
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title] h2')).nativeElement.textContent,
-      ).toContain('Forgot Password');
+      ).toContain('Reimposta Password');
       expect(
         fixture.debugElement.query(By.css('mat-dialog-content p')).nativeElement.textContent,
-      ).toContain("Enter your email and we'll send you a reset link.");
+      ).toContain("Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.");
     });
 
     it('should not render progress bar or error banner', () => {
@@ -145,7 +145,7 @@ describe('ForgotPasswordDialog', () => {
       component['forgotPasswordForm'].controls.email.markAsTouched();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        'Email is required.',
+        'Campo obbligatorio',
       );
     });
 
@@ -154,7 +154,7 @@ describe('ForgotPasswordDialog', () => {
       component['forgotPasswordForm'].controls.email.markAsTouched();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        'Please enter a valid email address.',
+        'Campo obbligatorio',
       );
     });
   });

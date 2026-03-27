@@ -111,7 +111,7 @@ describe('LoginFormComponent', () => {
       component['loginForm'].controls.email.markAsTouched();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        'Email is required',
+        'Campo obbligatorio',
       );
     });
 
@@ -123,8 +123,8 @@ describe('LoginFormComponent', () => {
 
       const errors = fixture.debugElement.queryAll(By.css('mat-error'));
       const texts = errors.map((e) => e.nativeElement.textContent);
-      expect(texts.some((t) => t.includes('Invalid email'))).toBe(true);
-      expect(texts.some((t) => t.includes('Password is required'))).toBe(true);
+      expect(texts.some((t) => t.includes('Indirizzo email non valido'))).toBe(true);
+      expect(texts.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
     });
   });
 

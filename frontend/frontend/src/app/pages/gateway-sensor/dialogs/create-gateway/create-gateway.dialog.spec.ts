@@ -38,15 +38,15 @@ describe('CreateGatewayDialog (Unit)', () => {
     fixture.detectChanges();
   };
   const submitBtn = () => fixture.debugElement.query(By.css('button[color="primary"]'));
-  const cancelBtn = () => fixture.debugElement.queryAll(By.css('button')).find((btn) => btn.nativeElement.textContent.includes('Cancel'))!;
+  const cancelBtn = () => fixture.debugElement.queryAll(By.css('button')).find((btn) => btn.nativeElement.textContent.includes('Annulla'))!;
 
   describe('initial state', () => {
     it('should create with correct title, form defaults, and no error/spinner', () => {
       expect(component).toBeTruthy();
-      expect(fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent).toContain('New Gateway');
+      expect(fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent).toContain('Nuovo Gateway');
       expect(component['gatewayForm'].value).toEqual({ name: '', interval: 1000 });
       expect(submitBtn().nativeElement.disabled).toBe(true);
-      expect(submitBtn().nativeElement.textContent).toContain('Create');
+      expect(submitBtn().nativeElement.textContent).toContain('Crea');
       expect(cancelBtn().nativeElement.disabled).toBe(false);
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeNull();
@@ -67,7 +67,7 @@ describe('CreateGatewayDialog (Unit)', () => {
       component['gatewayForm'].controls.name.markAsTouched();
       fixture.detectChanges();
       expect(component['gatewayForm'].valid).toBe(false);
-      expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain('Name is required');
+      expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain('Campo obbligatorio');
     });
 
     it('should be invalid when interval is below 100 and show min error when touched', () => {
@@ -76,8 +76,8 @@ describe('CreateGatewayDialog (Unit)', () => {
       component['gatewayForm'].controls.interval.markAsTouched();
       fixture.detectChanges();
       expect(component['gatewayForm'].valid).toBe(false);
-      const minError = fixture.debugElement.queryAll(By.css('mat-error')).find((e) => e.nativeElement.textContent.includes('Minimum'));
-      expect(minError!.nativeElement.textContent).toContain('Minimum 100ms');
+      const minError = fixture.debugElement.queryAll(By.css('mat-error')).find((e) => e.nativeElement.textContent.includes('Almeno'));
+      expect(minError!.nativeElement.textContent).toContain('Almeno 100ms');
     });
   });
 

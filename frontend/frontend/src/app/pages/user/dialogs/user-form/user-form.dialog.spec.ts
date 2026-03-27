@@ -198,7 +198,7 @@ describe('UserFormDialogComponent', () => {
 
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
-      ).toContain('Aggiungi Utente');
+      ).toContain('Aggiungi Nuovo Utente');
     });
   });
 });

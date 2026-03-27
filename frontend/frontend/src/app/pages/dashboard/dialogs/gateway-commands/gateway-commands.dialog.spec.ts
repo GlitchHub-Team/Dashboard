@@ -40,7 +40,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
   const cancelBtn = () =>
     fixture.debugElement
       .queryAll(By.css('button'))
-      .find((btn) => btn.nativeElement.textContent.includes('Cancel'))!;
+      .find((btn) => btn.nativeElement.textContent.includes('Annulla'))!;
   const selectCommand = (value: string) => {
     component['commandForm'].controls.command.setValue(value);
     fixture.detectChanges();
@@ -75,7 +75,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
       expect(component).toBeTruthy();
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
-      ).toContain('Gateway Command');
+      ).toContain('Comando Gateway');
       const input: HTMLInputElement = fixture.debugElement.query(
         By.css('input[disabled]'),
       ).nativeElement;
@@ -95,7 +95,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
       component['commandForm'].controls.command.markAsTouched();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        'Please select a command',
+        'Campo obbligatorio',
       );
     });
 

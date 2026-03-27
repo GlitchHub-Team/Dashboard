@@ -48,14 +48,14 @@ describe('CreateSensorDialog (Unit)', () => {
   const cancelBtn = () =>
     fixture.debugElement
       .queryAll(By.css('button'))
-      .find((btn) => btn.nativeElement.textContent.includes('Cancel'))!;
+      .find((btn) => btn.nativeElement.textContent.includes('Annulla'))!;
 
   describe('initial state', () => {
     it('should create with correct title, form defaults, gateway display, and no error/spinner', () => {
       expect(component).toBeTruthy();
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
-      ).toContain('New Sensor');
+      ).toContain('Nuovo Sensore');
       expect(component['sensorForm'].value).toEqual({ name: '', profile: '', interval: 1000 });
       expect(fixture.debugElement.query(By.css('input[disabled]')).nativeElement.value).toBe(
         'Gateway Alpha',
@@ -83,8 +83,9 @@ describe('CreateSensorDialog (Unit)', () => {
     });
 
     it.each([
-      ['name', '', 'Name is required'],
-      ['profile', '', 'Profile is required'],
+      ['name', '', 'Campo obbligatorio'],
+      ['profile', '', 'Campo obbligatorio'],
+      ['interval', '', ''],
     ])('should be invalid and show error when %s is empty', (field, value, errorText) => {
       fillValidForm();
       component['sensorForm'].controls[field as 'name' | 'profile'].setValue(value);
@@ -104,8 +105,8 @@ describe('CreateSensorDialog (Unit)', () => {
       expect(component['sensorForm'].valid).toBe(false);
       const minError = fixture.debugElement
         .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Minimum'));
-      expect(minError!.nativeElement.textContent).toContain('Minimum 100ms');
+        .find((e) => e.nativeElement.textContent.includes('Almeno'));
+      expect(minError!.nativeElement.textContent).toContain('Almeno 100ms');
     });
   });
 

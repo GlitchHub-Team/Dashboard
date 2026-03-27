@@ -63,7 +63,7 @@ describe('TenantTableComponent (Unit)', () => {
       const empty = fixture.debugElement.query(By.css('.empty-state'));
       expect(empty).toBeTruthy();
       expect(empty.query(By.css('mat-icon')).nativeElement.textContent).toContain('business');
-      expect(empty.query(By.css('p')).nativeElement.textContent).toContain('No tenants available');
+      expect(empty.query(By.css('p')).nativeElement.textContent).toContain('Nessun tenant disponibile');
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
     });

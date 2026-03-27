@@ -68,11 +68,11 @@ describe('ResetPasswordFormComponent', () => {
 
       const successBanner = fixture.debugElement.query(By.css('.success-banner'));
       expect(successBanner).toBeTruthy();
-      expect(successBanner.nativeElement.textContent).toContain('Password reset successfully');
+      expect(successBanner.nativeElement.textContent).toContain('Reimpostazione della password riuscita.');
       expect(fixture.debugElement.query(By.css('form'))).toBeFalsy();
 
       const goToLoginButton = fixture.debugElement.query(By.css('button'));
-      expect(goToLoginButton.nativeElement.textContent).toContain('Go to Login');
+      expect(goToLoginButton.nativeElement.textContent).toContain('Torna indietro');
 
       const emitSpy = vi.fn();
       component.goToLogin.subscribe(emitSpy);
@@ -138,8 +138,8 @@ describe('ResetPasswordFormComponent', () => {
       const errorTexts = fixture.debugElement
         .queryAll(By.css('mat-error'))
         .map((e) => e.nativeElement.textContent);
-      expect(errorTexts.some((t) => t.includes('Password is required'))).toBe(true);
-      expect(errorTexts.some((t) => t.includes('Confirm password is required'))).toBe(true);
+      expect(errorTexts.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
+      expect(errorTexts.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
     });
 
     it('should show mismatch error when passwords differ and confirm is dirty, hide when they match', () => {
@@ -150,7 +150,7 @@ describe('ResetPasswordFormComponent', () => {
 
       const mismatchError = fixture.debugElement.query(By.css('.field-error'));
       expect(mismatchError).toBeTruthy();
-      expect(mismatchError.nativeElement.textContent).toContain('Passwords do not match');
+      expect(mismatchError.nativeElement.textContent).toContain('Le password non coincidono');
 
       component['resetPasswordForm'].controls.confirmNewPassword.setValue('secret123');
       fixture.detectChanges();
@@ -201,7 +201,7 @@ describe('ResetPasswordFormComponent', () => {
 
       const backButton = fixture.debugElement
         .queryAll(By.css('button[type="button"]'))
-        .find((b) => b.nativeElement.textContent.includes('Back to Login'));
+        .find((b) => b.nativeElement.textContent.includes('Torna indietro'));
       backButton!.triggerEventHandler('click');
 
       expect(emitSpy).toHaveBeenCalled();
