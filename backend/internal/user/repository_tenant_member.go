@@ -7,15 +7,14 @@ import (
 
 	cloud_db "backend/internal/infra/database/cloud_db/connection"
 
-	"backend/internal/shared/identity"
-
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-// Entities ===========================================================================================
+//go:generate mockgen -destination=../../tests/user/mocks/repository_tenant_member.go -package=mocks . TenantMemberRepository
+
+// Entity ===========================================================================================
 
 type TenantMemberEntity struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
@@ -33,83 +32,80 @@ type TenantMemberEntity struct {
 
 func (TenantMemberEntity) TableName() string { return "tenant_members" }
 
-func (entity *TenantMemberEntity) FromUser(user User) {
-	entity.ID = user.Id
-	entity.Email = user.Email
-	entity.Name = user.Name
-	entity.Password = user.PasswordHash
-	entity.Role = string(user.Role)
-	entity.TenantId = user.TenantId.String()
-	entity.Confirmed = user.Confirmed
-}
 
-func (entity *TenantMemberEntity) ToUser() (User, error) {
-	if entity.ID == 0 {
-		return User{}, ErrInvalidUser
-	}
+// func (entity *TenantMemberEntity) FromUser(user User) {
+// 	entity.ID = user.Id
+// 	entity.Email = user.Email
+// 	entity.Name = user.Name
+// 	entity.Password = user.PasswordHash
+// 	entity.Role = string(user.Role)
+// 	entity.TenantId = user.TenantId.String()
+// 	entity.Confirmed = user.Confirmed
+// }
 
-	tenantId, err := uuid.Parse(entity.TenantId)
-	var tenantIdPointer *uuid.UUID
-	if err != nil {
-		tenantIdPointer = nil
-	} else {
-		tenantIdPointer = &tenantId
-	}
+// func (entity *TenantMemberEntity) ToUser() (User, error) {
+// 	if entity.ID == 0 {
+// 		return User{}, ErrInvalidUser
+// 	}
 
-	return User{
-		Id:           entity.ID,
-		Name:         entity.Name,
-		Email:        entity.Email,
-		PasswordHash: entity.Password,
-		Role:         identity.UserRole(entity.Role),
-		TenantId:     tenantIdPointer,
-		Confirmed:    entity.Confirmed,
-	}, err
-}
+// 	tenantId, err := uuid.Parse(entity.TenantId)
+// 	var tenantIdPointer *uuid.UUID
+// 	if err != nil {
+// 		tenantIdPointer = nil
+// 	} else {
+// 		tenantIdPointer = &tenantId
+// 	}
 
-type SuperAdminEntity struct {
-	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	Email     string `gorm:"unique;size:256;not null"`
-	Name      string `gorm:"size:128;not null"`
-	Password  *string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Confirmed bool `gorm:"not null"`
-}
-
-func (SuperAdminEntity) TableName() string { return "super_admins" }
-
-func (entity *SuperAdminEntity) fromUser(user User) *SuperAdminEntity {
-	entity.ID = user.Id
-	entity.Email = user.Email
-	entity.Name = user.Name
-	entity.Password = user.PasswordHash
-	entity.Confirmed = user.Confirmed
-	return entity
-}
-
-func (entity *SuperAdminEntity) toUser() User {
-	return User{
-		Id:           entity.ID,
-		Name:         entity.Name,
-		Email:        entity.Email,
-		PasswordHash: entity.Password,
-		Role:         identity.ROLE_SUPER_ADMIN,
-		Confirmed:    entity.Confirmed,
-	}
-}
+// 	return User{
+// 		Id:           entity.ID,
+// 		Name:         entity.Name,
+// 		Email:        entity.Email,
+// 		PasswordHash: entity.Password,
+// 		Role:         identity.UserRole(entity.Role),
+// 		TenantId:     tenantIdPointer,
+// 		Confirmed:    entity.Confirmed,
+// 	}, err
+// }
 
 // Repository =========================================================================================
-type userPostgreRepository struct {
+
+type TenantMemberRepository interface {
+	SaveTenantMember(tenantMember *TenantMemberEntity) error
+
+	DeleteTenantMember(tenantMember *TenantMemberEntity) error
+
+	GetTenantMember(tenantId string, by UserRepositoryGetUserBy) (
+		tenantMember *TenantMemberEntity, err error,
+	)
+	GetTenantUser(tenantId string, by UserRepositoryGetUserBy) (
+		tenantMember *TenantMemberEntity, err error,
+	)
+	GetTenantAdmin(tenantId string, by UserRepositoryGetUserBy) (
+		tenantMember *TenantMemberEntity, err error,
+	)
+
+	GetTenantUsers(tenantId string, offset, limit int) (
+		tenantAdmins []TenantMemberEntity, total int64, err error,
+	)
+	GetTenantAdmins(tenantId string, offset, limit int) (
+		tenantAdmins []TenantMemberEntity, total int64, err error,
+	)
+
+	CountTenantAdminsByTenant(tenantId string) (total int64, err error)
+}
+
+type tenantMemberPgRepository struct {
 	log *zap.Logger
 	db  *gorm.DB
 }
 
-func newUserPostgreRepository(
+var _ TenantMemberRepository = (*tenantMemberPgRepository)(nil) // Compile-time check
+
+func newTenantMemberPgRepository(
 	log *zap.Logger,
 	db *gorm.DB,
-) *userPostgreRepository {
-	return &userPostgreRepository{
+) *tenantMemberPgRepository {
+	return &tenantMemberPgRepository{
 		log: log,
 		db:  db,
 	}
@@ -117,7 +113,7 @@ func newUserPostgreRepository(
 
 // Save -------------------------------------------------------------------------------------------
 
-func (repo *userPostgreRepository) SaveTenantMember(tenantMember *TenantMemberEntity) error {
+func (repo *tenantMemberPgRepository) SaveTenantMember(tenantMember *TenantMemberEntity) error {
 	err := repo.db.
 		Scopes(cloud_db.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
 		Save(tenantMember).
@@ -125,14 +121,9 @@ func (repo *userPostgreRepository) SaveTenantMember(tenantMember *TenantMemberEn
 	return err
 }
 
-func (repo *userPostgreRepository) SaveSuperAdmin(tenantMember *SuperAdminEntity) error {
-	err := repo.db.Save(tenantMember).Error
-	return err
-}
-
 // Delete -----------------------------------------------------------------------------------------
 
-func (repo *userPostgreRepository) DeleteTenantMember(tenantMember *TenantMemberEntity) error {
+func (repo *tenantMemberPgRepository) DeleteTenantMember(tenantMember *TenantMemberEntity) error {
 	if tenantMember.ID == 0 {
 		return errors.New("cannot delete tenant member with ID 0")
 	}
@@ -149,26 +140,15 @@ func (repo *userPostgreRepository) DeleteTenantMember(tenantMember *TenantMember
 	return err
 }
 
-func (repo *userPostgreRepository) DeleteSuperAdmin(tenantMember *SuperAdminEntity) error {
-	if tenantMember.ID == 0 {
-		return errors.New("cannot delete super admin with ID 0")
-	}
-	err := repo.db.
-		Clauses(clause.Returning{}).
-		Delete(tenantMember).
-		Error
-	return err
-}
-
 // Get singolo ------------------------------------------------------------------------------------------------------
 
-type userRepositoryGetUserBy struct {
+type UserRepositoryGetUserBy struct {
 	Email  *string
 	UserId *uint
 }
 
-func (by *userRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
-	if by == (&userRepositoryGetUserBy{}) {
+func (by *UserRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
+	if by == (&UserRepositoryGetUserBy{}) {
 		return "", nil, errors.New("cannot get user without specifying parameters")
 	}
 
@@ -186,7 +166,7 @@ func (by *userRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
 	return strings.Join(conditions, " AND "), params, nil
 }
 
-func (repo *userPostgreRepository) GetTenantMember(tenantId string, by userRepositoryGetUserBy) (
+func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRepositoryGetUserBy) (
 	tenantMember *TenantMemberEntity, err error,
 ) {
 	where, params, err := by.getWhere()
@@ -203,7 +183,7 @@ func (repo *userPostgreRepository) GetTenantMember(tenantId string, by userRepos
 	return
 }
 
-func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userRepositoryGetUserBy) (
+func (repo *tenantMemberPgRepository) GetTenantUser(tenantId string, by UserRepositoryGetUserBy) (
 	tenantMember *TenantMemberEntity, err error,
 ) {
 	where, params, err := by.getWhere()
@@ -221,7 +201,7 @@ func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userReposit
 	return
 }
 
-func (repo *userPostgreRepository) GetTenantAdmin(tenantId string, by userRepositoryGetUserBy) (
+func (repo *tenantMemberPgRepository) GetTenantAdmin(tenantId string, by UserRepositoryGetUserBy) (
 	tenantMember *TenantMemberEntity, err error,
 ) {
 	where, params, err := by.getWhere()
@@ -239,23 +219,9 @@ func (repo *userPostgreRepository) GetTenantAdmin(tenantId string, by userReposi
 	return
 }
 
-func (repo *userPostgreRepository) GetSuperAdmin(by userRepositoryGetUserBy) (*SuperAdminEntity, error) {
-	var tenantMember *SuperAdminEntity
-	where, params, err := by.getWhere()
-	if err != nil {
-		return &SuperAdminEntity{}, err
-	}
-
-	err = repo.db.
-		Where(where, params...).
-		Find(&tenantMember).
-		Error
-	return tenantMember, err
-}
-
 // Get multiplo ---------------------------------------------------------------------------------------------------------
 
-func (repo *userPostgreRepository) GetTenantUsers(tenantId string, offset, limit int) (
+func (repo *tenantMemberPgRepository) GetTenantUsers(tenantId string, offset, limit int) (
 	tenantUsers []TenantMemberEntity, count int64, err error,
 ) {
 	baseQuery := repo.db.
@@ -280,7 +246,7 @@ func (repo *userPostgreRepository) GetTenantUsers(tenantId string, offset, limit
 	return tenantUsers, count, nil
 }
 
-func (repo *userPostgreRepository) GetTenantAdmins(tenantId string, offset, limit int) (
+func (repo *tenantMemberPgRepository) GetTenantAdmins(tenantId string, offset, limit int) (
 	tenantAdmins []TenantMemberEntity, total int64, err error,
 ) {
 	baseQuery := repo.db.
@@ -306,43 +272,12 @@ func (repo *userPostgreRepository) GetTenantAdmins(tenantId string, offset, limi
 	return
 }
 
-func (repo *userPostgreRepository) GetSuperAdmins(offset, limit int) (
-	superAdmins []SuperAdminEntity, total int64, err error,
-) {
-	baseQuery := repo.db.
-		Model(&SuperAdminEntity{}).
-		Where("role = ?", "tenant_user")
-
-	// Ottieni count
-	if err := baseQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	// Ottieni super admin
-	err = baseQuery.Order("name ASC").Limit(limit).Offset(offset).Find(&superAdmins).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return
-}
-
 // Conteggio ------------------------------------------------------------------------------------------
 
-func (repo *userPostgreRepository) CountTenantAdminsByTenant(tenantId string) (total int64, err error) {
+func (repo *tenantMemberPgRepository) CountTenantAdminsByTenant(tenantId string) (total int64, err error) {
 	err = repo.db.
 		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin").
-		Count(&total).
-		Error
-
-	return
-}
-
-func (repo *userPostgreRepository) CountSuperAdmins() (total int64, err error) {
-	err = repo.db.
-		Model(&SuperAdminEntity{}).
-		Where("role = ?", "super_admin").
 		Count(&total).
 		Error
 

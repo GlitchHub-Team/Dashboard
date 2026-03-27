@@ -7,8 +7,8 @@ import (
 )
 
 /*
-	Possibile miglioria: spezzare classe di dominio in TenantMember e SuperAdmin. Questo
-	richiede il refactor dell'intero package
+Possibile miglioria: spezzare classe di dominio in TenantMember e SuperAdmin. Questo
+richiede il refactor dell'intero package
 */
 type User struct {
 	Id           uint
