@@ -141,7 +141,12 @@ describe('SensorApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/sensor`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockConfig);
+      expect(req.request.body).toEqual({
+        gateway_id: mockConfig.gatewayId,
+        sensor_name: mockConfig.name,
+        profile: 'health thermometer',
+        sensor_interval: mockConfig.dataInterval,
+      });
       req.flush(mockResponse);
     });
 

@@ -84,7 +84,10 @@ describe('TenantApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/tenant`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(tenantConfig);
+      expect(req.request.body).toEqual({
+        name: tenantConfig.name,
+        can_impersonate: tenantConfig.canImpersonate,
+      });
       req.flush(createdTenant);
     });
   });
