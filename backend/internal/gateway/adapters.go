@@ -14,8 +14,6 @@ type SaveGatewayPort interface {
 	Save(g Gateway) (Gateway, error)
 }
 
-// ritorna il Gateway salvato con l'ID generato
-
 type RemoveGatewayPort interface {
 	Remove(gatewayId uuid.UUID) (Gateway, error)
 }

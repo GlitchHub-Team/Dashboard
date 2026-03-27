@@ -26,7 +26,7 @@ type GetAllGateways interface {
 	GetAllGateways() ([]Gateway, error)
 }
 
-// --- Costruttore Globale ----------------------------------------------------------------------------
+//  Costruttore Globale -------------------------------------------------------------------------------
 
 func NewGatewayServices(
 	log *zap.Logger,
@@ -50,6 +50,7 @@ func NewGatewayServices(
 	return createSvc, deleteSvc, getSvc, getListSvc, getByTenantSvc
 }
 
+// CreateGatewayService -------------------------------------------------------------------------------
 
 type CreateGatewayService struct {
 	log             *zap.Logger
@@ -77,6 +78,8 @@ func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gate
 	return gateway, nil
 }
 
+// DeleteGatewayService -------------------------------------------------------------------------------
+
 type DeleteGatewayService struct {
 	removeGatewayPort RemoveGatewayPort
 }
@@ -102,7 +105,7 @@ func (s *GetGatewayService) GetGateway(command GetGatewayByIdCommand) (Gateway, 
 	return s.getGatewayPort.GetById(command.GatewayId.String())
 }
 
-// GetGatewayListService ---
+// GetGatewayListService ------------------------------------------------------------------------------
 type GetGatewayListService struct {
 	getGatewaysPort GetGatewaysPort
 }
@@ -120,6 +123,7 @@ func (s *GetGatewayListService) GetAllGateways() ([]Gateway, error) {
 	return gat, nil
 }
 
+// GetGatewaysByTenantService -------------------------------------------------------------------------
 type GetGatewaysByTenantService struct {
 	getGatewaysPort GetGatewaysPort
 }
