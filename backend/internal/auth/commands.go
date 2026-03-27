@@ -29,15 +29,15 @@ type ConfirmAccountCommand struct {
 
 type VerifyConfirmAccountTokenCommand struct {
 	// identity.Requester
-	TenantId    *uuid.UUID
-	Token string
+	TenantId *uuid.UUID
+	Token    string
 }
 
 // Forgot password ---------------------------------------
 type VerifyForgotPasswordTokenCommand struct {
 	// identity.Requester
-	TenantId    *uuid.UUID
-	Token string
+	TenantId *uuid.UUID
+	Token    string
 }
 
 type RequestForgotPasswordCommand struct {

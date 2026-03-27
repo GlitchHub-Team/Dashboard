@@ -25,7 +25,6 @@ type SuperAdminEntity struct {
 
 func (SuperAdminEntity) TableName() string { return "super_admins" }
 
-
 // Repository =========================================================================================
 
 type SuperAdminRepository interface {

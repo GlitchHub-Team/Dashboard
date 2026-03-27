@@ -48,7 +48,7 @@ var Module = fx.Module(
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		
+
 		newTenantPasswordTokenPgRepository,
 		newSuperAdminPasswordTokenPgRepository,
 

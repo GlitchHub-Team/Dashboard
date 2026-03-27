@@ -166,7 +166,7 @@ func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPas
 	if err != nil {
 		return
 	}
-	
+
 	// 2. Controlla token con plaintext ricevuto
 	err = service.hasher.CompareHashAndSecret(tokenObj.hashedToken, cmd.Token)
 	if err != nil {

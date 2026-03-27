@@ -62,7 +62,7 @@ func SuperAdminEntityToUser(entity *SuperAdminEntity) (user User, err error) {
 		TenantId:     nil,
 		Confirmed:    entity.Confirmed,
 	}
-	return 
+	return
 }
 
 /*

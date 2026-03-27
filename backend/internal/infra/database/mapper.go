@@ -7,7 +7,7 @@ in una lista di elementi di dominio (di tipo DomainT). Se c'è un errore nel map
 NOTA: il mapper deve restituire anche il tipo error (anche se non necessario), in modo tale da essere compatibile con
 i mapper che possono ritornare errori.
 */
-func MapEntityListToDomain[EntityT Tabler, DomainT any] (
+func MapEntityListToDomain[EntityT Tabler, DomainT any](
 	entityList []EntityT, mapper func(*EntityT) (DomainT, error),
 ) (
 	domainList []DomainT, err error,

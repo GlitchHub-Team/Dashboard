@@ -56,8 +56,6 @@ func setupMockUseCase[MockT any](
 	return mockUseCase
 }
 
-
-
 func executeControllerTest[InputT any, MockT any](
 	t *testing.T,
 	tc genericControllerTestCase[InputT, MockT],

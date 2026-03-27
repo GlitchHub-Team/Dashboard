@@ -30,5 +30,4 @@ var Module = fx.Module(
 			fx.As(new(SuperAdminRepository)),
 		),
 	),
-
 )

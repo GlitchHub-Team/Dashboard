@@ -176,7 +176,10 @@ func (adapter *ChangePasswordTokenPostgreAdapter) NewForgotPasswordToken(user us
 			Token:  hashedTokenString,
 			UserId: user.Id,
 		}
-		adapter.superAdminRepo.SaveToken(&entity)
+		err = adapter.superAdminRepo.SaveToken(&entity)
+		if err != nil {
+			return "", err
+		}
 
 	case identity.ROLE_TENANT_ADMIN, identity.ROLE_TENANT_USER:
 		tenantIdString := user.TenantId.String()

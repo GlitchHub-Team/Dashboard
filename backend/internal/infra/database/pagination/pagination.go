@@ -4,8 +4,10 @@ import (
 	"errors"
 )
 
-var ErrInvalidPage = errors.New("invalid page parameter")
-var ErrInvalidLimit = errors.New("invalid limit parameter")
+var (
+	ErrInvalidPage  = errors.New("invalid page parameter")
+	ErrInvalidLimit = errors.New("invalid limit parameter")
+)
 
 func PageLimitToOffset(page int, limit int) (int, error) {
 	if page < 1 {

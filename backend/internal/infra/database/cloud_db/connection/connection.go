@@ -3,8 +3,8 @@ package connection
 import (
 	"fmt"
 
-	"backend/internal/shared/config"
 	dbPackage "backend/internal/infra/database"
+	"backend/internal/shared/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -21,8 +21,6 @@ func NewDatabaseConnection(cfg *config.Config) (*gorm.DB, error) {
 
 	return db, nil
 }
-
-
 
 func WithTenantSchema(tenantId string, table dbPackage.Tabler) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {

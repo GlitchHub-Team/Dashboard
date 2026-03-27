@@ -172,7 +172,7 @@ func (controller *Controller) LogoutUser(ctx *gin.Context) {
 
 func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 	// 1. Binding URI
-		var bodyDto VerifyConfirmAccountTokenBodyDTO
+	var bodyDto VerifyConfirmAccountTokenBodyDTO
 	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
@@ -186,7 +186,7 @@ func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 	// 2. Check token
 	err := controller.verifyConfirmAccountTokenUseCase.VerifyConfirmAccountToken(VerifyConfirmAccountTokenCommand{
 		TenantId: tenantId,
-		Token: bodyDto.Token,
+		Token:    bodyDto.Token,
 	})
 	if err != nil {
 		ctx.JSON(404, gin.H{
@@ -219,7 +219,7 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 	// 2. Verifica token di confirma
 	err := controller.verifyConfirmAccountTokenUseCase.VerifyConfirmAccountToken(VerifyConfirmAccountTokenCommand{
 		TenantId: tenantId,
-		Token: bodyDto.Token,
+		Token:    bodyDto.Token,
 	})
 	if err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
@@ -276,7 +276,7 @@ func (controller *Controller) VerifyForgotPasswordToken(ctx *gin.Context) {
 	// 2. Esegui comando
 	err := controller.verifyForgotPasswordTokenUseCase.VerifyForgotPasswordToken(VerifyForgotPasswordTokenCommand{
 		TenantId: tenantId,
-		Token: bodyDto.Token,
+		Token:    bodyDto.Token,
 	})
 	if err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
@@ -337,7 +337,7 @@ func (controller *Controller) ConfirmForgotPasswordToken(ctx *gin.Context) {
 
 	// 2. Esegui comando
 	err := controller.confirmForgotPasswordUseCase.ConfirmForgotPassword(ConfirmForgotPasswordCommand{
-		TenantId: tenantId,
+		TenantId:    tenantId,
 		Token:       bodyDto.Token,
 		NewPassword: bodyDto.NewPassword,
 	})

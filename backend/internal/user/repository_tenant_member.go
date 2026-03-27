@@ -32,7 +32,6 @@ type TenantMemberEntity struct {
 
 func (TenantMemberEntity) TableName() string { return "tenant_members" }
 
-
 // Repository =========================================================================================
 
 type TenantMemberRepository interface {

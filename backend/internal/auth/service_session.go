@@ -51,7 +51,6 @@ func (service *SessionService) LoginUser(cmd LoginUserCommand) (
 	// }
 
 	foundUser, err = service.getUserPort.GetUserByEmail(cmd.TenantId, cmd.Email)
-
 	if err != nil {
 		return user.User{}, err
 	}

@@ -650,7 +650,6 @@ func TestUserPostgreAdapter_GetUser(t *testing.T) {
 			Times(1)
 	}
 
-
 	mockGetSuperAdminError := errors.New("unexpected error (super admin)")
 	getSuperAdminError := func(
 		tenantMemberRepo *mocks.MockTenantMemberRepository, superAdminRepo *mocks.MockSuperAdminRepository,
@@ -965,43 +964,43 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 	targetTenantId := uuid.New()
 	targetEntityList := []user.TenantMemberEntity{
 		{
-			ID: uint(1),
-			Email: "email@email.com",
-			Name: "Username",
-			Password: &targetPassword1,
+			ID:        uint(1),
+			Email:     "email@email.com",
+			Name:      "Username",
+			Password:  &targetPassword1,
 			Confirmed: true,
-			Role: string(identity.ROLE_TENANT_USER),
-			TenantId: targetTenantId.String(),
+			Role:      string(identity.ROLE_TENANT_USER),
+			TenantId:  targetTenantId.String(),
 		},
 		{
-			ID: uint(2),
-			Email: "email2@email.com",
-			Name: "Username2",
-			Password: &targetPassword2,
+			ID:        uint(2),
+			Email:     "email2@email.com",
+			Name:      "Username2",
+			Password:  &targetPassword2,
 			Confirmed: true,
-			Role: string(identity.ROLE_TENANT_USER),
-			TenantId: targetTenantId.String(),
+			Role:      string(identity.ROLE_TENANT_USER),
+			TenantId:  targetTenantId.String(),
 		},
 	}
 
 	expectedUserList := []user.User{
 		{
-			Id: uint(1),
-			Email: "email@email.com",
-			Name: "Username",
+			Id:           uint(1),
+			Email:        "email@email.com",
+			Name:         "Username",
 			PasswordHash: &targetPassword1,
-			Confirmed: true,
-			Role: identity.ROLE_TENANT_USER,
-			TenantId: &targetTenantId,
+			Confirmed:    true,
+			Role:         identity.ROLE_TENANT_USER,
+			TenantId:     &targetTenantId,
 		},
 		{
-			Id: uint(2),
-			Email: "email2@email.com",
-			Name: "Username2",
+			Id:           uint(2),
+			Email:        "email2@email.com",
+			Name:         "Username2",
 			PasswordHash: &targetPassword2,
-			Confirmed: true,
-			Role: identity.ROLE_TENANT_USER,
-			TenantId: &targetTenantId,
+			Confirmed:    true,
+			Role:         identity.ROLE_TENANT_USER,
+			TenantId:     &targetTenantId,
 		},
 	}
 
@@ -1024,7 +1023,7 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 	) *gomock.Call {
 		return tenantMemberRepo.EXPECT().
 			GetTenantUsers(targetTenantId.String(), anyInt, anyInt).
-			Return(targetEmptyEntityList, int64(len(targetEmptyEntityList)),  nil).
+			Return(targetEmptyEntityList, int64(len(targetEmptyEntityList)), nil).
 			Times(1)
 	}
 
@@ -1048,10 +1047,10 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 
 	cases := []testCase{
 		{
-			name: "Success: populated list",
+			name:          "Success: populated list",
 			inputTenantId: &targetTenantId,
-			inputPage: 1,
-			inputLimit: 10,
+			inputPage:     1,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantUsersOk_PopulatedList,
 			},
@@ -1060,10 +1059,10 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Success: empty list",
+			name:          "Success: empty list",
 			inputTenantId: &targetTenantId,
-			inputPage: 1,
-			inputLimit: 10,
+			inputPage:     1,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantUsersOk_EmptyList,
 			},
@@ -1072,10 +1071,10 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Fail: pagination error",
+			name:          "Fail: pagination error",
 			inputTenantId: &targetTenantId,
-			inputPage: 0,
-			inputLimit: 10,
+			inputPage:     0,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantUsersNeverCalled,
 			},
@@ -1084,10 +1083,10 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 			expectedError: pagination.ErrInvalidPage,
 		},
 		{
-			name: "Fail: unexpected error",
+			name:          "Fail: unexpected error",
 			inputTenantId: &targetTenantId,
-			inputPage: 1,
-			inputLimit: 10,
+			inputPage:     1,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantUsersError,
 			},
@@ -1118,7 +1117,6 @@ func TestUserPostgreAdapter_GetTenantUsersByTenant(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
@@ -1140,43 +1138,43 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 	targetRole := identity.ROLE_TENANT_ADMIN
 	targetEntityList := []user.TenantMemberEntity{
 		{
-			ID: uint(1),
-			Email: "email@email.com",
-			Name: "Username",
-			Password: &targetPassword1,
+			ID:        uint(1),
+			Email:     "email@email.com",
+			Name:      "Username",
+			Password:  &targetPassword1,
 			Confirmed: true,
-			Role: string(targetRole),
-			TenantId: targetTenantId.String(),
+			Role:      string(targetRole),
+			TenantId:  targetTenantId.String(),
 		},
 		{
-			ID: uint(2),
-			Email: "email2@email.com",
-			Name: "Username2",
-			Password: &targetPassword2,
+			ID:        uint(2),
+			Email:     "email2@email.com",
+			Name:      "Username2",
+			Password:  &targetPassword2,
 			Confirmed: true,
-			Role: string(targetRole),
-			TenantId: targetTenantId.String(),
+			Role:      string(targetRole),
+			TenantId:  targetTenantId.String(),
 		},
 	}
 
 	expectedUserList := []user.User{
 		{
-			Id: uint(1),
-			Email: "email@email.com",
-			Name: "Username",
+			Id:           uint(1),
+			Email:        "email@email.com",
+			Name:         "Username",
 			PasswordHash: &targetPassword1,
-			Confirmed: true,
-			Role: targetRole,
-			TenantId: &targetTenantId,
+			Confirmed:    true,
+			Role:         targetRole,
+			TenantId:     &targetTenantId,
 		},
 		{
-			Id: uint(2),
-			Email: "email2@email.com",
-			Name: "Username2",
+			Id:           uint(2),
+			Email:        "email2@email.com",
+			Name:         "Username2",
 			PasswordHash: &targetPassword2,
-			Confirmed: true,
-			Role: targetRole,
-			TenantId: &targetTenantId,
+			Confirmed:    true,
+			Role:         targetRole,
+			TenantId:     &targetTenantId,
 		},
 	}
 
@@ -1199,7 +1197,7 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 	) *gomock.Call {
 		return tenantMemberRepo.EXPECT().
 			GetTenantAdmins(targetTenantId.String(), anyInt, anyInt).
-			Return(targetEmptyEntityList, int64(len(targetEmptyEntityList)),  nil).
+			Return(targetEmptyEntityList, int64(len(targetEmptyEntityList)), nil).
 			Times(1)
 	}
 
@@ -1223,10 +1221,10 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 
 	cases := []testCase{
 		{
-			name: "Success: populated list",
+			name:          "Success: populated list",
 			inputTenantId: &targetTenantId,
-			inputPage: 1,
-			inputLimit: 10,
+			inputPage:     1,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantAdminsOk_PopulatedList,
 			},
@@ -1235,10 +1233,10 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Success: empty list",
+			name:          "Success: empty list",
 			inputTenantId: &targetTenantId,
-			inputPage: 1,
-			inputLimit: 10,
+			inputPage:     1,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantAdminsOk_EmptyList,
 			},
@@ -1247,10 +1245,10 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Fail: pagination error",
+			name:          "Fail: pagination error",
 			inputTenantId: &targetTenantId,
-			inputPage: 0,
-			inputLimit: 10,
+			inputPage:     0,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantAdminsNeverCalled,
 			},
@@ -1259,10 +1257,10 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 			expectedError: pagination.ErrInvalidPage,
 		},
 		{
-			name: "Fail: unexpected error",
+			name:          "Fail: unexpected error",
 			inputTenantId: &targetTenantId,
-			inputPage: 1,
-			inputLimit: 10,
+			inputPage:     1,
+			inputLimit:    10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getTenantAdminsError,
 			},
@@ -1293,7 +1291,6 @@ func TestUserPostgreAdapter_GetTenantAdminsByTenant(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
@@ -1313,39 +1310,39 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 	targetRole := identity.ROLE_SUPER_ADMIN
 	targetEntityList := []user.SuperAdminEntity{
 		{
-			ID: uint(1),
-			Email: "email@email.com",
-			Name: "Username",
-			Password: &targetPassword1,
+			ID:        uint(1),
+			Email:     "email@email.com",
+			Name:      "Username",
+			Password:  &targetPassword1,
 			Confirmed: true,
 		},
 		{
-			ID: uint(2),
-			Email: "email2@email.com",
-			Name: "Username2",
-			Password: &targetPassword2,
+			ID:        uint(2),
+			Email:     "email2@email.com",
+			Name:      "Username2",
+			Password:  &targetPassword2,
 			Confirmed: true,
 		},
 	}
 
 	expectedUserList := []user.User{
 		{
-			Id: uint(1),
-			Email: "email@email.com",
-			Name: "Username",
+			Id:           uint(1),
+			Email:        "email@email.com",
+			Name:         "Username",
 			PasswordHash: &targetPassword1,
-			Confirmed: true,
-			TenantId: nil,
-			Role: targetRole,
+			Confirmed:    true,
+			TenantId:     nil,
+			Role:         targetRole,
 		},
 		{
-			Id: uint(2),
-			Email: "email2@email.com",
-			Name: "Username2",
+			Id:           uint(2),
+			Email:        "email2@email.com",
+			Name:         "Username2",
 			PasswordHash: &targetPassword2,
-			Confirmed: true,
-			TenantId: nil,
-			Role: targetRole,
+			Confirmed:    true,
+			TenantId:     nil,
+			Role:         targetRole,
 		},
 	}
 
@@ -1368,7 +1365,7 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 	) *gomock.Call {
 		return superAdminRepo.EXPECT().
 			GetSuperAdmins(anyInt, anyInt).
-			Return(targetEmptyEntityList, int64(len(targetEmptyEntityList)),  nil).
+			Return(targetEmptyEntityList, int64(len(targetEmptyEntityList)), nil).
 			Times(1)
 	}
 
@@ -1392,8 +1389,8 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 
 	cases := []testCase{
 		{
-			name: "Success: populated list",
-			inputPage: 1,
+			name:       "Success: populated list",
+			inputPage:  1,
 			inputLimit: 10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getSuperAdminsOk_PopulatedList,
@@ -1403,8 +1400,8 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Success: empty list",
-			inputPage: 1,
+			name:       "Success: empty list",
+			inputPage:  1,
 			inputLimit: 10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getSuperAdminsOk_EmptyList,
@@ -1414,8 +1411,8 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Fail: pagination error",
-			inputPage: 0,
+			name:       "Fail: pagination error",
+			inputPage:  0,
 			inputLimit: 10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getSuperAdminsNeverCalled,
@@ -1425,8 +1422,8 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 			expectedError: pagination.ErrInvalidPage,
 		},
 		{
-			name: "Fail: unexpected error",
-			inputPage: 1,
+			name:       "Fail: unexpected error",
+			inputPage:  1,
 			inputLimit: 10,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				getSuperAdminsError,
@@ -1458,7 +1455,6 @@ func TestUserPostgreAdapter_GetSuperAdmins(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestUserPostgreAdapter_CountTenantAdminsByTenant(t *testing.T) {
@@ -1495,7 +1491,7 @@ func TestUserPostgreAdapter_CountTenantAdminsByTenant(t *testing.T) {
 
 	cases := []testCase{
 		{
-			name: "Success",
+			name:          "Success",
 			inputTenantId: targetTenantId,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				countOk,
@@ -1504,7 +1500,7 @@ func TestUserPostgreAdapter_CountTenantAdminsByTenant(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Fail: unexpected error",
+			name:          "Fail: unexpected error",
 			inputTenantId: targetTenantId,
 			setupSteps: []mockSetupFunc_userPostgreAdapter{
 				countError,
@@ -1531,7 +1527,6 @@ func TestUserPostgreAdapter_CountTenantAdminsByTenant(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestUserPostgreAdapter_CountSuperAdmins(t *testing.T) {
@@ -1600,5 +1595,4 @@ func TestUserPostgreAdapter_CountSuperAdmins(t *testing.T) {
 			}
 		})
 	}
-
 }
