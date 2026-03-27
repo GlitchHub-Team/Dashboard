@@ -242,7 +242,7 @@ export class SensorApiClientServiceMock {
       gateway_id: config.gatewayId,
       sensor_name: config.name,
       sensor_interval: config.dataInterval,
-      profile: SensorProfiles[config.profile as keyof typeof SensorProfiles],
+      profile: config.profile,
       status: 'active',
     };
 

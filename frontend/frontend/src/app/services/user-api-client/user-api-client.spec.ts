@@ -55,27 +55,27 @@ describe('UserApiClientService', () => {
     total: 2,
     users: [
       {
-        id: '1',
+        user_id: '1',
         username: 'admin',
         email: 'admin@test.com',
-        role: UserRole.TENANT_ADMIN,
+        user_role: UserRole.TENANT_ADMIN,
         tenant_id: 'tenant-1',
       },
       {
-        id: '2',
+        user_id: '2',
         username: 'user',
         email: 'user@test.com',
-        role: UserRole.TENANT_USER,
+        user_role: UserRole.TENANT_USER,
         tenant_id: 'tenant-1',
       },
     ],
   };
 
   const userBackend: UserBackend = {
-    id: '3',
+    user_id: '3',
     username: 'newuser',
     email: 'new@test.com',
-    role: UserRole.TENANT_USER,
+    user_role: UserRole.TENANT_USER,
     tenant_id: 'tenant-1',
   };
 
@@ -137,10 +137,10 @@ describe('UserApiClientService', () => {
         tenant_id: undefined,
         url: 'super_admin/1',
         response: {
-          id: '1',
+          user_id: '1',
           email: 'super@test.com',
           username: 'super',
-          role: UserRole.SUPER_ADMIN,
+          user_role: UserRole.SUPER_ADMIN,
           tenant_id: '',
         } satisfies UserBackend,
       },
@@ -175,10 +175,10 @@ describe('UserApiClientService', () => {
         tenantId: undefined,
         url: 'super_admin',
         response: {
-          id: '10',
+          user_id: '10',
           email: 'super@test.com',
           username: 'super',
-          role: UserRole.SUPER_ADMIN,
+          user_role: UserRole.SUPER_ADMIN,
           tenant_id: '',
         } satisfies UserBackend,
       },

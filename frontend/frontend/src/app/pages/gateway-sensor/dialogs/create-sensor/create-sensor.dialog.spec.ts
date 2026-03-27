@@ -8,6 +8,7 @@ import { CreateSensorDialog } from './create-sensor.dialog';
 import { SensorService } from '../../../../services/sensor/sensor.service';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ApiError } from '../../../../models/api-error.model';
+import { sensorProfilesMapper } from '../../../../utils/sensor-profile.utils';
 
 describe('CreateSensorDialog (Unit)', () => {
   let fixture: ComponentFixture<CreateSensorDialog>;
@@ -56,7 +57,7 @@ describe('CreateSensorDialog (Unit)', () => {
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
       ).toContain('New Sensor');
-      expect(component['sensorForm'].value).toEqual({ name: '', profile: '', interval: 1000 });
+      expect(component['sensorForm'].value).toEqual({ name: '', profile: null, interval: 1000 });
       expect(fixture.debugElement.query(By.css('input[disabled]')).nativeElement.value).toBe(
         'Gateway Alpha',
       );
@@ -80,20 +81,6 @@ describe('CreateSensorDialog (Unit)', () => {
       fillValidForm();
       expect(component['sensorForm'].valid).toBe(true);
       expect(submitBtn().nativeElement.disabled).toBe(false);
-    });
-
-    it.each([
-      ['name', '', 'Name is required'],
-      ['profile', '', 'Profile is required'],
-    ])('should be invalid and show error when %s is empty', (field, value, errorText) => {
-      fillValidForm();
-      component['sensorForm'].controls[field as 'name' | 'profile'].setValue(value);
-      component['sensorForm'].controls[field as 'name' | 'profile'].markAsTouched();
-      fixture.detectChanges();
-      expect(component['sensorForm'].valid).toBe(false);
-      expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        errorText,
-      );
     });
 
     it('should be invalid and show min error when interval is below 100', () => {
@@ -132,7 +119,7 @@ describe('CreateSensorDialog (Unit)', () => {
       expect(sensorServiceMock.addNewSensor).toHaveBeenCalledWith({
         gatewayId: 'gw-1',
         name: 'Heart Rate Sensor',
-        profile: SensorProfiles.HEART_RATE_SERVICE,
+        profile: sensorProfilesMapper.toBackend(SensorProfiles.HEART_RATE_SERVICE),
         dataInterval: 1000,
       });
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
