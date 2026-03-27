@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
@@ -14,7 +15,7 @@ import { Tenant } from '../../models/tenant/tenant.model';
 @Component({
   selector: 'app-tenant-manager-page',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatPaginatorModule],
+  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatPaginatorModule, MatIconModule],
   templateUrl: './tenant-manager.page.html',
   styleUrl: './tenant-manager.page.css',
 })

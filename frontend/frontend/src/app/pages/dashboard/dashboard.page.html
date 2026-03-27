@@ -16,7 +16,7 @@
         <span>Per visualizzare i dati, devi selezionare un tenant.</span>
         <button mat-button color="primary" (click)="onBackToTenants()">
           <mat-icon>domain</mat-icon>
-          Vai a Tenant Management
+          Vai a Gestione Tenant
         </button>
       </div>
     } @else {
@@ -26,37 +26,39 @@
           <span>{{ error() }}</span>
         </div>
       }
-      @if (canSendCommands()) {
-        <app-dashboard-gateway-table
-          actionMode="dashboard"
-          [gateways]="gatewayList()"
-          [sensors]="sensorList()"
-          [expandedGateway]="expandedGateway()"
-          [gatewayLoading]="gatewayLoading()"
-          [sensorLoading]="sensorLoading()"
-          [gatewayTotal]="gatewayTotal()"
-          [gatewayPageIndex]="gatewayPageIndex()"
-          [gatewayLimit]="gatewayLimit()"
-          [sensorTotal]="sensorTotal()"
-          [sensorPageIndex]="sensorPageIndex()"
-          [sensorLimit]="sensorLimit()"
-          (commandRequested)="onCommandRequested($event)"
-          (chartRequested)="onChartOpen($event)"
-          (expandedGatewayChange)="onExpandedGatewayChange($event)"
-          (gatewayPageChange)="onGatewayPageChange($event)"
-          (sensorPageChange)="onSensorPageChange($event)"
-        />
-      } @else {
-        <app-dashboard-sensor-table
-          [sensors]="sensorList()"
-          [loading]="sensorLoading()"
-          [total]="sensorTotal()"
-          [pageIndex]="sensorPageIndex()"
-          [limit]="sensorLimit()"
-          (chartRequested)="onChartOpen($event)"
-          (pageChange)="onSensorPageChange($event)"
-        />
-      }
+      <div class="table-container">
+        @if (canSendCommands()) {
+          <app-dashboard-gateway-table
+            actionMode="dashboard"
+            [gateways]="gatewayList()"
+            [sensors]="sensorList()"
+            [expandedGateway]="expandedGateway()"
+            [gatewayLoading]="gatewayLoading()"
+            [sensorLoading]="sensorLoading()"
+            [gatewayTotal]="gatewayTotal()"
+            [gatewayPageIndex]="gatewayPageIndex()"
+            [gatewayLimit]="gatewayLimit()"
+            [sensorTotal]="sensorTotal()"
+            [sensorPageIndex]="sensorPageIndex()"
+            [sensorLimit]="sensorLimit()"
+            (commandRequested)="onCommandRequested($event)"
+            (chartRequested)="onChartOpen($event)"
+            (expandedGatewayChange)="onExpandedGatewayChange($event)"
+            (gatewayPageChange)="onGatewayPageChange($event)"
+            (sensorPageChange)="onSensorPageChange($event)"
+          />
+        } @else {
+          <app-dashboard-sensor-table
+            [sensors]="sensorList()"
+            [loading]="sensorLoading()"
+            [total]="sensorTotal()"
+            [pageIndex]="sensorPageIndex()"
+            [limit]="sensorLimit()"
+            (chartRequested)="onChartOpen($event)"
+            (pageChange)="onSensorPageChange($event)"
+          />
+        }
+      </div>
     }
   </div>
 

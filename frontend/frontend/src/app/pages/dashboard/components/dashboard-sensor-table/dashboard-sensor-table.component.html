@@ -1,8 +1,8 @@
 @if (actionMode() === 'manage') {
   <div class="manager-header">
-    <h3>Gateway & Sensors Management</h3>
+    <h3>Gestione Sensori</h3>
     <button mat-raised-button color="primary" (click)="createRequested.emit()">
-      <mat-icon>add</mat-icon> New Sensor
+      <mat-icon>add</mat-icon> Nuovo Sensore
     </button>
   </div>
 }
@@ -12,7 +12,7 @@
 } @else if (sensors().length === 0) {
   <div class="empty-state">
     <mat-icon>router</mat-icon>
-    <p>No sensors available</p>
+    <p>Nessun sensore disponibile</p>
   </div>
 } @else {
   <mat-table [dataSource]="sensors()">
@@ -22,12 +22,12 @@
     </ng-container>
 
     <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Nome</mat-header-cell>
       <mat-cell *matCellDef="let sensor">{{ sensor.name }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="profile">
-      <mat-header-cell *matHeaderCellDef>Profile</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Profilo</mat-header-cell>
       <mat-cell *matCellDef="let sensor">{{ sensor.profile | titlecase }}</mat-cell>
     </ng-container>
 
@@ -37,7 +37,7 @@
     </ng-container>
 
     <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef>Charts</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Grafici</mat-header-cell>
       <mat-cell *matCellDef="let sensor">
         <button
           mat-icon-button
@@ -57,7 +57,7 @@
     </ng-container>
 
     <ng-container matColumnDef="delete">
-      <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Azioni</mat-header-cell>
       <mat-cell *matCellDef="let sensor">
         <button
           mat-icon-button

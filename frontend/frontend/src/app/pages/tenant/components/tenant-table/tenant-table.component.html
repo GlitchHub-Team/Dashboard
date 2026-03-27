@@ -3,7 +3,7 @@
 } @else if (tenants().length === 0) {
   <div class="empty-state">
     <mat-icon>business</mat-icon>
-    <p>No tenants available</p>
+    <p>Nessun tenant disponibile</p>
   </div>
 } @else {
   <mat-table [dataSource]="tenants()" class="tenant-table">
@@ -13,12 +13,12 @@
     </ng-container>
 
     <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Nome</mat-header-cell>
       <mat-cell *matCellDef="let tenant">{{ tenant.name }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef class="actions-header">Actions</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef class="actions-header">Azioni</mat-header-cell>
       <mat-cell *matCellDef="let tenant" class="actions-cell">
         @if (tenant.canImpersonate) {
           <button

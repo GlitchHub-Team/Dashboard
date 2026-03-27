@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
+import { MatIconModule } from '@angular/material/icon';
 
 import { UserService } from '../../services/user/user.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
@@ -21,7 +22,7 @@ interface UserManagerContext {
 @Component({
   selector: 'app-user-manager-page',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, UserTableComponent],
+  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule],
   templateUrl: './user-manager.page.html',
   styleUrl: './user-manager.page.css',
 })

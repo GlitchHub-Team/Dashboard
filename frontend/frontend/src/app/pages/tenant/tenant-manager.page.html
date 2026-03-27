@@ -1,10 +1,10 @@
 <div class="tenant-manager-container">
   <div class="header-section">
-    <h1>Tenant Management</h1>
-    <button mat-raised-button color="primary" (click)="onCreateTenant()">+ Aggiungi Tenant</button>
+    <h1>Gestione Tenant</h1>
+    <button mat-raised-button color="primary" (click)="onCreateTenant()"><mat-icon>add</mat-icon> Aggiungi Nuovo Tenant</button>
   </div>
 
-  <div class="user-content">
+  <div class="user-content table-container">
     <app-tenant-table
       [tenants]="tenants()"
       [loading]="loading() || false"

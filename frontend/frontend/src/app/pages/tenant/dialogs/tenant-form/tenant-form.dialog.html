@@ -1,14 +1,14 @@
-<h2 mat-dialog-title>Aggiungi Tenant</h2>
+<h2 mat-dialog-title>Aggiungi Nuovo Tenant</h2>
 <mat-dialog-content>
   <form [formGroup]="tenantForm">
     <mat-form-field appearance="outline" class="w-100">
       <mat-label>Nome</mat-label>
       <input matInput formControlName="name" required />
       @if (tenantForm.get('name')?.hasError('required')) {
-        <mat-error>Nome obbligatorio</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     </mat-form-field>
-    <mat-checkbox formControlName="canImpersonate">Allow Impersonation</mat-checkbox>
+    <mat-checkbox formControlName="canImpersonate">Permetti Impersonificazione</mat-checkbox>
     @if (generalError) {
       <div class="error-text">
         {{ generalError }}

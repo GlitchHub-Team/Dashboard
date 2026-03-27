@@ -1,10 +1,10 @@
 <h2 mat-dialog-title>
-  {{ data.title || 'Confirm Deletion' }}
+  {{ data.title || 'Conferma Eliminazione' }}
 </h2>
 <mat-dialog-content>
-  <p>{{ data.message || 'Are you sure you want to proceed?' }}</p>
+  <p>{{ data.message || 'Sei sicuro di voler continuare l\'eliminazione?' }}</p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-raised-button color="warn" (click)="onConfirm()">Delete</button>
+  <button mat-button (click)="onCancel()">Annulla</button>
+  <button mat-raised-button color="warn" (click)="onConfirm()">Elimina</button>
 </mat-dialog-actions>

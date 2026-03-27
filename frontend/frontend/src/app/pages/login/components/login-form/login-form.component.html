@@ -20,9 +20,9 @@
     @if (loginForm.controls.email; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
         @if (ctrl.hasError('required')) {
-          <mat-error>Email is required</mat-error>
+          <mat-error>Campo obbligatorio</mat-error>
         } @else if (ctrl.hasError('email')) {
-          <mat-error>Invalid email</mat-error>
+          <mat-error>Indirizzo email non valido</mat-error>
         }
       }
     }
@@ -34,7 +34,7 @@
     <mat-icon matSuffix>lock</mat-icon>
     @if (loginForm.controls.password; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>Password is required</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     }
   </mat-form-field>
@@ -48,7 +48,7 @@
     </mat-select>
     @if (loginForm.controls.tenantId; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>Tenant is required.</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     }
   </mat-form-field>
@@ -57,7 +57,7 @@
     @if (loading()) {
       <mat-icon class="spin">sync</mat-icon>
     }
-    Login
+    Continua
   </button>
 
   <button
@@ -67,6 +67,6 @@
     (click)="forgotPassword.emit()"
     [disabled]="loading()"
   >
-    Forgot Password?
+    Password Dimenticata?
   </button>
 </form>

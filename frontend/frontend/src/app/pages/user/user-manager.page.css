@@ -24,3 +24,17 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   overflow: hidden;
 }
+
+::ng-deep .table-container .mat-header-row,
+::ng-deep .table-container .mat-mdc-header-row,
+::ng-deep .table-container .mat-header-cell,
+::ng-deep .table-container .mat-mdc-header-cell {
+  background-color: #dedcdc !important;
+}
+
+::ng-deep .table-container .mat-header-cell,
+::ng-deep .table-container .mat-mdc-header-cell {
+  border-bottom: 2px solid #000000 !important;
+  font-weight: bold !important;
+  color: #000000 !important;
+}

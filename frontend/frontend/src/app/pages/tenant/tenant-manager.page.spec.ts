@@ -84,7 +84,7 @@ describe('TenantManagerPage', () => {
     {
       name: 'page title',
       selector: 'h1',
-      expectedText: 'Tenant Management',
+      expectedText: 'Gestione Tenant',
       setup: () => undefined,
     },
     {

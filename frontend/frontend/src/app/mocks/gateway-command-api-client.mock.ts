@@ -8,13 +8,13 @@ export class GatewayCommandApiClientMockService {
   private readonly mockGateway: GatewayBackend = {
     gateway_id: 'gateway-01',
     tenant_id: 'tenant-01',
-    name: 'Main Lobby Gateway',
-    status: 'active',
+    name: 'Lobby principale Gateway',
+    status: 'attivo',
     interval: 60,
   };
 
   public commissionGateway(_gatewayId: string): Observable<GatewayBackend> {
-    return of({ ...this.mockGateway, gateway_id: _gatewayId, status: 'active' }).pipe(delay(500));
+    return of({ ...this.mockGateway, gateway_id: _gatewayId, status: 'attivo' }).pipe(delay(500));
   }
 
   public decommissionGateway(_gatewayId: string): Observable<void> {
