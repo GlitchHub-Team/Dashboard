@@ -10,6 +10,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { SideBarComponent } from './components/side-bar/side-bar.component';
 
 import { NAV_ITEMS } from '../../models/nav_items/nav-config.model';
+import { UserRole } from '../../models/user/user-role.enum';
 
 @Component({
   selector: 'app-shell',
@@ -28,15 +29,19 @@ export class AppShellPage {
   protected readonly currentUserRole = this.userSession.currentRole;
   // TODO: per ora mostra solo il TenantID
   protected readonly currentTenant = this.userSession.currentTenant;
-  protected readonly navItems = computed(() =>
-    NAV_ITEMS.filter((item) => {
+  protected readonly navItems = computed(() => {
+    const isSuperAdmin = this.currentUserRole() === UserRole.SUPER_ADMIN;
+
+    return NAV_ITEMS.filter((item) => {
       if (!item.permission) {
         return true;
       }
       const permissions = Array.isArray(item.permission) ? item.permission : [item.permission];
       return this.permissionService.canAny(permissions);
-    }),
-  );
+    }).map(item => 
+      item.separator && !isSuperAdmin ? { ...item, separator: false } : item
+    );
+  });
 
   protected onLogout(): void {
     this.authSessionService.logout();

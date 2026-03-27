@@ -153,8 +153,8 @@ describe('AppShellPage (Unit)', () => {
   });
 
   describe('navItems', () => {
-    it('should include all 6 items when user has all permissions', () => {
-      expect(component['navItems']().length).toBe(6);
+    it('should include all 7 items when user has all permissions', () => {
+      expect(component['navItems']().length).toBe(7);
     });
 
     it('should return empty list when user has no permissions', () => {
@@ -177,7 +177,7 @@ describe('AppShellPage (Unit)', () => {
     it('should call canAny with an array for each gated item', () => {
       component['navItems']();
 
-      expect(permissionServiceMock.canAny).toHaveBeenCalledTimes(6);
+      expect(permissionServiceMock.canAny).toHaveBeenCalledTimes(7);
       permissionServiceMock.canAny.mock.calls.forEach((call: unknown[][]) => {
         expect(Array.isArray(call[0])).toBe(true);
       });
@@ -220,7 +220,7 @@ describe('AppShellPage (Unit)', () => {
 
       const items = component['navItems']();
       expect(items).toHaveLength(2);
-      expect(items.map((i) => i.label)).toEqual(['Dashboard', 'Gestione Tenant User']);
+      expect(items.map((i) => i.label)).toEqual(['Gestione Tenant User', 'Dashboard']);
     });
   });
 

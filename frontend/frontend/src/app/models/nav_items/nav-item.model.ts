@@ -5,4 +5,5 @@ export interface NavItem {
   route: string;
   icon: string;
   permission?: Permission | Permission[];
+  separator?: boolean;
 }

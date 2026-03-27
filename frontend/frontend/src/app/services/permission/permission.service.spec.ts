@@ -45,7 +45,7 @@ describe('PermissionService', () => {
       [UserRole.SUPER_ADMIN, Permission.GATEWAY_COMMANDS, true],
       [UserRole.SUPER_ADMIN, Permission.TENANT_ADMIN_MANAGEMENT, true],
       [UserRole.SUPER_ADMIN, Permission.TENANT_MANAGEMENT, true],
-      [UserRole.SUPER_ADMIN, Permission.APIKEY_MANAGEMENT, true],
+      [UserRole.SUPER_ADMIN, Permission.SUPER_ADMIN_MANAGEMENT, true],
       [UserRole.SUPER_ADMIN, Permission.TENANT_USER_MANAGEMENT, false],
     ])('%s / %s => %s', (role: UserRole, permission: Permission, expected: boolean) => {
       userSessionMock.currentRole.mockReturnValue(role);
