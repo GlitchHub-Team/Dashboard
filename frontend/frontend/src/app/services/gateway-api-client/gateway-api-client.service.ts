@@ -19,7 +19,7 @@ export class GatewayApiClientService {
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
-    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
+    const params = new HttpParams().set('page', page).set('limit', limit);
 
     return this.http.get<PaginatedGatewayResponse<GatewayBackend>>(
       `${this.apiUrl}/tenant/${tenantId}/gateways`,
@@ -33,7 +33,7 @@ export class GatewayApiClientService {
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
-    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
+    const params = new HttpParams().set('page', page).set('limit', limit);
 
     return this.http.get<PaginatedGatewayResponse<GatewayBackend>>(`${this.apiUrl}/gateways`, {
       params,

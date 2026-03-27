@@ -22,7 +22,7 @@ export class TenantApiClientService {
     page: number,
     limit: number,
   ): Observable<PaginatedTenantResponse<TenantBackend>> {
-    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
+    const params = new HttpParams().set('page', page).set('limit', limit);
 
     return this.http.get<PaginatedTenantResponse<TenantBackend>>(`${this.apiUrl}/tenants`, {
       params,

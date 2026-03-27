@@ -19,7 +19,7 @@ export class SensorApiClientService {
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
-    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
+    const params = new HttpParams().set('page', page).set('limit', limit);
 
     return this.http.get<PaginatedSensorResponse<SensorBackend>>(
       `${this.apiUrl}/gateway/${gatewayId}/sensors`,
@@ -34,7 +34,7 @@ export class SensorApiClientService {
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
-    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
+    const params = new HttpParams().set('page', page).set('limit', limit);
 
     return this.http.get<PaginatedSensorResponse<SensorBackend>>(
       `${this.apiUrl}/tenant/${tenantId}/sensors`,

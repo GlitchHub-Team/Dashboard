@@ -3,7 +3,7 @@ import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-respo
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 
 export abstract class SensorAdapter {
-  abstract fromDTO(dto: unknown): Sensor;
+  abstract fromDTO(dto: SensorBackend): Sensor;
   abstract fromPaginatedDTO(
     response: PaginatedSensorResponse<SensorBackend>,
   ): PaginatedSensorResponse<Sensor>;

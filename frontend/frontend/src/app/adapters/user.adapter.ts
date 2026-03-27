@@ -3,7 +3,7 @@ import { PaginatedUserResponse } from '../models/user/paginated-user-response.mo
 import { UserBackend } from '../models/user/user-backend.model';
 
 export abstract class UserAdapter {
-  abstract fromDTO(dto: unknown): User;
+  abstract fromDTO(dto: UserBackend): User;
   abstract fromPaginatedDTO(
     response: PaginatedUserResponse<UserBackend>,
   ): PaginatedUserResponse<User>;

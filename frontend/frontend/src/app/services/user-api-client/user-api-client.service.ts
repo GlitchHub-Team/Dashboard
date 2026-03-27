@@ -34,7 +34,7 @@ export class UserApiClientService {
     size: number,
     tenantId?: string,
   ): Observable<PaginatedUserResponse<UserBackend>> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    const params = new HttpParams().set('page', page).set('size', size);
 
     const url = this.getBaseUrl(role, tenantId, true);
 
