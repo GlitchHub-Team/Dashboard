@@ -277,10 +277,8 @@ describe('ChartContainerComponent (Unit)', () => {
     it.each([
       [mockHistoricRequest, 'isHistoricChart', true],
       [mockRealtimeRequest, 'isHistoricChart', false],
-      [null, 'isHistoricChart', false],
       [mockRealtimeRequest, 'isLiveChart', true],
       [mockHistoricRequest, 'isLiveChart', false],
-      [null, 'isLiveChart', false],
     ] as const)('chartRequest=%s to %s() === %s', (req, prop, expected) => {
       setChartRequest(req);
       expect(component[prop]()).toBe(expected);

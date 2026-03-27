@@ -10,24 +10,30 @@
     <h3 class="section-title">Time Range</h3>
 
     <div class="row">
-      <mat-form-field appearance="outline">
-        <mat-label>From</mat-label>
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>From Date</mat-label>
         <input matInput [matDatepicker]="fromPicker" formControlName="from" />
         <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
         <mat-datepicker #fromPicker />
-        @if (filtersForm.controls.from.hasError('required')) {
-          <mat-error>Start date is required</mat-error>
-        }
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>To</mat-label>
+      <mat-form-field appearance="outline" class="time-field">
+        <mat-label>From Time</mat-label>
+        <input matInput type="time" formControlName="fromTime" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>To Date</mat-label>
         <input matInput [matDatepicker]="toPicker" formControlName="to" />
         <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
         <mat-datepicker #toPicker />
-        @if (filtersForm.controls.to.hasError('required')) {
-          <mat-error>End date is required</mat-error>
-        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="time-field">
+        <mat-label>To Time</mat-label>
+        <input matInput type="time" formControlName="toTime" />
       </mat-form-field>
     </div>
 
@@ -41,17 +47,11 @@
       <mat-form-field appearance="outline">
         <mat-label>Lower Bound</mat-label>
         <input matInput type="number" formControlName="lowerBound" />
-        @if (filtersForm.controls.lowerBound.hasError('required')) {
-          <mat-error>Lower bound is required</mat-error>
-        }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Upper Bound</mat-label>
         <input matInput type="number" formControlName="upperBound" />
-        @if (filtersForm.controls.upperBound.hasError('required')) {
-          <mat-error>Upper bound is required</mat-error>
-        }
       </mat-form-field>
     </div>
 

@@ -10,9 +10,9 @@ export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
-    const interval = req.timeInterval ?? this.getDefaultInterval();
-    const from = interval.from.getTime();
-    const to = interval.to.getTime();
+    const defaultInterval = this.getDefaultInterval();
+    const from = (req.timeInterval?.from ?? defaultInterval.from).getTime();
+    const to = (req.timeInterval?.to ?? defaultInterval.to).getTime();
     const durationMs = to - from;
     const resolution = 60_000; // 60 seconds in ms
     const totalPoints = Math.floor(durationMs / resolution);

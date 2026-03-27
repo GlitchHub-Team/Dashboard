@@ -8,8 +8,8 @@ import { RealTimeReading } from '../models/sensor-data/real-time-reading.model';
 export class SensorLiveReadingApiAdapter extends SensorLiveReadingAdapter {
   fromDTO(dto: RealTimeReading): SensorReading {
     return {
-      value: dto.value,
-      timestamp: new Date().toISOString(),
+      value: dto.datum,
+      timestamp: new Date(dto.timestamp).toISOString(),
     };
   }
 }

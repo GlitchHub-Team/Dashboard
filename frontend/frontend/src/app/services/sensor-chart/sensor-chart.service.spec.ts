@@ -51,7 +51,7 @@ describe('SensorChartService', () => {
 
   const mockRawReading: RealTimeReading = {
     timestamp: new Date('2026-01-01T00:00:00.000Z').getTime(),
-    value: 36.6,
+    datum: 36.6,
   };
 
   const mockAdaptedReading: SensorReading = {

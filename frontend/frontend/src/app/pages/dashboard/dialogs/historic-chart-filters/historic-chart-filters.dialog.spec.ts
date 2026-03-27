@@ -64,27 +64,18 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
     it('should have form with default values', () => {
       const form = component['filtersForm'];
-      expect(form.value.dataPointsCounter).toBe(100);
-      expect(form.value.from).toBeInstanceOf(Date);
-      expect(form.value.to).toBeInstanceOf(Date);
-      expect(form.value.lowerBound).toBe(0);
-      expect(form.value.upperBound).toBe(100);
+      expect(form.value.dataPointsCounter).toBeNull();
+      expect(form.value.from).toBeNull();
+      expect(form.value.fromTime).toBeNull();
+      expect(form.value.to).toBeNull();
+      expect(form.value.toTime).toBeNull();
+      expect(form.value.lowerBound).toBeNull();
+      expect(form.value.upperBound).toBeNull();
     });
 
-    it('should default "from" to approximately 24 hours ago', () => {
-      const from = component['filtersForm'].value.from!;
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      expect(Math.abs(from.getTime() - twentyFourHoursAgo.getTime())).toBeLessThan(1000);
-    });
-
-    it('should default "to" to approximately now', () => {
-      const to = component['filtersForm'].value.to!;
-      expect(Math.abs(to.getTime() - Date.now())).toBeLessThan(1000);
-    });
-
-    it('should have Apply button enabled (form valid by default)', () => {
+    it('should have Apply button disabled (dataPointsCounter empty by default)', () => {
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
-      expect(applyBtn.nativeElement.disabled).toBe(false);
+      expect(applyBtn.nativeElement.disabled).toBe(true);
     });
 
     it('should have Cancel button enabled', () => {
@@ -104,19 +95,26 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
   });
 
   describe('form validation', () => {
-    it('should be valid with default values', () => {
-      expect(component['filtersForm'].valid).toBe(true);
+    it('should be invalid with default values (dataPointsCounter required)', () => {
+      expect(component['filtersForm'].valid).toBe(false);
+    });
+
+    it('should be invalid when dataPointsCounter is null', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(null);
+      expect(component['filtersForm'].valid).toBe(false);
     });
 
     it.each([
       ['from', null],
+      ['fromTime', null],
       ['to', null],
+      ['toTime', null],
       ['lowerBound', null],
       ['upperBound', null],
-      ['dataPointsCounter', null],
-    ] as const)('should be invalid when %s is cleared', (field, value) => {
-      component['filtersForm'].controls[field].setValue(value!);
-      expect(component['filtersForm'].valid).toBe(false);
+    ] as const)('should remain valid when optional field %s is null', (field, value) => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(100);
+      component['filtersForm'].controls[field].setValue(value as never);
+      expect(component['filtersForm'].valid).toBe(true);
     });
 
     it('should be invalid when dataPointsCounter is 0', () => {
@@ -134,8 +132,16 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(component['filtersForm'].valid).toBe(true);
     });
 
-    it('should disable Apply button when form is invalid', () => {
-      component['filtersForm'].controls.from.setValue(null!);
+    it('should disable Apply button when dataPointsCounter is null', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(null);
+      fixture.detectChanges();
+
+      const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
+      expect(applyBtn.nativeElement.disabled).toBe(true);
+    });
+
+    it('should disable Apply button when dataPointsCounter is below minimum', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(0);
       fixture.detectChanges();
 
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
@@ -144,52 +150,8 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
   });
 
   describe('validation error messages', () => {
-    it('should show "Start date is required" error', () => {
-      component['filtersForm'].controls.from.setValue(null!);
-      component['filtersForm'].controls.from.markAsTouched();
-      fixture.detectChanges();
-
-      const error = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Start date'));
-      expect(error).toBeTruthy();
-    });
-
-    it('should show "End date is required" error', () => {
-      component['filtersForm'].controls.to.setValue(null!);
-      component['filtersForm'].controls.to.markAsTouched();
-      fixture.detectChanges();
-
-      const error = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('End date'));
-      expect(error).toBeTruthy();
-    });
-
-    it('should show "Lower bound is required" error', () => {
-      component['filtersForm'].controls.lowerBound.setValue(null!);
-      component['filtersForm'].controls.lowerBound.markAsTouched();
-      fixture.detectChanges();
-
-      const error = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Lower bound'));
-      expect(error).toBeTruthy();
-    });
-
-    it('should show "Upper bound is required" error', () => {
-      component['filtersForm'].controls.upperBound.setValue(null!);
-      component['filtersForm'].controls.upperBound.markAsTouched();
-      fixture.detectChanges();
-
-      const error = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Upper bound'));
-      expect(error).toBeTruthy();
-    });
-
     it('should show "Data points count is required" error', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(null!);
+      component['filtersForm'].controls.dataPointsCounter.setValue(null);
       component['filtersForm'].controls.dataPointsCounter.markAsTouched();
       fixture.detectChanges();
 
@@ -211,10 +173,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
     });
   });
 
-  // ─────────────────────────────────────────────
-  // APPLY
-  // ─────────────────────────────────────────────
-
   describe('apply', () => {
     it('should close dialog with complete ChartRequest', () => {
       const from = new Date('2025-01-01');
@@ -222,12 +180,19 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
       component['filtersForm'].setValue({
         from,
+        fromTime: '10:30',
         to,
+        toTime: '20:00',
         lowerBound: 50,
         upperBound: 200,
         dataPointsCounter: 250,
       });
       fixture.detectChanges();
+
+      const expectedFrom = new Date(from);
+      expectedFrom.setHours(10, 30, 0, 0);
+      const expectedTo = new Date(to);
+      expectedTo.setHours(20, 0, 0, 0);
 
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
       applyBtn.nativeElement.click();
@@ -235,13 +200,16 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(dialogRefMock.close).toHaveBeenCalledWith({
         sensor: mockSensor,
         chartType: ChartType.HISTORIC,
-        timeInterval: { from, to },
+        timeInterval: { from: expectedFrom, to: expectedTo },
         valuesInterval: { lowerBound: 50, upperBound: 200 },
         dataPointsCounter: 250,
       });
     });
 
     it('should include correct sensor from dialog data', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(100);
+      fixture.detectChanges();
+
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
       applyBtn.nativeElement.click();
 
@@ -250,24 +218,42 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(result.chartType).toBe(ChartType.HISTORIC);
     });
 
-    it('should include default values when form is not modified', () => {
-      const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
-      applyBtn.nativeElement.click();
+    it('should omit optional fields when only dataPointsCounter is set', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(100);
+      component['onApply']();
 
       const result = dialogRefMock.close.mock.calls[0][0];
+      expect(result.timeInterval).toBeUndefined();
+      expect(result.valuesInterval).toBeUndefined();
       expect(result.dataPointsCounter).toBe(100);
-      expect(result.valuesInterval.lowerBound).toBe(0);
-      expect(result.valuesInterval.upperBound).toBe(100);
-      expect(result.timeInterval.from).toBeInstanceOf(Date);
-      expect(result.timeInterval.to).toBeInstanceOf(Date);
+    });
+
+    it('should omit timeInterval when only one of from/to is set', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(100);
+      component['filtersForm'].controls.from.setValue(new Date('2025-01-01'));
+      component['onApply']();
+
+      const result = dialogRefMock.close.mock.calls[0][0];
+      expect(result.timeInterval).toBeUndefined();
+    });
+
+    it('should omit valuesInterval when only one of lowerBound/upperBound is set', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(100);
+      component['filtersForm'].controls.lowerBound.setValue(10);
+      component['onApply']();
+
+      const result = dialogRefMock.close.mock.calls[0][0];
+      expect(result.valuesInterval).toBeUndefined();
     });
 
     it('should mark all as touched and not close when form is invalid', () => {
-      component['filtersForm'].controls.from.setValue(null!);
+      component['filtersForm'].controls.dataPointsCounter.setValue(null);
       component['onApply']();
 
       expect(component['filtersForm'].controls.from.touched).toBe(true);
+      expect(component['filtersForm'].controls.fromTime.touched).toBe(true);
       expect(component['filtersForm'].controls.to.touched).toBe(true);
+      expect(component['filtersForm'].controls.toTime.touched).toBe(true);
       expect(component['filtersForm'].controls.lowerBound.touched).toBe(true);
       expect(component['filtersForm'].controls.upperBound.touched).toBe(true);
       expect(component['filtersForm'].controls.dataPointsCounter.touched).toBe(true);
