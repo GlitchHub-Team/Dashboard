@@ -1,25 +1,16 @@
 package user
 
 import (
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 )
 
-//go:generate mockgen -destination=../../tests/user/mocks/use_cases_delete.go -package=mocks . DeleteTenantUserUseCase,DeleteTenantAdminUseCase,DeleteSuperAdminUseCase
-
 // Delete User ====================================================================================
-type DeleteTenantUserUseCase interface {
-	DeleteTenantUser(cmd DeleteTenantUserCommand) (User, error)
-}
+/*
+	Servizio di eliminazione utente.
 
-type DeleteTenantAdminUseCase interface {
-	DeleteTenantAdmin(cmd DeleteTenantAdminCommand) (User, error)
-}
-
-type DeleteSuperAdminUseCase interface {
-	DeleteSuperAdmin(cmd DeleteSuperAdminCommand) (User, error)
-}
-
+	Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+*/
 type DeleteUserService struct {
 	deleteUserPort DeleteUserPort
 	getUserPort    GetUserPort
@@ -84,20 +75,29 @@ func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// 2. Controlla autorizzazione tenant
+	// Controlla autorizzazione tenant
 	// NOTA: rimosso static check per chiarezza
 	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
 	if !superAdminAccess && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {    //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 
-	// 3. Controlla user
+	// 2. Controlla user
 	user, err := service.getUserPort.GetTenantAdmin(cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
 	}
 	if user.IsZero() {
 		return User{}, ErrUserNotFound
+	}
+
+	// 3. Controlla che non sia l'ultimo tenant admin
+	total, err := service.getUserPort.CountTenantAdminsByTenant(cmd.TenantId)
+	if err != nil {
+		return User{}, err
+	}
+	if total <= 1 {
+		return User{}, ErrCannotDeleteLastAdmin
 	}
 
 	// 4. Elimina user
@@ -120,7 +120,16 @@ func (service *DeleteUserService) DeleteSuperAdmin(cmd DeleteSuperAdminCommand) 
 		return User{}, ErrUserNotFound
 	}
 
-	// 2. Elimina user
+	// 2. Controlla che non sia l'ultimo tenant admin
+	total, err := service.getUserPort.CountSuperAdmins()
+	if err != nil {
+		return User{}, err
+	}
+	if total == 1 {
+		return User{}, ErrCannotDeleteLastAdmin
+	}
+
+	// 3. Elimina user
 	oldUser, err := service.deleteUserPort.DeleteSuperAdmin(cmd.UserId)
 	return oldUser, err
 }

@@ -1,9 +1,5 @@
 package gateway
 
-type CreateGatewayCommand struct {
+type CreateGatewayCommand struct{}
 
-}
-
-type DeleteGatewayCommand struct {
-	
-}
+type DeleteGatewayCommand struct{}

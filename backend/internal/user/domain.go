@@ -1,11 +1,10 @@
 package user
 
 import (
+	"backend/internal/shared/identity"
+
 	"github.com/google/uuid"
-	"backend/internal/identity"
 )
-
-
 
 type User struct {
 	Id           uint
@@ -19,4 +18,17 @@ type User struct {
 
 func (u *User) IsZero() bool {
 	return *u == (User{})
+}
+
+func (u *User) SetPasswordHash(newPasswordHash string) error {
+	if newPasswordHash == "" {
+		return ErrEmptyPassword
+	}
+
+	if newPasswordHash == *u.PasswordHash {
+		return ErrSamePassword
+	}
+
+	u.PasswordHash = &newPasswordHash
+	return nil
 }

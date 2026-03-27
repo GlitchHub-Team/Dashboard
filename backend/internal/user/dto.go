@@ -1,8 +1,8 @@
 package user
 
 import (
-	"backend/internal/common/dto"
-	"backend/internal/identity"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
 )
 
 // Request DTO ========================================================================================
@@ -26,9 +26,9 @@ type UserResponseDTO struct {
 
 func NewUserResponseDTO(user User) UserResponseDTO {
 	response := UserResponseDTO{
-		UserIdField: dto.UserIdField{UserId: user.Id},
+		UserIdField:   dto.UserIdField{UserId: user.Id},
 		UsernameField: dto.UsernameField{Username: user.Name},
-		EmailField: dto.EmailField{Email: user.Email},
+		EmailField:    dto.EmailField{Email: user.Email},
 		UserRoleField: dto.UserRoleField{UserRole: string(user.Role)},
 	}
 	if user.Role != identity.ROLE_SUPER_ADMIN {
@@ -60,4 +60,3 @@ func NewUserListResponseDTO(userList []User, total uint) UserListResponseDTO {
 		},
 	}
 }
-

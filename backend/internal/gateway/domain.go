@@ -11,13 +11,11 @@ const (
 	GATEWAY_STATUS_INACTIVE GatewayStatus = "inactive"
 )
 
-
 type Gateway struct {
-	Id            uuid.UUID
-	Name          string
-	TenantId      *uuid.UUID
+	Id       uuid.UUID
+	Name     string
+	TenantId *uuid.UUID
 	// Sensors	map[uuid.UUID]sensor.Sensor
 	Status        GatewayStatus
 	IntervalLimit int64
-	
 }

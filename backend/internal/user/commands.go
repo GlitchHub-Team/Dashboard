@@ -1,7 +1,7 @@
 package user
 
 import (
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
 )
@@ -62,8 +62,6 @@ type GetSuperAdminCommand struct {
 }
 
 // Get multiple ---------------------------------------------------------------------------------------
-
-// TODO: possibile miglioramento: validazione nel command
 
 type GetTenantUsersByTenantCommand struct {
 	identity.Requester

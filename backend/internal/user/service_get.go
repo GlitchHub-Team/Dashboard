@@ -1,13 +1,15 @@
 package user
 
 import (
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 )
 
-//go:generate mockgen -destination=../../tests/user/mocks/use_cases_get.go -package=mocks . GetTenantUserUseCase,GetTenantAdminUseCase,GetSuperAdminUseCase,GetTenantUsersByTenantUseCase,GetTenantAdminsByTenantUseCase,GetSuperAdminListUseCase
+/*
+Servizio usato per ottenere informazioni su uno o più utenti.
 
-
+Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+*/
 type GetUserService struct {
 	getUserPort   GetUserPort
 	getTenantPort tenant.GetTenantPort
@@ -17,6 +19,7 @@ func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPo
 	GetTenantUserUseCase,
 	GetTenantAdminUseCase,
 	GetSuperAdminUseCase,
+
 	GetTenantUsersByTenantUseCase,
 	GetTenantAdminsByTenantUseCase,
 	GetSuperAdminListUseCase,
@@ -29,17 +32,6 @@ func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPo
 }
 
 // Get single -----------------------------------------------------------------------------------------
-type GetTenantUserUseCase interface {
-	GetTenantUser(cmd GetTenantUserCommand) (User, error)
-}
-
-type GetTenantAdminUseCase interface {
-	GetTenantAdmin(cmd GetTenantAdminCommand) (User, error)
-}
-
-type GetSuperAdminUseCase interface {
-	GetSuperAdmin(cmd GetSuperAdminCommand) (User, error)
-}
 
 func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, error) {
 	// TODO: Ottimizzare controllo autorizz. (metti qua controllo per tenant user/admin)
@@ -55,10 +47,10 @@ func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, er
 
 	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
-	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
-	tenantUserAccess := cmd.Requester.CanTenantUserAccess(cmd.TenantId) && cmd.RequesterUserId == cmd.UserId
-	if !superAdminAccess && !tenantAdminAccess && !tenantUserAccess { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate                           //nolint:staticcheck
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)                                    //nolint:staticcheck
+	tenantUserAccess := cmd.Requester.CanTenantUserAccess(cmd.TenantId) && cmd.RequesterUserId == cmd.UserId //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess && !tenantUserAccess {                                        //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 
@@ -88,9 +80,9 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 
 	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
-	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
-	if !superAdminAccess && !tenantAdminAccess  { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)          //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess {
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 	// 2) Get tenant admin
@@ -123,23 +115,6 @@ func (service *GetUserService) GetSuperAdmin(cmd GetSuperAdminCommand) (User, er
 }
 
 // Get multiple ---------------------------------------------------------------------------------------
-type GetTenantUsersByTenantUseCase interface {
-	GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
-		tenantUsers []User, total uint, err error,
-	)
-}
-
-type GetTenantAdminsByTenantUseCase interface {
-	GetTenantAdminsByTenant(cmd GetTenantAdminsByTenantCommand) (
-		tenantAdmins []User, total uint, err error,
-	)
-}
-
-type GetSuperAdminListUseCase interface {
-	GetSuperAdminList(cmd GetSuperAdminListCommand) (
-		superAdmins []User, total uint, err error,
-	)
-}
 
 func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenantCommand) (
 	tenantUsers []User, total uint, err error,
@@ -157,9 +132,9 @@ func (service *GetUserService) GetTenantUsersByTenant(cmd GetTenantUsersByTenant
 
 	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
-	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
-	if !superAdminAccess && !tenantAdminAccess { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)          //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess {                                   //nolint:staticcheck
 		return nil, 0, identity.ErrUnauthorizedAccess
 	}
 
@@ -187,9 +162,9 @@ func (service *GetUserService) GetTenantAdminsByTenant(cmd GetTenantAdminsByTena
 
 	// 2) Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
-	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)
-	if !superAdminAccess && !tenantAdminAccess { //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)          //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess {                                   //nolint:staticcheck
 		return nil, 0, identity.ErrUnauthorizedAccess
 	}
 

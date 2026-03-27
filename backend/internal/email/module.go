@@ -1,9 +1,12 @@
 package email
 
 import (
+	"backend/internal/auth"
+	"backend/internal/shared/config"
+	"backend/internal/user"
+
 	"go.uber.org/fx"
 	"go.uber.org/zap"
-	"backend/internal/config"
 )
 
 func NewEmailAdapterFactory(
@@ -23,6 +26,10 @@ func NewEmailAdapterFactory(
 var Module = fx.Module(
 	"email",
 	fx.Provide(
-		NewEmailAdapterFactory,
+		fx.Annotate(
+			NewEmailAdapterFactory,
+			fx.As(new(user.SendConfirmAccountEmailPort)),
+			fx.As(new(auth.SendChangePasswordEmailPort)),
+		),
 	),
 )
