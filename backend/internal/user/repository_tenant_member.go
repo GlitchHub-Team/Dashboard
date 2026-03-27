@@ -33,40 +33,6 @@ type TenantMemberEntity struct {
 func (TenantMemberEntity) TableName() string { return "tenant_members" }
 
 
-// func (entity *TenantMemberEntity) FromUser(user User) {
-// 	entity.ID = user.Id
-// 	entity.Email = user.Email
-// 	entity.Name = user.Name
-// 	entity.Password = user.PasswordHash
-// 	entity.Role = string(user.Role)
-// 	entity.TenantId = user.TenantId.String()
-// 	entity.Confirmed = user.Confirmed
-// }
-
-// func (entity *TenantMemberEntity) ToUser() (User, error) {
-// 	if entity.ID == 0 {
-// 		return User{}, ErrInvalidUser
-// 	}
-
-// 	tenantId, err := uuid.Parse(entity.TenantId)
-// 	var tenantIdPointer *uuid.UUID
-// 	if err != nil {
-// 		tenantIdPointer = nil
-// 	} else {
-// 		tenantIdPointer = &tenantId
-// 	}
-
-// 	return User{
-// 		Id:           entity.ID,
-// 		Name:         entity.Name,
-// 		Email:        entity.Email,
-// 		PasswordHash: entity.Password,
-// 		Role:         identity.UserRole(entity.Role),
-// 		TenantId:     tenantIdPointer,
-// 		Confirmed:    entity.Confirmed,
-// 	}, err
-// }
-
 // Repository =========================================================================================
 
 type TenantMemberRepository interface {
