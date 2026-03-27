@@ -1,1 +1,249 @@
 package user
+
+import (
+	"errors"
+	"strings"
+	"time"
+
+	// "backend/internal/tenant"
+	db_conn "backend/internal/common/db_connection"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
+
+// Entities ===========================================================================================
+type genericUserEntity struct {
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
+	Email     string `gorm:"unique;size:256;not null"`
+	Name      string `gorm:"size:128;not null"`
+	Password  string `gorm:"not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Confirmed bool
+}
+
+type TenantMemberEntity struct {
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
+	Email     string `gorm:"unique;size:256;not null"`
+	Name      string `gorm:"size:128;not null"`
+	Password  *string
+	Confirmed bool   `gorm:"not null"`
+	Role      string `gorm:"not null;size:32;check:role = 'tenant_user' or role ='tenant_admin'"`
+	TenantId  string `gorm:"-"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (TenantMemberEntity) TableName() string { return "tenant_members" }
+
+func (entity *TenantMemberEntity) fromUser(user User) {
+	entity.Email = user.Email
+	entity.Name = user.Name
+	entity.Password = user.PasswordHash
+	entity.Role = string(user.Role)
+	entity.TenantId = user.TenantId.String()
+	entity.Confirmed = user.Confirmed
+}
+
+func (entity *TenantMemberEntity) toUser() (User, error) {
+	if entity.ID == 0 {
+		return User{}, nil
+	}
+
+	tenantId, err := uuid.Parse(entity.TenantId)
+	var tenantIdPointer *uuid.UUID
+	if err != nil {
+		tenantIdPointer = nil
+	} else {
+		tenantIdPointer = &tenantId
+	}
+
+	return User{
+		Id:           entity.ID,
+		Name:         entity.Name,
+		Email:        entity.Email,
+		PasswordHash: entity.Password,
+		Role:         (UserRole)(entity.Role),
+		TenantId:     tenantIdPointer,
+		Confirmed:    entity.Confirmed,
+	}, err
+}
+
+type SuperAdminEntity struct {
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
+	Email     string `gorm:"unique;size:256;not null"`
+	Name      string `gorm:"size:128;not null"`
+	Password  *string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Confirmed bool `gorm:"not null"`
+}
+
+func (SuperAdminEntity) TableName() string { return "super_admins" }
+
+func (entity *SuperAdminEntity) fromUser(user User) *SuperAdminEntity {
+	entity.ID = user.Id
+	entity.Email = user.Email
+	entity.Name = user.Name
+	entity.Password = user.PasswordHash
+	return entity
+}
+
+func (entity *SuperAdminEntity) toUser() User {
+	return User{
+		Id:           entity.ID,
+		Name:         entity.Name,
+		Email:        entity.Email,
+		PasswordHash: entity.Password,
+		Confirmed:    entity.Confirmed,
+	}
+}
+
+// Repository =========================================================================================
+type userPostgreRepository struct {
+	log *zap.Logger
+	db  *gorm.DB
+}
+
+func newUserPostgreRepository(
+	log *zap.Logger,
+	db *gorm.DB,
+) *userPostgreRepository {
+	return &userPostgreRepository{
+		log: log,
+		db:  db,
+	}
+}
+
+func (repo *userPostgreRepository) SaveTenantMember(tenantMember *TenantMemberEntity) error {
+	err := repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
+		Save(tenantMember).
+		Error
+	return err
+}
+
+func (repo *userPostgreRepository) DeleteTenantMember(tenantMember *TenantMemberEntity) error {
+	if tenantMember.ID == 0 {
+		return errors.New("cannot delete tenant member with ID 0")
+	}
+
+	if tenantMember.TenantId == "" {
+		return errors.New("cannot delete tenant member with no tenant")
+	}
+
+	err := repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
+		Clauses(clause.Returning{}).
+		Delete(&tenantMember).
+		Error
+	return err
+}
+
+func (repo *userPostgreRepository) GetTenantMembers(tenantId string, page, limit int) ([]TenantMemberEntity, error) {
+	var tenantMembers []TenantMemberEntity
+	err := repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Order("name ASC").
+		Limit(limit).
+		Offset(page * limit).
+		Find(&tenantMembers).
+		Error
+		
+	for i := range tenantMembers {
+		tenantMembers[i].TenantId = tenantId
+	}
+
+	return tenantMembers, err
+}
+
+type userRepositoryGetUserBy struct {
+	Email  *string
+	userId *uint
+}
+func (by *userRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
+	if by == (&userRepositoryGetUserBy{}) {
+		return "", nil, errors.New("cannot get user without specifying parameters")
+	}
+
+	var conditions []string
+	var params []any
+	if by.Email != nil {
+		conditions = append(conditions, "email = ?")
+		params = append(params, *by.Email)
+	}
+	if by.userId != nil {
+		conditions = append(conditions, "id = ?")
+		params = append(params, *by.userId)
+	}
+
+	return strings.Join(conditions, " AND "), params, nil
+}
+
+func (repo *userPostgreRepository) GetTenantUser(tenantId string, by userRepositoryGetUserBy) (*TenantMemberEntity, error) {
+	var tenantMember *TenantMemberEntity
+	where, params, err := by.getWhere()
+	if err != nil {
+		return nil, err
+	}
+
+
+	err = repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Where("role = ?", "tenant_user").
+		Where(where, params...).
+		Find(&tenantMember).
+		Error
+	tenantMember.TenantId = tenantId
+	return tenantMember, err
+}
+
+func (repo *userPostgreRepository) GetTenantAdmin(tenantId string, by userRepositoryGetUserBy) (*TenantMemberEntity, error) {
+	var tenantMember *TenantMemberEntity
+	where, params, err := by.getWhere()
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.db.
+		Scopes(db_conn.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+		Where("role = ?", "tenant_admin").
+		Where(where, params...).
+		Find(&tenantMember).
+		Error
+	tenantMember.TenantId = tenantId
+	return tenantMember, err
+}
+
+func (repo *userPostgreRepository) SaveSuperAdmin(tenantMember *SuperAdminEntity) error {
+	err := repo.db.Save(tenantMember).Error
+	return err
+}
+
+func (repo *userPostgreRepository) DeleteSuperAdmin(tenantMember *SuperAdminEntity) error {
+	if tenantMember.ID == 0 {
+		return errors.New("cannot delete super admin with ID 0")
+	}
+	err := repo.db.
+		Clauses(clause.Returning{}).
+		Delete(tenantMember).
+		Error
+	return err
+}
+
+func (repo *userPostgreRepository) GetSuperAdmin(by userRepositoryGetUserBy) (*SuperAdminEntity, error) {
+	var tenantMember *SuperAdminEntity
+	where, params, err := by.	()
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.db.
+		Where(where, params...).
+		Find(&tenantMember).
+		Error
+	return tenantMember, err
+}
