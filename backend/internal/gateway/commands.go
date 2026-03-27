@@ -1,10 +1,16 @@
 package gateway
 
-import "github.com/google/uuid"
+import (
+	"backend/internal/identity"
+
+	"github.com/google/uuid"
+)
 
 type CreateGatewayCommand struct {
-	Name string
-	Test int //??
+	identity.Requester
+	TenantId    uuid.UUID
+	Name        string
+	Certificate string
 }
 
 type DeleteGatewayCommand struct {
@@ -22,37 +28,37 @@ type GetGatewayListCommand struct {
 
 type GetGatewaysByTenantCommand struct {
 	TenantId uuid.UUID
-//	Page     int
-//	Size     int
+	// Page     int
+	// Size     int
 }
 
-type CommissionGatewayCommand struct{
-	GatewayId uuid.UUID
-	TenantId uuid.UUID
+type CommissionGatewayCommand struct {
+	GatewayId          uuid.UUID
+	TenantId           uuid.UUID
 	GatewayCertificate string
 }
 
-type DecommissionGatewayCommand struct{
+type DecommissionGatewayCommand struct {
 	GatewayId uuid.UUID
 }
 
-type InterruptGatewayCommand struct{
+type InterruptGatewayCommand struct {
 	GatewayId uuid.UUID
 }
 
-type ResumeGatewayCommand struct{
+type ResumeGatewayCommand struct {
 	GatewayId uuid.UUID
 }
 
-type ResetGatewayCommand struct{
+type ResetGatewayCommand struct {
 	GatewayId uuid.UUID
 }
 
-type RebootGatewayCommand struct{
+type RebootGatewayCommand struct {
 	GatewayId uuid.UUID
 }
 
-type SetGatewayIntervalLimitCommand struct{
-	GatewayId uuid.UUID
+type SetGatewayIntervalLimitCommand struct {
+	GatewayId     uuid.UUID
 	IntervalLimit int
 }

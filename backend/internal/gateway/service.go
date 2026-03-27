@@ -39,8 +39,6 @@ func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gate
 	return gateway, nil
 }
 
-// Compile-time checks
-var _ CreateGatewayUseCase = (*CreateGatewayService)(nil)
 
 // DeleteGatewayService ---------------------------------------------------------------------------
 type DeleteGatewayUseCase interface {
@@ -62,17 +60,5 @@ func (s *DeleteGatewayService) DeleteGateway(command DeleteGatewayCommand) error
 	return nil
 }
 
-<<<<<<< HEAD
-type DeleteGatewayService struct {
-	log *zap.Logger
-}
 
-func NewDeleteGatewayService(log *zap.Logger,) *DeleteGatewayService {
-	return &DeleteGatewayService{
-		log:             log,
-	}
-}
-=======
-// Compile-time checks
-var _ DeleteGatewayUseCase = (*DeleteGatewayService)(nil)
->>>>>>> origin/issue-17
+var _ CreateGatewayUseCase = (*CreateGatewayService)(nil)
