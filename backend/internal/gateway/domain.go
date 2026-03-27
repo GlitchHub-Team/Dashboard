@@ -12,10 +12,20 @@ const (
 )
 
 type Gateway struct {
-	Id       uuid.UUID
-	Name     string
-	TenantId *uuid.UUID
+	Id            uuid.UUID
+	Name          string
+	TenantId      *uuid.UUID
 	// Sensors	map[uuid.UUID]sensor.Sensor
 	Status        GatewayStatus
 	IntervalLimit int64
 }
+
+func (g Gateway) IsZero() bool {
+	return g == (Gateway{})
+}
+
+func (g Gateway) IsCommissioned() bool {
+	return g.TenantId != nil
+}
+
+func (g *Gateway) GetId() uuid.UUID { return g.Id }

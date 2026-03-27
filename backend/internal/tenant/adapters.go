@@ -1,10 +1,109 @@
 package tenant
 
 import (
+	"errors"
+
 	"github.com/google/uuid"
 )
 
-//go:generate mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . GetTenantPort,GetTenantsPort
+// ROBE ===============================================================================================
+
+func (TenantEntity) TableName() string { return "tenants" }
+
+func (entity *TenantEntity) fromTenant(tenant Tenant) {
+	if tenant.Id != uuid.Nil {
+		entity.ID = tenant.Id.String()
+	} else {
+		entity.ID = uuid.New().String()
+	}
+	entity.Name = tenant.Name
+	entity.CanImpersonate = tenant.CanImpersonate
+}
+
+func (entity *TenantEntity) toTenant() (Tenant, error) {
+	if entity.ID == "" {
+		return Tenant{}, nil
+	}
+
+	id, err := uuid.Parse(entity.ID)
+	if err != nil {
+		return Tenant{}, err
+	}
+
+	return Tenant{
+		Id:             id,
+		Name:           entity.Name,
+		CanImpersonate: entity.CanImpersonate,
+	}, nil
+}
+
+type TenantPostgreAdapter struct {
+	repo *tenantPostgreRepository
+}
+
+// Repository =========================================================================================
+
+
+
+// Adapter ============================================================================================
+
+//go:generate mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . CreateTenantPort,DeleteTenantPort,GetTenantPort,GetTenantsPort,GetTenantByUserPort
+
+
+
+func NewTenantPostgreAdapter(repository *tenantPostgreRepository) (
+	CreateTenantPort,
+	DeleteTenantPort,
+	GetTenantPort,
+	GetTenantsPort,
+	GetTenantByUserPort,
+) {
+	adapter := &TenantPostgreAdapter{repo: repository}
+	return adapter, adapter, adapter, adapter, adapter
+}
+
+// CREATE =============================================================================================
+
+
+
+func (adapter *TenantPostgreAdapter) CreateTenant(tenant Tenant) (Tenant, error) {
+	entity := &TenantEntity{}
+
+	entity.fromTenant(tenant)
+
+	err := adapter.repo.SaveTenant(entity)
+	if err != nil {
+		return Tenant{}, err
+	}
+
+	return entity.toTenant()
+}
+
+// DELETE =============================================================================================
+
+type DeleteTenantPort interface {
+	DeleteTenant(tenantId uuid.UUID) (Tenant, error)
+}
+
+func (adapter *TenantPostgreAdapter) DeleteTenant(tenantId uuid.UUID) (Tenant, error) {
+	oldEntity, err := adapter.repo.GetTenant(tenantId.String())
+	if err != nil {
+		return Tenant{}, err
+	}
+
+	if oldEntity.ID == "" {
+		return Tenant{}, errors.New("tenant not found")
+	}
+
+	oldTenant, err := adapter.repo.DeleteTenant(oldEntity)
+	if err != nil {
+		return Tenant{}, err
+	}
+
+	return oldTenant, nil
+}
+
+// GET ================================================================================================
 
 type GetTenantPort interface {
 	GetTenant(tenantId uuid.UUID) (Tenant, error)
@@ -14,54 +113,48 @@ type GetTenantsPort interface {
 	GetTenants() ([]Tenant, error)
 }
 
-type GetTenantsPostgreAdapter struct {
-	repository *TenantPostgreRepository
+type GetTenantByUserPort interface {
+	GetTenantByUser(userId uuid.UUID) (Tenant, error)
 }
 
-func NewGetTenantsPostgreAdapter(repository *TenantPostgreRepository) (GetTenantPort, GetTenantsPort) {
-	adapter := &GetTenantsPostgreAdapter{
-		repository: repository,
-	}
-	return adapter, adapter
-}
-
-func (adapter *GetTenantsPostgreAdapter) mapTenantEntity(entity TenantEntity) (*Tenant, error) {
-	tenantId, err := uuid.Parse(entity.ID)
-	if err != nil {
-		return nil, err
-	}
-	return &Tenant{
-		Id:             tenantId,
-		Name:           entity.Name,
-		CanImpersonate: entity.CanImpersonate,
-	}, nil
-}
-
-func (adapter *GetTenantsPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, error) {
-	tenantEntity, err := adapter.repository.GetTenant(tenantId.String())
+func (adapter *TenantPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, error) {
+	entity, err := adapter.repo.GetTenant(tenantId.String())
 	if err != nil {
 		return Tenant{}, err
 	}
-
-	tenant, err := tenantEntity.toTenant()
-	return tenant, err
+	return entity.toTenant()
 }
 
-func (adapter *GetTenantsPostgreAdapter) GetTenants() ([]Tenant, error) {
-	tenantEntities, err := adapter.repository.GetAllTenants()
+func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, error) {
+	entities, err := adapter.repo.GetAllTenants()
 	if err != nil {
 		return nil, err
 	}
 
 	var tenants []Tenant
-
-	for _, entity := range tenantEntities {
-		tenant, err := adapter.mapTenantEntity(entity)
+	for _, entity := range entities {
+		tenant, err := entity.toTenant()
 		if err != nil {
 			return nil, err
 		}
-		tenants = append(tenants, *tenant)
+		tenants = append(tenants, tenant)
 	}
 
 	return tenants, nil
 }
+
+func (adapter *TenantPostgreAdapter) GetTenantByUser(userId uuid.UUID) (Tenant, error) {
+	entity, err := adapter.repo.GetTenantByUser(userId.String())
+	if err != nil {
+		return Tenant{}, err
+	}
+	return entity.toTenant()
+}
+
+// Compile-time checks ================================================================================
+var (
+	_ CreateTenantPort = (*TenantPostgreAdapter)(nil)
+	_ DeleteTenantPort = (*TenantPostgreAdapter)(nil)
+	_ GetTenantPort    = (*TenantPostgreAdapter)(nil)
+	_ GetTenantsPort   = (*TenantPostgreAdapter)(nil)
+)
