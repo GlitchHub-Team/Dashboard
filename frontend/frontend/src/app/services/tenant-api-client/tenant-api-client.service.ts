@@ -30,7 +30,11 @@ export class TenantApiClientService {
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {
-    return this.http.post<TenantBackend>(`${this.apiUrl}/tenant`, config);
+    return this.http.post<TenantBackend>(`${this.apiUrl}/tenant`, {
+      // Mapping del body rispetto a quando documentato su APIDOG
+      name: config.name,
+      can_impersonate: config.canImpersonate,
+    });
   }
 
   public deleteTenant(id: string): Observable<void> {

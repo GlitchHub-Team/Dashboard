@@ -45,7 +45,13 @@ export class SensorApiClientService {
   }
 
   public addNewSensor(config: SensorConfig): Observable<SensorBackend> {
-    return this.http.post<SensorBackend>(`${this.apiUrl}/sensor`, config);
+    return this.http.post<SensorBackend>(`${this.apiUrl}/sensor`, {
+      // Mapping del body rispetto a quando documentato su APIDOG
+      gateway_id: config.gatewayId,
+      sensor_name: config.name,
+      profile: config.profile,
+      sensor_interval: config.dataInterval,
+    });
   }
 
   public deleteSensor(sensorId: string): Observable<void> {

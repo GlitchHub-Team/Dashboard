@@ -52,7 +52,11 @@ export class UserApiClientService {
     tenantId?: string,
   ): Observable<UserBackend> {
     const url = this.getBaseUrl(role, tenantId, false);
-    return this.http.post<UserBackend>(url, config);
+    // Mapping del body rispetto a quando documentato su APIDOG
+    return this.http.post<UserBackend>(url, {
+      email: config.email,
+      username: config.username,
+    });
   }
 
   public deleteUser(id: string, role: UserRole, tenantId?: string): Observable<void> {

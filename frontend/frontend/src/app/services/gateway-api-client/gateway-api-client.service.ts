@@ -41,7 +41,11 @@ export class GatewayApiClientService {
   }
 
   public addNewGateway(config: GatewayConfig): Observable<GatewayBackend> {
-    return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway`, config);
+    return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway`, {
+      // Mapping del body rispetto a quando documentato su APIDOG
+      name: config.name,
+      interval: config.interval,
+    });
   }
 
   public deleteGateway(gatewayId: string): Observable<void> {
