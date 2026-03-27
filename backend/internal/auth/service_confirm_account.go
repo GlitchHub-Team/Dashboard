@@ -4,6 +4,7 @@ import (
 	"backend/internal/shared/crypto"
 	"backend/internal/user"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -14,8 +15,20 @@ import (
 type ConfirmAccountTokenPort interface {
 	NewConfirmAccountToken(user user.User) (string, error)
 	DeleteConfirmAccountToken(token ConfirmAccountToken) error
-	GetConfirmAccountToken(tokenString string) (ConfirmAccountToken, error)
-	GetUserByConfirmAccountToken(tokenString string) (user.User, error)
+
+	GetTenantMemberByConfirmAccountToken(tenantId uuid.UUID, tokenString string) (
+		userFound user.User, err error,
+	)
+	GetSuperAdminByConfirmAccountToken(tokenString string) (
+		userFound user.User, err error,
+	)
+
+	GetTenantConfirmAccountToken(tenantId string, tokenString string) (
+		token ConfirmAccountToken, err error,
+	)
+	GetSuperAdminConfirmAccountToken(tokenString string) (
+		token ConfirmAccountToken, err error,
+	)
 }
 
 /* Service che gestisce la conferma degli account */
@@ -46,8 +59,19 @@ func NewConfirmUserAccountService(
 	}
 }
 
-func (service *ConfirmUserAccountService) getToken(token string) (ConfirmAccountToken, error) {
-	tokenObj, err := service.confirmAccountTokenPort.GetConfirmAccountToken(token)
+func (service *ConfirmUserAccountService) getValidTenantToken(tenantId uuid.UUID, token string) (ConfirmAccountToken, error) {
+	tokenObj, err := service.confirmAccountTokenPort.GetTenantConfirmAccountToken(tenantId.String(), token)
+	if err != nil {
+		return ConfirmAccountToken{}, nil
+	}
+	if tokenObj.IsExpired() {
+		return ConfirmAccountToken{}, ErrTokenExpired
+	}
+	return tokenObj, err
+}
+
+func (service *ConfirmUserAccountService) getValidSuperAdminToken(token string) (ConfirmAccountToken, error) {
+	tokenObj, err := service.confirmAccountTokenPort.GetSuperAdminConfirmAccountToken(token)
 	if err != nil {
 		return ConfirmAccountToken{}, nil
 	}
@@ -61,32 +85,55 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	confirmedUser user.User, err error,
 ) {
 	// 1. Get token
-	tokenObj, err := service.getToken(cmd.Token)
+	var tokenObj ConfirmAccountToken
+
+	// - Super Admin
+	if cmd.TenantId == nil {
+		tokenObj, err = service.getValidSuperAdminToken(cmd.Token)
+	} else
+	// - Tenant Member
+	{
+		tokenObj, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+	}
+
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, ErrTokenNotFound
 	}
 
 	// 2. Get user
 	// TODO: Non so se fare questa query o chiamare getUserPort.Get -> problema di questo approccio =
 	// dover rifare sempre la logica relativa ai ruoli
-	confirmedUser, err = service.confirmAccountTokenPort.GetUserByConfirmAccountToken(cmd.Token)
-	if err != nil {
-		return confirmedUser, ErrTokenNotFound
+
+	// - Super Admin
+	if cmd.TenantId == nil {
+		confirmedUser, err = service.confirmAccountTokenPort.GetSuperAdminByConfirmAccountToken(cmd.Token)
+	} else
+	// - Tenant Member
+	{
+		confirmedUser, err = service.confirmAccountTokenPort.GetTenantMemberByConfirmAccountToken(*cmd.TenantId, cmd.Token)
 	}
+
+	if err != nil {
+		return user.User{}, ErrTokenNotFound
+	}
+
 	if confirmedUser.Confirmed {
 		return user.User{}, ErrAccountAlreadyConfirmed
 	}
 
 	// 3. Set password and confirmed status
+
+	// - Password
 	hash, err := service.hasher.HashSecret(cmd.NewPassword)
 	if err != nil {
 		return user.User{}, err
 	}
-
 	err = confirmedUser.SetPasswordHash(hash)
 	if err != nil {
 		return user.User{}, err
 	}
+
+	// - Confirmed status
 	confirmedUser.Confirmed = true
 
 	// 4. Save user
@@ -105,7 +152,11 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 }
 
 /* Verifica esistenza del token di conferma account. Se nil, allora il token esiste, altrimenti non esiste o è scaduto.*/
-func (service *ConfirmUserAccountService) VerifyConfirmAccountToken(cmd VerifyConfirmAccountTokenCommand) error {
-	_, err := service.getToken(cmd.Token)
+func (service *ConfirmUserAccountService) VerifyConfirmAccountToken(cmd VerifyConfirmAccountTokenCommand) (err error) {
+	if cmd.TenantId == nil {
+		_, err = service.getValidSuperAdminToken(cmd.Token)
+	} else {
+		_, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+	}
 	return err
 }

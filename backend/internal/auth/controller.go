@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	transportHttp "backend/internal/infra/transport/http"
-	"backend/internal/infra/transport/http/dto"
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 	"backend/internal/user"
@@ -103,7 +102,7 @@ func NewController(
 
 func (controller *Controller) LoginUser(ctx *gin.Context) {
 	// 1. Binding JSON body
-	var bodyDto LoginUserDto
+	var bodyDto LoginUserDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
@@ -125,7 +124,7 @@ func (controller *Controller) LoginUser(ctx *gin.Context) {
 	}
 	userLogged, err := controller.loginUserUseCase.LoginUser(cmd)
 	if err != nil {
-		if errors.Is(err, user.ErrUnknownRole) {
+		if errors.Is(err, identity.ErrUnknownRole) {
 			transportHttp.RequestError(ctx, err)
 			return
 		} else if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrWrongCredentials) {
@@ -148,7 +147,7 @@ func (controller *Controller) LoginUser(ctx *gin.Context) {
 	}
 
 	// 4. Rispondi all'utente
-	responseDto := LoginResponseDto{
+	responseDto := LoginResponseDTO{
 		JWT: jwtToken,
 	}
 	transportHttp.RequestOk(ctx, responseDto)
@@ -173,15 +172,21 @@ func (controller *Controller) LogoutUser(ctx *gin.Context) {
 
 func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 	// 1. Binding URI
-	var uriDto dto.TokenUriDTO
-	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+		var bodyDto VerifyConfirmAccountTokenBodyDTO
+	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
+	}
+	var tenantId *uuid.UUID
+	if bodyDto.TenantId != nil {
+		parsed, _ := uuid.Parse(*bodyDto.TenantId)
+		tenantId = &parsed
 	}
 
 	// 2. Check token
 	err := controller.verifyConfirmAccountTokenUseCase.VerifyConfirmAccountToken(VerifyConfirmAccountTokenCommand{
-		Token: uriDto.Token,
+		TenantId: tenantId,
+		Token: bodyDto.Token,
 	})
 	if err != nil {
 		ctx.JSON(404, gin.H{
@@ -198,16 +203,22 @@ func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 
 func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 	// 1. Binding JSON
-	var bodyDto ConfirmUserAccountDto
+	var bodyDto ConfirmUserAccountBodyDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
+	var tenantId *uuid.UUID
+	if bodyDto.TenantId != nil {
+		parsed, _ := uuid.Parse(*bodyDto.TenantId)
+		tenantId = &parsed
+	}
 
 	// 2. Verifica token di confirma
 	err := controller.verifyConfirmAccountTokenUseCase.VerifyConfirmAccountToken(VerifyConfirmAccountTokenCommand{
+		TenantId: tenantId,
 		Token: bodyDto.Token,
 	})
 	if err != nil {
@@ -241,7 +252,7 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 	}
 
 	// 5. Invia risposta
-	responseDto := LoginResponseDto{
+	responseDto := LoginResponseDTO{
 		JWT: authToken,
 	}
 	transportHttp.RequestOk(ctx, responseDto)
@@ -251,15 +262,21 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 
 func (controller *Controller) VerifyForgotPasswordToken(ctx *gin.Context) {
 	// 1. Binding JSON
-	var uriDto dto.TokenUriDTO
-	if err := ctx.ShouldBindUri(&uriDto); err != nil {
+	var bodyDto VerifyForgotPasswordTokenBodyDTO
+	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
+	}
+	var tenantId *uuid.UUID
+	if bodyDto.TenantId != nil {
+		parsed, _ := uuid.Parse(*bodyDto.TenantId)
+		tenantId = &parsed
 	}
 
 	// 2. Esegui comando
 	err := controller.verifyForgotPasswordTokenUseCase.VerifyForgotPasswordToken(VerifyForgotPasswordTokenCommand{
-		Token: uriDto.Token,
+		TenantId: tenantId,
+		Token: bodyDto.Token,
 	})
 	if err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
@@ -267,12 +284,12 @@ func (controller *Controller) VerifyForgotPasswordToken(ctx *gin.Context) {
 	}
 
 	// 3. Rispondi
-	transportHttp.RequestOk(ctx, ResultDto{Result: "ok"})
+	transportHttp.RequestOk(ctx, ResultDTO{Result: "ok"})
 }
 
 func (controller *Controller) RequestForgotPasswordToken(ctx *gin.Context) {
 	// 1. Binding JSON
-	var bodyDto RequestForgotPasswordDto
+	var bodyDto RequestForgotPasswordBodyDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
@@ -300,21 +317,27 @@ func (controller *Controller) RequestForgotPasswordToken(ctx *gin.Context) {
 	}
 
 	// 3. Rispondi
-	transportHttp.RequestOk(ctx, ResultDto{Result: "ok"})
+	transportHttp.RequestOk(ctx, ResultDTO{Result: "ok"})
 }
 
 func (controller *Controller) ConfirmForgotPasswordToken(ctx *gin.Context) {
 	// 1. Binding JSON
-	var bodyDto ConfirmForgotPasswordDto
+	var bodyDto ConfirmForgotPasswordBodyDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
+	var tenantId *uuid.UUID
+	if bodyDto.TenantId != nil {
+		parsed, _ := uuid.Parse(*bodyDto.TenantId)
+		tenantId = &parsed
+	}
 
 	// 2. Esegui comando
 	err := controller.confirmForgotPasswordUseCase.ConfirmForgotPassword(ConfirmForgotPasswordCommand{
+		TenantId: tenantId,
 		Token:       bodyDto.Token,
 		NewPassword: bodyDto.NewPassword,
 	})
@@ -328,7 +351,7 @@ func (controller *Controller) ConfirmForgotPasswordToken(ctx *gin.Context) {
 	}
 
 	// 3. Rispondi
-	transportHttp.RequestOk(ctx, ResultDto{Result: "ok"})
+	transportHttp.RequestOk(ctx, ResultDTO{Result: "ok"})
 }
 
 func (controller *Controller) ChangePassword(ctx *gin.Context) {
@@ -339,7 +362,7 @@ func (controller *Controller) ChangePassword(ctx *gin.Context) {
 	}
 
 	// 1. Binding JSON
-	var bodyDto ChangePasswordDto
+	var bodyDto ChangePasswordBodyDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
@@ -363,5 +386,5 @@ func (controller *Controller) ChangePassword(ctx *gin.Context) {
 	}
 
 	// 3. Rispondi
-	transportHttp.RequestOk(ctx, ResultDto{Result: "ok"})
+	transportHttp.RequestOk(ctx, ResultDTO{Result: "ok"})
 }

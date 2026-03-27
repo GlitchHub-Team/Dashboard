@@ -22,18 +22,21 @@ type LogoutUserCommand struct {
 // Confirm account ------------------------------------
 type ConfirmAccountCommand struct {
 	// identity.Requester
+	TenantId    *uuid.UUID
 	Token       string
 	NewPassword string
 }
 
 type VerifyConfirmAccountTokenCommand struct {
 	// identity.Requester
+	TenantId    *uuid.UUID
 	Token string
 }
 
 // Forgot password ---------------------------------------
 type VerifyForgotPasswordTokenCommand struct {
 	// identity.Requester
+	TenantId    *uuid.UUID
 	Token string
 }
 
@@ -45,6 +48,7 @@ type RequestForgotPasswordCommand struct {
 
 type ConfirmForgotPasswordCommand struct {
 	// identity.Requester
+	TenantId    *uuid.UUID
 	Token       string
 	NewPassword string
 }
