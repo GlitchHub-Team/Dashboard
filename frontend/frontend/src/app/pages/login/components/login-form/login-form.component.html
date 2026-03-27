@@ -20,9 +20,9 @@
     @if (loginForm.controls.email; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
         @if (ctrl.hasError('required')) {
-          <mat-error>Email is required</mat-error>
+          <mat-error>Campo obbligatorio</mat-error>
         } @else if (ctrl.hasError('email')) {
-          <mat-error>Invalid email</mat-error>
+          <mat-error>Indirizzo email non valido</mat-error>
         }
       }
     }
@@ -34,13 +34,13 @@
     <mat-icon matSuffix>lock</mat-icon>
     @if (loginForm.controls.password; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>Password is required</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     }
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Role</mat-label>
+    <mat-label>Ruolo</mat-label>
     <mat-select formControlName="role">
       @for (role of roles; track role.value) {
         <mat-option [value]="role.value">{{ role.label }}</mat-option>
@@ -48,7 +48,7 @@
     </mat-select>
     @if (loginForm.controls.role; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>Role is required.</mat-error>
+        <mat-error>Campo obbligatorio.</mat-error>
       }
     }
   </mat-form-field>
@@ -63,7 +63,7 @@
       </mat-select>
       @if (loginForm.controls.tenantId; as ctrl) {
         @if (ctrl.invalid && ctrl.touched) {
-          <mat-error>Tenant is required.</mat-error>
+          <mat-error>Campo obbligatorio</mat-error>
         }
       }
     </mat-form-field>
@@ -73,7 +73,7 @@
     @if (loading()) {
       <mat-icon class="spin">sync</mat-icon>
     }
-    Login
+    Continua
   </button>
 
   <button
@@ -83,6 +83,6 @@
     (click)="forgotPassword.emit()"
     [disabled]="loading()"
   >
-    Forgot Password?
+    Password Dimenticata?
   </button>
 </form>

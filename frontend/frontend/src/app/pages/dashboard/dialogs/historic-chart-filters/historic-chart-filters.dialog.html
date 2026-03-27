@@ -7,11 +7,11 @@
   </p>
 
   <form [formGroup]="filtersForm" class="dialog-form">
-    <h3 class="section-title">Time Range</h3>
+    <h3 class="section-title">Intervallo Tempo</h3>
 
     <div class="row">
-      <mat-form-field appearance="outline" class="date-field">
-        <mat-label>From Date</mat-label>
+      <mat-form-field appearance="outline">
+        <mat-label>Da</mat-label>
         <input matInput [matDatepicker]="fromPicker" formControlName="from" />
         <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
         <mat-datepicker #fromPicker />
@@ -38,44 +38,44 @@
     </div>
 
     @if (filtersForm.hasError('invalidDateRange')) {
-      <mat-error>"From" date must be before "To" date</mat-error>
+      <mat-error>La data "Da" deve essere precedente alla data "A".</mat-error>
     }
 
-    <h3 class="section-title">Value Bounds</h3>
+    <h3 class="section-title">Limiti di valore</h3>
 
     <div class="row">
       <mat-form-field appearance="outline">
-        <mat-label>Lower Bound</mat-label>
+        <mat-label>Limite Inferiore</mat-label>
         <input matInput type="number" formControlName="lowerBound" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Upper Bound</mat-label>
+        <mat-label>Limite Superiore</mat-label>
         <input matInput type="number" formControlName="upperBound" />
       </mat-form-field>
     </div>
 
     @if (filtersForm.hasError('invalidValueRange')) {
-      <mat-error>Lower bound must be less than upper bound</mat-error>
+      <mat-error>Il limite inferiore deve essere inferiore al limite superiore</mat-error>
     }
 
-    <h3 class="section-title">Data Points</h3>
+    <h3 class="section-title">Punti Dati</h3>
 
     <mat-form-field appearance="outline">
-      <mat-label>Number of Data Points</mat-label>
+      <mat-label>Numero di Punti dei Dati</mat-label>
       <input matInput type="number" formControlName="dataPointsCounter" />
       @if (filtersForm.controls.dataPointsCounter.hasError('required')) {
-        <mat-error>Data points count is required</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       } @else if (filtersForm.controls.dataPointsCounter.hasError('min')) {
-        <mat-error>Minimum 1 data point</mat-error>
+        <mat-error>Almeno 1 punto dati</mat-error>
       }
     </mat-form-field>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onCancel()">Annulla</button>
   <button mat-raised-button color="primary" [disabled]="filtersForm.invalid" (click)="onApply()">
-    Apply
+    Applica
   </button>
 </mat-dialog-actions>

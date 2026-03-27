@@ -81,16 +81,16 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
     it('should have Cancel button enabled', () => {
       const cancelBtn = fixture.debugElement
         .queryAll(By.css('button'))
-        .find((btn) => btn.nativeElement.textContent.includes('Cancel'));
+        .find((btn) => btn.nativeElement.textContent.includes('Annulla'));
       expect(cancelBtn!.nativeElement.disabled).toBe(false);
     });
 
     it('should render all section titles', () => {
       const titles = fixture.debugElement.queryAll(By.css('.section-title'));
       expect(titles).toHaveLength(3);
-      expect(titles[0].nativeElement.textContent).toContain('Time Range');
-      expect(titles[1].nativeElement.textContent).toContain('Value Bounds');
-      expect(titles[2].nativeElement.textContent).toContain('Data Points');
+      expect(titles[0].nativeElement.textContent).toContain('Intervallo Tempo');
+      expect(titles[1].nativeElement.textContent).toContain('Limiti di valore');
+      expect(titles[2].nativeElement.textContent).toContain('Punti Dati');
     });
   });
 
@@ -157,7 +157,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
       const error = fixture.debugElement
         .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Data points count'));
+        .find((e) => e.nativeElement.textContent.includes('Campo obbligatorio'));
       expect(error).toBeTruthy();
     });
 
@@ -168,7 +168,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
       const error = fixture.debugElement
         .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Minimum 1'));
+        .find((e) => e.nativeElement.textContent.includes('Almeno 1'));
       expect(error).toBeTruthy();
     });
   });
@@ -265,7 +265,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
     it('should close dialog without result when Cancel is clicked', () => {
       const cancelBtn = fixture.debugElement
         .queryAll(By.css('button'))
-        .find((btn) => btn.nativeElement.textContent.includes('Cancel'));
+        .find((btn) => btn.nativeElement.textContent.includes('Annulla'));
       cancelBtn!.nativeElement.click();
 
       expect(dialogRefMock.close).toHaveBeenCalledWith();

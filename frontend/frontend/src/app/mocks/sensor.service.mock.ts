@@ -22,7 +22,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Heart Rate Monitor A',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-02',
@@ -30,7 +30,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Thermometer A',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-03',
@@ -38,7 +38,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ECG Monitor A',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-04',
@@ -46,7 +46,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Pulse Oximeter A',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-05',
@@ -54,7 +54,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Environment Sensor A',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-06',
@@ -62,7 +62,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Heart Rate Monitor B',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-07',
@@ -70,7 +70,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Thermometer B',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-08',
@@ -78,7 +78,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ECG Monitor B',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-09',
@@ -86,7 +86,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Pulse Oximeter B',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-10',
@@ -94,7 +94,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Environment Sensor B',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-11',
@@ -102,7 +102,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Heart Rate Monitor C',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-12',
@@ -110,7 +110,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Thermometer C',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-13',
@@ -118,7 +118,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ECG Monitor C',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-14',
@@ -126,7 +126,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Pulse Oximeter C',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-15',
@@ -134,7 +134,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Environment Sensor C',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
       ],
     ],
@@ -147,7 +147,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Heart Rate',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-21',
@@ -155,7 +155,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Pulse Oximeter',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-22',
@@ -163,7 +163,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Thermometer',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-23',
@@ -171,7 +171,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU ECG',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-24',
@@ -179,7 +179,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Environment',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
       ],
     ],
@@ -193,7 +193,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Ward C Heart Rate',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
       ],
     ],
@@ -243,7 +243,7 @@ export class SensorApiClientServiceMock {
       sensor_name: config.name,
       sensor_interval: config.dataInterval,
       profile: config.profile,
-      status: 'active',
+      status: 'attivo',
     };
 
     gatewaySensors.push(newSensor);

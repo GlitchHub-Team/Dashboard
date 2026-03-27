@@ -149,9 +149,7 @@ describe('DashboardSensorTableComponent (Unit)', () => {
       fixture.detectChanges();
       const emptyState = fixture.debugElement.query(By.css('.empty-state'));
       expect(emptyState).toBeTruthy();
-      expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain(
-        'No sensors available',
-      );
+      expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain('Nessun sensore disponibile');
       expect(emptyState.query(By.css('mat-icon')).nativeElement.textContent).toContain('router');
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
@@ -175,7 +173,7 @@ describe('DashboardSensorTableComponent (Unit)', () => {
         .map((cell) => cell.nativeElement.textContent.trim());
       expect(cellTexts).toEqual(expect.arrayContaining(['1', '2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Temperature', 'Humidity']));
-      expect(cellTexts).toEqual(expect.arrayContaining(['ACTIVE', 'INACTIVE']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['ATTIVO', 'INATTIVO']));
     });
   });
 

@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>
   <mat-icon>terminal</mat-icon>
-  Gateway Command
+  Comando Gateway
 </h2>
 
 <mat-dialog-content>
@@ -12,14 +12,14 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Command</mat-label>
+      <mat-label>Comando</mat-label>
       <mat-select formControlName="command">
         @for (option of commands; track option.value) {
           <mat-option [value]="option.value">{{ option.label }}</mat-option>
         }
       </mat-select>
       @if (commandForm.controls.command.hasError('required')) {
-        <mat-error>Please select a command</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     </mat-form-field>
 
@@ -40,8 +40,8 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onCancel()">Annulla</button>
   <button mat-raised-button color="primary" [disabled]="commandForm.invalid" (click)="onConfirm()">
-    Send
+    Manda
   </button>
 </mat-dialog-actions>

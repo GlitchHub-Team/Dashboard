@@ -2,11 +2,11 @@
   <div class="manager-header">
     <h1>{{ context().title }}</h1>
     <button mat-raised-button color="primary" (click)="onCreateUser()" [disabled]="loading()">
-      + Aggiungi Utente
+     <mat-icon>add</mat-icon> Aggiungi Nuovo Utente
     </button>
   </div>
 
-  <div class="manager-content">
+  <div class="manager-content table-container">
     @if (error()) {
       <div class="error-banner">
         <span>{{ error() }}</span>

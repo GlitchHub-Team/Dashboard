@@ -87,12 +87,12 @@ export class ChangePasswordDialog {
     this.authActionsService.clearMessages();
   }
 
-  protected getFieldError(field: string, label: string): string {
+  protected getFieldError(field: string): string {
     const control = this.form.get(field);
     if (!control?.errors) return '';
 
     if (control.hasError('required')) {
-      return `${label} is required.`;
+      return `Campo obbligatorio.`;
     }
 
     return 'Invalid value';

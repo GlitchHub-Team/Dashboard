@@ -1,8 +1,8 @@
 @if (actionMode() === 'manage') {
   <div class="manager-header">
-    <h1>Gateway & Sensors Management</h1>
+    <h1>Gestione Gateway</h1>
     <button mat-raised-button color="primary" (click)="gatewayCreateRequested.emit()">
-      <mat-icon>add</mat-icon> New Gateway
+      <mat-icon>add</mat-icon> Nuovo Gateway
     </button>
   </div>
 }
@@ -12,7 +12,7 @@
 } @else if (gateways().length === 0) {
   <div class="empty-state">
     <mat-icon>router</mat-icon>
-    <p>No gateways available</p>
+    <p>Nessun gateway disponibile</p>
   </div>
 } @else {
   <mat-table [dataSource]="gateways()" multiTemplateDataRows>
@@ -27,7 +27,7 @@
     </ng-container>
 
     <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Nome</mat-header-cell>
       <mat-cell *matCellDef="let gateway">{{ gateway.name }}</mat-cell>
     </ng-container>
 
@@ -39,7 +39,7 @@
     </ng-container>
 
     <ng-container matColumnDef="commands">
-      <mat-header-cell *matHeaderCellDef>Commands</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Comandi</mat-header-cell>
       <mat-cell *matCellDef="let gateway">
         <button
           mat-icon-button
@@ -52,7 +52,7 @@
     </ng-container>
 
     <ng-container matColumnDef="delete">
-      <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Azioni</mat-header-cell>
       <mat-cell *matCellDef="let gateway">
         <button
           mat-icon-button

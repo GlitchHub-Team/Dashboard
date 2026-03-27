@@ -124,9 +124,7 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
 
       const emptyState = fixture.debugElement.query(By.css('.empty-state'));
       expect(emptyState).toBeTruthy();
-      expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain(
-        'No gateways available',
-      );
+      expect(emptyState.query(By.css('p')).nativeElement.textContent).toContain('Nessun gateway disponibile');
       expect(emptyState.query(By.css('mat-icon')).nativeElement.textContent).toContain('router');
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
@@ -149,7 +147,7 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
         .map((c) => c.nativeElement.textContent.trim());
       expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Gateway Alpha', 'Gateway Beta']));
-      expect(cellTexts).toEqual(expect.arrayContaining(['ACTIVE', 'INACTIVE']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['ATTIVO', 'INATTIVO']));
     });
   });
 

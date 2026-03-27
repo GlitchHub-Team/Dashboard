@@ -115,7 +115,7 @@ describe('ChartContainerComponent (Unit)', () => {
     it('should show placeholder and hide mat-card', () => {
       const placeholder = fixture.debugElement.query(By.css('.chart-placeholder'));
       expect(placeholder).toBeTruthy();
-      expect(placeholder.nativeElement.textContent).toContain('No chart selected');
+      expect(placeholder.nativeElement.textContent).toContain('Nessun grafico selezionato');
       expect(fixture.debugElement.query(By.css('mat-card'))).toBeNull();
     });
 

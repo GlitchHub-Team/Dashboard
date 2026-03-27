@@ -84,13 +84,13 @@ describe('TenantManagerPage', () => {
     {
       name: 'page title',
       selector: 'h1',
-      expectedText: 'Tenant Management',
+      expectedText: 'Gestione Tenant',
       setup: () => undefined,
     },
     {
       name: 'create button',
       selector: 'button[mat-raised-button]',
-      expectedText: 'Aggiungi Tenant',
+      expectedText: 'Aggiungi Nuovo Tenant',
       setup: () => undefined,
     },
     {

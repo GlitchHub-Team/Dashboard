@@ -83,7 +83,7 @@ describe('ResetPasswordPage', () => {
 
     it('should render the heading', () => {
       const heading = fixture.debugElement.query(By.css('h1'));
-      expect(heading.nativeElement.textContent).toContain('Reset Password');
+      expect(heading.nativeElement.textContent).toContain('Reimposta Password');
     });
 
     it('should render the reset password form', () => {

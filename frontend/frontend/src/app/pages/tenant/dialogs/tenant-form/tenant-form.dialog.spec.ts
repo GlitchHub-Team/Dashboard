@@ -77,7 +77,7 @@ describe('TenantFormDialog (Unit)', () => {
 
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
-      ).toContain('Aggiungi Tenant');
+      ).toContain('Aggiungi Nuovo Tenant');
       expect(fixture.debugElement.query(By.css('input[formControlName="name"]'))).toBeTruthy();
       expect(
         fixture.debugElement.query(By.css('mat-checkbox[formControlName="canImpersonate"]')),

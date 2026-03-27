@@ -22,7 +22,7 @@ describe('SensorApiClientService', () => {
       sensor_name: 'Temperature',
       profile: 'health thermometer',
       sensor_interval: 60,
-      status: 'active',
+      status: 'attivo',
     },
     {
       sensor_id: 's-2',
@@ -30,7 +30,7 @@ describe('SensorApiClientService', () => {
       sensor_name: 'Humidity',
       profile: 'environmental sensing',
       sensor_interval: 60,
-      status: 'inactive',
+      status: 'inattivo',
     },
   ];
 

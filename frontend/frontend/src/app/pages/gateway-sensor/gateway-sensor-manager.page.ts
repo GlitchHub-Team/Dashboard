@@ -62,7 +62,7 @@ export class GatewaySensorManagerPage implements OnInit {
     ref.afterClosed().subscribe((created) => {
       if (created) {
         this.managerService.refreshGateways();
-        this.snackBar.open('Gateway created', 'Close', { duration: 3000 });
+        this.snackBar.open('Gateway creato con successo', 'Close', { duration: 3000 });
       }
     });
   }
@@ -70,15 +70,15 @@ export class GatewaySensorManagerPage implements OnInit {
   protected onDeleteGateway(gateway: Gateway): void {
     const ref = this.dialog.open(ConfirmDeleteDialog, {
       data: {
-        title: 'Delete Gateway',
-        message: `Are you sure you want to delete the gateway "${gateway.name}"?`,
+        title: 'Elimina Gateway',
+        message: `Sei sicuro di voler eliminare il gateway "${gateway.name}"?`,
       },
     });
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.managerService.deleteGateway(gateway);
-        this.snackBar.open('Gateway deleted', 'Close', { duration: 3000 });
+        this.snackBar.open('Gateway eliminato con successo', 'Close', { duration: 3000 });
       }
     });
   }
@@ -94,7 +94,7 @@ export class GatewaySensorManagerPage implements OnInit {
     ref.afterClosed().subscribe((created) => {
       if (created) {
         this.managerService.refreshSensors(gateway.id);
-        this.snackBar.open('Sensor created', 'Close', { duration: 3000 });
+        this.snackBar.open('Sensore creato con successo', 'Close', { duration: 3000 });
       }
     });
   }
@@ -102,15 +102,15 @@ export class GatewaySensorManagerPage implements OnInit {
   protected onDeleteSensor(sensor: Sensor): void {
     const ref = this.dialog.open(ConfirmDeleteDialog, {
       data: {
-        title: 'Delete Sensor',
-        message: `Are you sure you want to delete the sensor "${sensor.name}"?`,
+        title: 'Elimina Sensor',
+        message: `Sei sicuro di voler eliminare il sensore "${sensor.name}"?`,
       },
     });
 
     ref.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.managerService.deleteSensor(sensor);
-        this.snackBar.open('Sensor deleted', 'Close', { duration: 3000 });
+        this.snackBar.open('Sensore eliminato con successo', 'Close', { duration: 3000 });
       }
     });
   }

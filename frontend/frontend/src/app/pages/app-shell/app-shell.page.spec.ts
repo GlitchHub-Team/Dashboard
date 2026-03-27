@@ -225,7 +225,7 @@ describe('AppShellPage (Unit)', () => {
       expect(items[0].route).toBe('/dashboard');
     });
 
-    it('should show Dashboard and Tenant User Management for TENANT_ADMIN', () => {
+    it('should show Dashboard and Gestione Tenant User for TENANT_ADMIN', () => {
       const tenantAdminPerms = [
         Permission.DASHBOARD_ACCESS,
         Permission.GATEWAY_COMMANDS,
@@ -238,7 +238,7 @@ describe('AppShellPage (Unit)', () => {
 
       const items = component['navItems']();
       expect(items).toHaveLength(2);
-      expect(items.map((i) => i.label)).toEqual(['Dashboard', 'Tenant User Management']);
+      expect(items.map((i) => i.label)).toEqual(['Dashboard', 'Gestione Tenant User']);
     });
   });
 

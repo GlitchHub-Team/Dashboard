@@ -36,7 +36,7 @@ describe('ConfirmDeleteDialog (Unit)', () => {
   const cancelBtn = () =>
     fixture.debugElement
       .queryAll(By.css('button'))
-      .find((btn) => btn.nativeElement.textContent.includes('Cancel'))!;
+      .find((btn) => btn.nativeElement.textContent.includes('Annulla'))!;
 
   describe('rendering', () => {
     it('should create and display title, message, and both buttons', () => {
@@ -49,7 +49,7 @@ describe('ConfirmDeleteDialog (Unit)', () => {
       ).toContain('Are you sure you want to delete the gateway "Gateway Alpha"?');
       expect(cancelBtn()).toBeTruthy();
       expect(deleteBtn()).toBeTruthy();
-      expect(deleteBtn().nativeElement.textContent).toContain('Delete');
+      expect(deleteBtn().nativeElement.textContent).toContain('Elimina');
     });
   });
 
@@ -67,10 +67,10 @@ describe('ConfirmDeleteDialog (Unit)', () => {
       fixture.detectChanges();
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
-      ).toContain('Confirm Deletion');
+      ).toContain('Conferma Eliminazione');
       expect(
         fixture.debugElement.query(By.css('mat-dialog-content p')).nativeElement.textContent,
-      ).toContain('Are you sure you want to proceed?');
+      ).toContain('Sei sicuro di voler continuare l\'eliminazione?');
     });
   });
 

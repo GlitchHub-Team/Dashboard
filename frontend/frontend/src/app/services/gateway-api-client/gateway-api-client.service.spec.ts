@@ -19,14 +19,14 @@ describe('GatewayApiClientService', () => {
       gateway_id: 'gw-1',
       name: 'Gateway 1',
       tenant_id: 'tenant-1',
-      status: 'active',
+      status: 'attivo',
       interval: 60,
     },
     {
       gateway_id: 'gw-2',
       name: 'Gateway 2',
       tenant_id: 'tenant-1',
-      status: 'inactive',
+      status: 'inattivo',
       interval: 120,
     },
   ];

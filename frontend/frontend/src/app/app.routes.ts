@@ -48,7 +48,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           permissions: [Permission.TENANT_USER_MANAGEMENT],
-          userManagerContext: { title: 'Tenant User Management', role: UserRole.TENANT_USER },
+          userManagerContext: { title: 'Gestione Tenant User', role: UserRole.TENANT_USER },
         },
         loadComponent: () =>
           import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),
@@ -58,7 +58,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           permissions: [Permission.TENANT_ADMIN_MANAGEMENT],
-          userManagerContext: { title: 'Tenant Admin Management', role: UserRole.TENANT_ADMIN },
+          userManagerContext: { title: 'Gestione Tenant Admin', role: UserRole.TENANT_ADMIN },
         },
         loadComponent: () =>
           import('./pages/user/user-manager.page').then((m) => m.UserManagerPage),

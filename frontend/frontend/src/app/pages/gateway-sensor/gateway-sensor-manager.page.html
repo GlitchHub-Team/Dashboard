@@ -5,26 +5,28 @@
       <span>{{ error() }}</span>
     </div>
   }
+  <div class="table-container">
+      <app-dashboard-gateway-table
+      actionMode="manage"
+      [gateways]="gatewayList()"
+      [sensors]="sensorList()"
+      [expandedGateway]="expandedGateway()"
+      [gatewayLoading]="gatewayLoading()"
+      [sensorLoading]="sensorLoading()"
+      [gatewayTotal]="gatewayTotal()"
+      [gatewayPageIndex]="gatewayPageIndex()"
+      [gatewayLimit]="gatewayLimit()"
+      [sensorTotal]="sensorTotal()"
+      [sensorPageIndex]="sensorPageIndex()"
+      [sensorLimit]="sensorLimit()"
+      (gatewayCreateRequested)="onCreateGateway()"
+      (gatewayDeleteRequested)="onDeleteGateway($event)"
+      (sensorCreateRequested)="onCreateSensor($event)"
+      (sensorDeleteRequested)="onDeleteSensor($event)"
+      (expandedGatewayChange)="onExpandedGatewayChange($event)"
+      (gatewayPageChange)="onGatewayPageChange($event)"
+      (sensorPageChange)="onSensorPageChange($event)"
+    />
+  </div>
 
-  <app-dashboard-gateway-table
-    actionMode="manage"
-    [gateways]="gatewayList()"
-    [sensors]="sensorList()"
-    [expandedGateway]="expandedGateway()"
-    [gatewayLoading]="gatewayLoading()"
-    [sensorLoading]="sensorLoading()"
-    [gatewayTotal]="gatewayTotal()"
-    [gatewayPageIndex]="gatewayPageIndex()"
-    [gatewayLimit]="gatewayLimit()"
-    [sensorTotal]="sensorTotal()"
-    [sensorPageIndex]="sensorPageIndex()"
-    [sensorLimit]="sensorLimit()"
-    (gatewayCreateRequested)="onCreateGateway()"
-    (gatewayDeleteRequested)="onDeleteGateway($event)"
-    (sensorCreateRequested)="onCreateSensor($event)"
-    (sensorDeleteRequested)="onDeleteSensor($event)"
-    (expandedGatewayChange)="onExpandedGatewayChange($event)"
-    (gatewayPageChange)="onGatewayPageChange($event)"
-    (sensorPageChange)="onSensorPageChange($event)"
-  />
 </div>

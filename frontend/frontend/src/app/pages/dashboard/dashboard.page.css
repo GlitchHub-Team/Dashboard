@@ -45,7 +45,6 @@
   overflow: hidden;
 }
 
-/* Stili uniformi per le intestazioni delle tabelle */
 ::ng-deep .table-container .mat-header-row,
 ::ng-deep .table-container .mat-mdc-header-row,
 ::ng-deep .table-container .mat-header-cell,
