@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Historic Chart Filters</h2>
+<h2 mat-dialog-title>Filtri grafico dati storici</h2>
 
 <mat-dialog-content>
   <p class="sensor-info">
@@ -18,27 +18,27 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="time-field">
-        <mat-label>From Time</mat-label>
+        <mat-label>Da</mat-label>
         <input matInput type="time" formControlName="fromTime" />
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field appearance="outline" class="date-field">
-        <mat-label>To Date</mat-label>
+        <mat-label>A</mat-label>
         <input matInput [matDatepicker]="toPicker" formControlName="to" />
         <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
         <mat-datepicker #toPicker />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="time-field">
-        <mat-label>To Time</mat-label>
+        <mat-label>A</mat-label>
         <input matInput type="time" formControlName="toTime" />
       </mat-form-field>
     </div>
 
     @if (filtersForm.hasError('invalidDateRange')) {
-      <mat-error>La data "Da" deve essere precedente alla data "A".</mat-error>
+      <mat-error>La data/ora "Da" deve essere precedente alla data "A".</mat-error>
     }
 
     <h3 class="section-title">Limiti di valore</h3>
@@ -56,13 +56,13 @@
     </div>
 
     @if (filtersForm.hasError('invalidValueRange')) {
-      <mat-error>Il limite inferiore deve essere inferiore al limite superiore</mat-error>
+      <mat-error>Il limite inferiore deve essere più basso del limite superiore</mat-error>
     }
 
     <h3 class="section-title">Punti Dati</h3>
 
     <mat-form-field appearance="outline">
-      <mat-label>Numero di Punti dei Dati</mat-label>
+      <mat-label>Numero di Punti</mat-label>
       <input matInput type="number" formControlName="dataPointsCounter" />
       @if (filtersForm.controls.dataPointsCounter.hasError('required')) {
         <mat-error>Campo obbligatorio</mat-error>
