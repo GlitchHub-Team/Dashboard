@@ -20,7 +20,7 @@ export class UserApiClientMockService {
       username: 'Stefano',
       email: 'admin@test.com',
       user_role: 'tenant_admin',
-      tenant_id: 'tenant-2',
+      tenant_id: 'tenant-1',
     },
     {
       user_id: '3',

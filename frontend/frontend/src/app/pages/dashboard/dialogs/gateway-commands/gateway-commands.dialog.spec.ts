@@ -10,12 +10,13 @@ import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
 
+// Mappa tipo di comando agli args che il form ritorna
 const COMMAND_CASES: [
   string,
   'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway',
   string[],
 ][] = [
-  ['commission', 'commissionGateway', ['gw-1', '']],
+  ['commission', 'commissionGateway', ['gw-1', 'tenant-1', 'commission-token']],
   ['decommission', 'decommissionGateway', ['gw-1']],
   ['restart', 'resetGateway', ['gw-1']],
   ['reboot', 'rebootGateway', ['gw-1']],
@@ -34,7 +35,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
 
   const mockGateway: Gateway = {
     id: 'gw-1',
-    tenantId: 'tenant-01',
+    tenantId: undefined,
     name: 'Main Lobby Gateway',
     status: Status.ACTIVE,
     interval: 60,
@@ -47,6 +48,12 @@ describe('GatewayCommandsDialog (Unit)', () => {
       .find((btn) => btn.nativeElement.textContent.includes('Annulla'))!;
   const selectCommand = (value: string) => {
     component['commandForm'].controls.command.setValue(value);
+
+    if (value === 'commission') {
+      component['commandForm'].controls.tenantId.setValue('tenant-1');
+      component['commandForm'].controls.token.setValue('commission-token');
+    }
+
     fixture.detectChanges();
   };
 
@@ -134,7 +141,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
 
     it.each(COMMAND_CASES)(
       '%s: should set generalError and close with false on error',
-      (command, method, _args) => {
+      (command, method) => {
         gatewayServiceMock[method].mockReturnValue(
           throwError(() => ({ message: `${command} failed` }) as ApiError),
         );

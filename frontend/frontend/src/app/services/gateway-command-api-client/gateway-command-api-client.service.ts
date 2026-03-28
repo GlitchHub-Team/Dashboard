@@ -13,9 +13,14 @@ export class GatewayCommandApiClientService {
   private readonly apiUrl = `${environment.apiUrl}`;
 
   // TODO: Manca l'invio del commission_token, da dove lo prendo ???
-  public commissionGateway(gatewayId: string, tenantId: string): Observable<GatewayBackend> {
+  public commissionGateway(
+    gatewayId: string,
+    tenantId: string,
+    token: string,
+  ): Observable<GatewayBackend> {
     return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway/${gatewayId}/commission`, {
       tenant_id: tenantId,
+      commission_token: token,
     });
   }
 

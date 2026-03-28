@@ -54,12 +54,12 @@ export class GatewayCommandsDialog implements OnInit {
 
   protected generalError = '';
 
-  protected get showTenantDropdown(): boolean {
+  protected get showCommissionFields(): boolean {
     return !this.gateway.tenantId && this.commandForm.controls.command.value === 'commission';
   }
 
-  // TODO: Se gateway non commissionato, allora posso solo fare commission/reboot
-  // TODO: JWT manuale generato con la public key (vedi APIDOG)
+  // TENANT ADMIN NON FA NIENTE
+  // Se gateway non commissionato, allora posso solo fare commission/reboot
   protected get commands(): { value: string; label: string }[] {
     if (this.isDashboardMode) {
       return [
@@ -87,19 +87,25 @@ export class GatewayCommandsDialog implements OnInit {
   protected readonly commandForm = this.formBuilder.nonNullable.group({
     command: ['', Validators.required],
     tenantId: [''],
+    token: [''],
   });
 
   ngOnInit(): void {
     this.tenantService.retrieveTenants();
     this.commandForm.controls.command.valueChanges.subscribe((command) => {
       const tenantIdCtrl = this.commandForm.controls.tenantId;
+      const tokenCtrl = this.commandForm.controls.token;
       if (!this.gateway.tenantId && command === 'commission') {
         tenantIdCtrl.addValidators(Validators.required);
+        tokenCtrl.addValidators(Validators.required);
       } else {
         tenantIdCtrl.removeValidators(Validators.required);
         tenantIdCtrl.setValue('');
+        tokenCtrl.removeValidators(Validators.required);
+        tokenCtrl.setValue('');
       }
       tenantIdCtrl.updateValueAndValidity();
+      tokenCtrl.updateValueAndValidity();
     });
   }
 
@@ -117,7 +123,11 @@ export class GatewayCommandsDialog implements OnInit {
     switch (command) {
       case 'commission':
         this.gatewayService
-          .commissionGateway(this.data.gateway.id, this.commandForm.controls.tenantId.value)
+          .commissionGateway(
+            this.data.gateway.id,
+            this.commandForm.controls.tenantId.value,
+            this.commandForm.controls.token.value,
+          )
           .subscribe({
             next: () => {
               this.dialogRef.close(true);
