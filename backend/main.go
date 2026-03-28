@@ -19,6 +19,7 @@ import (
 	"backend/internal/auth"
 	"backend/internal/email"
 	"backend/internal/gateway"
+	"backend/internal/gateway_connection"
 	"backend/internal/historical_data"
 	"backend/internal/infra/crypto"
 	"backend/internal/infra/database/cloud_db"
@@ -143,6 +144,7 @@ func main() {
 		sensor.Module,
 		tenant.Module,
 		user.Module,
+		gateway_connection.Module,
 
 		// TODO: Spostare funzioni in rispettivi moduli???
 		fx.Provide(

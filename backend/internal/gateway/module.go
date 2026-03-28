@@ -23,6 +23,6 @@ var Module = fx.Module(
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		newGatewayPostgreRepository,
+		NewGatewayPostgreRepository,
 	),
 )

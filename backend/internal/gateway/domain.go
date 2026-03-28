@@ -16,6 +16,7 @@ type Gateway struct {
 	Name     string
 	TenantId *uuid.UUID
 	// Sensors	map[uuid.UUID]sensor.Sensor
-	Status        GatewayStatus
-	IntervalLimit int64
+	Status           GatewayStatus
+	IntervalLimit    int64
+	PublicIdentifier string
 }

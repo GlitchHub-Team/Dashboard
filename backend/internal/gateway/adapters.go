@@ -26,9 +26,10 @@ func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) (SaveGatewayP
 }
 
 func (adapter *GatewayPostgreAdapter) Save(g Gateway) error {
-	// ...
-	return nil
+	return adapter.repository.Save(g)
 }
+
+var ()
 
 func (adapter *GatewayPostgreAdapter) Remove(g Gateway) error {
 	// ...
