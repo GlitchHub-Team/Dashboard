@@ -11,6 +11,7 @@ import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
 import { environment } from '../../../environments/environment';
+import { userRoleMapper } from '../../utils/user-role.utils';
 
 describe('AuthApiClientService', () => {
   let service: AuthApiClientService;
@@ -37,10 +38,12 @@ describe('AuthApiClientService', () => {
 
   describe('login', () => {
     it('should POST credentials to /auth/login', () => {
+      // The component maps the role before building the request
+      const mappedRole = userRoleMapper.toBackend(UserRole.TENANT_USER);
       const mockRequest: LoginRequest = {
         email: 'test@example.com',
         password: 'password',
-        userRole: UserRole.TENANT_USER,
+        userRole: mappedRole,
         tenantId: 'tenant-01',
       };
       const mockResponse: AuthResponse = { jwt: 'mock-token' };
@@ -54,7 +57,7 @@ describe('AuthApiClientService', () => {
       expect(req.request.body).toEqual({
         email: 'test@example.com',
         password: 'password',
-        user_role: UserRole.TENANT_USER,
+        user_role: mappedRole,
         tenant_id: 'tenant-01',
       });
       req.flush(mockResponse);
@@ -112,7 +115,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/request`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        email: 'test@example.com',
+        tenant_id: 'tenant-01',
+      });
       req.flush(null);
     });
 
@@ -123,7 +129,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/request`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        email: 'test@example.com',
+        tenant_id: undefined,
+      });
       req.flush(null);
     });
   });
@@ -141,7 +150,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        token: 'reset-token',
+        new_password: 'new-password',
+      });
       req.flush(null);
     });
   });
@@ -202,17 +214,21 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/confirm_account`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        token: 'account-token',
+        new_password: 'new-password',
+      });
       req.flush(null);
     });
   });
 
   describe('error handling', () => {
     it('should propagate HTTP errors on login', () => {
+      const mappedRole = userRoleMapper.toBackend(UserRole.TENANT_USER);
       const mockRequest: LoginRequest = {
         email: 'test@example.com',
         password: 'password',
-        userRole: UserRole.TENANT_USER,
+        userRole: mappedRole,
         tenantId: 'tenant-01',
       };
       const mockError = { status: 401, statusText: 'Unauthorized' };
