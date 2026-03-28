@@ -32,19 +32,25 @@ export class AuthApiClientService {
   }
 
   // API DOG - Password Dimenticata
+  // Da dove lo tiro fuori il tenant id ???
   public verifyForgotPasswordToken(token: string): Observable<boolean> {
     return this.http
       .get<{ result: boolean }>(`${this.apiUrl}/forgot_password/verify_token/${token}`, {})
       .pipe(map((response) => response.result));
   }
 
-  // Serve anche il tenantId
   public forgotPasswordRequest(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/forgot_password/request`, forgotPasswordRequest);
+    return this.http.post<void>(`${this.apiUrl}/forgot_password/request`, {
+      email: forgotPasswordRequest.email,
+      tenant_id: forgotPasswordRequest.tenantId,
+    });
   }
 
   public confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/forgot_password`, req);
+    return this.http.post<void>(`${this.apiUrl}/forgot_password`, {
+      token: req.token,
+      new_password: req.newPassword,
+    });
   }
 
   // API DOG - Cambia password (serve old e new password)
@@ -56,6 +62,7 @@ export class AuthApiClientService {
   }
 
   // API DOG - Conferma account
+  // Da dove lo tiro fuori il tenant id ???
   public verifyAccountToken(token: string): Observable<boolean> {
     return this.http
       .get<{ result: boolean }>(`${this.apiUrl}/confirm_account/verify_token/${token}`, {})
@@ -63,6 +70,9 @@ export class AuthApiClientService {
   }
 
   public confirmAccountCreation(req: ConfirmAccountResponse): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/confirm_account`, req);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/confirm_account`, {
+      token: req.token,
+      new_password: req.newPassword,
+    });
   }
 }
