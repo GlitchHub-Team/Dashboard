@@ -68,7 +68,9 @@ func (w *NATSWorker) ListenHelloMessages() {
 				break
 			}
 			for _, msg := range messages {
-				w.ProcessMsg(msg) // errors already logged
+				if err := w.ProcessMsg(msg); err != nil {
+					w.logger.Error("Failed to process message", zap.Error(err))
+				}
 			}
 		}
 	}

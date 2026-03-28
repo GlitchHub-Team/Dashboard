@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,22 +23,6 @@ func (e *gatewayEntity) fromDomain(g Gateway) {
 	e.Status = string(g.Status)
 	e.IntervalLimit = g.IntervalLimit
 	e.PublicIdentifier = g.PublicIdentifier
-}
-
-func (e *gatewayEntity) toDomain() Gateway {
-	var tenantId *uuid.UUID
-	if e.TenantId != "" {
-		parsed, _ := uuid.Parse(e.TenantId)
-		tenantId = &parsed
-	}
-	return Gateway{
-		Id:               uuid.Nil,
-		Name:             e.Name,
-		TenantId:         tenantId,
-		Status:           GatewayStatus(e.Status),
-		IntervalLimit:    e.IntervalLimit,
-		PublicIdentifier: e.PublicIdentifier,
-	}
 }
 
 type gatewayPostgreRepository struct {
