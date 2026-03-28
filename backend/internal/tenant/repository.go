@@ -11,7 +11,7 @@ type TenantEntity struct {
 	CanImpersonate bool
 }
 
-type tenantPostgreRepository struct {
+type TenantPostgreRepository struct {
 	log *zap.Logger
 	db  *gorm.DB
 }
@@ -19,14 +19,14 @@ type tenantPostgreRepository struct {
 func NewTenantPostgreRepository(
 	log *zap.Logger,
 	db *gorm.DB,
-) *tenantPostgreRepository {
-	return &tenantPostgreRepository{
+) *TenantPostgreRepository {
+	return &TenantPostgreRepository{
 		log: log,
 		db:  db,
 	}
 }
 
-func (repo *tenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, error) {
+func (repo *TenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, error) {
 	var entity *TenantEntity
 	err := repo.db.
 		Where("id = ?", tenantId).
@@ -35,7 +35,7 @@ func (repo *tenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, 
 	return entity, err
 }
 
-func (repo *tenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
+func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
 	var users []TenantEntity
 	if err := repo.db.Find(&users).Error; err != nil {
 		return nil, err
@@ -43,11 +43,11 @@ func (repo *tenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
 	return users, nil
 }
 
-func (repo *tenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
+func (repo *TenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
 	return repo.db.Save(tenant).Error
 }
 
-func (repo *tenantPostgreRepository) DeleteTenant(tenant *TenantEntity) (Tenant, error) {
+func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) (Tenant, error) {
 	oldTenant, err := tenant.toTenant()
 	if err != nil {
 		return Tenant{}, err
@@ -61,7 +61,7 @@ func (repo *tenantPostgreRepository) DeleteTenant(tenant *TenantEntity) (Tenant,
 	return oldTenant, nil
 }
 
-func (repo *tenantPostgreRepository) GetTenantByUser(userId string) (*TenantEntity, error) {
+func (repo *TenantPostgreRepository) GetTenantByUser(userId string) (*TenantEntity, error) {
 	var tenant TenantEntity
 	err := repo.db.
 		Where("id = ?", userId).

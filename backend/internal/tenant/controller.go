@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"backend/internal/common"
-	"backend/internal/identity"
-	transportHttp "backend/internal/transport/http"
+	transportHttp "backend/internal/infra/transport/http"
+	"backend/internal/shared/identity"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -45,14 +44,14 @@ func NewTenantController(
 func (controller *Controller) CreateTenant(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	var bodyDto CreateTenantDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -67,14 +66,14 @@ func (controller *Controller) CreateTenant(ctx *gin.Context) {
 	if err != nil {
 
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrTenantAlreadyExists) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
 
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -86,13 +85,13 @@ func (controller *Controller) CreateTenant(ctx *gin.Context) {
 func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 	var bodyDto DeleteTenantDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -107,14 +106,14 @@ func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 	oldTenant, err := controller.deleteTenantUseCase.DeleteTenant(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrTenantNotFound) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
 
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -126,14 +125,14 @@ func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 func (controller *Controller) GetTenant(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	var bodyDto GetTenantDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -148,14 +147,14 @@ func (controller *Controller) GetTenant(ctx *gin.Context) {
 	tenant, err := controller.getTenantUseCase.GetTenant(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrTenantNotFound) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
 
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -167,14 +166,14 @@ func (controller *Controller) GetTenant(ctx *gin.Context) {
 func (controller *Controller) GetTenants(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	var queryDto GetTenantListDTO
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -188,11 +187,11 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 	tenants, err := controller.getTenantListUseCase.GetTenantList(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		}
 
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 

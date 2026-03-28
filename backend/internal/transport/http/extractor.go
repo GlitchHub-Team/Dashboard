@@ -3,7 +3,7 @@ package http
 import (
 	"errors"
 
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

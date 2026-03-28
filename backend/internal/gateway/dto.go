@@ -1,49 +1,75 @@
 package gateway
 
+import (
+	"backend/internal/infra/transport/http/dto"
+)
+
 // Request
-/*
 type createGatewayDTO struct {
-	Name string `json:"name" binding:"required"`
+	dto.GatewayNameField
 }
 
-type deleteGatewayDTO struct{}
+type deleteGatewayDTO struct {
+	dto.GatewayIdField
+}
 
-type getGatewayByIdDTO struct{}
+type getGatewayByIdDTO struct {
+	dto.GatewayIdField
+}
 
-type getGatewayListDTO struct{}
+type getGatewayListDTO struct {
+	dto.Pagination
+}
 
-type getGatewaysByTenantDTO struct{}
+type getGatewaysByTenantDTO struct {
+	dto.TenantIdField
+	dto.Pagination
+}
 
-type commissionGatewayDTO struct{}
+type commissionGatewayDTO struct {
+	dto.TenantIdField
+	dto.GatewayIdField
+	dto.GatewayCertificateField
+}
 
-type decommissionGatewayDTO struct{}
+type decommissionGatewayDTO struct {
+	dto.GatewayIdField
+}
 
-type interruptGatewayDTO struct{}
+type interruptGatewayDTO struct {
+	dto.GatewayIdField
+}
 
-type resumeGatewayDTO struct{}
+type resumeGatewayDTO struct {
+	dto.GatewayIdField
+}
 
-type resetGatewayDTO struct{}
+type resetGatewayDTO struct {
+	dto.GatewayIdField
+}
 
-type rebootGatewayDTO struct{}
+type rebootGatewayDTO struct {
+	dto.GatewayIdField
+}
 
-type setGatewayIntervalLimitDTO struct{}
+type setGatewayIntervalLimitDTO struct {
+	dto.GatewayIdField
+	IntervalLimit int `uri:"interval_limit" form:"interval_limit" json:"interval_limit" binding:"required"`
+}
 
 // Response
 type gatewayResponseDTO struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	Status string `json:"status"`
+	dto.GatewayIdField
+	dto.GatewayNameField
 }
 
 type gatewayListResponseDTO struct {
-	Count    int                  `json:"count"`
-	Total    int                  `json:"total"`
+	dto.ListInfo
 	Gateways []gatewayResponseDTO `json:"gateways"`
 }
 
 type commissionGatewayResponseDTO struct {
-	TenantId    string `json:"tenant_id"`
-	TenantName  string `json:"tenant_name"`
-	Certificate string `json:"certificate"`
+	dto.TenantIdField
+	dto.TenantNameField
+	dto.GatewayCertificateField
 }
-*/

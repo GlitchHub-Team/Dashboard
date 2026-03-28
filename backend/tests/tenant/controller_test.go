@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"backend/internal/common/dto"
-	"backend/internal/identity"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/tenant/mocks"
 
@@ -611,7 +611,7 @@ func TestController_GetTenants(t *testing.T) {
 }
 
 // Get Tenant By User =================================================================================
-// 
+//
 // /*
 /*
 func TestController_GetTenantByUser(t *testing.T) {

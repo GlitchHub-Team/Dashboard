@@ -4,10 +4,9 @@ import (
 	"errors"
 	"net/http"
 
-	"backend/internal/common"
-	"backend/internal/common/dto"
-	"backend/internal/identity"
-	transportHttp "backend/internal/transport/http"
+	transportHttp "backend/internal/infra/transport/http"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/shared/identity"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -61,14 +60,14 @@ func NewGatewayController(
 func (controller *GatewayController) CreateGateway(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 
 	var bodyDto createGatewayDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
@@ -82,14 +81,14 @@ func (controller *GatewayController) CreateGateway(ctx *gin.Context) {
 	if err != nil {
 
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrGatewayAlreadyExists) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
 
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -103,20 +102,20 @@ func (controller *GatewayController) CreateGateway(ctx *gin.Context) {
 func (controller *GatewayController) DeleteGateway(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
-		common.RequestUnauthorized(ctx, err)
+		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
 	var bodyDto deleteGatewayDTO
 	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
 
 	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
 	if err != nil {
-		common.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, err)
 		return
 	}
 
@@ -128,14 +127,14 @@ func (controller *GatewayController) DeleteGateway(ctx *gin.Context) {
 	gateway, err := controller.deleteGatewayUseCase.DeleteGateway(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			common.RequestUnauthorized(ctx, err)
+			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrGatewayNotFound) {
-			common.RequestError(ctx, err)
+			transportHttp.RequestError(ctx, err)
 			return
 		}
 
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -149,7 +148,7 @@ func (controller *GatewayController) DeleteGateway(ctx *gin.Context) {
 func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 	gateways, err := controller.getAllGatewaysUseCase.GetAllGateways()
 	if err != nil {
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -167,15 +166,15 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 	var queryDto getGatewaysByTenantDTO
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
-		if !common.ValidationError(ctx, err) {
-			common.RequestError(ctx, err)
+		if !transportHttp.ValidationError(ctx, err) {
+			transportHttp.RequestError(ctx, err)
 		}
 		return
 	}
 
 	tenantId, err := uuid.Parse(queryDto.TenantId)
 	if err != nil {
-		common.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, err)
 		return
 	}
 
@@ -185,7 +184,7 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 
 	gateways, err := controller.getGatewaysByTenantUseCase.GetGatewaysByTenant(cmd)
 	if err != nil {
-		common.RequestServerError(ctx, err)
+		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 

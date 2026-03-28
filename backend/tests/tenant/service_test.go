@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/tenant/mocks"
 

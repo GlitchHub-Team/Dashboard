@@ -9,7 +9,7 @@ var Module = fx.Module(
 
 	// Metodi pubblici
 	fx.Provide(
-	//..
+		NewSensorController,
 	),
 
 	// Metodi privati

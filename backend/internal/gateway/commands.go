@@ -1,7 +1,7 @@
 package gateway
 
 import (
-	"backend/internal/identity"
+	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
 )

@@ -6,13 +6,12 @@
 //	mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . CreateTenantPort,DeleteTenantPort,GetTenantPort,GetTenantsPort,GetTenantByUserPort
 //
 
-// package mocks is a generated GoMock package.
+// Package mocks is a generated GoMock package.
 package mocks
 
 import (
-	reflect "reflect"
-
 	tenant "backend/internal/tenant"
+	reflect "reflect"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"

@@ -5,6 +5,8 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=../../tests/gateway/mocks/save_remove_get_port.go -package=mocks . SaveGatewayPort,RemoveGatewayPort,GetGatewayPort
+
 type GatewayPostgreAdapter struct {
 	repo *gatewayPostgreRepository
 	log  *zap.Logger

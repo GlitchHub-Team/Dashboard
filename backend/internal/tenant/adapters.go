@@ -38,7 +38,7 @@ func (entity *TenantEntity) toTenant() (Tenant, error) {
 }
 
 type TenantPostgreAdapter struct {
-	repo *tenantPostgreRepository
+	repo *TenantPostgreRepository
 }
 
 // Repository =========================================================================================
@@ -51,7 +51,7 @@ type TenantPostgreAdapter struct {
 
 
 
-func NewTenantPostgreAdapter(repository *tenantPostgreRepository) (
+func NewTenantPostgreAdapter(repository *TenantPostgreRepository) (
 	CreateTenantPort,
 	DeleteTenantPort,
 	GetTenantPort,

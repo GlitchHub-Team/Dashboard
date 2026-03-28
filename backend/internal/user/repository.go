@@ -289,7 +289,7 @@ func (repo *userPostgreRepository) DeleteSuperAdmin(tenantMember *SuperAdminEnti
 
 func (repo *userPostgreRepository) GetSuperAdmin(by userRepositoryGetUserBy) (*SuperAdminEntity, error) {
 	var tenantMember *SuperAdminEntity
-	where, params, err := by.	()
+	where, params, err := by.getWhere()
 	if err != nil {
 		return &SuperAdminEntity{}, err
 	}

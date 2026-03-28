@@ -1,7 +1,7 @@
 package tenant
 
 import (
-	"backend/internal/common/dto"
+	"backend/internal/infra/transport/http/dto"
 )
 
 // Request DTO ========================================================================================
@@ -61,8 +61,8 @@ func NewTenantListResponseDTO(tenantList []Tenant, total int) TenantListResponse
 	return TenantListResponseDTO{
 		Tenants: tenantDtos,
 		ListInfo: dto.ListInfo{
-			Count: len(tenantList),
-			Total: total,
+			Count: uint(len(tenantList)),
+			Total: uint(total),
 		},
 	}
 }
