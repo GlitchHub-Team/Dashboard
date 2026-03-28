@@ -27,7 +27,6 @@ describe('AuthApiClientService', () => {
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  // Fail se una richiesta viene fatta ma non gestita
   afterEach(() => {
     httpMock.verify();
   });
@@ -44,7 +43,7 @@ describe('AuthApiClientService', () => {
         userRole: UserRole.TENANT_USER,
         tenantId: 'tenant-01',
       };
-      const mockResponse: AuthResponse = { token: 'mock-token' };
+      const mockResponse: AuthResponse = { jwt: 'mock-token' };
 
       service.login(mockRequest).subscribe((response) => {
         expect(response).toEqual(mockResponse);
@@ -52,7 +51,12 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/login`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        email: 'test@example.com',
+        password: 'password',
+        user_role: UserRole.TENANT_USER,
+        tenant_id: 'tenant-01',
+      });
       req.flush(mockResponse);
     });
   });
@@ -152,7 +156,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/change_password`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(data);
+      expect(req.request.body).toEqual({
+        old_password: 'old-password',
+        new_password: 'new-password',
+      });
       req.flush(null);
     });
   });

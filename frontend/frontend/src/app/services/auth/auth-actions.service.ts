@@ -88,8 +88,8 @@ export class AuthActionsService {
           tap((response) => {
             // Salva il token JWT e inizializza la sessione utente
             // per loggare automaticamente l'utente dopo la conferma dell'account
-            this.tokenStorage.saveToken(response.token);
-            this.userSession.initSession(response.token);
+            this.tokenStorage.saveToken(response.jwt);
+            this.userSession.initSession(response.jwt);
           }),
         );
       }),

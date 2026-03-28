@@ -189,7 +189,7 @@ describe('AuthActionsService', () => {
 
   describe('confirmAccount', () => {
     const mockReq: ConfirmAccountResponse = { token: 'account-token', newPassword: 'newSecret456' };
-    const mockAuthResponse: AuthResponse = { token: 'jwt-token' };
+    const mockAuthResponse: AuthResponse = { jwt: 'jwt-token' };
 
     it('should call verifyAccountToken, then confirmAccountCreation, save the JWT, init session, and clear loading on success', () => {
       authApiClientMock.verifyAccountToken.mockReturnValue(of(true));
@@ -199,8 +199,8 @@ describe('AuthActionsService', () => {
 
       expect(authApiClientMock.verifyAccountToken).toHaveBeenCalledWith(mockReq.token);
       expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
-      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.token);
-      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.token);
+      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.jwt);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
@@ -212,8 +212,8 @@ describe('AuthActionsService', () => {
       service.confirmAccount(mockReq).subscribe();
 
       expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
-      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.token);
-      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.token);
+      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.jwt);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);
       expect(service.loading()).toBe(false);
     });
 

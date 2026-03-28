@@ -35,7 +35,7 @@ describe('LoginPage', () => {
     userRole: UserRole.SUPER_ADMIN,
   };
   const mockResponse: AuthResponse = {
-    token: 'jwt-token',
+    jwt: 'jwt-token',
   };
 
   beforeEach(async () => {

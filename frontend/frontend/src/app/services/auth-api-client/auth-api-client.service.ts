@@ -19,7 +19,12 @@ export class AuthApiClientService {
 
   // Si aspetta di ricevere solo il token JWT
   public login(req: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, req);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, {
+      email: req.email,
+      password: req.password,
+      user_role: req.userRole,
+      tenant_id: req.tenantId,
+    });
   }
 
   public logout(): Observable<void> {
@@ -44,7 +49,10 @@ export class AuthApiClientService {
 
   // API DOG - Cambia password (serve old e new password)
   public confirmPasswordChange(data: PasswordChange): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/change_password`, data);
+    return this.http.post<void>(`${this.apiUrl}/change_password`, {
+      old_password: data.oldPassword,
+      new_password: data.newPassword,
+    });
   }
 
   // API DOG - Conferma account

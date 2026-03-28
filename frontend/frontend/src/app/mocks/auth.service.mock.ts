@@ -51,8 +51,8 @@ export class AuthServiceMock {
       entry.role === req.userRole &&
       (entry.tenantId === req.tenantId || !entry.tenantId)
     ) {
-      const token = this.buildJwt(entry.userId, entry.role, entry.tenantId);
-      return of({ token }).pipe(delay(MOCK_DELAY));
+      const jwt = this.buildJwt(entry.userId, entry.role, entry.tenantId);
+      return of({ jwt }).pipe(delay(MOCK_DELAY));
     }
 
     return this.delayedError({ status: 401, message: 'Invalid email or password' });

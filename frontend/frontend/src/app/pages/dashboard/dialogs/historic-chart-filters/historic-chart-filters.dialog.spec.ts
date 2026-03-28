@@ -54,7 +54,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
     it('should display correct title', () => {
       const title = fixture.debugElement.query(By.css('[mat-dialog-title]'));
-      expect(title.nativeElement.textContent).toContain('Historic Chart Filters');
+      expect(title.nativeElement.textContent).toContain('Filtri grafico dati storici');
     });
 
     it('should display sensor name', () => {

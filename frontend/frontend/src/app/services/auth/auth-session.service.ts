@@ -34,8 +34,8 @@ export class AuthSessionService {
     // e inizializza la sessione utente
     return this.authApiClient.login(req).pipe(
       tap((response) => {
-        this.tokenStorage.saveToken(response.token);
-        this.userSession.initSession(response.token);
+        this.tokenStorage.saveToken(response.jwt);
+        this.userSession.initSession(response.jwt);
       }),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Login failed');

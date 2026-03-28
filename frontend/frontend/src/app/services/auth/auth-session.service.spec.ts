@@ -63,7 +63,7 @@ describe('AuthSessionService', () => {
       userRole: UserRole.SUPER_ADMIN,
     };
     const mockResponse: AuthResponse = {
-      token: 'jwt-token-abc',
+      jwt: 'jwt-token-abc',
     };
 
     it('should call API, save token, init session, return response, and clear loading on success', () => {
@@ -75,7 +75,7 @@ describe('AuthSessionService', () => {
 
       expect(authApiClientMock.login).toHaveBeenCalledWith(mockRequest);
       expect(tokenStorageMock.saveToken).toHaveBeenCalledWith('jwt-token-abc');
-      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockResponse.token);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockResponse.jwt);
       expect(service.loading()).toBe(false);
     });
 
