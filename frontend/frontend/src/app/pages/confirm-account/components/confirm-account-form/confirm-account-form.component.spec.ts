@@ -123,7 +123,7 @@ describe('ConfirmAccountFormComponent', () => {
       const errors = fixture.debugElement
         .queryAll(By.css('mat-error'))
         .map((e) => e.nativeElement.textContent);
-      expect(errors.some((t) => t.includes('New Password is required'))).toBe(true);
+      expect(errors.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
     });
 
     it('should show required error for confirmNewPassword when touched and empty', () => {
@@ -133,7 +133,7 @@ describe('ConfirmAccountFormComponent', () => {
       const errors = fixture.debugElement
         .queryAll(By.css('mat-error'))
         .map((e) => e.nativeElement.textContent);
-      expect(errors.some((t) => t.includes('Confirm New Password is required'))).toBe(true);
+      expect(errors.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
     });
   });
 

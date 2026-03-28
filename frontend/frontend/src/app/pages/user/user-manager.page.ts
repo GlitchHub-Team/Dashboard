@@ -48,7 +48,11 @@ export class UserManagerPage implements OnInit {
 
   public ngOnInit(): void {
     this.activatedRoute.data.subscribe((data) => {
-      this.context.set(data['userManagerContext'] || this.context());
+      const routeContext = data['userManagerContext'];
+      this.context.set({
+        ...routeContext,
+        tenantId: this.userSession.currentUser()?.tenantId,
+      });
       this.refreshUsers();
     });
   }
@@ -69,8 +73,7 @@ export class UserManagerPage implements OnInit {
             username: result.username,
           };
 
-          const tenantIdToPass =
-            result.tenantId || context.tenantId || this.userSession.currentUser()?.tenantId;
+          const tenantIdToPass = result.tenantId || context.tenantId;
 
           this.userService.addNewUser(userConfig, context.role, tenantIdToPass).subscribe(() => {
             this.refreshUsers();

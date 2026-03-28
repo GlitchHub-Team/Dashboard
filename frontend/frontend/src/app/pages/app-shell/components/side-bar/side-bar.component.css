@@ -45,3 +45,7 @@ nav {
   height: 20px;
   color: inherit;
 }
+
+mat-divider {
+  margin: 8px 0;
+}

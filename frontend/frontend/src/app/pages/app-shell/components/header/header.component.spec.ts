@@ -85,7 +85,7 @@ describe('HeaderComponent', () => {
       const menu = await loader.getHarness(MatMenuHarness);
       await menu.open();
 
-      const items = await menu.getItems({ text: /Change Password/i });
+      const items = await menu.getItems({ text: /Cambia Password/i });
       await items[0].click();
 
       expect(spy).toHaveBeenCalledOnce();

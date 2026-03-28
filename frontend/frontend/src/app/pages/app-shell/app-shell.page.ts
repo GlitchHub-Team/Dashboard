@@ -12,6 +12,7 @@ import { SideBarComponent } from './components/side-bar/side-bar.component';
 import { NAV_ITEMS } from '../../models/nav_items/nav-config.model';
 import { UserService } from '../../services/user/user.service';
 import { TenantService } from '../../services/tenant/tenant.service';
+import { UserRole } from '../../models/user/user-role.enum';
 
 @Component({
   selector: 'app-shell',
@@ -47,15 +48,16 @@ export class AppShellPage {
     ? toSignal(this.tenantService.getTenant(this.currentTenantId))
     : signal(null);
 
-  protected readonly navItems = computed(() =>
-    NAV_ITEMS.filter((item) => {
+  protected readonly navItems = computed(() => {
+    const isSuperAdmin = this.currentUserRole === UserRole.SUPER_ADMIN;
+    return NAV_ITEMS.filter((item) => {
       if (!item.permission) {
         return true;
       }
       const permissions = Array.isArray(item.permission) ? item.permission : [item.permission];
       return this.permissionService.canAny(permissions);
-    }),
-  );
+    }).map((item) => (item.separator && !isSuperAdmin ? { ...item, separator: false } : item));
+  });
 
   // Logout non richiede campi da passare
   protected onLogout(): void {

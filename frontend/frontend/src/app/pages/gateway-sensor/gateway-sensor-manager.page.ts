@@ -102,7 +102,7 @@ export class GatewaySensorManagerPage implements OnInit {
   protected onDeleteSensor(sensor: Sensor): void {
     const ref = this.dialog.open(ConfirmDeleteDialog, {
       data: {
-        title: 'Elimina Sensor',
+        title: 'Elimina Sensore',
         message: `Sei sicuro di voler eliminare il sensore "${sensor.name}"?`,
       },
     });

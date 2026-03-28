@@ -30,7 +30,7 @@ const MOCK_USERS: Record<string, MockUser> = {
     password: 'password',
     userId: '2',
     role: 'tenant_admin',
-    tenantId: 'tenant-1',
+    tenantId: 'tenant-2',
   },
   'user@test.com': {
     password: 'password',

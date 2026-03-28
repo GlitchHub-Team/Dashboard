@@ -20,7 +20,7 @@ export class UserApiClientMockService {
       username: 'Stefano',
       email: 'admin@test.com',
       user_role: 'tenant_admin',
-      tenant_id: 'tenant-1',
+      tenant_id: 'tenant-2',
     },
     {
       user_id: '3',
@@ -49,6 +49,20 @@ export class UserApiClientMockService {
       email: 'viewer@example.com',
       user_role: 'super_admin',
       tenant_id: 'tenant-2',
+    },
+    {
+      user_id: 'user-6779',
+      username: 'supersuper',
+      email: 'supersuper@example.com',
+      user_role: 'super_admin',
+      tenant_id: 'tenant 1',
+    },
+    {
+      user_id: 'user-6779',
+      username: 'supersuper',
+      email: 'supersuper@example.com',
+      user_role: 'super_admin',
+      tenant_id: 'tenant 1',
     },
     {
       user_id: 'user-4160',

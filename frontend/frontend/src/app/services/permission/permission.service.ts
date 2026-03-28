@@ -23,8 +23,9 @@ export class PermissionService {
       Permission.SENSOR_MANAGEMENT,
       Permission.GATEWAY_COMMANDS,
       Permission.TENANT_ADMIN_MANAGEMENT,
+      Permission.SUPER_ADMIN_MANAGEMENT,
       Permission.TENANT_MANAGEMENT,
-      Permission.APIKEY_MANAGEMENT,
+      Permission.TENANT_USER_MANAGEMENT,
     ],
   };
 

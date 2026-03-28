@@ -35,9 +35,7 @@ export class UserTableComponent {
   protected readonly displayedColumns = computed(() => {
     const cols: string[] = ['username', 'email'];
 
-    if (this.targetRole() === UserRole.TENANT_ADMIN) {
-      cols.push('tenantId');
-    }
+    cols.push('tenantId');
 
     cols.push('actions');
 

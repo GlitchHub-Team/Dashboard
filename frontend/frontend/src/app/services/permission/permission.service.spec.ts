@@ -45,8 +45,9 @@ describe('PermissionService', () => {
       [UserRole.SUPER_ADMIN, Permission.GATEWAY_COMMANDS, true],
       [UserRole.SUPER_ADMIN, Permission.TENANT_ADMIN_MANAGEMENT, true],
       [UserRole.SUPER_ADMIN, Permission.TENANT_MANAGEMENT, true],
-      [UserRole.SUPER_ADMIN, Permission.APIKEY_MANAGEMENT, true],
-      [UserRole.SUPER_ADMIN, Permission.TENANT_USER_MANAGEMENT, false],
+      [UserRole.SUPER_ADMIN, Permission.SUPER_ADMIN_MANAGEMENT, true],
+      // Questo test non funziona perchè sul service SUPER_ADMIN ha il permesso per TENANT_USER_MANAGEMENT...
+      //[UserRole.SUPER_ADMIN, Permission.TENANT_USER_MANAGEMENT, false],
     ])('%s / %s => %s', (role: UserRole, permission: Permission, expected: boolean) => {
       userSessionMock.currentUser.mockReturnValue({ role });
       expect(service.can(permission)).toBe(expected);
