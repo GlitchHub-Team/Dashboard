@@ -4,23 +4,23 @@ import { Injectable, signal } from '@angular/core';
   providedIn: 'root',
 })
 export class TokenStorageService {
-  private readonly TOKEN_KEY = '';
+  private readonly TOKEN_KEY = 'jwt';
   private _isValid = signal<boolean>(this.isTokenValid());
 
   public readonly isValid = this._isValid.asReadonly();
 
   // Salva il token JWT e aggiorna lo stato di validità
   public saveToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    window.sessionStorage.setItem(this.TOKEN_KEY, token);
     this._isValid.set(this.isTokenValid());
   }
 
   public getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return window.sessionStorage.getItem(this.TOKEN_KEY);
   }
 
   public clearToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    window.sessionStorage.removeItem(this.TOKEN_KEY);
     this._isValid.set(false);
   }
 

@@ -10,16 +10,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const userSession = inject(UserSessionService);
   const router = inject(Router);
 
+  // Non attaccare token alle richieste di login
+  const isAuthRequest = req.url.includes('/auth/');
   const token = tokenStorage.getToken();
 
-  const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  const authReq =
+    token && !isAuthRequest ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
-        tokenStorage.clearToken();
-        userSession.clearSession();
-        router.navigate(['/login']);
+      if (error.status === 401 && !isAuthRequest) {
+        // Redirect solo se la sessione non è stata ancora pulita
+        if (tokenStorage.getToken()) {
+          tokenStorage.clearToken();
+          userSession.clearSession();
+          router.navigate(['/login']);
+        }
       }
       return throwError(() => error);
     }),
