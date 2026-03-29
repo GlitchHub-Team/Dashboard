@@ -1,52 +1,66 @@
 package gateway_connection_test
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 
 	"backend/internal/gateway_connection"
 
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
-// --- MOCK MANUALE (Per non dipendere da mockgen) ---
+// --- MOCK DEL MESSAGGIO JETSTREAM ---
+type mockJetStreamMsg struct {
+	jetstream.Msg
+	data       []byte
+	ackCalled  bool
+	nakCalled  bool
+	termCalled bool
+}
+
+func (m *mockJetStreamMsg) Data() []byte { return m.data }
+func (m *mockJetStreamMsg) Ack() error   { m.ackCalled = true; return nil }
+func (m *mockJetStreamMsg) Nak() error   { m.nakCalled = true; return nil }
+func (m *mockJetStreamMsg) Term() error  { m.termCalled = true; return nil }
+
+// --- MOCK DEL SERVIZIO ---
 type mockHelloService struct {
-	calledWith  gateway_connection.GatewayHelloMessage
 	errToReturn error
 }
 
 func (m *mockHelloService) ProcessHello(msg gateway_connection.GatewayHelloMessage) error {
-	m.calledWith = msg
 	return m.errToReturn
 }
 
 // --- TEST CASE ---
 func TestNATSWorker_ProcessMsg(t *testing.T) {
 	cases := []struct {
-		name          string
-		payload       gateway_connection.GatewayHelloMessage
-		serviceErr    error
-		expectedError bool
+		name       string
+		data       []byte
+		serviceErr error
+		expectAck  bool
+		expectNak  bool
+		expectTerm bool
 	}{
 		{
-			name: "Success: valid message",
-			payload: gateway_connection.GatewayHelloMessage{
-				GatewayId:        "00000000-0000-0000-0000-000000000001",
-				PublicIdentifier: "GW-001",
-			},
-			serviceErr:    nil,
-			expectedError: false,
+			name:       "Success: valid message",
+			data:       []byte(`{"gateway_id":"001"}`),
+			serviceErr: nil,
+			expectAck:  true,
 		},
 		{
-			name: "Error: service fails",
-			payload: gateway_connection.GatewayHelloMessage{
-				GatewayId: "00000000-0000-0000-0000-000000000001",
-			},
-			serviceErr:    errors.New("service error"), // Un errore qualsiasi
-			expectedError: true,
+			name:       "Error: service fails",
+			data:       []byte(`{"gateway_id":"001"}`),
+			serviceErr: errors.New("db error"),
+			expectNak:  true,
+		},
+		{
+			name:       "Error: invalid JSON",
+			data:       []byte(`{ broken-json }`),
+			serviceErr: nil,
+			expectTerm: true,
 		},
 	}
 
@@ -54,27 +68,21 @@ func TestNATSWorker_ProcessMsg(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			mockSvc := &mockHelloService{errToReturn: tc.serviceErr}
-			logger := zap.NewNop()
-
-			// NewNATSWorker(js, service, logger)
-			worker := gateway_connection.NewNATSWorker(nil, mockSvc, logger)
-
-			// Prepariamo il messaggio finto (Niente Docker!)
-			data, _ := json.Marshal(tc.payload)
-			msg := &nats.Msg{
-				Data: data,
-				Sub:  nil, // Questo fa saltare l'Ack() grazie alla tua modifica
-			}
+			worker := gateway_connection.NewNATSWorker(nil, mockSvc, zap.NewNop())
+			msg := &mockJetStreamMsg{data: tc.data}
 
 			// Esecuzione
-			err := worker.ProcessMsg(msg)
+			worker.ProcessMsg(msg)
 
 			// Verifiche
-			if tc.expectedError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.payload.PublicIdentifier, mockSvc.calledWith.PublicIdentifier)
+			if tc.expectAck {
+				require.True(t, msg.ackCalled, "Dovrebbe aver chiamato Ack()")
+			}
+			if tc.expectNak {
+				require.True(t, msg.nakCalled, "Dovrebbe aver chiamato Nak()")
+			}
+			if tc.expectTerm {
+				require.True(t, msg.termCalled, "Dovrebbe aver chiamato Term()")
 			}
 		})
 	}

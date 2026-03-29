@@ -3,75 +3,53 @@ package gateway_connection
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type NATSWorker struct {
-	js      nats.JetStreamContext
+	nc      *nats.Conn
 	service GatewayHelloService
 	logger  *zap.Logger
 }
 
-func NewNATSWorker(js nats.JetStreamContext, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
-	return &NATSWorker{js: js, service: service, logger: logger}
+func NewNATSWorker(nc *nats.Conn, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
+	return &NATSWorker{nc: nc, service: service, logger: logger}
 }
 
 func (w *NATSWorker) Run(lc fx.Lifecycle) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			go w.ListenHelloMessages()
+			go w.ListenHelloMessages(context.Background())
 			return nil
 		},
 	})
 }
 
-func (w *NATSWorker) ProcessMsg(msg *nats.Msg) error {
+func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 	var helloMsg GatewayHelloMessage
-	if err := json.Unmarshal(msg.Data, &helloMsg); err != nil {
-		w.logger.Error("Failed to unmarshal hello message", zap.Error(err))
-		return err
-	}
-	if err := w.service.ProcessHello(helloMsg); err != nil {
-		w.logger.Error("Failed to process hello message", zap.Error(err))
-		return err
+	if err := json.Unmarshal(msg.Data(), &helloMsg); err != nil {
+		msg.Term()
+		return
 	}
 
-	if msg.Reply != "" { // Se c'è un destinatario (NATS reale), allora fai l'Ack
-		if err := msg.Ack(); err != nil {
-			w.logger.Error("Failed to ack message", zap.Error(err))
-			return err
-		}
+	if err := w.service.ProcessHello(helloMsg); err != nil {
+		msg.Nak()
+		return
 	}
-	return nil
+
+	msg.Ack()
 }
 
-func (w *NATSWorker) ListenHelloMessages() {
-	subject := "gateway.hello.*"
-	stream := "HELLO_STREAM"
-	consumer := "gateway_hello_consumer"
+func (w *NATSWorker) ListenHelloMessages(ctx context.Context) {
+	js, _ := jetstream.New(w.nc)
 
-	for {
-		msgs, err := w.js.PullSubscribe(subject, consumer, nats.BindStream(stream))
-		if err != nil {
-			w.logger.Error("NATS PullSubscribe error", zap.Error(err))
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		for {
-			messages, err := msgs.Fetch(10, nats.MaxWait(2*time.Second))
-			if err != nil && err != nats.ErrTimeout {
-				w.logger.Error("NATS Fetch error", zap.Error(err))
-				break
-			}
-			for _, msg := range messages {
-				if err := w.ProcessMsg(msg); err != nil {
-					w.logger.Error("Failed to process message", zap.Error(err))
-				}
-			}
-		}
-	}
+	cons, _ := js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
+
+	cons.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
+
+	<-ctx.Done()
 }
