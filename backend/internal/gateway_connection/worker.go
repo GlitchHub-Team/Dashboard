@@ -32,16 +32,20 @@ func (w *NATSWorker) Run(lc fx.Lifecycle) {
 func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 	var helloMsg GatewayHelloMessage
 	if err := json.Unmarshal(msg.Data(), &helloMsg); err != nil {
-		msg.Term()
-		return
+		if err := msg.Term(); err != nil {
+			w.logger.Error("failed to Term message", zap.Error(err))
+		}
 	}
 
 	if err := w.service.ProcessHello(helloMsg); err != nil {
-		msg.Nak()
-		return
+		if err := msg.Nak(); err != nil {
+			w.logger.Error("failed to Nak message", zap.Error(err))
+		}
 	}
 
-	msg.Ack()
+	if err := msg.Ack(); err != nil {
+		w.logger.Error("failed to Ack message", zap.Error(err))
+	}
 }
 
 func (w *NATSWorker) ListenHelloMessages(ctx context.Context) {
@@ -49,7 +53,10 @@ func (w *NATSWorker) ListenHelloMessages(ctx context.Context) {
 
 	cons, _ := js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
 
-	cons.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
+	_, err := cons.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
+	if err != nil {
+		w.logger.Error("failed to start consume", zap.Error(err))
+	}
 
 	<-ctx.Done()
 }
