@@ -1,6 +1,7 @@
 package historical_data
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -33,11 +34,13 @@ func (repo *historicalDataTimescaleRepository) GetSensorHistoricalData(
 
 	query, args := buildHistoricalDataQuery(tenantId, sensorId, filter)
 
-	rows, err := repo.db.Query(query, args...)
+	rows, err := repo.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	samples := make([]HistoricalSample, 0)
 	for rows.Next() {
@@ -81,19 +84,19 @@ func buildHistoricalDataQuery(
 	argPos := 3
 
 	if filter.From != nil {
-		query.WriteString(fmt.Sprintf(" AND timestamp >= $%d", argPos))
+		_, _ = fmt.Fprintf(&query, " AND timestamp >= $%d", argPos)
 		args = append(args, *filter.From)
 		argPos++
 	}
 
 	if filter.To != nil {
-		query.WriteString(fmt.Sprintf(" AND timestamp <= $%d", argPos))
+		_, _ = fmt.Fprintf(&query, " AND timestamp <= $%d", argPos)
 		args = append(args, *filter.To)
 		argPos++
 	}
 
 	query.WriteString(" ORDER BY timestamp ASC")
-	query.WriteString(fmt.Sprintf(" LIMIT $%d", argPos))
+	_, _ = fmt.Fprintf(&query, " LIMIT $%d", argPos)
 	args = append(args, filter.Limit)
 
 	return query.String(), args
