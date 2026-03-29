@@ -4,6 +4,7 @@ import { delay, Observable, of, throwError } from 'rxjs';
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../models/gateway/gateway-config.model';
 import { PaginatedGatewayResponse } from '../models/gateway/paginated-gateway-response.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -241,6 +242,19 @@ export class GatewayApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
+
     const filtered = this.mockGateways.filter((g) => g.tenant_id === tenantId);
     return of(this.paginate(filtered, page, limit)).pipe(delay(800));
   }
@@ -249,10 +263,35 @@ export class GatewayApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
     return of(this.paginate(this.mockGateways, page, limit)).pipe(delay(800));
   }
 
   public addNewGateway(config: GatewayConfig): Observable<GatewayBackend> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
+
     const newGateway: GatewayBackend = {
       gateway_id: `gateway-${Date.now()}`,
       tenant_id: undefined,
@@ -266,6 +305,19 @@ export class GatewayApiClientServiceMock {
   }
 
   public deleteGateway(gatewayId: string): Observable<void> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
+
     const index = this.mockGateways.findIndex((g) => g.gateway_id === gatewayId);
 
     if (index === -1) {

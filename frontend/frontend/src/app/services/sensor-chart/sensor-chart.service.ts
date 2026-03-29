@@ -92,6 +92,7 @@ export class SensorChartService {
         // Ogni volta che arriva una nuova lettura, la adatta e la aggiunge alla lista di quelle visualizzate
         next: (raw) => {
           this._connectionStatus.set('connected');
+          this._error.set(null);
           const reading = this.liveReadingsAdapter.fromDTO(raw);
           this._liveReadings.update((readings) => {
             // Mantiene solo le ultime MAX_LIVE_READINGS letture per evitare di sovraccaricare il grafico

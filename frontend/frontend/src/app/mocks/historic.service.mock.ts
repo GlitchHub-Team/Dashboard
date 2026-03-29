@@ -1,15 +1,28 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Observable, of, delay, throwError } from 'rxjs';
 import { ChartRequest } from '../models/chart/chart-request.model';
 import { HistoricResponse } from '../models/sensor-data/historic-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
 import { TimeInterval } from '../models/chart/time-interval.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable()
 export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
+    const shouldFail = true;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
     const defaultInterval = this.getDefaultInterval();
     const from = (req.timeInterval?.from ?? defaultInterval.from).getTime();
     const to = (req.timeInterval?.to ?? defaultInterval.to).getTime();

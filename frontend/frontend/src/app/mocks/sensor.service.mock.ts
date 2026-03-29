@@ -7,6 +7,7 @@ import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../models/sensor/sensor-config.model';
 import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -213,6 +214,18 @@ export class SensorApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
     const all = this.mockSensors.get(gatewayId) ?? [];
     return of(this.paginate(all, page, limit)).pipe(delay(600));
   }

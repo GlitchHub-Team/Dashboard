@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, interval, map, Subject, takeUntil } from 'rxjs';
+import { Observable, interval, map, Subject, takeUntil, switchMap, throwError, timer } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Sensor } from '../models/sensor/sensor.model';
 import { RealTimeReading } from '../models/sensor-data/real-time-reading.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
@@ -8,15 +9,47 @@ import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
 export class SensorRealTimeMockService {
   private readonly stop$ = new Subject<void>();
   private currentValue = 0;
+  private readingCount = 0;
+
+  // Toggle these to simulate different scenarios
+  private readonly shouldFailConnection = false;
+  private readonly shouldDisconnectAfter = 10; // 0 = never, N = after N readings
 
   connect(sensor: Sensor): Observable<RealTimeReading> {
+    this.readingCount = 0;
+
+    // Simulate connection failure
+    if (this.shouldFailConnection) {
+      return timer(1000).pipe(
+        switchMap(() =>
+          throwError(
+            () =>
+              new HttpErrorResponse({
+                status: 0,
+                statusText: 'Unknown Error',
+                error: { error: 'WebSocket connection failed' },
+              }),
+          ),
+        ),
+      );
+    }
+
     this.currentValue = this.getBaseValue(sensor.profile);
 
     return interval(1000).pipe(
-      // one reading every 1 second
       takeUntil(this.stop$),
       map(() => {
-        // random walk: small increments/decrements
+        this.readingCount++;
+
+        // Simulate disconnection after N readings
+        if (this.shouldDisconnectAfter > 0 && this.readingCount >= this.shouldDisconnectAfter) {
+          throw new HttpErrorResponse({
+            status: 0,
+            statusText: 'Unknown Error',
+            error: { error: 'WebSocket connection lost' },
+          });
+        }
+
         const delta = (Math.random() - 0.5) * this.getStep(sensor.profile);
         this.currentValue += delta;
         this.currentValue = Math.round(this.currentValue * 100) / 100;
