@@ -7,7 +7,7 @@ describe('UserApiAdapter', () => {
   const adapter = new UserApiAdapter();
 
   const dto: UserBackend = {
-    user_id: 'user-01',
+    user_id: 1,
     username: 'john',
     email: 'john@example.com',
     user_role: 'tenant_admin',
@@ -16,7 +16,7 @@ describe('UserApiAdapter', () => {
 
   describe('fromDTO', () => {
     it.each([
-      { field: 'id', expected: 'user-01' },
+      { field: 'id', expected: '1' },
       { field: 'username', expected: 'john' },
       { field: 'email', expected: 'john@example.com' },
       { field: 'role', expected: UserRole.TENANT_ADMIN },
@@ -44,7 +44,7 @@ describe('UserApiAdapter', () => {
       const response = {
         count: 2,
         total: 10,
-        users: [dto, { ...dto, user_id: 'user-02', user_role: 'tenant_user' }],
+        users: [dto, { ...dto, user_id: 2, user_role: 'tenant_user' }],
       };
 
       const result = adapter.fromPaginatedDTO(response);
@@ -52,7 +52,7 @@ describe('UserApiAdapter', () => {
       expect(result.count).toBe(2);
       expect(result.total).toBe(10);
       expect(result.users).toHaveLength(2);
-      expect(result.users[0].id).toBe('user-01');
+      expect(result.users[0].id).toBe('1');
       expect(result.users[1].role).toBe(UserRole.TENANT_USER);
     });
 

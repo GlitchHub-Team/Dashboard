@@ -10,139 +10,139 @@ import { userRoleMapper } from '../utils/user-role.utils';
 export class UserApiClientMockService {
   private mockUsers: UserBackend[] = [
     {
-      user_id: '1',
+      user_id: 1,
       username: 'Tullio',
       email: 'super@test.com',
       user_role: 'super_admin',
     },
     {
-      user_id: '2',
+      user_id: 2,
       username: 'Stefano',
       email: 'admin@test.com',
       user_role: 'tenant_admin',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: '3',
+      user_id: 3,
       username: 'Tullio x Stefano',
       email: 'user@test.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-5741',
+      user_id: 4,
       username: 'admin',
       email: 'admin@example.com',
       user_role: 'tenant_admin',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-3592',
+      user_id: 5,
       username: 'editor',
       email: 'editor@example.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-3876',
+      user_id: 6,
       username: 'viewer',
       email: 'viewer@example.com',
       user_role: 'super_admin',
       tenant_id: 'tenant-2',
     },
     {
-      user_id: 'user-6779',
+      user_id: 7,
       username: 'supersuper',
       email: 'supersuper@example.com',
       user_role: 'super_admin',
       tenant_id: 'tenant 1',
     },
     {
-      user_id: 'user-6779',
+      user_id: 8,
       username: 'supersuper',
       email: 'supersuper@example.com',
       user_role: 'super_admin',
       tenant_id: 'tenant 1',
     },
     {
-      user_id: 'user-4160',
+      user_id: 9,
       username: 'alice.smith',
       email: 'alice.smith@tenant-1.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-5386',
+      user_id: 10,
       username: 'bob.jones',
       email: 'bob.jones@tenant-1.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-6397',
+      user_id: 11,
       username: 'charlie.brown',
       email: 'charlie.brown@tenant-2.com',
       user_role: 'tenant_admin',
       tenant_id: 'tenant-2',
     },
     {
-      user_id: 'user-7351',
+      user_id: 12,
       username: 'diana.prince',
       email: 'diana.prince@tenant-2.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-2',
     },
     {
-      user_id: 'user-8888',
+      user_id: 13,
       username: 'eve.davis',
       email: 'eve.davis@tenant-3.com',
       user_role: 'tenant_admin',
       tenant_id: 'tenant-3',
     },
     {
-      user_id: 'user-9765',
+      user_id: 14,
       username: 'frank.miller',
       email: 'frank.miller@tenant-3.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-3',
     },
     {
-      user_id: 'user-1027',
+      user_id: 15,
       username: 'grace.hopper',
       email: 'grace.hopper@tenant-3.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-3',
     },
     {
-      user_id: 'user-1136',
+      user_id: 16,
       username: 'heidi.klum',
       email: 'heidi.klum@tenant-1.com',
       user_role: 'tenant_admin',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-1283',
+      user_id: 17,
       username: 'ivan.drago',
       email: 'ivan.drago@tenant-2.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-2',
     },
     {
-      user_id: 'user-1390',
+      user_id: 18,
       username: 'judy.garland',
       email: 'judy.garland@tenant-3.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-3',
     },
     {
-      user_id: 'user-1482',
+      user_id: 19,
       username: 'kevin.bacon',
       email: 'kevin.bacon@tenant-1.com',
       user_role: 'tenant_user',
       tenant_id: 'tenant-1',
     },
     {
-      user_id: 'user-1516',
+      user_id: 20,
       username: 'laura.croft',
       email: 'laura.croft@tenant-2.com',
       user_role: 'tenant_admin',
@@ -173,7 +173,7 @@ export class UserApiClientMockService {
     const roleString = userRoleMapper.toBackend(role);
     const user = this.mockUsers.find(
       (u) =>
-        u.user_id === id &&
+        u.user_id === Number(id) &&
         u.user_role === roleString &&
         (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId),
     );
@@ -188,7 +188,7 @@ export class UserApiClientMockService {
     role: UserRole,
     tenantId?: string,
   ): Observable<UserBackend> {
-    const newId = `user-${Math.floor(Math.random() * 10000)}`;
+    const newId = Math.floor(Math.random() * 10000);
     const newTenantId = tenantId || 'mock-tenant-id';
 
     const newUser: UserBackend = {
@@ -207,7 +207,7 @@ export class UserApiClientMockService {
     this.mockUsers = this.mockUsers.filter(
       (u) =>
         !(
-          u.user_id === id &&
+          u.user_id === Number(id) &&
           u.user_role === roleString &&
           (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId)
         ),

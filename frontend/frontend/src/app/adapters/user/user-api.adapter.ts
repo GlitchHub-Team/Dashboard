@@ -9,7 +9,7 @@ import { userRoleMapper } from '../../utils/user-role.utils';
 export class UserApiAdapter extends UserAdapter {
   fromDTO(dto: UserBackend): User {
     return {
-      id: dto.user_id,
+      id: String(dto.user_id),
       username: dto.username,
       email: dto.email,
       role: userRoleMapper.fromBackend(dto.user_role),
