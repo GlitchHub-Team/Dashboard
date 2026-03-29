@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Observable, of, throwError, delay } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { PaginatedTenantResponse } from '../models/tenant/paginated-tenant-response.model';
 import { TenantBackend } from '../models/tenant/tenant-backend.model';
@@ -17,17 +18,55 @@ export class TenantApiClientMockService {
   ];
 
   public getTenant(id: string): Observable<TenantBackend> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
     const tenant = this.mockTenants.find((t) => t.tenant_id === id);
     return of(tenant!).pipe(delay(500));
   }
 
   public getTenants(page = 0, limit = 10): Observable<PaginatedTenantResponse<TenantBackend>> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
+
     const total = this.mockTenants.length;
     const tenants = this.mockTenants.slice(page * limit, (page + 1) * limit);
     return of({ count: tenants.length, total, tenants }).pipe(delay(500));
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
+
     const newTenant: TenantBackend = {
       tenant_id: `tenant-${(this.mockTenants.length + 1).toString()}`,
       name: config.name,
@@ -38,6 +77,19 @@ export class TenantApiClientMockService {
   }
 
   public deleteTenant(id: string): Observable<void> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'LOL' },
+          }),
+      ).pipe(delay(500));
+    }
+
     this.mockTenants = this.mockTenants.filter((tenant) => tenant.tenant_id !== id);
     return of(void 0).pipe(delay(500));
   }

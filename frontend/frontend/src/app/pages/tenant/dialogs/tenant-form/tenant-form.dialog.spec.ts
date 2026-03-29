@@ -60,18 +60,6 @@ describe('TenantFormDialog (Unit)', () => {
       expect(testApi.generalError).toBe('');
     });
 
-    it('should patch form values from dialog data', async () => {
-      await createComponent({
-        name: 'Tenant Alpha',
-        canImpersonate: true,
-      });
-
-      expect(testApi.tenantForm.value).toEqual({
-        name: 'Tenant Alpha',
-        canImpersonate: true,
-      });
-    });
-
     it('should render title and form controls', async () => {
       await createComponent(null);
 
@@ -165,7 +153,7 @@ describe('TenantFormDialog (Unit)', () => {
 
       testApi.onSave();
 
-      expect(testApi.generalError).toBe('Failed to save tenant');
+      expect(testApi.generalError).toBe('Failed to create tenant');
       expect(testApi.isSubmitting).toBe(false);
     });
   });

@@ -36,6 +36,7 @@ export class TenantService {
       tap({
         error: (err: ApiError) => {
           this._error.set(err.message ?? 'Failed to fetch tenant');
+          return EMPTY;
         },
       }),
       finalize(() => this._loading.set(false)),
@@ -69,18 +70,9 @@ export class TenantService {
     this.retrieveTenants();
   }
 
+  // Il dialog si occupa del loading/errors
   public addNewTenant(config: TenantConfig): Observable<Tenant> {
-    this.setLoadingState();
-
-    return this.tenantApi.createTenant(config).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
-      tap({
-        error: (err: ApiError) => {
-          this._error.set(err.message ?? 'Failed to create tenant');
-        },
-      }),
-      finalize(() => this._loading.set(false)),
-    );
+    return this.tenantApi.createTenant(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
   }
 
   public removeTenant(id: string): Observable<void> {

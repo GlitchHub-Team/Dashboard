@@ -144,28 +144,6 @@ describe('TenantService', () => {
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
-
-    it.each([
-      {
-        error: { status: 400, message: 'Failed to create' } as ApiError,
-        expected: 'Failed to create',
-      },
-      { error: { status: 400 } as ApiError, expected: 'Failed to create tenant' },
-    ])('should handle create errors', ({ error, expected }) => {
-      tenantApiMock.createTenant.mockReturnValue(throwError(() => error));
-
-      let thrownError: unknown;
-      service.addNewTenant(mockConfig).subscribe({
-        error: (err) => {
-          thrownError = err;
-        },
-      });
-
-      expect(tenantApiMock.createTenant).toHaveBeenCalledWith(mockConfig);
-      expect(thrownError).toBe(error);
-      expect(service.loading()).toBe(false);
-      expect(service.error()).toBe(expected);
-    });
   });
 
   describe('removeTenant', () => {

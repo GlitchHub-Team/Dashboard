@@ -29,6 +29,7 @@ export class TenantManagerPage implements OnInit {
   protected readonly pageIndex = this.tenantService.pageIndex;
   protected readonly limit = this.tenantService.limit;
   protected readonly loading = this.tenantService.loading;
+  protected readonly error = this.tenantService.error;
 
   public ngOnInit(): void {
     this.tenantService.retrieveTenants();
