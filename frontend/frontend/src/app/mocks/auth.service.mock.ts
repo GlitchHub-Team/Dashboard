@@ -62,9 +62,11 @@ export class AuthServiceMock {
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  forgotPassword(req: ForgotPasswordRequest): Observable<void> {
+  forgotPasswordRequest(req: ForgotPasswordRequest): Observable<void> {
     if (!MOCK_USERS[req.email]) {
       return this.delayedError({ status: 404, message: 'Email not found' });
+    } else if (req.tenantId && MOCK_USERS[req.email].tenantId !== req.tenantId) {
+      return this.delayedError({ status: 404, message: 'Wrong tenant' });
     }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
@@ -83,7 +85,7 @@ export class AuthServiceMock {
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  confirmAccount(req: ConfirmAccountResponse): Observable<void> {
+  confirmAccountCreation(req: ConfirmAccountResponse): Observable<void> {
     if (!req.token || req.token === 'expired-token') {
       return this.delayedError({ status: 400, message: 'Invalid or expired token' });
     }

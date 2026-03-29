@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
 import { TenantService } from '../../../../services/tenant/tenant.service';
+import { ForgotPasswordRequest } from '../../../../models/auth/forgot-password-request.model';
 
 @Component({
   selector: 'app-forgot-password.dialog',
@@ -39,7 +40,7 @@ export class ForgotPasswordDialog {
 
   protected readonly forgotPasswordForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    tenantId: ['', Validators.required],
+    tenantId: [''],
   });
 
   protected readonly loading = this.authActionsService.loading;
@@ -57,7 +58,7 @@ export class ForgotPasswordDialog {
     }
 
     // Confeziona e invia la richiesta di reset password, chiude il dialog alla risposta positiva
-    const forgotPasswordRequest = {
+    const forgotPasswordRequest: ForgotPasswordRequest = {
       email: this.forgotPasswordForm.controls.email.value!,
       tenantId: this.forgotPasswordForm.controls.tenantId.value!,
     };

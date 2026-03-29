@@ -76,7 +76,9 @@ describe('ForgotPasswordDialog', () => {
       ).toContain('Reimposta Password');
       expect(
         fixture.debugElement.query(By.css('mat-dialog-content p')).nativeElement.textContent,
-      ).toContain("Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.");
+      ).toContain(
+        'Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.',
+      );
     });
 
     it('should not render progress bar or error banner', () => {
@@ -127,7 +129,6 @@ describe('ForgotPasswordDialog', () => {
     it.each([
       ['empty email', '', 'tenant-01'],
       ['invalid email format', 'not-an-email', 'tenant-01'],
-      ['missing tenantId', 'user@example.com', ''],
     ])('should be invalid with %s', (_, email, tenantId) => {
       component['forgotPasswordForm'].controls.email.setValue(email);
       component['forgotPasswordForm'].controls.tenantId.setValue(tenantId);
