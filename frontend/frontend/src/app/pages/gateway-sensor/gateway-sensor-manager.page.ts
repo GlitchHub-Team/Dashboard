@@ -1,8 +1,10 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
+import { filter, switchMap } from 'rxjs';
 
 import { GatewaySensorManagerService } from '../../services/gateway-sensor-manager/gateway-sensor-manager.service';
 import { DashboardGatewayTableComponent } from '../dashboard/components/dashboard-gateway-table/dashboard-gateway-table.component';
@@ -22,6 +24,7 @@ export class GatewaySensorManagerPage implements OnInit {
   private readonly managerService = inject(GatewaySensorManagerService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly gatewayList = this.managerService.gatewayList;
   protected readonly gatewayTotal = this.managerService.gatewayTotal;
@@ -57,61 +60,73 @@ export class GatewaySensorManagerPage implements OnInit {
   }
 
   protected onCreateGateway(): void {
-    const ref = this.dialog.open(CreateGatewayDialog);
-
-    ref.afterClosed().subscribe((created) => {
-      if (created) {
+    this.dialog
+      .open(CreateGatewayDialog)
+      .afterClosed()
+      .pipe(
+        filter((created) => !!created),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
         this.managerService.refreshGateways();
         this.snackBar.open('Gateway creato con successo', 'Close', { duration: 3000 });
-      }
-    });
+      });
   }
 
   protected onDeleteGateway(gateway: Gateway): void {
-    const ref = this.dialog.open(ConfirmDeleteDialog, {
-      data: {
-        title: 'Elimina Gateway',
-        message: `Sei sicuro di voler eliminare il gateway "${gateway.name}"?`,
-      },
-    });
-
-    ref.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        this.managerService.deleteGateway(gateway);
+    this.dialog
+      .open(ConfirmDeleteDialog, {
+        data: {
+          title: 'Elimina Gateway',
+          message: `Sei sicuro di voler eliminare il gateway "${gateway.name}"?`,
+        },
+      })
+      .afterClosed()
+      .pipe(
+        filter((confirmed) => !!confirmed),
+        switchMap(() => this.managerService.deleteGateway(gateway)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
         this.snackBar.open('Gateway eliminato con successo', 'Close', { duration: 3000 });
-      }
-    });
+      });
   }
 
   protected onCreateSensor(gateway: Gateway): void {
-    const ref = this.dialog.open(CreateSensorDialog, {
-      data: {
-        id: gateway.id,
-        name: gateway.name,
-      },
-    });
-
-    ref.afterClosed().subscribe((created) => {
-      if (created) {
+    this.dialog
+      .open(CreateSensorDialog, {
+        data: {
+          id: gateway.id,
+          name: gateway.name,
+        },
+      })
+      .afterClosed()
+      .pipe(
+        filter((created) => !!created),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
         this.managerService.refreshSensors(gateway.id);
         this.snackBar.open('Sensore creato con successo', 'Close', { duration: 3000 });
-      }
-    });
+      });
   }
 
   protected onDeleteSensor(sensor: Sensor): void {
-    const ref = this.dialog.open(ConfirmDeleteDialog, {
-      data: {
-        title: 'Elimina Sensore',
-        message: `Sei sicuro di voler eliminare il sensore "${sensor.name}"?`,
-      },
-    });
-
-    ref.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        this.managerService.deleteSensor(sensor);
+    this.dialog
+      .open(ConfirmDeleteDialog, {
+        data: {
+          title: 'Elimina Sensore',
+          message: `Sei sicuro di voler eliminare il sensore "${sensor.name}"?`,
+        },
+      })
+      .afterClosed()
+      .pipe(
+        filter((confirmed) => !!confirmed),
+        switchMap(() => this.managerService.deleteSensor(sensor)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
         this.snackBar.open('Sensore eliminato con successo', 'Close', { duration: 3000 });
-      }
-    });
+      });
   }
 }

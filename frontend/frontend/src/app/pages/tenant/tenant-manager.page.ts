@@ -13,6 +13,7 @@ import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-tenant-manager-page',
@@ -26,6 +27,7 @@ export class TenantManagerPage implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly tenants = this.tenantService.tenantList;
   protected readonly total = this.tenantService.total;
@@ -51,6 +53,7 @@ export class TenantManagerPage implements OnInit {
       )
       .subscribe(() => {
         this.tenantService.retrieveTenants();
+        this.snackBar.open('Tenant creato con successo', 'Close', { duration: 3000 });
       });
   }
 
@@ -69,7 +72,9 @@ export class TenantManagerPage implements OnInit {
         switchMap(() => this.tenantService.removeTenant(tenant.id)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe();
+      .subscribe(() => {
+        this.snackBar.open('Tenant eliminato con successo', 'Close', { duration: 3000 });
+      });
   }
 
   protected onPageChange(event: PageEvent): void {

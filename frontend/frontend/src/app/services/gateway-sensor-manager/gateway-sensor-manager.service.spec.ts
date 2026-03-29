@@ -207,7 +207,7 @@ describe('GatewaySensorManagerService', () => {
 
   describe('deleteGateway', () => {
     it('should call gatewayService.deleteGateway with gateway id', () => {
-      service.deleteGateway(mockGateway);
+      service.deleteGateway(mockGateway).subscribe();
       expect(gatewayServiceMock.deleteGateway).toHaveBeenCalledWith('gw-1');
     });
 
@@ -217,7 +217,7 @@ describe('GatewaySensorManagerService', () => {
     ])('should refresh gateways at page %i with limit %i after deletion', (page, limit) => {
       gatewayPageIndexSig.set(page);
       gatewayLimitSig.set(limit);
-      service.deleteGateway(mockGateway);
+      service.deleteGateway(mockGateway).subscribe();
       expect(gatewayServiceMock.changePage).toHaveBeenCalledWith(page, limit);
     });
 
@@ -225,7 +225,7 @@ describe('GatewaySensorManagerService', () => {
       service.toggleExpandedGateway(mockGateway);
       sensorServiceMock.clearSensors.mockClear();
 
-      service.deleteGateway(mockGateway);
+      service.deleteGateway(mockGateway).subscribe();
 
       expect(service.expandedGateway()).toBeNull();
       expect(sensorServiceMock.clearSensors).toHaveBeenCalled();
@@ -239,7 +239,7 @@ describe('GatewaySensorManagerService', () => {
       const expandedBefore = service.expandedGateway();
       sensorServiceMock.clearSensors.mockClear();
 
-      service.deleteGateway(mockGateway);
+      service.deleteGateway(mockGateway).subscribe();
 
       expect(service.expandedGateway()).toEqual(expandedBefore);
       expect(sensorServiceMock.clearSensors).not.toHaveBeenCalled();
@@ -247,14 +247,14 @@ describe('GatewaySensorManagerService', () => {
 
     it('should not refresh if deleteGateway returns EMPTY', () => {
       gatewayServiceMock.deleteGateway.mockReturnValue(EMPTY);
-      service.deleteGateway(mockGateway);
+      service.deleteGateway(mockGateway).subscribe();
       expect(gatewayServiceMock.changePage).not.toHaveBeenCalled();
     });
   });
 
   describe('deleteSensor', () => {
     it('should call sensorService.deleteSensor with sensor id', () => {
-      service.deleteSensor(mockSensor);
+      service.deleteSensor(mockSensor).subscribe();
       expect(sensorServiceMock.deleteSensor).toHaveBeenCalledWith('sensor-1');
     });
 
@@ -264,13 +264,13 @@ describe('GatewaySensorManagerService', () => {
     ])('should refresh sensors at page %i with limit %i after deletion', (page, limit) => {
       sensorPageIndexSig.set(page);
       sensorLimitSig.set(limit);
-      service.deleteSensor(mockSensor);
+      service.deleteSensor(mockSensor).subscribe();
       expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-1', page, limit);
     });
 
     it('should not refresh if deleteSensor returns EMPTY', () => {
       sensorServiceMock.deleteSensor.mockReturnValue(EMPTY);
-      service.deleteSensor(mockSensor);
+      service.deleteSensor(mockSensor).subscribe();
       expect(sensorServiceMock.getSensorsByGateway).not.toHaveBeenCalled();
     });
   });

@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 
 import { GatewayService } from '../gateway/gateway.service';
 import { SensorService } from '../sensor/sensor.service';
@@ -46,18 +47,21 @@ export class GatewaySensorManagerService {
     }
   }
 
-  public deleteGateway(gateway: Gateway): void {
+  public deleteGateway(gateway: Gateway): Observable<void> {
     const wasExpanded = this._expandedGateway()?.id === gateway.id;
-    this.gatewayService.deleteGateway(gateway.id).subscribe(() => {
-      if (wasExpanded) this.collapseGateway();
-      this.refreshGateways();
-    });
+
+    return this.gatewayService.deleteGateway(gateway.id).pipe(
+      tap(() => {
+        if (wasExpanded) this.collapseGateway();
+        this.refreshGateways();
+      }),
+    );
   }
 
-  public deleteSensor(sensor: Sensor): void {
-    this.sensorService.deleteSensor(sensor.id).subscribe(() => {
-      this.refreshSensors(sensor.gatewayId);
-    });
+  public deleteSensor(sensor: Sensor): Observable<void> {
+    return this.sensorService
+      .deleteSensor(sensor.id)
+      .pipe(tap(() => this.refreshSensors(sensor.gatewayId)));
   }
 
   public changeGatewayPage(pageIndex: number, limit: number): void {

@@ -93,8 +93,8 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       changeSensorPage: vi.fn(),
       refreshGateways: vi.fn(),
       refreshSensors: vi.fn(),
-      deleteGateway: vi.fn(),
-      deleteSensor: vi.fn(),
+      deleteGateway: vi.fn().mockReturnValue(of(undefined)),
+      deleteSensor: vi.fn().mockReturnValue(of(undefined)),
     };
 
     dialogMock = { open: vi.fn() };
@@ -237,7 +237,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       });
     });
 
-    it.each([undefined, null, ''])('should not refresh when dialog returns %s', (result) => {
+    it.each([undefined, null, false, ''])('should not refresh when dialog returns %s', (result) => {
       mockDialog(result);
       getTable().triggerEventHandler('gatewayCreateRequested');
       expect(managerServiceMock.refreshGateways).not.toHaveBeenCalled();
@@ -261,7 +261,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       });
     });
 
-    it.each([undefined, false])('should not delete when dialog returns %s', (result) => {
+    it.each([undefined, false, null])('should not delete when dialog returns %s', (result) => {
       mockDialog(result);
       getTable().triggerEventHandler('gatewayDeleteRequested', mockGateway);
       expect(managerServiceMock.deleteGateway).not.toHaveBeenCalled();
@@ -282,7 +282,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       });
     });
 
-    it.each([undefined, null])('should not refresh when dialog returns %s', (result) => {
+    it.each([undefined, null, false])('should not refresh when dialog returns %s', (result) => {
       mockDialog(result);
       getTable().triggerEventHandler('sensorCreateRequested', mockGateway);
       expect(managerServiceMock.refreshSensors).not.toHaveBeenCalled();
@@ -306,7 +306,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       });
     });
 
-    it.each([undefined, false])('should not delete when dialog returns %s', (result) => {
+    it.each([undefined, false, null])('should not delete when dialog returns %s', (result) => {
       mockDialog(result);
       getTable().triggerEventHandler('sensorDeleteRequested', mockSensor);
       expect(managerServiceMock.deleteSensor).not.toHaveBeenCalled();
