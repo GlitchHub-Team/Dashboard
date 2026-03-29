@@ -1,10 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { filter, switchMap } from 'rxjs';
 
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
@@ -23,6 +25,7 @@ export class TenantManagerPage implements OnInit {
   private readonly tenantService = inject(TenantService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly tenants = this.tenantService.tenantList;
   protected readonly total = this.tenantService.total;
@@ -42,10 +45,12 @@ export class TenantManagerPage implements OnInit {
         data: null,
       })
       .afterClosed()
-      .subscribe((created) => {
-        if (created) {
-          this.tenantService.retrieveTenants();
-        }
+      .pipe(
+        filter((created) => !!created),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.tenantService.retrieveTenants();
       });
   }
 
@@ -59,11 +64,12 @@ export class TenantManagerPage implements OnInit {
         },
       })
       .afterClosed()
-      .subscribe((confirmed) => {
-        if (confirmed) {
-          this.tenantService.removeTenant(tenant.id).subscribe();
-        }
-      });
+      .pipe(
+        filter((confirmed) => !!confirmed),
+        switchMap(() => this.tenantService.removeTenant(tenant.id)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   protected onPageChange(event: PageEvent): void {
