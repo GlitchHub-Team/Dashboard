@@ -9,12 +9,14 @@ var Module = fx.Module(
 
 	// Metodi pubblici
 	fx.Provide(
-	//..
+		NewHistoricalDataController,
+		NewGetHistoricalDataService,
+		NewHistoricalDataTimescaleAdapter,
 	),
 
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		// ...
+		newHistoricalDataTimescaleRepository,
 	),
 )

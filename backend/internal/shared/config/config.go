@@ -18,6 +18,13 @@ type Config struct {
 	// URL per il Cloud DB
 	CloudDBUrl string `json:"CLOUD_DB_URL"`
 
+	// Configurazione DB IoT / TimescaleDB
+	PostgresHost string    `json:"POSTGRES_HOST"`
+	PostgresPort stringInt `json:"POSTGRES_PORT"`
+	PostgresDB   string    `json:"POSTGRES_DB"`
+	PostgresUser string    `json:"POSTGRES_USER"`
+	PostgresPass string    `json:"POSTGRES_PASSWORD"`
+
 	// Quale mail adapter utilizzare, può essere o "terminal" o "mailtrap"
 	MailAdapter string `json:"MAIL_ADAPTER"`
 

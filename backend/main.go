@@ -22,6 +22,7 @@ import (
 	"backend/internal/historical_data"
 	"backend/internal/infra/crypto"
 	"backend/internal/infra/database/cloud_db"
+	"backend/internal/infra/database/iot_db"
 	httpMiddlewares "backend/internal/infra/transport/http/middlewares"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
@@ -46,6 +47,7 @@ func NewGinEngine(
 	authzMiddleware *httpMiddlewares.AuthzMiddleware,
 
 	gatewayController *gateway.GatewayController,
+	historicalDataController *historical_data.Controller,
 	userController *user.Controller,
 	authController *auth.Controller,
 ) *gin.Engine {
@@ -107,6 +109,14 @@ func NewGinEngine(
 		private.GET("/super_admins", userController.GetSuperAdmins)
 	}
 
+	// Historical data
+	{
+		private.GET(
+			"/tenant/:tenant_id/sensor/:sensor_id/historical_data",
+			historicalDataController.GetSensorHistoricalData,
+		)
+	}
+
 	log.Info("CONFIG DB URL:" + config.CloudDBUrl)
 
 	lc.Append(fx.Hook{
@@ -130,6 +140,7 @@ func main() {
 		config.Module,
 		crypto.Module,
 		cloud_db.Module, // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
+		iot_db.Module,
 		email.Module,
 		httpMiddlewares.Module,
 
