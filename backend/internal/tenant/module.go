@@ -5,14 +5,14 @@ import (
 )
 
 var Module = fx.Module(
-    "tenant",
-    fx.Provide(
-        NewTenantController,
-        NewCreateTenantService,
-        NewTenantPostgreAdapter,
-    ),
-    fx.Provide(
-        fx.Private,
-        NewTenantPostgreRepository,
-    ),
+	"tenant",
+	fx.Provide(
+		NewTenantController,
+		NewCreateTenantService,
+		NewTenantPostgreAdapter,
+	),
+	fx.Provide(
+		fx.Private,
+		NewTenantPostgreRepository,
+	),
 )

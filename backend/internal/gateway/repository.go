@@ -16,7 +16,7 @@ type DB any // TODO: solo per test
 
 // per il commissionig // risoista  requst replay,
 
-type gatewayEntity struct{}
+// type gatewayEntity struct{}
 
 // entity =============================================================================================
 
@@ -108,25 +108,25 @@ func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 }
 
 func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayEntity, error) {
-    var entity GatewayEntity
-    err := repo.db.
-        Where("gateway_id = ?", gatewayId).
-        First(&entity). 
-        Error
-    if errors.Is(err, gorm.ErrRecordNotFound) {
-        return GatewayEntity{}, nil 
-    }
-    return entity, err
+	var entity GatewayEntity
+	err := repo.db.
+		Where("gateway_id = ?", gatewayId).
+		First(&entity).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return GatewayEntity{}, nil
+	}
+	return entity, err
 }
 
 func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]GatewayEntity, error) {
-    var entities []GatewayEntity
-    err := repo.db.Where("tenant_id = ?", tenantId).Find(&entities).Error
-    return entities, err
+	var entities []GatewayEntity
+	err := repo.db.Where("tenant_id = ?", tenantId).Find(&entities).Error
+	return entities, err
 }
 
 func (repo *gatewayPostgreRepository) GetAllGateways() ([]GatewayEntity, error) {
-    var entities []GatewayEntity
-    err := repo.db.Find(&entities).Error
-    return entities, err
+	var entities []GatewayEntity
+	err := repo.db.Find(&entities).Error
+	return entities, err
 }

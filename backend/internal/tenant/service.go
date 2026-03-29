@@ -25,7 +25,6 @@ type GetTenantByUserUseCase interface {
 	GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error)
 }
 
-
 type TenantService struct {
 	createTenantPort    CreateTenantPort
 	deleteTenantPort    DeleteTenantPort
@@ -52,7 +51,7 @@ func NewCreateTenantService(
 }
 
 func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, error) {
-	if !cmd.Requester.IsSuperAdmin() {
+	if !cmd.IsSuperAdmin() {
 		return Tenant{}, ErrUnauthorized
 	}
 
@@ -83,7 +82,7 @@ func (service *TenantService) DeleteTenant(cmd DeleteTenantCommand) (Tenant, err
 		return Tenant{}, ErrTenantNotFound
 	}
 
-	if !cmd.Requester.IsSuperAdmin() {
+	if !cmd.IsSuperAdmin() {
 		return Tenant{}, ErrUnauthorized
 	}
 
@@ -106,7 +105,7 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 		return Tenant{}, ErrTenantNotFound
 	}
 
-	if !cmd.Requester.IsSuperAdmin() && !cmd.Requester.CanTenantAdminAccess(tenant.Id) {
+	if !cmd.IsSuperAdmin() && !cmd.CanTenantAdminAccess(tenant.Id) {
 		return Tenant{}, ErrUnauthorized
 	}
 
@@ -114,7 +113,7 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 }
 
 func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, error) {
-	if !cmd.Requester.IsSuperAdmin() {
+	if !cmd.IsSuperAdmin() {
 		return nil, ErrUnauthorized
 	}
 
@@ -133,19 +132,18 @@ func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant,
 }
 
 func (service *TenantService) GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error) {
+	tenant, err := service.getTenantByUserPort.GetTenantByUser(cmd.UserId)
+	if err != nil {
+		return Tenant{}, err
+	}
 
-    tenant, err := service.getTenantByUserPort.GetTenantByUser(cmd.UserId)
-    if err != nil {
-        return Tenant{}, err
-    }
+	if tenant.IsZero() {
+		return Tenant{}, ErrTenantNotFound
+	}
 
-    if tenant.IsZero() {
-        return Tenant{}, ErrTenantNotFound
-    }
+	if !cmd.IsSuperAdmin() && !cmd.CanTenantAdminAccess(tenant.Id) {
+		return Tenant{}, ErrUnauthorized
+	}
 
-    if !cmd.Requester.IsSuperAdmin() && !cmd.Requester.CanTenantAdminAccess(tenant.Id) {
-        return Tenant{}, ErrUnauthorized
-    }
-
-    return tenant, nil
+	return tenant, nil
 }

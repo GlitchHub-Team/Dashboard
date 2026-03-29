@@ -55,6 +55,10 @@ func (s *InterruptSensorService) InterruptSensor(cmd InterruptSensorCommand) err
 		return ErrSensorNotFound
 	}
 
+	if sensor.Status != Active {
+		return ErrSensorNotActive
+	}
+
 	// Controllo che il gateway esista
 	gat, err := s.getGatewayPort.GetById(sensor.GatewayId.String())
 	if err != nil {
@@ -100,6 +104,10 @@ func (s *ResumeSensorService) ResumeSensor(cmd ResumeSensorCommand) error {
 
 	if sensor.IsZero() {
 		return ErrSensorNotFound
+	}
+
+	if sensor.Status != Inactive {
+		return ErrSensorNotInactive
 	}
 
 	// Controllo che il gateway esista

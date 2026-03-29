@@ -58,7 +58,7 @@ type CreateGatewayService struct {
 }
 
 func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
-	if !command.Requester.IsSuperAdmin() {
+	if !command.IsSuperAdmin() {
 		return Gateway{}, identity.ErrUnauthorizedAccess
 	}
 

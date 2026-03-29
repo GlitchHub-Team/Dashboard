@@ -43,13 +43,9 @@ type TenantPostgreAdapter struct {
 
 // Repository =========================================================================================
 
-
-
 // Adapter ============================================================================================
 
 //go:generate mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . CreateTenantPort,DeleteTenantPort,GetTenantPort,GetTenantsPort,GetTenantByUserPort
-
-
 
 func NewTenantPostgreAdapter(repository *TenantPostgreRepository) (
 	CreateTenantPort,
@@ -63,8 +59,6 @@ func NewTenantPostgreAdapter(repository *TenantPostgreRepository) (
 }
 
 // CREATE =============================================================================================
-
-
 
 func (adapter *TenantPostgreAdapter) CreateTenant(tenant Tenant) (Tenant, error) {
 	entity := &TenantEntity{}
