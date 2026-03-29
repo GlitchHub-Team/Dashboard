@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 
 import { SensorService } from './sensor.service';
 import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
-import { SensorAdapter } from '../../adapters/sensor.adapter';
+import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';

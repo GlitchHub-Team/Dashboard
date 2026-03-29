@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { TenantService } from './tenant.service';
-import { TenantApiAdapter } from '../../adapters/tenant-api.adapter';
+import { TenantApiAdapter } from '../../adapters/tenant/tenant-api.adapter';
 import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
 import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 import { ApiError } from '../../models/api-error.model';

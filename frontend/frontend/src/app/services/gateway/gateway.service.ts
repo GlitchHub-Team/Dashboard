@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
 
 import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { GatewayAdapter } from '../../adapters/gateway.adapter';
+import { GatewayAdapter } from '../../adapters/gateway/gateway.adapter';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { ApiError } from '../../models/api-error.model';

@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 
 import { GatewayService } from './gateway.service';
 import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { GatewayAdapter } from '../../adapters/gateway.adapter';
+import { GatewayAdapter } from '../../adapters/gateway/gateway.adapter';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';

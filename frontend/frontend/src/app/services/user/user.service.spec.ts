@@ -7,7 +7,7 @@ import { UserApiClientService } from '../user-api-client/user-api-client.service
 import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
 import { UserConfig } from '../../models/user/user-config.model';
-import { UserAdapter } from '../../adapters/user.adapter';
+import { UserAdapter } from '../../adapters/user/user.adapter';
 
 describe('UserService', () => {
   let service: UserService;

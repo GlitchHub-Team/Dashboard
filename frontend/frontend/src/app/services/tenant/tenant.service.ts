@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
 
-import { TenantApiAdapter } from '../../adapters/tenant-api.adapter';
+import { TenantApiAdapter } from '../../adapters/tenant/tenant-api.adapter';
 import { ApiError } from '../../models/api-error.model';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';

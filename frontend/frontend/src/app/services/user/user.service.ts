@@ -5,7 +5,7 @@ import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
 import { ApiError } from '../../models/api-error.model';
-import { UserAdapter } from '../../adapters/user.adapter';
+import { UserAdapter } from '../../adapters/user/user.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {

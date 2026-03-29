@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 
 import { GatewayAdapter } from './gateway.adapter';
-import { GatewayBackend } from '../models/gateway/gateway-backend.model';
-import { Gateway } from '../models/gateway/gateway.model';
-import { PaginatedGatewayResponse } from '../models/gateway/paginated-gateway-response.model';
-import { statusMapper } from '../utils/status.utils';
+import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
+import { statusMapper } from '../../utils/status.utils';
 
 @Injectable()
 export class GatewayApiAdapter extends GatewayAdapter {

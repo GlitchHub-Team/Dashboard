@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
 
 import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
-import { SensorAdapter } from '../../adapters/sensor.adapter';
+import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { ApiError } from '../../models/api-error.model';

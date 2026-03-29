@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { UserAdapter } from './user.adapter';
-import { UserBackend } from '../models/user/user-backend.model';
-import { PaginatedUserResponse } from '../models/user/paginated-user-response.model';
-import { User } from '../models/user/user.model';
-import { userRoleMapper } from '../utils/user-role.utils';
+import { UserBackend } from '../../models/user/user-backend.model';
+import { PaginatedUserResponse } from '../../models/user/paginated-user-response.model';
+import { User } from '../../models/user/user.model';
+import { userRoleMapper } from '../../utils/user-role.utils';
 
 @Injectable({ providedIn: 'root' })
 export class UserApiAdapter extends UserAdapter {

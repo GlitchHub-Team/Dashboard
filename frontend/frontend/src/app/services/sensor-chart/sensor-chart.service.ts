@@ -3,8 +3,8 @@ import { retry, Subscription, timer } from 'rxjs';
 
 import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
 import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
-import { SensorHistoricAdapter } from '../../adapters/sensor-historic.adapter';
-import { SensorLiveReadingAdapter } from '../../adapters/sensor-live-reading.adapter';
+import { SensorHistoricAdapter } from '../../adapters/sensor-historic/sensor-historic.adapter';
+import { SensorLiveReadingAdapter } from '../../adapters/sensor-live/sensor-live-reading.adapter';
 import { SensorReading } from '../../models/sensor-data/sensor-reading.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';

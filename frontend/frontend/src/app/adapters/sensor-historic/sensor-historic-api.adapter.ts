@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 
 import { SensorHistoricAdapter } from './sensor-historic.adapter';
-import { HistoricResponse } from '../models/sensor-data/historic-response.model';
-import { SensorReading } from '../models/sensor-data/sensor-reading.model';
-import { HistoricReadings } from '../models/sensor-data/historic-readings.model';
+import { HistoricResponse } from '../../models/sensor-data/historic-response.model';
+import { SensorReading } from '../../models/sensor-data/sensor-reading.model';
+import { HistoricReadings } from '../../models/sensor-data/historic-readings.model';
 
 @Injectable()
 export class SensorHistoricApiAdapter extends SensorHistoricAdapter {

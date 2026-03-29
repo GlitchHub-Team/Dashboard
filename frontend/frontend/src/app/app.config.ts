@@ -6,14 +6,14 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth/auth.interceptor';
 import { httpErrorInterceptor } from './interceptors/error/http-error.interceptor';
-import { GatewayAdapter } from './adapters/gateway.adapter';
-import { GatewayApiAdapter } from './adapters/gateway-api.adapter';
-import { SensorAdapter } from './adapters/sensor.adapter';
-import { SensorHistoricAdapter } from './adapters/sensor-historic.adapter';
-import { SensorApiAdapter } from './adapters/sensor-api.adapter';
-import { SensorLiveReadingAdapter } from './adapters/sensor-live-reading.adapter';
-import { SensorHistoricApiAdapter } from './adapters/sensor-historic-api.adapter';
-import { SensorLiveReadingApiAdapter } from './adapters/sensor-livel-reading-api.adapter';
+import { GatewayAdapter } from './adapters/gateway/gateway.adapter';
+import { GatewayApiAdapter } from './adapters/gateway/gateway-api.adapter';
+import { SensorAdapter } from './adapters/sensor/sensor.adapter';
+import { SensorHistoricAdapter } from './adapters/sensor-historic/sensor-historic.adapter';
+import { SensorApiAdapter } from './adapters/sensor/sensor-api.adapter';
+import { SensorLiveReadingAdapter } from './adapters/sensor-live/sensor-live-reading.adapter';
+import { SensorHistoricApiAdapter } from './adapters/sensor-historic/sensor-historic-api.adapter';
+import { SensorLiveReadingApiAdapter } from './adapters/sensor-live/sensor-live-reading-api.adapter';
 // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
 import { AuthApiClientService } from './services/auth-api-client/auth-api-client.service';
 import { AuthServiceMock } from './mocks/auth.service.mock';
@@ -31,8 +31,8 @@ import { SensorLiveReadingsApiService } from './services/sensor-live-api/sensor-
 import { SensorHistoricApiService } from './services/sensor-historic-api/sensor-historic-api.service';
 import { GatewayCommandApiClientMockService } from './mocks/gateway-command-api-client.mock';
 import { GatewayCommandApiClientService } from './services/gateway-command-api-client/gateway-command-api-client.service';
-import { UserAdapter } from './adapters/user.adapter';
-import { UserApiAdapter } from './adapters/user-api.adapter';
+import { UserAdapter } from './adapters/user/user.adapter';
+import { UserApiAdapter } from './adapters/user/user-api.adapter';
 
 export const appConfig: ApplicationConfig = {
   providers: [
