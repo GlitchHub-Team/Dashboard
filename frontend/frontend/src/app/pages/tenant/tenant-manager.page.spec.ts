@@ -33,6 +33,7 @@ describe('TenantManagerPage', () => {
     pageIndex: signal(0),
     limit: signal(10),
     loading: signal(false),
+    error: signal<string | null>(null), // Added
     retrieveTenants: vi.fn(),
     removeTenant: vi.fn(),
     changePage: vi.fn(),
@@ -49,6 +50,9 @@ describe('TenantManagerPage', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    // Reset signals
+    mockTenantService.error.set(null);
 
     afterClosedSubject = new Subject();
     dialogMock = {
@@ -126,11 +130,18 @@ describe('TenantManagerPage', () => {
     });
   });
 
-  it('should refetch tenants after create dialog closes', () => {
+  it('should refetch tenants after create dialog closes with true', () => {
     testApi.onCreateTenant();
     afterClosedSubject.next(true);
 
     expect(mockTenantService.retrieveTenants).toHaveBeenCalled();
+  });
+
+  it('should not refetch tenants after create dialog closes with false', () => {
+    testApi.onCreateTenant();
+    afterClosedSubject.next(false);
+
+    expect(mockTenantService.retrieveTenants).not.toHaveBeenCalled();
   });
 
   it('should open delete dialog with correct config', () => {
