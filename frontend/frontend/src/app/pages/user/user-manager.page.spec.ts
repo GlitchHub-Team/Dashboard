@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
 import { Observable, of, Subject } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +12,7 @@ import { UserManagerPage } from './user-manager.page';
 import { UserService } from '../../services/user/user.service';
 import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
+import { UserSession } from '../../models/auth/user-session.model';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 
@@ -27,10 +29,7 @@ describe('UserManagerPage', () => {
 
   let afterClosedSubject: Subject<unknown>;
   let dialogMock: { open: ReturnType<typeof vi.fn> };
-  let userSessionServiceMock: {
-    currentRole: ReturnType<typeof vi.fn>;
-    currentTenant: ReturnType<typeof vi.fn>;
-  };
+  let currentUserSignal: WritableSignal<UserSession | null>;
   let activatedRouteMock: { data: Observable<unknown>; queryParams: Observable<unknown> };
 
   const routeContext = {
@@ -39,14 +38,6 @@ describe('UserManagerPage', () => {
   };
 
   const sessionTenantId = 'session-tenant';
-
-  const userSessionMock = {
-    currentUser: signal({
-      userId: 'user-1',
-      tenantId: sessionTenantId,
-      role: UserRole.TENANT_ADMIN,
-    }),
-  };
 
   const userServiceMock = {
     userList: signal<User[]>([]),
@@ -61,6 +52,12 @@ describe('UserManagerPage', () => {
     changePage: vi.fn(),
   };
 
+  function createComponent(): void {
+    fixture = TestBed.createComponent(UserManagerPage);
+    component = fixture.componentInstance;
+    testApi = component as unknown as UserManagerPageTestApi;
+  }
+
   beforeEach(async () => {
     vi.resetAllMocks();
 
@@ -74,10 +71,11 @@ describe('UserManagerPage', () => {
       }),
     };
 
-    userSessionServiceMock = {
-      currentRole: vi.fn(),
-      currentTenant: vi.fn(),
-    };
+    currentUserSignal = signal<UserSession | null>({
+      userId: 'user-1',
+      tenantId: sessionTenantId,
+      role: UserRole.TENANT_ADMIN,
+    });
 
     activatedRouteMock = {
       data: of({ userManagerContext: routeContext }),
@@ -88,31 +86,31 @@ describe('UserManagerPage', () => {
       imports: [UserManagerPage],
       providers: [
         { provide: UserService, useValue: userServiceMock },
-        { provide: UserSessionService, useValue: userSessionMock },
-        { provide: MatDialog, useValue: dialogMock },
+        { provide: UserSessionService, useValue: { currentUser: currentUserSignal } },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
-        { provide: UserSessionService, useValue: userSessionServiceMock },
         { provide: Router, useValue: { navigate: vi.fn() } },
       ],
     })
       .overrideProvider(MatDialog, { useValue: dialogMock })
+      .overrideProvider(MatSnackBar, { useValue: { open: vi.fn() } })
       .compileComponents();
-
-    fixture = TestBed.createComponent(UserManagerPage);
-    component = fixture.componentInstance;
-    testApi = component as unknown as UserManagerPageTestApi;
   });
 
   it('should create', () => {
+    createComponent();
     expect(component).toBeTruthy();
   });
 
   describe('ngOnInit', () => {
     it('should set context for TENANT_ADMIN and retrieve their users', () => {
-      userSessionServiceMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-      userSessionServiceMock.currentTenant.mockReturnValue('tenant-from-session');
+      currentUserSignal.set({
+        userId: 'user-1',
+        tenantId: 'tenant-from-session',
+        role: UserRole.TENANT_ADMIN,
+      });
       activatedRouteMock.queryParams = of({ tenantId: 'tenant-from-url-ignored' });
 
+      createComponent();
       fixture.detectChanges();
 
       const expectedContext = { ...routeContext, tenantId: 'tenant-from-session' };
@@ -124,9 +122,10 @@ describe('UserManagerPage', () => {
     });
 
     it('should set context for SUPER_ADMIN with tenantId from URL and retrieve users', () => {
-      userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+      currentUserSignal.set({ userId: 'user-1', role: UserRole.SUPER_ADMIN });
       activatedRouteMock.queryParams = of({ tenantId: 'tenant-from-url' });
 
+      createComponent();
       fixture.detectChanges();
 
       const expectedContext = { ...routeContext, tenantId: 'tenant-from-url' };
@@ -138,9 +137,10 @@ describe('UserManagerPage', () => {
     });
 
     it('should set context for SUPER_ADMIN without tenantId and retrieve users', () => {
-      userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+      currentUserSignal.set({ userId: 'user-1', role: UserRole.SUPER_ADMIN });
       activatedRouteMock.queryParams = of({});
 
+      createComponent();
       fixture.detectChanges();
 
       const expectedContext = { ...routeContext, tenantId: undefined };
@@ -156,132 +156,148 @@ describe('UserManagerPage', () => {
         title: 'Test Tenant Users',
         role: UserRole.TENANT_USER,
       };
+      currentUserSignal.set({ userId: 'user-1', role: UserRole.TENANT_ADMIN });
       activatedRouteMock.data = of({ userManagerContext: tenantUserRouteContext });
-      userSessionServiceMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
-      userSessionServiceMock.currentTenant.mockReturnValue(null);
       activatedRouteMock.queryParams = of({});
 
+      createComponent();
       fixture.detectChanges();
 
       const expectedContext = { ...tenantUserRouteContext, tenantId: undefined };
       expect((component as any).context()).toEqual(expectedContext);
       expect(userServiceMock.retrieveUser).not.toHaveBeenCalled();
     });
-  it('should initialize context with session tenantId and retrieve users on init', () => {
-    fixture.detectChanges();
 
-    expect((component as unknown as { context: () => unknown }).context()).toEqual({
-      title: 'Test Users',
-      role: UserRole.TENANT_ADMIN,
-      tenantId: sessionTenantId,
-    });
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
-      UserRole.TENANT_ADMIN,
-      sessionTenantId,
-    );
-  });
+    it('should initialize context with session tenantId and retrieve users on init', () => {
+      createComponent();
+      fixture.detectChanges();
 
-  it('should open create dialog with correct config', () => {
-    fixture.detectChanges();
-    testApi.onCreateUser();
-
-    expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
-      width: '400px',
-      data: {
+      expect((component as any).context()).toEqual({
+        title: 'Test Users',
         role: UserRole.TENANT_ADMIN,
         tenantId: sessionTenantId,
-      },
-    });
-  });
-
-  it('should refetch users after create dialog closes with true', () => {
-    fixture.detectChanges();
-    const callsBefore = (userServiceMock.retrieveUser as ReturnType<typeof vi.fn>).mock.calls
-      .length;
-
-    testApi.onCreateUser();
-    afterClosedSubject.next(true);
-
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledTimes(callsBefore + 1);
-  });
-
-  it('should not refetch users after create dialog closes with false', () => {
-    fixture.detectChanges();
-    const callsBefore = (userServiceMock.retrieveUser as ReturnType<typeof vi.fn>).mock.calls
-      .length;
-
-    testApi.onCreateUser();
-    afterClosedSubject.next(false);
-
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledTimes(callsBefore);
-  });
-
-  it('should open delete dialog with correct config', () => {
-    const user: User = {
-      id: '1',
-      email: 'delete@user.com',
-      username: 'deleteuser',
-      role: UserRole.TENANT_ADMIN,
-      tenantId: sessionTenantId,
-    };
-
-    fixture.detectChanges();
-    testApi.onDeleteUser(user);
-
-    expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
-      width: '400px',
-      data: {
-        title: 'Elimina Utente',
-        message: `Sei sicuro di voler eliminare "${user.email}"?`,
-      },
-    });
-  });
-
-  it.each([
-    { confirmed: true, shouldDelete: true },
-    { confirmed: false, shouldDelete: false },
-  ])('should handle delete confirmation: $confirmed', ({ confirmed, shouldDelete }) => {
-    userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
-    activatedRouteMock.queryParams = of({ tenantId: 'tenant-1' });
-    fixture.detectChanges();
-    const user: User = {
-      id: '1',
-      email: 'delete@user.com',
-      username: 'deleteuser',
-      role: UserRole.TENANT_ADMIN,
-      tenantId: sessionTenantId,
-    };
-
-    userServiceMock.retrieveUser.mockClear();
-
-    testApi.onDeleteUser(user);
-    afterClosedSubject.next(confirmed);
-
-    if (shouldDelete) {
-      expect(userServiceMock.removeUser).toHaveBeenCalledWith(user);
+      });
       expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
         UserRole.TENANT_ADMIN,
         sessionTenantId,
       );
-      return;
-    }
-
-    expect(userServiceMock.removeUser).not.toHaveBeenCalled();
-    expect(userServiceMock.retrieveUser).not.toHaveBeenCalled();
+    });
   });
 
-  it('should call changePage with context tenantId', () => {
-    fixture.detectChanges();
-    const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
+  describe('onCreateUser', () => {
+    it('should open create dialog with correct config', () => {
+      createComponent();
+      fixture.detectChanges();
+      testApi.onCreateUser();
 
-    testApi.onPageChange(event);
+      expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
+        width: '400px',
+        data: {
+          role: UserRole.TENANT_ADMIN,
+          tenantId: sessionTenantId,
+        },
+      });
+    });
 
-    expect(userServiceMock.changePage).toHaveBeenCalledWith(
-      2,
-      25,
-      UserRole.TENANT_ADMIN,
-      sessionTenantId,
-    );
+    it('should refetch users after create dialog closes with true', () => {
+      createComponent();
+      fixture.detectChanges();
+      const callsBefore = (userServiceMock.retrieveUser as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+
+      testApi.onCreateUser();
+      afterClosedSubject.next(true);
+
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledTimes(callsBefore + 1);
+    });
+
+    it('should not refetch users after create dialog closes with false', () => {
+      createComponent();
+      fixture.detectChanges();
+      const callsBefore = (userServiceMock.retrieveUser as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+
+      testApi.onCreateUser();
+      afterClosedSubject.next(false);
+
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledTimes(callsBefore);
+    });
   });
-});
+
+  describe('onDeleteUser', () => {
+    it('should open delete dialog with correct config', () => {
+      const user: User = {
+        id: '1',
+        email: 'delete@user.com',
+        username: 'deleteuser',
+        role: UserRole.TENANT_ADMIN,
+        tenantId: sessionTenantId,
+      };
+
+      createComponent();
+      fixture.detectChanges();
+      testApi.onDeleteUser(user);
+
+      expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
+        width: '400px',
+        data: {
+          title: 'Elimina Utente',
+          message: `Sei sicuro di voler eliminare "${user.email}"?`,
+        },
+      });
+    });
+
+    it.each([
+      { confirmed: true, shouldDelete: true },
+      { confirmed: false, shouldDelete: false },
+    ])('should handle delete confirmation: $confirmed', ({ confirmed, shouldDelete }) => {
+      currentUserSignal.set({ userId: 'user-1', role: UserRole.SUPER_ADMIN });
+      activatedRouteMock.queryParams = of({ tenantId: 'tenant-1' });
+
+      createComponent();
+      fixture.detectChanges();
+
+      const user: User = {
+        id: '1',
+        email: 'delete@user.com',
+        username: 'deleteuser',
+        role: UserRole.TENANT_ADMIN,
+        tenantId: sessionTenantId,
+      };
+
+      userServiceMock.retrieveUser.mockClear();
+
+      testApi.onDeleteUser(user);
+      afterClosedSubject.next(confirmed);
+
+      if (shouldDelete) {
+        expect(userServiceMock.removeUser).toHaveBeenCalledWith(user);
+        expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
+          UserRole.TENANT_ADMIN,
+          'tenant-1',
+        );
+        return;
+      }
+
+      expect(userServiceMock.removeUser).not.toHaveBeenCalled();
+      expect(userServiceMock.retrieveUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onPageChange', () => {
+    it('should call changePage with context tenantId', () => {
+      createComponent();
+      fixture.detectChanges();
+      const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
+
+      testApi.onPageChange(event);
+
+      expect(userServiceMock.changePage).toHaveBeenCalledWith(
+        2,
+        25,
+        UserRole.TENANT_ADMIN,
+        sessionTenantId,
+      );
+    });
+  });
 });
