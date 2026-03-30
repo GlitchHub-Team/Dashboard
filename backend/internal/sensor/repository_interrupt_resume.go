@@ -6,10 +6,12 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func (repo *sensorPostgreRepository) UpdateSensor(sensorId string, status string) error {
-	return repo.db.Model(&SensorEntity{}).
+	db := (*gorm.DB)(repo.db)
+	return db.Model(&SensorEntity{}).
 		Where("id = ?", sensorId).
 		Update("status", status).Error
 }

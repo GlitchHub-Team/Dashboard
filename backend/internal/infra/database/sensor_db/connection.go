@@ -1,34 +1,30 @@
-package connection
+package sensordb
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	dbPackage "backend/internal/infra/database"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type CloudDBConnection *gorm.DB
+type SensorDBConnection *gorm.DB
 
 type (
-	CloudDBAddress  string
-	CloudDBPort     int
-	CloudDBUsername string
-	CloudDBPassword string
-	CloudDBName     string
+	SensorDBAddress  string
+	SensorDBPort     int
+	SensorDBUsername string
+	SensorDBPassword string
+	SensorDBName     string
 )
 
-func NewDatabaseConnection(addr CloudDBAddress, port CloudDBPort, user CloudDBUsername, pass CloudDBPassword, dbname CloudDBName) (CloudDBConnection, error) {
+func NewTimescaleDBConnection(addr SensorDBAddress, port SensorDBPort, user SensorDBUsername, pass SensorDBPassword, dbname SensorDBName) (SensorDBConnection, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		addr, port, user, pass, dbname,
 	)
-	db, err := gorm.Open(
-		postgres.Open(dsn), &gorm.Config{},
-	)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("impossibile aprire connessione Postgres: %w", err)
 	}
@@ -43,14 +39,5 @@ func NewDatabaseConnection(addr CloudDBAddress, port CloudDBPort, user CloudDBUs
 	if err := sqlDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("impossibile raggiungere Postgres: %w", err)
 	}
-
 	return db, nil
-}
-
-func WithTenantSchema(tenantId string, table dbPackage.Tabler) func(*gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Table(
-			fmt.Sprintf("\"tenant_%s\".\"%s\"", tenantId, table.TableName()),
-		)
-	}
 }

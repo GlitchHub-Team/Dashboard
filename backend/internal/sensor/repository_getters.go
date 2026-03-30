@@ -1,11 +1,14 @@
 package sensor
 
+import "gorm.io/gorm"
+
 func (repo *sensorPostgreRepository) GetSensorsByGatewayId(gatewayId string, offset int, limit int) ([]SensorEntity, uint, error) {
 	var sensorEntities []SensorEntity
 	var count int64
 	var err error
 
-	baseQuery := repo.db.
+	db := (*gorm.DB)(repo.db)
+	baseQuery := db.
 		Where("gateway_id = ?", gatewayId)
 
 	err = baseQuery.
@@ -28,7 +31,8 @@ func (repo *sensorPostgreRepository) GetSensorsByGatewayId(gatewayId string, off
 
 func (repo *sensorPostgreRepository) GetSensorById(sensorId string) (SensorEntity, error) {
 	var sensorEntity SensorEntity
-	err := repo.db.
+	db := (*gorm.DB)(repo.db)
+	err := db.
 		Where("id = ?", sensorId).
 		First(&sensorEntity).Error
 	if err != nil {
@@ -41,7 +45,8 @@ func (repo *sensorPostgreRepository) GetSensorsByTenantId(tenantId string, offse
 	var sensorEntities []SensorEntity
 	var count int64
 
-	query := repo.db.Model(&SensorEntity{}).
+	db := (*gorm.DB)(repo.db)
+	query := db.Model(&SensorEntity{}).
 		Joins("JOIN gateways ON gateways.gateway_id = sensors.gateway_id").
 		Where("gateways.tenant_id = ?", tenantId)
 

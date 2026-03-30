@@ -6,11 +6,13 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 func (repo *sensorPostgreRepository) CreateSensor(entity *SensorEntity) error {
-	err := repo.db.
+	db := (*gorm.DB)(repo.db)
+	err := db.
 		Clauses(clause.Returning{}).
 		Create(entity).
 		Error
@@ -22,7 +24,8 @@ func (repo *sensorPostgreRepository) CreateSensor(entity *SensorEntity) error {
 }
 
 func (repo *sensorPostgreRepository) DeleteSensor(entity *SensorEntity) error {
-	err := repo.db.
+	conn := (*gorm.DB)(repo.db)
+	err := conn.
 		Clauses(clause.Returning{}).
 		Delete(entity).
 		Error

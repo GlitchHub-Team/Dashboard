@@ -5,6 +5,8 @@ import (
 
 	"backend/internal/user"
 
+	clouddb "backend/internal/infra/database/cloud_db/connection"
+
 	"gorm.io/gorm"
 )
 
@@ -42,29 +44,32 @@ func (SuperAdminConfirmTokenEntity) TableName() string { return "super_admin_con
 // repository -----------------------------------------------------------------------------------------
 
 type superAdminConfirmTokenPgRepository struct {
-	db *gorm.DB
+	db clouddb.CloudDBConnection
 }
 
-func newSuperAdminConfirmTokenPgRepository(db *gorm.DB) *superAdminConfirmTokenPgRepository {
+func newSuperAdminConfirmTokenPgRepository(db clouddb.CloudDBConnection) *superAdminConfirmTokenPgRepository {
 	return &superAdminConfirmTokenPgRepository{
 		db: db,
 	}
 }
 
 func (repo *superAdminConfirmTokenPgRepository) SaveToken(entity *SuperAdminConfirmTokenEntity) (err error) {
-	err = repo.db.Save(entity).Error
+	db := (*gorm.DB)(repo.db)
+	err = db.Save(entity).Error
 	return
 }
 
 func (repo *superAdminConfirmTokenPgRepository) DeleteToken(entity *SuperAdminConfirmTokenEntity) (err error) {
-	err = repo.db.Delete(entity).Error
+	db := (*gorm.DB)(repo.db)
+	err = db.Delete(entity).Error
 	return
 }
 
 func (repo *superAdminConfirmTokenPgRepository) GetToken(tokenString string) (
 	entity *SuperAdminConfirmTokenEntity, err error,
 ) {
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Where("token = ?", tokenString).
 		First(&entity).
 		Error
@@ -74,7 +79,8 @@ func (repo *superAdminConfirmTokenPgRepository) GetToken(tokenString string) (
 func (repo *superAdminConfirmTokenPgRepository) GetTokenWithUser(tokenString string) (
 	entity *SuperAdminConfirmTokenEntity, err error,
 ) {
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Joins("User").
 		Where("token = ?", tokenString).
 		First(&entity).
@@ -117,29 +123,32 @@ func (SuperAdminPasswordTokenEntity) TableName() string { return "super_admin_fo
 
 // repository -----------------------------------------------------------------------------------------
 type superAdminPasswordTokenPgRepository struct {
-	db *gorm.DB
+	db clouddb.CloudDBConnection
 }
 
-func newSuperAdminPasswordTokenPgRepository(db *gorm.DB) *superAdminPasswordTokenPgRepository {
+func newSuperAdminPasswordTokenPgRepository(db clouddb.CloudDBConnection) *superAdminPasswordTokenPgRepository {
 	return &superAdminPasswordTokenPgRepository{
 		db: db,
 	}
 }
 
 func (repo *superAdminPasswordTokenPgRepository) SaveToken(entity *SuperAdminPasswordTokenEntity) (err error) {
-	err = repo.db.Save(entity).Error
+	db := (*gorm.DB)(repo.db)
+	err = db.Save(entity).Error
 	return
 }
 
 func (repo *superAdminPasswordTokenPgRepository) DeleteToken(entity *SuperAdminPasswordTokenEntity) (err error) {
-	err = repo.db.Delete(entity).Error
+	db := (*gorm.DB)(repo.db)
+	err = db.Delete(entity).Error
 	return
 }
 
 func (repo *superAdminPasswordTokenPgRepository) GetToken(tokenString string) (
 	entity *SuperAdminPasswordTokenEntity, err error,
 ) {
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Where("token = ?", tokenString).
 		First(&entity).
 		Error
@@ -149,7 +158,8 @@ func (repo *superAdminPasswordTokenPgRepository) GetToken(tokenString string) (
 func (repo *superAdminPasswordTokenPgRepository) GetTokenWithUser(tokenString string) (
 	entity *SuperAdminPasswordTokenEntity, err error,
 ) {
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Joins("User").
 		Where("token = ?", tokenString).
 		First(&entity).

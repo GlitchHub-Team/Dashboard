@@ -10,9 +10,9 @@ var Module = fx.Module(
 		NewTenantController,
 		NewCreateTenantService,
 		NewTenantPostgreAdapter,
+		NewTenantPostgreRepository,
 	),
 	fx.Provide(
 		fx.Private,
-		NewTenantPostgreRepository,
 	),
 )

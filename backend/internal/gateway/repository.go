@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	clouddb "backend/internal/infra/database/cloud_db/connection"
 )
 
 type DB any // TODO: solo per test
@@ -35,10 +37,10 @@ func (GatewayEntity) TableName() string { return "gateways" }
 
 type gatewayPostgreRepository struct {
 	log *zap.Logger
-	db  *gorm.DB
+	db  clouddb.CloudDBConnection
 }
 
-func NewGatewayPostgreRepository(log *zap.Logger, db *gorm.DB) *gatewayPostgreRepository {
+func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) *gatewayPostgreRepository {
 	return &gatewayPostgreRepository{
 		log: log,
 		db:  db,
@@ -80,7 +82,8 @@ func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
 	entity.fromGateway(gateway)
 
 	existing := &GatewayEntity{}
-	err := repo.db.Where("gateway_id = ? AND tenant_id IS NOT NULL", entity.GatewayId).First(existing).Error
+	db := (*gorm.DB)(repo.db)
+	err := db.Where("gateway_id = ? AND tenant_id IS NOT NULL", entity.GatewayId).First(existing).Error
 
 	if err == nil {
 		return ErrGatewayAlreadyAssigned
@@ -90,13 +93,15 @@ func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
 		return err
 	}
 
-	return repo.db.Save(entity).Error
+	return db.Save(entity).Error
 }
 
 func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 	entity := &GatewayEntity{}
 
-	return repo.db.Transaction(func(tx *gorm.DB) error {
+	db := (*gorm.DB)(repo.db)
+
+	return db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("gateway_id = ?", gateway.Id).
 			Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(entity).Error; err != nil {
@@ -109,7 +114,8 @@ func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 
 func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayEntity, error) {
 	var entity GatewayEntity
-	err := repo.db.
+	db := (*gorm.DB)(repo.db)
+	err := db.
 		Where("gateway_id = ?", gatewayId).
 		First(&entity).
 		Error
@@ -121,12 +127,14 @@ func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayE
 
 func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]GatewayEntity, error) {
 	var entities []GatewayEntity
-	err := repo.db.Where("tenant_id = ?", tenantId).Find(&entities).Error
+	db := (*gorm.DB)(repo.db)
+	err := db.Where("tenant_id = ?", tenantId).Find(&entities).Error
 	return entities, err
 }
 
 func (repo *gatewayPostgreRepository) GetAllGateways() ([]GatewayEntity, error) {
 	var entities []GatewayEntity
-	err := repo.db.Find(&entities).Error
+	db := (*gorm.DB)(repo.db)
+	err := db.Find(&entities).Error
 	return entities, err
 }

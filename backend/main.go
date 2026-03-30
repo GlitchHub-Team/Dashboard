@@ -22,6 +22,8 @@ import (
 	"backend/internal/historical_data"
 	"backend/internal/infra/crypto"
 	"backend/internal/infra/database/cloud_db"
+	sensordb "backend/internal/infra/database/sensor_db"
+	natsutils "backend/internal/infra/nats"
 	httpMiddlewares "backend/internal/infra/transport/http/middlewares"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
@@ -107,8 +109,6 @@ func NewGinEngine(
 		private.GET("/super_admins", userController.GetSuperAdmins)
 	}
 
-	log.Info("CONFIG DB URL:" + config.CloudDBUrl)
-
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			log.Info("Starting HTTP server!")
@@ -132,6 +132,8 @@ func main() {
 		cloud_db.Module, // NOTA: Questo esegue la migrazione PRIMA di eseguire NewGinEngine()
 		email.Module,
 		httpMiddlewares.Module,
+		sensordb.Module,
+		natsutils.Module,
 
 		// Moduli funzionalità
 		alert.Module,   // NOTA: Desiderabile

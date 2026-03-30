@@ -7,6 +7,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	clouddb "backend/internal/infra/database/cloud_db/connection"
 )
 
 //go:generate mockgen -destination=../../tests/user/mocks/repository_super_admin.go -package=mocks . SuperAdminRepository
@@ -39,14 +41,14 @@ type SuperAdminRepository interface {
 
 type superAdminPgRepository struct {
 	// log *zap.Logger
-	db *gorm.DB
+	db clouddb.CloudDBConnection
 }
 
 var _ SuperAdminRepository = (*superAdminPgRepository)(nil) // Compile-time check
 
 func newSuperAdminPgRepository(
 	log *zap.Logger,
-	db *gorm.DB,
+	db clouddb.CloudDBConnection,
 ) *superAdminPgRepository {
 	return &superAdminPgRepository{
 		db: db,
@@ -56,7 +58,8 @@ func newSuperAdminPgRepository(
 // Save -------------------------------------------------------------------------------------------
 
 func (repo *superAdminPgRepository) SaveSuperAdmin(superAdmin *SuperAdminEntity) error {
-	err := repo.db.Save(superAdmin).Error
+	db := (*gorm.DB)(repo.db)
+	err := db.Save(superAdmin).Error
 	return err
 }
 
@@ -66,7 +69,8 @@ func (repo *superAdminPgRepository) DeleteSuperAdmin(superAdmin *SuperAdminEntit
 	if superAdmin.ID == 0 {
 		return errors.New("cannot delete super admin with ID 0")
 	}
-	err := repo.db.
+	db := (*gorm.DB)(repo.db)
+	err := db.
 		Clauses(clause.Returning{}).
 		Delete(superAdmin).
 		Error
@@ -82,7 +86,8 @@ func (repo *superAdminPgRepository) GetSuperAdmin(by UserRepositoryGetUserBy) (*
 		return &SuperAdminEntity{}, err
 	}
 
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Where(where, params...).
 		Find(&tenantMember).
 		Error
@@ -94,7 +99,8 @@ func (repo *superAdminPgRepository) GetSuperAdmin(by UserRepositoryGetUserBy) (*
 func (repo *superAdminPgRepository) GetSuperAdmins(offset, limit int) (
 	superAdmins []SuperAdminEntity, total int64, err error,
 ) {
-	baseQuery := repo.db.
+	db := (*gorm.DB)(repo.db)
+	baseQuery := db.
 		Model(&SuperAdminEntity{}).
 		Where("role = ?", "tenant_user")
 
@@ -115,7 +121,8 @@ func (repo *superAdminPgRepository) GetSuperAdmins(offset, limit int) (
 // Conteggio ---------------------------------------------------------------------------------------------------------
 
 func (repo *superAdminPgRepository) CountSuperAdmins() (total int64, err error) {
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Model(&SuperAdminEntity{}).
 		Where("role = ?", "super_admin").
 		Count(&total).

@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"backend/internal/gateway"
+	clouddb "backend/internal/infra/database/cloud_db/connection"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 const (
@@ -40,7 +40,7 @@ type MessageBrokerRepository interface {
 
 type sensorPostgreRepository struct {
 	log *zap.Logger
-	db  *gorm.DB
+	db  clouddb.CloudDBConnection
 }
 
 type CommandResponse struct {
@@ -58,7 +58,7 @@ var (
 	_ MessageBrokerRepository = (*sensorNatsRepository)(nil)
 )
 
-func NewSensorPostgreRepository(log *zap.Logger, db *gorm.DB) *sensorPostgreRepository {
+func NewSensorPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) *sensorPostgreRepository {
 	return &sensorPostgreRepository{
 		log: log,
 		db:  db,

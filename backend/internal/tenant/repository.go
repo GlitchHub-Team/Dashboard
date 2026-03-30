@@ -1,6 +1,8 @@
 package tenant
 
 import (
+	clouddb "backend/internal/infra/database/cloud_db/connection"
+
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -13,12 +15,12 @@ type TenantEntity struct {
 
 type TenantPostgreRepository struct {
 	log *zap.Logger
-	db  *gorm.DB
+	db  clouddb.CloudDBConnection
 }
 
 func NewTenantPostgreRepository(
 	log *zap.Logger,
-	db *gorm.DB,
+	db clouddb.CloudDBConnection,
 ) *TenantPostgreRepository {
 	return &TenantPostgreRepository{
 		log: log,
@@ -28,7 +30,8 @@ func NewTenantPostgreRepository(
 
 func (repo *TenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, error) {
 	var entity *TenantEntity
-	err := repo.db.
+	db := (*gorm.DB)(repo.db)
+	err := db.
 		Where("id = ?", tenantId).
 		Find(&entity).
 		Error
@@ -37,14 +40,16 @@ func (repo *TenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, 
 
 func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
 	var users []TenantEntity
-	if err := repo.db.Find(&users).Error; err != nil {
+	db := (*gorm.DB)(repo.db)
+	if err := db.Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
 func (repo *TenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
-	return repo.db.Save(tenant).Error
+	db := (*gorm.DB)(repo.db)
+	return db.Save(tenant).Error
 }
 
 func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) (Tenant, error) {
@@ -53,7 +58,8 @@ func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) (Tenant,
 		return Tenant{}, err
 	}
 
-	err = repo.db.Delete(tenant).Error
+	db := (*gorm.DB)(repo.db)
+	err = db.Delete(tenant).Error
 	if err != nil {
 		return Tenant{}, err
 	}
@@ -63,7 +69,8 @@ func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) (Tenant,
 
 func (repo *TenantPostgreRepository) GetTenantByUser(userId string) (*TenantEntity, error) {
 	var tenant TenantEntity
-	err := repo.db.
+	db := (*gorm.DB)(repo.db)
+	err := db.
 		Where("id = ?", userId).
 		Find(&tenant).
 		Error

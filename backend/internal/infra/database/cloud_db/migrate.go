@@ -1,17 +1,16 @@
-package migrate
+package cloud_db
 
 import (
 	"fmt"
 
 	"backend/internal/sensor"
-	"backend/internal/shared/config"
 	"backend/internal/tenant"
 	"backend/internal/user"
 
+	clouddb "backend/internal/infra/database/cloud_db/connection"
+
 	"go.uber.org/zap"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	// "fmt"
 )
 
 type Migrator interface {
@@ -20,19 +19,19 @@ type Migrator interface {
 
 type PostgreMigrator struct {
 	log *zap.Logger
-	cfg *config.Config
+	db  clouddb.CloudDBConnection
 	// getTenantsPort tenant.GetTenantsPort
 	getTenantsRepo *tenant.TenantPostgreRepository
 }
 
 func NewPostgreMigrator(
 	log *zap.Logger,
-	cfg *config.Config,
+	db clouddb.CloudDBConnection,
 	getTenantsRepo *tenant.TenantPostgreRepository,
 ) Migrator {
 	return &PostgreMigrator{
 		log:            log,
-		cfg:            cfg,
+		db:             db,
 		getTenantsRepo: getTenantsRepo,
 	}
 }
@@ -52,17 +51,9 @@ func (migrator *PostgreMigrator) Migrate() error {
 
 	migrator.log.Info("[Migrator] started on cloud DB")
 
-	db, err := gorm.Open(
-		postgres.Open(migrator.cfg.CloudDBUrl),
-		&gorm.Config{},
-	)
-	if err != nil {
-		return fmt.Errorf("error open migrator connection: %v", err)
-	}
-	migrator.log.Info("[Migrator] Open connection")
-
 	// Migrate entities for public schema
-	err = db.AutoMigrate(publicEntities...)
+	db := (*gorm.DB)(migrator.db)
+	err := db.AutoMigrate(publicEntities...)
 	if err != nil {
 		return err
 	}
