@@ -11,10 +11,11 @@
       <span
         >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
       >
+      @if (currentRole === UserRole.SUPER_ADMIN) {
       <button mat-button color="primary" (click)="onBackToTenants()">
         <mat-icon>arrow_back</mat-icon>
         Torna ai Tenant
-      </button>
+      </button> }
     </div>
   }
   @if (currentRole === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_USER && !activeTenantId()) {
