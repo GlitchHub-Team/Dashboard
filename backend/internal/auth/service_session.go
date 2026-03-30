@@ -6,14 +6,14 @@ import (
 	"backend/internal/user"
 
 	"github.com/google/uuid"
-	"go.uber.org/zap"
+	// "go.uber.org/zap"
 )
 
 /*
 Service che gestisce le sessioni utente (login/logout)
 */
 type SessionService struct {
-	log         *zap.Logger
+	// log         *zap.Logger
 	hasher      crypto.SecretHasher
 	getUserPort user.GetUserPort
 }
@@ -25,17 +25,26 @@ var (
 )
 
 func NewAuthSessionService(
-	log *zap.Logger,
+	// log *zap.Logger,
 	hasher crypto.SecretHasher,
 	getUserPort user.GetUserPort,
 ) *SessionService {
 	return &SessionService{
-		log:         log,
+		// log:         log,
 		hasher:      hasher,
 		getUserPort: getUserPort,
 	}
 }
 
+/*
+Date le credenziali specificati in cmd, ritorna il relativo user.
+
+Se il ruolo specificato non è stato trovato, ritorna come errore ErrAccountNotConfirmed.
+
+Se l'account non è stato confermato, ritorna come errore ErrAccountNotConfirmed
+
+Se le credenziali specificate non sono corrette, ritorna come errore ErrWrongCredentials.
+*/
 func (service *SessionService) LoginUser(cmd LoginUserCommand) (
 	foundUser user.User, err error,
 ) {
@@ -65,7 +74,13 @@ func (service *SessionService) LoginUser(cmd LoginUserCommand) (
 	}
 
 	// Check password
-	err = service.hasher.CompareHashAndSecret(*foundUser.PasswordHash, cmd.Password)
+	hash := ""
+	if foundUser.PasswordHash == nil {
+		return user.User{}, ErrWrongCredentials
+	}
+	hash = *foundUser.PasswordHash
+
+	err = service.hasher.CompareHashAndSecret(hash, cmd.Password)
 	if err != nil {
 		return user.User{}, ErrWrongCredentials
 	}
@@ -74,5 +89,6 @@ func (service *SessionService) LoginUser(cmd LoginUserCommand) (
 }
 
 func (service *SessionService) LogoutUser(cmd LogoutUserCommand) error {
+	// NOTA: corpo tenuto vuoto in caso di implementazione di audit log
 	return nil
 }

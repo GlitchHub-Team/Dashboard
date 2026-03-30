@@ -1,5 +1,7 @@
 package crypto
 
+//go:generate mockgen -destination=../../../tests/shared/crypto/mocks/secret_hasher.go -package=mocks . SecretHasher
+
 type SecretHasher interface {
 	/* Ottieni hash di plaintext sottoforma di string*/
 	HashSecret(plaintext string) (string, error)
