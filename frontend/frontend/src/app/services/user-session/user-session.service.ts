@@ -8,8 +8,8 @@ import { userRoleMapperJWT } from '../../utils/user-role-jwt.utils';
   providedIn: 'root',
 })
 export class UserSessionService {
-  private tokenStorage = inject(TokenStorageService);
-  private _currentUser = signal<UserSession | null>(null);
+  private readonly tokenStorage = inject(TokenStorageService);
+  private readonly _currentUser = signal<UserSession | null>(null);
 
   public readonly currentUser = this._currentUser.asReadonly();
 

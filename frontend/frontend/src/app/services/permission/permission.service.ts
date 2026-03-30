@@ -8,7 +8,7 @@ import { Permission } from '../../models/permission.enum';
   providedIn: 'root',
 })
 export class PermissionService {
-  private userSession = inject(UserSessionService);
+  private readonly userSession = inject(UserSessionService);
 
   private ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     [UserRole.TENANT_USER]: [Permission.DASHBOARD_ACCESS],
@@ -25,7 +25,7 @@ export class PermissionService {
       Permission.TENANT_ADMIN_MANAGEMENT,
       Permission.SUPER_ADMIN_MANAGEMENT,
       Permission.TENANT_MANAGEMENT,
-      Permission.TENANT_USER_MANAGEMENT
+      Permission.TENANT_USER_MANAGEMENT,
     ],
   };
 

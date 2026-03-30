@@ -5,7 +5,7 @@ import { Injectable, signal } from '@angular/core';
 })
 export class TokenStorageService {
   private readonly TOKEN_KEY = 'jwt';
-  private _isValid = signal<boolean>(this.isTokenValid());
+  private readonly _isValid = signal<boolean>(this.isTokenValid());
 
   public readonly isValid = this._isValid.asReadonly();
 

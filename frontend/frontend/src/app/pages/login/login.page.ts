@@ -16,10 +16,13 @@ import { LoginRequest } from '../../models/auth/login-request.model';
   styleUrl: './login.page.css',
 })
 export class LoginPage {
-  protected readonly authSessionService = inject(AuthSessionService);
+  private readonly authSessionService = inject(AuthSessionService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly loading = this.authSessionService.loading;
+  protected readonly error = this.authSessionService.error;
 
   protected onLogin(req: LoginRequest): void {
     this.authSessionService

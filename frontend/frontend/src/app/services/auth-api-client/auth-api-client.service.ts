@@ -14,8 +14,8 @@ import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model'
   providedIn: 'root',
 })
 export class AuthApiClientService {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/auth`;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
 
   // Si aspetta di ricevere solo il token JWT
   public login(req: LoginRequest): Observable<AuthResponse> {
