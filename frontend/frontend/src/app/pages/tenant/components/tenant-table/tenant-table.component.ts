@@ -19,6 +19,7 @@ export class TenantTableComponent {
 
   public readonly deleteRequested = output<Tenant>();
   public readonly dashboardRequested = output<Tenant>();
+  public readonly tenantUserManagementRequested = output<Tenant>();
 
   private readonly columns = ['id', 'name'];
 
@@ -30,5 +31,9 @@ export class TenantTableComponent {
 
   protected onGoToDashboard(tenant: Tenant): void {
     this.dashboardRequested.emit(tenant);
+  }
+
+  protected onGoToTenantUserManagement(tenant: Tenant): void {
+    this.tenantUserManagementRequested.emit(tenant);
   }
 }

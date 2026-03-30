@@ -30,6 +30,15 @@
           >
             <mat-icon>dashboard</mat-icon>
           </button>
+          <button
+            mat-icon-button
+            (click)="onGoToTenantUserManagement(tenant); $event.stopPropagation()"
+            matTooltip="Go to Tenant User Management"
+            color="primary"
+            [disabled]="loading()"
+          >
+            <mat-icon>people</mat-icon>
+          </button>
         }
         <button
           mat-icon-button

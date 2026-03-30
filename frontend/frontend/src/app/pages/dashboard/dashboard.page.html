@@ -1,5 +1,6 @@
 <div class="dashboard-layout">
   <div class="dashboard-left">
+    <h1>Dashboard</h1>
     @if (activeTenantId()) {
       <div class="info-banner tenant-banner">
         <span
@@ -26,6 +27,7 @@
           <span>{{ error() }}</span>
         </div>
       }
+      
       <div class="table-container">
         @if (canSendCommands()) {
           <app-dashboard-gateway-table
