@@ -20,3 +20,7 @@ type Gateway struct {
 	IntervalLimit    int64
 	PublicIdentifier string
 }
+
+func (g Gateway) IsZero() bool {
+	return g.Id == uuid.Nil
+}

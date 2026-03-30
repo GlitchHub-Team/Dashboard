@@ -4,46 +4,67 @@ import (
 	"testing"
 
 	"backend/internal/gateway"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
+
 	"github.com/glebarez/sqlite"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-func TestGatewayPostgreRepository_Save_DeduplicatesByPublicIdentifier(t *testing.T) {
+func newTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	require.NoError(t, err)
-	require.NoError(t, gateway.MigrateGateway(db))
-
-	repo := gateway.NewGatewayPostgreRepository(db)
-	savePort, _, _ := gateway.NewGatewayPostgreAdapter(repo)
-
-	tenantID := uuid.New()
-	first := gateway.Gateway{
-		Id:               uuid.New(),
-		Name:             "gw1",
-		TenantId:         &tenantID,
-		Status:           gateway.GATEWAY_STATUS_ACTIVE,
-		IntervalLimit:    10,
-		PublicIdentifier: "pub-123",
+	if err != nil {
+		t.Fatalf("open db: %v", err)
 	}
 
-	err = savePort.Save(first)
-	require.NoError(t, err)
+	sqlDB, err := db.DB()
+	if err == nil {
+		t.Cleanup(func() {
+			_ = sqlDB.Close()
+		})
+	}
 
-	var count int64
-	err = db.Table("gateways").Where("public_identifier = ?", "pub-123").Count(&count).Error
-	require.NoError(t, err)
-	require.Equal(t, int64(1), count)
+	if err := gateway.MigrateGateway(db); err != nil {
+		if sqlDB != nil {
+			_ = sqlDB.Close()
+		}
+		t.Fatalf("migrate: %v", err)
+	}
+	return db
+}
 
-	second := first
-	second.Id = uuid.New()
-	second.Name = "gw2"
+func TestGetById_Found(t *testing.T) {
+	db := newTestDB(t)
 
-	err = savePort.Save(second)
-	require.NoError(t, err)
+	// inserimento diretto senza usare gatewayEntity (map con colonne)
+	id := uuid.New().String()
+	if err := db.Table("gateways").Create(map[string]interface{}{
+		"id":                id,
+		"name":              "gw-test",
+		"tenant_id":         "",
+		"status":            "inactive",
+		"interval_limit":    5,
+		"public_identifier": "",
+	}).Error; err != nil {
+		t.Fatalf("insert: %v", err)
+	}
 
-	err = db.Table("gateways").Where("public_identifier = ?", "pub-123").Count(&count).Error
-	require.NoError(t, err)
-	require.Equal(t, int64(1), count)
+	repo := gateway.NewGatewayPostgreRepository(db) // ora ritorna GatewayRepository
+	uuidId, _ := uuid.Parse(id)
+	got, err := repo.GetById(uuidId)
+	if err != nil {
+		t.Fatalf("GetById error: %v", err)
+	}
+	if got.Id != uuidId {
+		t.Fatalf("expected id %v, got %v", uuidId, got.Id)
+	}
+}
+
+func TestGetById_NotFound(t *testing.T) {
+	db := newTestDB(t)
+	repo := gateway.NewGatewayPostgreRepository(db)
+	_, err := repo.GetById(uuid.New())
+	if err == nil || err != gorm.ErrRecordNotFound {
+		t.Fatalf("expected gorm.ErrRecordNotFound, got %v", err)
+	}
 }

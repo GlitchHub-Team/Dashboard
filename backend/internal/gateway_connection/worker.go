@@ -35,12 +35,14 @@ func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 		if err := msg.Term(); err != nil {
 			w.logger.Error("failed to Term message", zap.Error(err))
 		}
+		return
 	}
 
 	if err := w.service.ProcessHello(helloMsg); err != nil {
 		if err := msg.Nak(); err != nil {
 			w.logger.Error("failed to Nak message", zap.Error(err))
 		}
+		return
 	}
 
 	if err := msg.Ack(); err != nil {
@@ -49,13 +51,22 @@ func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 }
 
 func (w *NATSWorker) ListenHelloMessages(ctx context.Context) {
-	js, _ := jetstream.New(w.nc)
+	js, err := jetstream.New(w.nc)
+	if err != nil {
+		w.logger.Error("jetstream.New failed", zap.Error(err))
+		return
+	}
 
-	cons, _ := js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
+	cons, err := js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
+	if err != nil {
+		w.logger.Error("js.Consumer failed", zap.Error(err))
+		return
+	}
 
-	_, err := cons.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
+	_, err = cons.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
 	if err != nil {
 		w.logger.Error("failed to start consume", zap.Error(err))
+		return
 	}
 
 	<-ctx.Done()

@@ -1,5 +1,7 @@
 package gateway
 
+import "github.com/google/uuid"
+
 type SaveGatewayPort interface {
 	Save(g Gateway) error
 }
@@ -9,16 +11,16 @@ type RemoveGatewayPort interface {
 }
 
 type GetGatewayPort interface {
-	GetById() error
+	GetById(id uuid.UUID) (Gateway, error)
 	GetByTenantId() error
 	GetAll() error
 }
 
 type GatewayPostgreAdapter struct {
-	repository gatewayPostgreRepository
+	repository GatewayRepository
 }
 
-func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
+func NewGatewayPostgreAdapter(repository GatewayRepository) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
 	adapter := &GatewayPostgreAdapter{
 		repository: repository,
 	}
@@ -36,8 +38,8 @@ func (adapter *GatewayPostgreAdapter) Remove(g Gateway) error {
 	return nil
 }
 
-func (a *GatewayPostgreAdapter) GetById() error {
-	return nil
+func (a *GatewayPostgreAdapter) GetById(id uuid.UUID) (Gateway, error) {
+	return a.repository.GetById(id)
 }
 
 func (a *GatewayPostgreAdapter) GetByTenantId() error {

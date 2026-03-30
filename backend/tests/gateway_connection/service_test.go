@@ -4,77 +4,141 @@ import (
 	"errors"
 	"testing"
 
+	"backend/internal/gateway"
 	"backend/internal/gateway_connection"
-	gatewayMocks "backend/tests/gateway/mocks"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
-func TestGatewayHelloService_ProcessHello(t *testing.T) {
-	cases := []struct {
-		name          string
-		input         gateway_connection.GatewayHelloMessage
-		setupMock     func(mock *gatewayMocks.MockSaveGatewayPort)
-		expectedError bool
-		expectedCall  bool
-	}{
-		{
-			name: "Success: valid message",
-			input: gateway_connection.GatewayHelloMessage{
-				GatewayId:        uuid.New().String(),
-				PublicIdentifier: "pub-123",
-			},
-			setupMock: func(mock *gatewayMocks.MockSaveGatewayPort) {
-				mock.EXPECT().Save(gomock.Any()).Return(nil).Times(1)
-			},
-			expectedError: false,
-			expectedCall:  true,
-		},
-		{
-			name: "Error: save fails",
-			input: gateway_connection.GatewayHelloMessage{
-				GatewayId:        uuid.New().String(),
-				PublicIdentifier: "pub-456",
-			},
-			setupMock: func(mock *gatewayMocks.MockSaveGatewayPort) {
-				mock.EXPECT().Save(gomock.Any()).Return(errors.New("save failed")).Times(1)
-			},
-			expectedError: true,
-			expectedCall:  true,
-		},
-		{
-			name: "Error: invalid UUID",
-			input: gateway_connection.GatewayHelloMessage{
-				GatewayId:        "invalid-uuid",
-				PublicIdentifier: "pub-789",
-			},
-			setupMock: func(mock *gatewayMocks.MockSaveGatewayPort) {
-				// No call expected
-			},
-			expectedError: true,
-			expectedCall:  false,
-		},
+// mockGetGatewayPort implementa gateway.GetGatewayPort
+type mockGetGatewayPort struct {
+	result       gateway.Gateway
+	err          error
+	calledGetBy  bool
+	calledGetAll bool
+}
+
+func (m *mockGetGatewayPort) GetById(id uuid.UUID) (gateway.Gateway, error) {
+	m.calledGetBy = true
+	return m.result, m.err
+}
+
+func (m *mockGetGatewayPort) GetByTenantId() error {
+	return nil
+}
+
+func (m *mockGetGatewayPort) GetAll() error {
+	m.calledGetAll = true
+	return nil
+}
+
+// mockSaveGatewayPort implementa gateway.SaveGatewayPort
+type mockSaveGatewayPort struct {
+	received gateway.Gateway
+	err      error
+	called   bool
+}
+
+func (m *mockSaveGatewayPort) Save(g gateway.Gateway) error {
+	m.called = true
+	m.received = g
+	return m.err
+}
+
+func TestProcessHello_InvalidUUID(t *testing.T) {
+	logger := zap.NewNop()
+	get := &mockGetGatewayPort{}
+	save := &mockSaveGatewayPort{}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: "not-a-uuid", PublicIdentifier: "p"}
+	err := svc.ProcessHello(msg)
+	if err == nil {
+		t.Fatalf("expected error for invalid uuid, got nil")
 	}
+}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockController := gomock.NewController(t)
-			defer mockController.Finish()
+func TestProcessHello_GatewayNotFound_Nak(t *testing.T) {
+	logger := zap.NewNop()
+	get := &mockGetGatewayPort{err: gorm.ErrRecordNotFound}
+	save := &mockSaveGatewayPort{}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
 
-			mockSavePort := gatewayMocks.NewMockSaveGatewayPort(mockController)
-			tc.setupMock(mockSavePort)
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
+	err := svc.ProcessHello(msg)
+	if err == nil {
+		t.Fatalf("expected error when gateway not found, got nil")
+	}
+	if !get.calledGetBy {
+		t.Fatalf("expected GetById to be called")
+	}
+	if save.called {
+		t.Fatalf("did not expect Save to be called when gateway not found")
+	}
+}
 
-			service := gateway_connection.NewGatewayHelloService(mockSavePort)
+func TestProcessHello_GetByIdError_Nak(t *testing.T) {
+	logger := zap.NewNop()
+	get := &mockGetGatewayPort{err: errors.New("db down")}
+	save := &mockSaveGatewayPort{}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
 
-			err := service.ProcessHello(tc.input)
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
+	err := svc.ProcessHello(msg)
+	if err == nil {
+		t.Fatalf("expected error when GetById fails, got nil")
+	}
+}
 
-			if tc.expectedError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-		})
+func TestProcessHello_UpdatePublicIdentifier_SaveCalled(t *testing.T) {
+	logger := zap.NewNop()
+	id := uuid.New()
+	existing := gateway.Gateway{
+		Id:               id,
+		Name:             "gw",
+		Status:           gateway.GATEWAY_STATUS_INACTIVE,
+		IntervalLimit:    1,
+		PublicIdentifier: "old",
+	}
+	get := &mockGetGatewayPort{result: existing, err: nil}
+	save := &mockSaveGatewayPort{}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	err := svc.ProcessHello(msg)
+	if err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+	if !save.called {
+		t.Fatalf("expected Save to be called")
+	}
+	if save.received.PublicIdentifier != "new-id" {
+		t.Fatalf("expected saved public identifier to be new-id, got %s", save.received.PublicIdentifier)
+	}
+	if save.received.Status != gateway.GATEWAY_STATUS_ACTIVE {
+		t.Fatalf("expected saved status active, got %v", save.received.Status)
+	}
+}
+
+func TestProcessHello_SaveError_Nak(t *testing.T) {
+	logger := zap.NewNop()
+	id := uuid.New()
+	existing := gateway.Gateway{
+		Id:               id,
+		Name:             "gw",
+		Status:           gateway.GATEWAY_STATUS_INACTIVE,
+		IntervalLimit:    1,
+		PublicIdentifier: "old",
+	}
+	get := &mockGetGatewayPort{result: existing, err: nil}
+	save := &mockSaveGatewayPort{err: errors.New("save failed")}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	err := svc.ProcessHello(msg)
+	if err == nil {
+		t.Fatalf("expected error when Save fails, got nil")
 	}
 }
