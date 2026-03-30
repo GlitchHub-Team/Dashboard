@@ -51,7 +51,6 @@ describe('UserManagerPage', () => {
     loading: signal(false),
     error: signal<string | null>(null),
     retrieveUser: vi.fn(),
-    addNewUser: vi.fn().mockReturnValue(of(void 0)),
     removeUser: vi.fn().mockReturnValue(of(void 0)),
     changePage: vi.fn(),
   };
@@ -111,57 +110,32 @@ describe('UserManagerPage', () => {
     expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
       width: '400px',
       data: {
-        user: null,
         role: UserRole.TENANT_ADMIN,
+        tenantId: sessionTenantId,
       },
     });
   });
 
-  it('should create user with dialog tenantId when provided', () => {
+  it('should refetch users after create dialog closes with true', () => {
     fixture.detectChanges();
+    const callsBefore = (userServiceMock.retrieveUser as ReturnType<typeof vi.fn>).mock.calls
+      .length;
 
     testApi.onCreateUser();
-    afterClosedSubject.next({
-      email: 'new@user.com',
-      username: 'newuser',
-      tenantId: 'custom-tenant',
-    });
+    afterClosedSubject.next(true);
 
-    expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
-      { email: 'new@user.com', username: 'newuser' },
-      UserRole.TENANT_ADMIN,
-      'custom-tenant',
-    );
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
-      UserRole.TENANT_ADMIN,
-      sessionTenantId,
-    );
+    expect(userServiceMock.retrieveUser).toHaveBeenCalledTimes(callsBefore + 1);
   });
 
-  it('should create user with context tenantId when dialog provides none', () => {
+  it('should not refetch users after create dialog closes with false', () => {
     fixture.detectChanges();
+    const callsBefore = (userServiceMock.retrieveUser as ReturnType<typeof vi.fn>).mock.calls
+      .length;
 
     testApi.onCreateUser();
-    afterClosedSubject.next({ email: 'new@user.com', username: 'newuser' });
+    afterClosedSubject.next(false);
 
-    expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
-      { email: 'new@user.com', username: 'newuser' },
-      UserRole.TENANT_ADMIN,
-      sessionTenantId,
-    );
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
-      UserRole.TENANT_ADMIN,
-      sessionTenantId,
-    );
-  });
-
-  it('should not create user when create dialog is cancelled', () => {
-    fixture.detectChanges();
-
-    testApi.onCreateUser();
-    afterClosedSubject.next(null);
-
-    expect(userServiceMock.addNewUser).not.toHaveBeenCalled();
+    expect(userServiceMock.retrieveUser).toHaveBeenCalledTimes(callsBefore);
   });
 
   it('should open delete dialog with correct config', () => {

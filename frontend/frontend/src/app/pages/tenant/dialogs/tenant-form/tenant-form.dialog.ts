@@ -31,8 +31,9 @@ export class TenantFormDialog {
   private readonly tenantService = inject(TenantService);
   private readonly dialogRef = inject(MatDialogRef<TenantFormDialog>);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly formBuilder = inject(FormBuilder);
 
-  protected readonly tenantForm = inject(FormBuilder).nonNullable.group({
+  protected readonly tenantForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required]],
     canImpersonate: [false, Validators.required],
   });

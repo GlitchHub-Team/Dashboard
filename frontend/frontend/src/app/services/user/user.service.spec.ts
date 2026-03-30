@@ -8,6 +8,7 @@ import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
 import { UserConfig } from '../../models/user/user-config.model';
 import { UserAdapter } from '../../adapters/user/user.adapter';
+import { ApiError } from '../../models/api-error.model';
 
 describe('UserService', () => {
   let service: UserService;
@@ -131,7 +132,7 @@ describe('UserService', () => {
   });
 
   describe('addNewUser', () => {
-    it('should call createUser and set loading false on success', () => {
+    it('should create a user and emit adapted user', () => {
       userApiMock.createUser.mockReturnValue(of(newUser));
       userAdapterMock.fromDTO.mockReturnValue(newUser);
 
@@ -150,38 +151,21 @@ describe('UserService', () => {
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
-
-    it('should set loading false on create error', () => {
-      const error = new Error('Error creating');
-      userApiMock.createUser.mockReturnValue(throwError(() => error));
-
-      let thrownError: unknown;
-      service.addNewUser(newUserConfig, UserRole.TENANT_ADMIN, 'tenant-1').subscribe({
-        error: (err) => {
-          thrownError = err;
-        },
-      });
-
-      expect(userApiMock.createUser).toHaveBeenCalledWith(
-        newUserConfig,
-        UserRole.TENANT_ADMIN,
-        'tenant-1',
-      );
-      expect(thrownError).toBe(error);
-      expect(service.loading()).toBe(false);
-    });
   });
 
   describe('removeUser', () => {
-    it('should call deleteUser with id, role, and tenantId and set loading false on success', () => {
-      const user: User = {
-        id: '1',
-        username: 'testuser',
-        email: 'test@test.com',
-        role: UserRole.TENANT_USER,
-        tenantId: 't1',
-      };
+    const user: User = {
+      id: '1',
+      username: 'testuser',
+      email: 'test@test.com',
+      role: UserRole.TENANT_USER,
+      tenantId: 't1',
+    };
+
+    it('should delete a user and refetch current page', () => {
       userApiMock.deleteUser.mockReturnValue(of(void 0));
+      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
+      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
       let completed = false;
       service.removeUser(user).subscribe({
@@ -191,31 +175,27 @@ describe('UserService', () => {
       });
 
       expect(userApiMock.deleteUser).toHaveBeenCalledWith('1', UserRole.TENANT_USER, 't1');
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 0, 10, 't1');
+      expect(service.userList()).toEqual(mockUsers);
       expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
       expect(completed).toBe(true);
     });
 
-    it('should set loading false on delete error', () => {
-      const error = new Error('Error deleting');
-      const user: User = {
-        id: '1',
-        username: 'testuser',
-        email: 'test@test.com',
-        role: UserRole.TENANT_USER,
-        tenantId: 't1',
-      };
+    it.each([
+      {
+        error: { status: 500, message: 'Failed to delete' } as ApiError,
+        expected: 'Failed to delete',
+      },
+      { error: { status: 500 } as ApiError, expected: 'Failed to delete user' },
+    ])('should handle delete errors', ({ error, expected }) => {
       userApiMock.deleteUser.mockReturnValue(throwError(() => error));
 
-      let thrownError: unknown;
-      service.removeUser(user).subscribe({
-        error: (err) => {
-          thrownError = err;
-        },
-      });
+      service.removeUser(user).subscribe();
 
       expect(userApiMock.deleteUser).toHaveBeenCalledWith('1', UserRole.TENANT_USER, 't1');
-      expect(thrownError).toBe(error);
       expect(service.loading()).toBe(false);
+      expect(service.error()).toBe(expected);
     });
   });
 });

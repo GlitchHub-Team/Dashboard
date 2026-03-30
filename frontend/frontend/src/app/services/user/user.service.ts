@@ -68,30 +68,26 @@ export class UserService {
   }
 
   public addNewUser(config: UserConfig, role: UserRole, tenantId?: string): Observable<User> {
-    this.setLoadingState();
-
-    return this.userApi.createUser(config, role, tenantId).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
-      tap({
-        error: (err: ApiError) => {
-          this._error.set(err.message ?? 'Failed to create user');
-        },
-      }),
-      finalize(() => this._loading.set(false)),
-    );
+    return this.userApi
+      .createUser(config, role, tenantId)
+      .pipe(map((dto) => this.adapter.fromDTO(dto)));
   }
 
   public removeUser(user: User): Observable<void> {
     this.setLoadingState();
 
     return this.userApi.deleteUser(user.id, user.role, user.tenantId).pipe(
-      tap({
-        error: (err: ApiError) => {
-          this._error.set(err.message ?? 'Failed to delete user');
-        },
+      tap(() => this.refetchCurrentPage(user.role, user.tenantId)),
+      catchError((err: ApiError) => {
+        this._error.set(err.message ?? 'Failed to delete user');
+        return EMPTY;
       }),
       finalize(() => this._loading.set(false)),
     );
+  }
+
+  private refetchCurrentPage(role: UserRole, tenantId?: string): void {
+    this.retrieveUser(role, tenantId);
   }
 
   private setGettingUsersState(): void {
