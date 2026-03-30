@@ -38,3 +38,8 @@ func (s *GetSensorByTenantIdService) GetSensorsByTenant(cmd GetSensorsByTenantCo
 
 	return sensors, total, nil
 }
+
+// Compile-time checks
+var (
+	_ GetSensorsByTenantUseCase = (*GetSensorByTenantIdService)(nil)
+)

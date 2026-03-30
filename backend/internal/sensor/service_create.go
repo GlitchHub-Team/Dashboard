@@ -63,3 +63,8 @@ func (s *CreateSensorService) CreateSensor(cmd CreateSensorCommand) (Sensor, err
 	// Salva il sensore nel database
 	return s.createSensorPort.CreateSensor(sensorId, cmd.GatewayId, cmd.Name, cmd.Interval, cmd.Profile)
 }
+
+// Compile-time checks
+var (
+	_ CreateSensorUseCase = (*CreateSensorService)(nil)
+)

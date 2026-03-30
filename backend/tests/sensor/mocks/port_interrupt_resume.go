@@ -42,17 +42,17 @@ func (m *MockSendInterruptCmdPort) EXPECT() *MockSendInterruptCmdPortMockRecorde
 }
 
 // SendInterrupt mocks base method.
-func (m *MockSendInterruptCmdPort) SendInterrupt(sensorId uuid.UUID) error {
+func (m *MockSendInterruptCmdPort) SendInterrupt(sensorId, gatewayId uuid.UUID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendInterrupt", sensorId)
+	ret := m.ctrl.Call(m, "SendInterrupt", sensorId, gatewayId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendInterrupt indicates an expected call of SendInterrupt.
-func (mr *MockSendInterruptCmdPortMockRecorder) SendInterrupt(sensorId any) *gomock.Call {
+func (mr *MockSendInterruptCmdPortMockRecorder) SendInterrupt(sensorId, gatewayId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendInterrupt", reflect.TypeOf((*MockSendInterruptCmdPort)(nil).SendInterrupt), sensorId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendInterrupt", reflect.TypeOf((*MockSendInterruptCmdPort)(nil).SendInterrupt), sensorId, gatewayId)
 }
 
 // MockSendResumeCmdPort is a mock of SendResumeCmdPort interface.
@@ -80,17 +80,17 @@ func (m *MockSendResumeCmdPort) EXPECT() *MockSendResumeCmdPortMockRecorder {
 }
 
 // SendResume mocks base method.
-func (m *MockSendResumeCmdPort) SendResume(sensorId uuid.UUID) error {
+func (m *MockSendResumeCmdPort) SendResume(sensorId, gatewayId uuid.UUID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendResume", sensorId)
+	ret := m.ctrl.Call(m, "SendResume", sensorId, gatewayId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendResume indicates an expected call of SendResume.
-func (mr *MockSendResumeCmdPortMockRecorder) SendResume(sensorId any) *gomock.Call {
+func (mr *MockSendResumeCmdPortMockRecorder) SendResume(sensorId, gatewayId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendResume", reflect.TypeOf((*MockSendResumeCmdPort)(nil).SendResume), sensorId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendResume", reflect.TypeOf((*MockSendResumeCmdPort)(nil).SendResume), sensorId, gatewayId)
 }
 
 // MockUpdatedSensorStatusPort is a mock of UpdatedSensorStatusPort interface.
@@ -117,16 +117,16 @@ func (m *MockUpdatedSensorStatusPort) EXPECT() *MockUpdatedSensorStatusPortMockR
 	return m.recorder
 }
 
-// UpdatedSensorStatus mocks base method.
-func (m *MockUpdatedSensorStatusPort) UpdatedSensorStatus(sensorId uuid.UUID, status sensor.SensorStatus) error {
+// UpdateSensorStatus mocks base method.
+func (m *MockUpdatedSensorStatusPort) UpdateSensorStatus(arg0 sensor.Sensor, status sensor.SensorStatus) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatedSensorStatus", sensorId, status)
+	ret := m.ctrl.Call(m, "UpdateSensorStatus", arg0, status)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdatedSensorStatus indicates an expected call of UpdatedSensorStatus.
-func (mr *MockUpdatedSensorStatusPortMockRecorder) UpdatedSensorStatus(sensorId, status any) *gomock.Call {
+// UpdateSensorStatus indicates an expected call of UpdateSensorStatus.
+func (mr *MockUpdatedSensorStatusPortMockRecorder) UpdateSensorStatus(arg0, status any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatedSensorStatus", reflect.TypeOf((*MockUpdatedSensorStatusPort)(nil).UpdatedSensorStatus), sensorId, status)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSensorStatus", reflect.TypeOf((*MockUpdatedSensorStatusPort)(nil).UpdateSensorStatus), arg0, status)
 }

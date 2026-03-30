@@ -53,3 +53,8 @@ func (s *DeleteSensorService) DeleteSensor(cmd DeleteSensorCommand) (Sensor, err
 	}
 	return s.deleteSensorPort.DeleteSensor(cmd.SensorId)
 }
+
+// Compile-time checks
+var (
+	_ DeleteSensorUseCase = (*DeleteSensorService)(nil)
+)

@@ -53,3 +53,8 @@ func (s *GetSensorByIdService) GetSensorById(cmd GetSensorCommand) (Sensor, erro
 
 	return sensor, nil
 }
+
+// Compile-time checks
+var (
+	_ GetSensorUseCase = (*GetSensorByIdService)(nil)
+)

@@ -45,3 +45,8 @@ func (s *GetSensorsByGatewayIdService) GetSensorsByGateway(cmd GetSensorsByGatew
 
 	return s.getSensorsByGatewayIdPort.GetSensorsByGatewayId(cmd.GatewayId, cmd.Page, cmd.Limit)
 }
+
+// Compile-time checks
+var (
+	_ GetSensorsByGatewayUseCase = (*GetSensorsByGatewayIdService)(nil)
+)

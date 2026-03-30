@@ -24,15 +24,15 @@ type ResumeSensorService struct {
 }
 
 type SendResumeCmdPort interface {
-	SendResume(sensorId uuid.UUID) error
+	SendResume(sensorId uuid.UUID, gatewayId uuid.UUID) error
 }
 
 type SendInterruptCmdPort interface {
-	SendInterrupt(sensorId uuid.UUID) error
+	SendInterrupt(sensorId uuid.UUID, gatewayId uuid.UUID) error
 }
 
 type UpdatedSensorStatusPort interface {
-	UpdatedSensorStatus(sensorId uuid.UUID, status SensorStatus) error
+	UpdateSensorStatus(sensor Sensor, status SensorStatus) error
 }
 
 func NewInterruptSensorService(sendInterruptCmdPort SendInterruptCmdPort, getSensorPort GetSensorByIdPort, getGatewayPort gateway.GetGatewayPort, updatedSensorStatusPort UpdatedSensorStatusPort) *InterruptSensorService {
@@ -77,13 +77,13 @@ func (s *InterruptSensorService) InterruptSensor(cmd InterruptSensorCommand) err
 	}
 
 	// Invia comando di interruzione sensore al gateway simulato
-	err = s.sendInterruptCmdPort.SendInterrupt(cmd.SensorId)
+	err = s.sendInterruptCmdPort.SendInterrupt(cmd.SensorId, gat.Id)
 	if err != nil {
 		return err
 	}
 
 	// Aggiorna lo stato del sensore a Inactive
-	return s.updatedSensorStatusPort.UpdatedSensorStatus(cmd.SensorId, Inactive)
+	return s.updatedSensorStatusPort.UpdateSensorStatus(sensor, Inactive)
 }
 
 func NewResumeSensorService(sendResumeCmdPort SendResumeCmdPort, getSensorPort GetSensorByIdPort, getGatewayPort gateway.GetGatewayPort, updatedSensorStatusPort UpdatedSensorStatusPort) *ResumeSensorService {
@@ -128,11 +128,17 @@ func (s *ResumeSensorService) ResumeSensor(cmd ResumeSensorCommand) error {
 	}
 
 	// Invia comando di ripresa sensore al gateway simulato
-	err = s.sendResumeCmdPort.SendResume(cmd.SensorId)
+	err = s.sendResumeCmdPort.SendResume(cmd.SensorId, gat.Id)
 	if err != nil {
 		return err
 	}
 
 	// Aggiorna lo stato del sensore a Active
-	return s.updatedSensorStatusPort.UpdatedSensorStatus(cmd.SensorId, Active)
+	return s.updatedSensorStatusPort.UpdateSensorStatus(sensor, Active)
 }
+
+// Compile-time checks
+var (
+	_ InterruptSensorUseCase = (*InterruptSensorService)(nil)
+	_ ResumeSensorUseCase    = (*ResumeSensorService)(nil)
+)

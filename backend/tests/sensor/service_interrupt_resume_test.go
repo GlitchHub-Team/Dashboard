@@ -138,55 +138,55 @@ func newStepGetGatewayNotFound(foundSensor sensor.Sensor) mockSetupFunc_Interrup
 	}
 }
 
-func newStepSendInterruptOk(sensorId uuid.UUID) mockSetupFunc_InterruptResumeService {
+func newStepSendInterruptOk(sensorId uuid.UUID, gatewayId uuid.UUID) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.sendInterruptCmdPort.EXPECT().
-			SendInterrupt(sensorId).
+			SendInterrupt(sensorId, gatewayId).
 			Return(nil).
 			Times(1)
 	}
 }
 
-func newStepSendInterruptErr(sensorId uuid.UUID, expectedErr error) mockSetupFunc_InterruptResumeService {
+func newStepSendInterruptErr(sensorId uuid.UUID, gatewayId uuid.UUID, expectedErr error) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.sendInterruptCmdPort.EXPECT().
-			SendInterrupt(sensorId).
+			SendInterrupt(sensorId, gatewayId).
 			Return(expectedErr).
 			Times(1)
 	}
 }
 
-func newStepSendResumeOk(sensorId uuid.UUID) mockSetupFunc_InterruptResumeService {
+func newStepSendResumeOk(sensorId uuid.UUID, gatewayId uuid.UUID) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.sendResumeCmdPort.EXPECT().
-			SendResume(sensorId).
+			SendResume(sensorId, gatewayId).
 			Return(nil).
 			Times(1)
 	}
 }
 
-func newStepSendResumeErr(sensorId uuid.UUID, expectedErr error) mockSetupFunc_InterruptResumeService {
+func newStepSendResumeErr(sensorId uuid.UUID, gatewayId uuid.UUID, expectedErr error) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.sendResumeCmdPort.EXPECT().
-			SendResume(sensorId).
+			SendResume(sensorId, gatewayId).
 			Return(expectedErr).
 			Times(1)
 	}
 }
 
-func newStepUpdateSensorStatusOk(sensorId uuid.UUID, status sensor.SensorStatus) mockSetupFunc_InterruptResumeService {
+func newStepUpdateSensorStatusOk(expectedSensor sensor.Sensor, status sensor.SensorStatus) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.updatedSensorStatusPort.EXPECT().
-			UpdatedSensorStatus(sensorId, status).
+			UpdateSensorStatus(expectedSensor, status).
 			Return(nil).
 			Times(1)
 	}
 }
 
-func newStepUpdateSensorStatusErr(sensorId uuid.UUID, status sensor.SensorStatus, expectedErr error) mockSetupFunc_InterruptResumeService {
+func newStepUpdateSensorStatusErr(expectedSensor sensor.Sensor, status sensor.SensorStatus, expectedErr error) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.updatedSensorStatusPort.EXPECT().
-			UpdatedSensorStatus(sensorId, status).
+			UpdateSensorStatus(expectedSensor, status).
 			Return(expectedErr).
 			Times(1)
 	}
@@ -198,17 +198,17 @@ func stepGetGatewayNeverCalled(mockBundle interruptResumeServiceMocks) *gomock.C
 }
 
 func stepSendInterruptNeverCalled(mockBundle interruptResumeServiceMocks) *gomock.Call {
-	mockBundle.sendInterruptCmdPort.EXPECT().SendInterrupt(gomock.Any()).Times(0)
+	mockBundle.sendInterruptCmdPort.EXPECT().SendInterrupt(gomock.Any(), gomock.Any()).Times(0)
 	return nil
 }
 
 func stepSendResumeNeverCalled(mockBundle interruptResumeServiceMocks) *gomock.Call {
-	mockBundle.sendResumeCmdPort.EXPECT().SendResume(gomock.Any()).Times(0)
+	mockBundle.sendResumeCmdPort.EXPECT().SendResume(gomock.Any(), gomock.Any()).Times(0)
 	return nil
 }
 
 func stepUpdateStatusNeverCalled(mockBundle interruptResumeServiceMocks) *gomock.Call {
-	mockBundle.updatedSensorStatusPort.EXPECT().UpdatedSensorStatus(gomock.Any(), gomock.Any()).Times(0)
+	mockBundle.updatedSensorStatusPort.EXPECT().UpdateSensorStatus(gomock.Any(), gomock.Any()).Times(0)
 	return nil
 }
 
@@ -409,8 +409,8 @@ func TestService_InterruptSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(superAdminInput.SensorId, activeSensor),
 				newStepGetGatewayOk(activeSensor, gatewayWithoutTenant),
-				newStepSendInterruptOk(superAdminInput.SensorId),
-				newStepUpdateSensorStatusOk(superAdminInput.SensorId, sensor.Inactive),
+				newStepSendInterruptOk(superAdminInput.SensorId, activeSensor.GatewayId),
+				newStepUpdateSensorStatusOk(activeSensor, sensor.Inactive),
 				stepSendResumeNeverCalled,
 			},
 		},
@@ -420,8 +420,8 @@ func TestService_InterruptSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(tenantAdminAuthorizedInput.SensorId, activeSensor),
 				newStepGetGatewayOk(activeSensor, gatewayBelongsToTenant),
-				newStepSendInterruptOk(tenantAdminAuthorizedInput.SensorId),
-				newStepUpdateSensorStatusOk(tenantAdminAuthorizedInput.SensorId, sensor.Inactive),
+				newStepSendInterruptOk(tenantAdminAuthorizedInput.SensorId, activeSensor.GatewayId),
+				newStepUpdateSensorStatusOk(activeSensor, sensor.Inactive),
 				stepSendResumeNeverCalled,
 			},
 		},
@@ -431,7 +431,7 @@ func TestService_InterruptSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(superAdminInput.SensorId, activeSensor),
 				newStepGetGatewayOk(activeSensor, gatewayBelongsToTenant),
-				newStepSendInterruptErr(superAdminInput.SensorId, errSendInterrupt),
+				newStepSendInterruptErr(superAdminInput.SensorId, activeSensor.GatewayId, errSendInterrupt),
 				stepSendResumeNeverCalled,
 				stepUpdateStatusNeverCalled,
 			},
@@ -443,8 +443,8 @@ func TestService_InterruptSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(superAdminInput.SensorId, activeSensor),
 				newStepGetGatewayOk(activeSensor, gatewayBelongsToTenant),
-				newStepSendInterruptOk(superAdminInput.SensorId),
-				newStepUpdateSensorStatusErr(superAdminInput.SensorId, sensor.Inactive, errUpdateStatus),
+				newStepSendInterruptOk(superAdminInput.SensorId, activeSensor.GatewayId),
+				newStepUpdateSensorStatusErr(activeSensor, sensor.Inactive, errUpdateStatus),
 				stepSendResumeNeverCalled,
 			},
 			expectedError: errUpdateStatus,
@@ -680,8 +680,8 @@ func TestService_ResumeSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(superAdminInput.SensorId, inactiveSensor),
 				newStepGetGatewayOk(inactiveSensor, gatewayWithoutTenant),
-				newStepSendResumeOk(superAdminInput.SensorId),
-				newStepUpdateSensorStatusOk(superAdminInput.SensorId, sensor.Active),
+				newStepSendResumeOk(superAdminInput.SensorId, inactiveSensor.GatewayId),
+				newStepUpdateSensorStatusOk(inactiveSensor, sensor.Active),
 				stepSendInterruptNeverCalled,
 			},
 		},
@@ -691,8 +691,8 @@ func TestService_ResumeSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(tenantAdminAuthorizedInput.SensorId, inactiveSensor),
 				newStepGetGatewayOk(inactiveSensor, gatewayBelongsToTenant),
-				newStepSendResumeOk(tenantAdminAuthorizedInput.SensorId),
-				newStepUpdateSensorStatusOk(tenantAdminAuthorizedInput.SensorId, sensor.Active),
+				newStepSendResumeOk(tenantAdminAuthorizedInput.SensorId, inactiveSensor.GatewayId),
+				newStepUpdateSensorStatusOk(inactiveSensor, sensor.Active),
 				stepSendInterruptNeverCalled,
 			},
 		},
@@ -702,7 +702,7 @@ func TestService_ResumeSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(superAdminInput.SensorId, inactiveSensor),
 				newStepGetGatewayOk(inactiveSensor, gatewayBelongsToTenant),
-				newStepSendResumeErr(superAdminInput.SensorId, errSendResume),
+				newStepSendResumeErr(superAdminInput.SensorId, inactiveSensor.GatewayId, errSendResume),
 				stepSendInterruptNeverCalled,
 				stepUpdateStatusNeverCalled,
 			},
@@ -714,8 +714,8 @@ func TestService_ResumeSensor(t *testing.T) {
 			setupSteps: []mockSetupFunc_InterruptResumeService{
 				newStepGetSensorByIdOk(superAdminInput.SensorId, inactiveSensor),
 				newStepGetGatewayOk(inactiveSensor, gatewayBelongsToTenant),
-				newStepSendResumeOk(superAdminInput.SensorId),
-				newStepUpdateSensorStatusErr(superAdminInput.SensorId, sensor.Active, errUpdateStatus),
+				newStepSendResumeOk(superAdminInput.SensorId, inactiveSensor.GatewayId),
+				newStepUpdateSensorStatusErr(inactiveSensor, sensor.Active, errUpdateStatus),
 				stepSendInterruptNeverCalled,
 			},
 			expectedError: errUpdateStatus,
