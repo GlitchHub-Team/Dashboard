@@ -55,14 +55,12 @@ export class UserApiClientMockService {
       username: 'supersuper',
       email: 'supersuper@example.com',
       user_role: 'super_admin',
-      tenant_id: 'tenant 1',
     },
     {
       user_id: 8,
-      username: 'supersuper',
-      email: 'supersuper@example.com',
+      username: 'meraviglia',
+      email: 'meraviglia@example.com',
       user_role: 'super_admin',
-      tenant_id: 'tenant 1',
     },
     {
       user_id: 9,
@@ -189,15 +187,18 @@ export class UserApiClientMockService {
     tenantId?: string,
   ): Observable<UserBackend> {
     const newId = Math.floor(Math.random() * 10000);
-    const newTenantId = tenantId || 'mock-tenant-id';
 
     const newUser: UserBackend = {
       user_id: newId,
       username: config.username || config.email.split('@')[0],
       email: config.email,
       user_role: userRoleMapper.toBackend(role),
-      tenant_id: newTenantId,
     };
+
+    if (role !== UserRole.SUPER_ADMIN) {
+      newUser.tenant_id = tenantId || 'mock-tenant-id';
+    }
+
     this.mockUsers.push(newUser);
     return of(newUser).pipe(delay(500));
   }

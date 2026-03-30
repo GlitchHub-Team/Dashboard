@@ -38,6 +38,11 @@
   background-color: #fff3e0;
 }
 
+.banner-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .table-container {
   background: white;
   border-radius: 8px;

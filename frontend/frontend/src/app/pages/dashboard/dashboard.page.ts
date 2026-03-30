@@ -78,6 +78,14 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/tenant-management']);
   }
 
+  protected onGoToTenantUsers(): void {
+    if (this.activeTenantId()) {
+      this.router.navigate(['/user-management/tenant-users'], {
+        queryParams: { tenantId: this.activeTenantId() },
+      });
+    }
+  }
+
   public ngOnDestroy(): void {
     this.dashboardService.closeChart();
   }

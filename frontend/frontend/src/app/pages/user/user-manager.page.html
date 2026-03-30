@@ -6,15 +6,23 @@
     </button>
   </div>
 
-    @if (activeTenantId()) {
+    @if (activeTenantId() && currentRole === UserRole.SUPER_ADMIN) {
     <div class="info-banner tenant-banner">
       <span
         >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
       >
-      <button mat-button color="primary" (click)="onBackToTenants()">
-        <mat-icon>arrow_back</mat-icon>
-        Torna ai Tenant
-      </button>
+        <div class="banner-actions">
+          @if(context().role === UserRole.TENANT_USER) {
+            <button mat-button color="accent" (click)="onBackToDashboard()">
+              <mat-icon>dashboard</mat-icon>
+              Vai alla Dashboard
+            </button>
+          }
+          <button mat-button color="primary" (click)="onBackToTenants()">
+            <mat-icon>arrow_back</mat-icon>
+            Torna ai Tenant
+          </button>
+        </div>
     </div>
   }
   @if (currentRole === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_USER && !activeTenantId()) {

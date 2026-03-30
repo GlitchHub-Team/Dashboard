@@ -127,6 +127,14 @@ export class UserManagerPage implements OnInit {
     this.router.navigate(['/tenant-management']);
   }
 
+  protected onBackToDashboard(): void {
+    if (this.activeTenantId()) {
+      this.router.navigate(['/dashboard'], {
+        queryParams: { tenantId: this.activeTenantId() },
+      });
+    }
+  }
+
   private refreshUsers(): void {
     const context = this.context();
     this.userService.retrieveUser(context.role, context.tenantId);
