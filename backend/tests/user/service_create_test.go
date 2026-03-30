@@ -110,7 +110,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUserByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(user.User{}, nil).
 			Times(1)
 	}
@@ -119,7 +119,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUserByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(expectedUser, nil).
 			Times(1)
 	}
@@ -128,7 +128,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUserByEmail(gomock.Any(), gomock.Any()).
+			GetUserByEmail(gomock.Any(), gomock.Any()).
 			Times(0)
 	}
 
@@ -137,7 +137,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantUserByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(user.User{}, errMockStep2).
 			Times(1)
 	}
@@ -519,7 +519,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantAdminByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(user.User{}, nil).
 			Times(1)
 	}
@@ -528,7 +528,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantAdminByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(expectedUser, nil).
 			Times(1)
 	}
@@ -537,7 +537,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantAdminByEmail(gomock.Any(), gomock.Any()).
+			GetUserByEmail(gomock.Any(), gomock.Any()).
 			Times(0)
 	}
 
@@ -546,7 +546,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetTenantAdminByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(user.User{}, errMockStep2).
 			Times(1)
 	}
@@ -918,7 +918,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetSuperAdminByEmail(targetUserEmail).
+			GetUserByEmail(nil, targetUserEmail).
 			Return(user.User{}, nil).
 			Times(1)
 	}
@@ -927,7 +927,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetSuperAdminByEmail(targetUserEmail).
+			GetUserByEmail(nil, targetUserEmail).
 			Return(expectedUser, nil).
 			Times(1)
 	}
@@ -937,7 +937,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetSuperAdminByEmail(targetUserEmail).
+			GetUserByEmail(nil, targetUserEmail).
 			Return(user.User{}, errMockStep1).
 			Times(1)
 	}
@@ -946,7 +946,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
-			GetSuperAdminByEmail(gomock.Any()).
+			GetUserByEmail(nil, gomock.Any()).
 			Times(0)
 	}
 

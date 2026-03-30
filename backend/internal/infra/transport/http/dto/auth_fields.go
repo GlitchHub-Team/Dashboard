@@ -1,7 +1,12 @@
 package dto
 
-type TokenField struct {
+/*
+Campi DTO per identificare un token: il token stesso e il potenziale tenant Id a cui appartiene (campo
+nullabile)
+*/
+type TokenFields struct {
 	Token string `uri:"token" form:"token" json:"token" binding:"required"`
+	TenantIdField_NotRequired
 }
 
 /* Campo DTO da usare per verificare password di un utente */
