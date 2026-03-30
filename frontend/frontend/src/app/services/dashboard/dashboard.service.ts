@@ -41,9 +41,13 @@ export class DashboardService {
   public loadDashboard(tenantId?: string): void {
     if (!tenantId) return;
     if (this.canSendCommands()) {
-      this.gatewayService.getGatewaysByTenant(tenantId, 0, 10);
+      this.gatewayService.getGatewaysByTenant(
+        tenantId,
+        this.gatewayPageIndex(),
+        this.gatewayLimit(),
+      );
     } else {
-      this.sensorService.getSensorsByTenant(tenantId, 0, 10);
+      this.sensorService.getSensorsByTenant(tenantId, this.sensorPageIndex(), this.sensorLimit());
     }
   }
 
