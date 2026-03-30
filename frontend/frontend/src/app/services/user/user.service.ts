@@ -52,7 +52,7 @@ export class UserService {
     this.retrieveUser(role, tenantId);
   }
 
-  public addNewUser(config: UserConfig, tenantId?: string, role?: string): Observable<User> {
+  public addNewUser(config: UserConfig, tenantId?: string, role?: UserRole): Observable<User> {
     this.setLoadingState();
 
     return this.userApi.createUser(config, tenantId, role).pipe(

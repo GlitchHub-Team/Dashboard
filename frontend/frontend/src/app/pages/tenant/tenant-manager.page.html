@@ -10,6 +10,7 @@
       [loading]="loading() || false"
       (dashboardRequested)="onGoToDashboard($event)"
       (deleteRequested)="onDeleteTenant($event)"
+      (tenantUserManagementRequested)="onGoToTenantUserManagement($event)" 
     ></app-tenant-table>
 
     <mat-paginator

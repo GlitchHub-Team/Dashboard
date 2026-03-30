@@ -72,4 +72,8 @@ export class TenantManagerPage implements OnInit {
   protected onGoToDashboard(tenant: Tenant): void {
     this.router.navigate(['/dashboard'], { queryParams: { tenantId: tenant.id } });
   }
+
+  protected onGoToTenantUserManagement(tenant: Tenant): void {
+    this.router.navigate(['/user-management/tenant-users'], { queryParams: { tenantId: tenant.id } });
+  } 
 }

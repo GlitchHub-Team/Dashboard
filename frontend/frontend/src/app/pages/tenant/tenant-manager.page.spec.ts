@@ -17,6 +17,7 @@ interface TenantManagerPageTestApi {
   onDeleteTenant: (tenant: Tenant) => void;
   onPageChange: (event: PageEvent) => void;
   onGoToDashboard: (tenant: Tenant) => void;
+  onGoToTenantUserManagement: (tenant: Tenant) => void;
 }
 
 describe('TenantManagerPage', () => {
@@ -180,6 +181,17 @@ describe('TenantManagerPage', () => {
     testApi.onGoToDashboard(tenant);
 
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard'], {
+      queryParams: { tenantId },
+    });
+  });
+
+    it.each([
+    { tenant: mockTenants[0], tenantId: 'tenant-01' },
+    { tenant: mockTenants[1], tenantId: 'tenant-02' },
+  ])('should navigate to tenant user management for $tenantId', ({ tenant, tenantId }) => {
+    testApi.onGoToTenantUserManagement(tenant);
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/user-management/tenant-users'], {
       queryParams: { tenantId },
     });
   });
