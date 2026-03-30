@@ -25,7 +25,6 @@ export class PermissionService {
       Permission.TENANT_ADMIN_MANAGEMENT,
       Permission.SUPER_ADMIN_MANAGEMENT,
       Permission.TENANT_MANAGEMENT,
-      Permission.TENANT_USER_MANAGEMENT,
     ],
   };
 

@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
-import { of, Subject } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserManagerPage } from './user-manager.page';
 import { UserService } from '../../services/user/user.service';
 import { User } from '../../models/user/user.model';
@@ -26,11 +28,15 @@ describe('UserManagerPage', () => {
 
   let afterClosedSubject: Subject<unknown>;
   let dialogMock: { open: ReturnType<typeof vi.fn> };
+  let userSessionServiceMock: {
+    currentRole: ReturnType<typeof vi.fn>;
+    currentTenant: ReturnType<typeof vi.fn>;
+  };
+  let activatedRouteMock: { data: Observable<unknown>; queryParams: Observable<unknown> };
 
   const routeContext = {
     title: 'Test Users',
     role: UserRole.TENANT_ADMIN,
-    tenantId: 'tenant-1',
   };
 
   const userServiceMock = {
@@ -41,30 +47,42 @@ describe('UserManagerPage', () => {
     loading: signal(false),
     error: signal<string | null>(null),
     retrieveUser: vi.fn(),
-    addNewUser: vi.fn().mockReturnValue(of(void 0)),
-    removeUser: vi.fn().mockReturnValue(of(void 0)),
+    addNewUser: vi.fn(),
+    removeUser: vi.fn(),
     changePage: vi.fn(),
   };
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     afterClosedSubject = new Subject();
+    userServiceMock.addNewUser.mockReturnValue(of(void 0));
+    userServiceMock.removeUser.mockReturnValue(of(void 0));
+
     dialogMock = {
       open: vi.fn().mockReturnValue({
         afterClosed: () => afterClosedSubject.asObservable(),
       }),
     };
 
+    userSessionServiceMock = {
+      currentRole: vi.fn(),
+      currentTenant: vi.fn(),
+    };
+
+    activatedRouteMock = {
+      data: of({ userManagerContext: routeContext }),
+      queryParams: of({}),
+    };
+
     await TestBed.configureTestingModule({
-      imports: [UserManagerPage],
+      imports: [UserManagerPage, NoopAnimationsModule],
       providers: [
         { provide: UserService, useValue: userServiceMock },
         { provide: MatDialog, useValue: dialogMock },
-        {
-          provide: ActivatedRoute,
-          useValue: { data: of({ userManagerContext: routeContext }) },
-        },
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: UserSessionService, useValue: userSessionServiceMock },
+        { provide: Router, useValue: { navigate: vi.fn() } },
       ],
     })
       .overrideProvider(MatDialog, { useValue: dialogMock })
@@ -79,14 +97,70 @@ describe('UserManagerPage', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize context and retrieve users on init', () => {
-    fixture.detectChanges();
+  describe('ngOnInit', () => {
+    it('should set context for TENANT_ADMIN and retrieve their users', () => {
+      userSessionServiceMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
+      userSessionServiceMock.currentTenant.mockReturnValue('tenant-from-session');
+      activatedRouteMock.queryParams = of({ tenantId: 'tenant-from-url-ignored' });
 
-    expect((component as unknown as { context: () => unknown }).context()).toEqual(routeContext);
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
+      fixture.detectChanges();
+
+      const expectedContext = { ...routeContext, tenantId: 'tenant-from-session' };
+      expect((component as any).context()).toEqual(expectedContext);
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
+        expectedContext.role,
+        expectedContext.tenantId,
+      );
+    });
+
+    it('should set context for SUPER_ADMIN with tenantId from URL and retrieve users', () => {
+      userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+      activatedRouteMock.queryParams = of({ tenantId: 'tenant-from-url' });
+
+      fixture.detectChanges();
+
+      const expectedContext = { ...routeContext, tenantId: 'tenant-from-url' };
+      expect((component as any).context()).toEqual(expectedContext);
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
+        expectedContext.role,
+        expectedContext.tenantId,
+      );
+    });
+
+    it('should set context for SUPER_ADMIN without tenantId and retrieve users', () => {
+      userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+      activatedRouteMock.queryParams = of({});
+
+      fixture.detectChanges();
+
+      const expectedContext = { ...routeContext, tenantId: undefined };
+      expect((component as any).context()).toEqual(expectedContext);
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(
+        expectedContext.role,
+        expectedContext.tenantId,
+      );
+    });
+
+    it('should not retrieve users if role is TENANT_USER and no tenantId is resolved', () => {
+      const tenantUserRouteContext = {
+        title: 'Test Tenant Users',
+        role: UserRole.TENANT_USER,
+      };
+      activatedRouteMock.data = of({ userManagerContext: tenantUserRouteContext });
+      userSessionServiceMock.currentRole.mockReturnValue(UserRole.TENANT_ADMIN);
+      userSessionServiceMock.currentTenant.mockReturnValue(null);
+      activatedRouteMock.queryParams = of({});
+
+      fixture.detectChanges();
+
+      const expectedContext = { ...tenantUserRouteContext, tenantId: undefined };
+      expect((component as any).context()).toEqual(expectedContext);
+      expect(userServiceMock.retrieveUser).not.toHaveBeenCalled();
+    });
   });
 
   it('should open create dialog with correct config', () => {
+    fixture.detectChanges();
     testApi.onCreateUser();
 
     expect(dialogMock.open).toHaveBeenCalledWith(UserFormDialogComponent, {
@@ -99,7 +173,10 @@ describe('UserManagerPage', () => {
   });
 
   it('should create and refetch users when create dialog returns data', () => {
+    userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+    activatedRouteMock.queryParams = of({ tenantId: 'tenant-1' });
     fixture.detectChanges();
+    userServiceMock.retrieveUser.mockClear();
 
     testApi.onCreateUser();
     afterClosedSubject.next({ email: 'new@user.com', username: 'newuser', tenantId: 'tenant-01' });
@@ -107,13 +184,16 @@ describe('UserManagerPage', () => {
     expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
       { email: 'new@user.com', username: 'newuser' },
       'tenant-01',
-      UserRole.TENANT_ADMIN,
+      routeContext.role,
     );
-    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
+    expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(routeContext.role, 'tenant-1');
   });
 
   it('should not create user when create dialog is cancelled', () => {
+    userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+    activatedRouteMock.queryParams = of({ tenantId: 'tenant-1' });
     fixture.detectChanges();
+    userServiceMock.addNewUser.mockClear();
 
     testApi.onCreateUser();
     afterClosedSubject.next(null);
@@ -130,6 +210,7 @@ describe('UserManagerPage', () => {
       tenantId: 'tenant-1',
     };
 
+    fixture.detectChanges();
     testApi.onDeleteUser(user);
 
     expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
@@ -145,6 +226,8 @@ describe('UserManagerPage', () => {
     { confirmed: true, shouldDelete: true },
     { confirmed: false, shouldDelete: false },
   ])('should handle delete confirmation: $confirmed', ({ confirmed, shouldDelete }) => {
+    userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+    activatedRouteMock.queryParams = of({ tenantId: 'tenant-1' });
     fixture.detectChanges();
     const user: User = {
       id: '1',
@@ -154,19 +237,24 @@ describe('UserManagerPage', () => {
       tenantId: 'tenant-1',
     };
 
+    userServiceMock.retrieveUser.mockClear();
+
     testApi.onDeleteUser(user);
     afterClosedSubject.next(confirmed);
 
     if (shouldDelete) {
       expect(userServiceMock.removeUser).toHaveBeenCalledWith(user);
-      expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
+      expect(userServiceMock.retrieveUser).toHaveBeenCalledWith(routeContext.role, 'tenant-1');
       return;
     }
 
     expect(userServiceMock.removeUser).not.toHaveBeenCalled();
+    expect(userServiceMock.retrieveUser).not.toHaveBeenCalled();
   });
 
   it('should call changePage with route context', () => {
+    userSessionServiceMock.currentRole.mockReturnValue(UserRole.SUPER_ADMIN);
+    activatedRouteMock.queryParams = of({ tenantId: 'tenant-1' });
     fixture.detectChanges();
     const event: PageEvent = { pageIndex: 2, pageSize: 25, length: 100 };
 
@@ -175,7 +263,7 @@ describe('UserManagerPage', () => {
     expect(userServiceMock.changePage).toHaveBeenCalledWith(
       2,
       25,
-      UserRole.TENANT_ADMIN,
+      routeContext.role,
       'tenant-1',
     );
   });

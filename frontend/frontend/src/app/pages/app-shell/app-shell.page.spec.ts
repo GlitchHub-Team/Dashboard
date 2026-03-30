@@ -220,7 +220,7 @@ describe('AppShellPage (Unit)', () => {
 
       const items = component['navItems']();
       expect(items).toHaveLength(2);
-      expect(items.map((i) => i.label)).toEqual(['Gestione Tenant User', 'Dashboard']);
+      expect(items.map((i) => i.label)).toEqual(['Dashboard', 'Gestione Tenant User',]);
     });
   });
 
