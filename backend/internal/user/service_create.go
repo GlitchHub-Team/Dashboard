@@ -28,7 +28,7 @@ type CreateUserService struct {
 	getUserPort             GetUserPort
 	getTenantPort           tenant.GetTenantPort // TODO: definire interfaccia localmente
 	confirmAccountTokenPort GenerateTokenPort
-	sendEmailPort           SendConfirmAccountEmailPort // TODO: definire interfaccia localmente
+	sendEmailPort           SendConfirmAccountEmailPort
 }
 
 func NewCreateUserService(

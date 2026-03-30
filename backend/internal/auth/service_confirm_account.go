@@ -10,8 +10,6 @@ import (
 
 //go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ConfirmAccountTokenPort
 
-// TODO: Non sono sicuro che i metodi NewConfirmAccountToken e GetConfirmAccountTokenByUserId
-// debbano prendere tenantId in input
 type ConfirmAccountTokenPort interface {
 	NewConfirmAccountToken(user user.User) (string, error)
 	DeleteConfirmAccountToken(token ConfirmAccountToken) error

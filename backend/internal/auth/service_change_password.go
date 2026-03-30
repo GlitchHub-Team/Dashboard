@@ -168,13 +168,13 @@ func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPas
 	}
 
 	// 2. Controlla token con plaintext ricevuto
-	err = service.hasher.CompareHashAndSecret(tokenObj.hashedToken, cmd.Token)
+	err = service.hasher.CompareHashAndSecret(tokenObj.HashedToken, cmd.Token)
 	if err != nil {
 		return err
 	}
 
 	// 3. Get user
-	userFound, err := service.getUserPort.GetUser(tokenObj.tenantId, tokenObj.userId)
+	userFound, err := service.getUserPort.GetUser(tokenObj.TenantId, tokenObj.UserId)
 	if err != nil {
 		return err
 	}

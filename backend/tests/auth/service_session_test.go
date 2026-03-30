@@ -18,12 +18,10 @@ import (
 func TestLoginUser(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
-	// otherTenantId := uuid.New()
 	targetUserId := uint(100)
 	targetUserEmail := "test@example.com"
 	targetUserName := "Test"
 	targetConfirmed := true
-	// targetRole := identity.ROLE_TENANT_USER
 
 	expectedHash := "hash"
 
@@ -56,14 +54,6 @@ func TestLoginUser(t *testing.T) {
 		TenantId:  &targetTenantId,
 		Confirmed: targetConfirmed,
 	}
-
-	// expectedRolelessUser := user.User{
-	// 	Id:        targetUserId,
-	// 	Name:      targetUserName,
-	// 	Email:     targetUserEmail,
-	// 	TenantId:  &targetTenantId,
-	// 	Confirmed: targetConfirmed,
-	// }
 
 	expectedUnconfirmedUser := user.User{
 		Id:        targetUserId,

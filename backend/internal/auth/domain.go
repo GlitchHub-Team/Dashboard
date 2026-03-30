@@ -10,24 +10,24 @@ import (
 
 type ForgotPasswordToken struct {
 	// id          int
-	hashedToken string
-	tenantId    *uuid.UUID
-	userId      uint
-	expiryDate  time.Time
+	HashedToken string
+	TenantId    *uuid.UUID
+	UserId      uint
+	ExpiryDate  time.Time
 }
 
 func (token *ForgotPasswordToken) IsExpired() bool {
-	return token.expiryDate.Before(time.Now())
+	return token.ExpiryDate.Before(time.Now())
 }
 
 type ConfirmAccountToken struct {
 	// id          int
-	hashedToken string
-	tenantId    *uuid.UUID
-	userId      uint
-	expiryDate  time.Time
+	HashedToken string
+	TenantId    *uuid.UUID
+	UserId      uint
+	ExpiryDate  time.Time
 }
 
 func (token *ConfirmAccountToken) IsExpired() bool {
-	return token.expiryDate.Before(time.Now())
+	return token.ExpiryDate.Before(time.Now())
 }
