@@ -1,0 +1,158 @@
+package auth
+
+import (
+	"time"
+
+	"backend/internal/user"
+
+	"gorm.io/gorm"
+)
+
+/*
+Entity per token di conferma account all'interno per un super admin
+*/
+type SuperAdminConfirmTokenEntity struct {
+	Token string `gorm:"primaryKey;index:,type:hash"`
+
+	UserId     uint                  `gorm:"not null"`
+	SuperAdmin user.SuperAdminEntity `gorm:"foreignKey:UserId;not null"`
+
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+func ConfirmAccountTokenToSuperAdminEntity(tokenObj ConfirmAccountToken) *SuperAdminConfirmTokenEntity {
+	return &SuperAdminConfirmTokenEntity{
+		Token:     tokenObj.hashedToken,
+		UserId:    tokenObj.userId,
+		ExpiresAt: tokenObj.expiryDate,
+	}
+}
+
+func SuperAdminConfirmTokenEntityToConfirmAccountToken(entity *SuperAdminConfirmTokenEntity) ConfirmAccountToken {
+	return ConfirmAccountToken{
+		hashedToken: entity.Token,
+		userId:      entity.UserId,
+		expiryDate:  entity.ExpiresAt,
+	}
+}
+
+func (SuperAdminConfirmTokenEntity) TableName() string { return "super_admin_confirm_tokens" }
+
+// repository -----------------------------------------------------------------------------------------
+
+type superAdminConfirmTokenPgRepository struct {
+	db *gorm.DB
+}
+
+func newSuperAdminConfirmTokenPgRepository(db *gorm.DB) *superAdminConfirmTokenPgRepository {
+	return &superAdminConfirmTokenPgRepository{
+		db: db,
+	}
+}
+
+func (repo *superAdminConfirmTokenPgRepository) SaveToken(entity *SuperAdminConfirmTokenEntity) (err error) {
+	err = repo.db.Save(entity).Error
+	return
+}
+
+func (repo *superAdminConfirmTokenPgRepository) DeleteToken(entity *SuperAdminConfirmTokenEntity) (err error) {
+	err = repo.db.Delete(entity).Error
+	return
+}
+
+func (repo *superAdminConfirmTokenPgRepository) GetToken(tokenString string) (
+	entity *SuperAdminConfirmTokenEntity, err error,
+) {
+	err = repo.db.
+		Where("token = ?", tokenString).
+		First(&entity).
+		Error
+	return
+}
+
+func (repo *superAdminConfirmTokenPgRepository) GetTokenWithUser(tokenString string) (
+	entity *SuperAdminConfirmTokenEntity, err error,
+) {
+	err = repo.db.
+		Joins("User").
+		Where("token = ?", tokenString).
+		First(&entity).
+		Error
+	return
+}
+
+// Forgot Password ====================================================================================
+
+/*
+Entity per i token di cambio password dimenticata per un super admin
+*/
+type SuperAdminPasswordTokenEntity struct {
+	Token string `gorm:"primaryKey;index:,type:hash"`
+
+	UserId     uint                  `gorm:"not null"`
+	SuperAdmin user.SuperAdminEntity `gorm:"foreignKey:UserId;not null"`
+
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+func ForgotPasswordTokenToSuperAdminEntity(tokenObj ForgotPasswordToken) *SuperAdminPasswordTokenEntity {
+	return &SuperAdminPasswordTokenEntity{
+		Token:     tokenObj.hashedToken,
+		UserId:    tokenObj.userId,
+		ExpiresAt: tokenObj.expiryDate,
+	}
+}
+
+func SuperAdminPasswordTokenEntityToForgotPasswordToken(entity *SuperAdminPasswordTokenEntity) ForgotPasswordToken {
+	return ForgotPasswordToken{
+		hashedToken: entity.Token,
+		userId:      entity.UserId,
+		expiryDate:  entity.ExpiresAt,
+	}
+}
+
+func (SuperAdminPasswordTokenEntity) TableName() string { return "super_admin_forgot_password_tokens" }
+
+// repository -----------------------------------------------------------------------------------------
+type superAdminPasswordTokenPgRepository struct {
+	db *gorm.DB
+}
+
+func newSuperAdminPasswordTokenPgRepository(db *gorm.DB) *superAdminPasswordTokenPgRepository {
+	return &superAdminPasswordTokenPgRepository{
+		db: db,
+	}
+}
+
+func (repo *superAdminPasswordTokenPgRepository) SaveToken(entity *SuperAdminPasswordTokenEntity) (err error) {
+	err = repo.db.Save(entity).Error
+	return
+}
+
+func (repo *superAdminPasswordTokenPgRepository) DeleteToken(entity *SuperAdminPasswordTokenEntity) (err error) {
+	err = repo.db.Delete(entity).Error
+	return
+}
+
+func (repo *superAdminPasswordTokenPgRepository) GetToken(tokenString string) (
+	entity *SuperAdminPasswordTokenEntity, err error,
+) {
+	err = repo.db.
+		Where("token = ?", tokenString).
+		First(&entity).
+		Error
+	return
+}
+
+func (repo *superAdminPasswordTokenPgRepository) GetTokenWithUser(tokenString string) (
+	entity *SuperAdminPasswordTokenEntity, err error,
+) {
+	err = repo.db.
+		Joins("User").
+		Where("token = ?", tokenString).
+		First(&entity).
+		Error
+	return
+}

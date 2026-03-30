@@ -63,8 +63,6 @@ type GetSuperAdminCommand struct {
 
 // Get multiple ---------------------------------------------------------------------------------------
 
-// TODO: possibile miglioramento: validazione nel command
-
 type GetTenantUsersByTenantCommand struct {
 	identity.Requester
 	Page     int

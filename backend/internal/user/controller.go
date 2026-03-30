@@ -366,6 +366,9 @@ func (controller *Controller) DeleteTenantAdmin(ctx *gin.Context) {
 		} else if errors.Is(err, ErrUserNotFound) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
+		} else if errors.Is(err, ErrCannotDeleteLastAdmin) {
+			transportHttp.RequestError(ctx, err)
+			return
 		}
 		transportHttp.RequestServerError(ctx, err)
 		return
@@ -403,6 +406,9 @@ func (controller *Controller) DeleteSuperAdmin(ctx *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
 			transportHttp.RequestNotFound(ctx, ErrUserNotFound)
+			return
+		} else if errors.Is(err, ErrCannotDeleteLastAdmin) {
+			transportHttp.RequestError(ctx, err)
 			return
 		}
 		transportHttp.RequestServerError(ctx, err)
@@ -580,9 +586,6 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 	}
 
 	users, total, err := controller.getTenantUsersByTenantUseCase.GetTenantUsersByTenant(cmd)
-	if users == nil {
-		users = make([]User, 0)
-	}
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
 			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)

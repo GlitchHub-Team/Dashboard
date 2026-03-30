@@ -10,9 +10,8 @@
 package mocks
 
 import (
-	reflect "reflect"
-
 	user "backend/internal/user"
+	reflect "reflect"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -150,34 +149,34 @@ func (m *MockGetUserPort) EXPECT() *MockGetUserPortMockRecorder {
 	return m.recorder
 }
 
-// GetSuperAdmin mocks base method.
-func (m *MockGetUserPort) GetSuperAdmin(userId uint) (user.User, error) {
+// CountSuperAdmins mocks base method.
+func (m *MockGetUserPort) CountSuperAdmins() (uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSuperAdmin", userId)
-	ret0, _ := ret[0].(user.User)
+	ret := m.ctrl.Call(m, "CountSuperAdmins")
+	ret0, _ := ret[0].(uint)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSuperAdmin indicates an expected call of GetSuperAdmin.
-func (mr *MockGetUserPortMockRecorder) GetSuperAdmin(userId any) *gomock.Call {
+// CountSuperAdmins indicates an expected call of CountSuperAdmins.
+func (mr *MockGetUserPortMockRecorder) CountSuperAdmins() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSuperAdmin", reflect.TypeOf((*MockGetUserPort)(nil).GetSuperAdmin), userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountSuperAdmins", reflect.TypeOf((*MockGetUserPort)(nil).CountSuperAdmins))
 }
 
-// GetSuperAdminByEmail mocks base method.
-func (m *MockGetUserPort) GetSuperAdminByEmail(email string) (user.User, error) {
+// CountTenantAdminsByTenant mocks base method.
+func (m *MockGetUserPort) CountTenantAdminsByTenant(tenantId uuid.UUID) (uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSuperAdminByEmail", email)
-	ret0, _ := ret[0].(user.User)
+	ret := m.ctrl.Call(m, "CountTenantAdminsByTenant", tenantId)
+	ret0, _ := ret[0].(uint)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSuperAdminByEmail indicates an expected call of GetSuperAdminByEmail.
-func (mr *MockGetUserPortMockRecorder) GetSuperAdminByEmail(email any) *gomock.Call {
+// CountTenantAdminsByTenant indicates an expected call of CountTenantAdminsByTenant.
+func (mr *MockGetUserPortMockRecorder) CountTenantAdminsByTenant(tenantId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSuperAdminByEmail", reflect.TypeOf((*MockGetUserPort)(nil).GetSuperAdminByEmail), email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountTenantAdminsByTenant", reflect.TypeOf((*MockGetUserPort)(nil).CountTenantAdminsByTenant), tenantId)
 }
 
 // GetSuperAdminList mocks base method.
@@ -196,36 +195,6 @@ func (mr *MockGetUserPortMockRecorder) GetSuperAdminList(page, limit any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSuperAdminList", reflect.TypeOf((*MockGetUserPort)(nil).GetSuperAdminList), page, limit)
 }
 
-// GetTenantAdmin mocks base method.
-func (m *MockGetUserPort) GetTenantAdmin(tenantId uuid.UUID, userId uint) (user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTenantAdmin", tenantId, userId)
-	ret0, _ := ret[0].(user.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTenantAdmin indicates an expected call of GetTenantAdmin.
-func (mr *MockGetUserPortMockRecorder) GetTenantAdmin(tenantId, userId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantAdmin", reflect.TypeOf((*MockGetUserPort)(nil).GetTenantAdmin), tenantId, userId)
-}
-
-// GetTenantAdminByEmail mocks base method.
-func (m *MockGetUserPort) GetTenantAdminByEmail(tenantId uuid.UUID, email string) (user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTenantAdminByEmail", tenantId, email)
-	ret0, _ := ret[0].(user.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTenantAdminByEmail indicates an expected call of GetTenantAdminByEmail.
-func (mr *MockGetUserPortMockRecorder) GetTenantAdminByEmail(tenantId, email any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantAdminByEmail", reflect.TypeOf((*MockGetUserPort)(nil).GetTenantAdminByEmail), tenantId, email)
-}
-
 // GetTenantAdminsByTenant mocks base method.
 func (m *MockGetUserPort) GetTenantAdminsByTenant(tenantId uuid.UUID, page, limit int) ([]user.User, uint, error) {
 	m.ctrl.T.Helper()
@@ -240,36 +209,6 @@ func (m *MockGetUserPort) GetTenantAdminsByTenant(tenantId uuid.UUID, page, limi
 func (mr *MockGetUserPortMockRecorder) GetTenantAdminsByTenant(tenantId, page, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantAdminsByTenant", reflect.TypeOf((*MockGetUserPort)(nil).GetTenantAdminsByTenant), tenantId, page, limit)
-}
-
-// GetTenantUser mocks base method.
-func (m *MockGetUserPort) GetTenantUser(tenantId uuid.UUID, userId uint) (user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTenantUser", tenantId, userId)
-	ret0, _ := ret[0].(user.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTenantUser indicates an expected call of GetTenantUser.
-func (mr *MockGetUserPortMockRecorder) GetTenantUser(tenantId, userId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantUser", reflect.TypeOf((*MockGetUserPort)(nil).GetTenantUser), tenantId, userId)
-}
-
-// GetTenantUserByEmail mocks base method.
-func (m *MockGetUserPort) GetTenantUserByEmail(tenantId uuid.UUID, email string) (user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTenantUserByEmail", tenantId, email)
-	ret0, _ := ret[0].(user.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTenantUserByEmail indicates an expected call of GetTenantUserByEmail.
-func (mr *MockGetUserPortMockRecorder) GetTenantUserByEmail(tenantId, email any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantUserByEmail", reflect.TypeOf((*MockGetUserPort)(nil).GetTenantUserByEmail), tenantId, email)
 }
 
 // GetTenantUsersByTenant mocks base method.

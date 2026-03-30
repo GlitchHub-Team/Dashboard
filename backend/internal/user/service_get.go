@@ -5,6 +5,11 @@ import (
 	"backend/internal/tenant"
 )
 
+/*
+Servizio usato per ottenere informazioni su uno o più utenti.
+
+Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
+*/
 type GetUserService struct {
 	getUserPort   GetUserPort
 	getTenantPort tenant.GetTenantPort
@@ -14,6 +19,7 @@ func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPo
 	GetTenantUserUseCase,
 	GetTenantAdminUseCase,
 	GetSuperAdminUseCase,
+
 	GetTenantUsersByTenantUseCase,
 	GetTenantAdminsByTenantUseCase,
 	GetSuperAdminListUseCase,
@@ -49,7 +55,7 @@ func (service *GetUserService) GetTenantUser(cmd GetTenantUserCommand) (User, er
 	}
 
 	// 2) Get tenant user
-	user, err := service.getUserPort.GetTenantUser(cmd.TenantId, cmd.UserId)
+	user, err := service.getUserPort.GetUser(&cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
 	}
@@ -80,7 +86,7 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 	// 2) Get tenant admin
-	user, err := service.getUserPort.GetTenantAdmin(cmd.TenantId, cmd.UserId)
+	user, err := service.getUserPort.GetUser(&cmd.TenantId, cmd.UserId)
 	if err != nil {
 		return User{}, err
 	}
@@ -97,8 +103,8 @@ func (service *GetUserService) GetSuperAdmin(cmd GetSuperAdminCommand) (User, er
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 
-	// 1) Get super admin
-	user, err := service.getUserPort.GetSuperAdmin(cmd.UserId)
+	// Get super admin
+	user, err := service.getUserPort.GetUser(nil, cmd.UserId)
 	if err != nil {
 		return User{}, err
 	}

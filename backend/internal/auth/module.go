@@ -41,14 +41,18 @@ var Module = fx.Module(
 		),
 		fx.Annotate(
 			NewChangePasswordTokenPostgreAdapter,
-			fx.As(new(ChangePasswordTokenPort)),
+			fx.As(new(ForgotPasswordTokenPort)),
 		),
 	),
 
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		newPasswordTokenPostgreRepository,
-		newConfirmTokenPostgreRepository,
+
+		newTenantPasswordTokenPgRepository,
+		newSuperAdminPasswordTokenPgRepository,
+
+		newTenantConfirmTokenPgRepository,
+		newSuperAdminConfirmTokenPgRepository,
 	),
 )

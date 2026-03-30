@@ -12,7 +12,3 @@ type TenantMemberUriDTO struct {
 type SuperAdminUriDTO struct {
 	UserIdField
 }
-
-type TokenUriDTO struct {
-	TokenField
-}

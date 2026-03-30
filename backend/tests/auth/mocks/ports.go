@@ -10,11 +10,11 @@
 package mocks
 
 import (
-	reflect "reflect"
-
 	auth "backend/internal/auth"
 	user "backend/internal/user"
+	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,34 +56,64 @@ func (mr *MockConfirmAccountTokenPortMockRecorder) DeleteConfirmAccountToken(tok
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).DeleteConfirmAccountToken), token)
 }
 
-// GetConfirmAccountToken mocks base method.
-func (m *MockConfirmAccountTokenPort) GetConfirmAccountToken(tokenString string) (auth.ConfirmAccountToken, error) {
+// GetSuperAdminByConfirmAccountToken mocks base method.
+func (m *MockConfirmAccountTokenPort) GetSuperAdminByConfirmAccountToken(tokenString string) (user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfirmAccountToken", tokenString)
-	ret0, _ := ret[0].(auth.ConfirmAccountToken)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetConfirmAccountToken indicates an expected call of GetConfirmAccountToken.
-func (mr *MockConfirmAccountTokenPortMockRecorder) GetConfirmAccountToken(tokenString any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).GetConfirmAccountToken), tokenString)
-}
-
-// GetUserByConfirmAccountToken mocks base method.
-func (m *MockConfirmAccountTokenPort) GetUserByConfirmAccountToken(tokenString string) (user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByConfirmAccountToken", tokenString)
+	ret := m.ctrl.Call(m, "GetSuperAdminByConfirmAccountToken", tokenString)
 	ret0, _ := ret[0].(user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserByConfirmAccountToken indicates an expected call of GetUserByConfirmAccountToken.
-func (mr *MockConfirmAccountTokenPortMockRecorder) GetUserByConfirmAccountToken(tokenString any) *gomock.Call {
+// GetSuperAdminByConfirmAccountToken indicates an expected call of GetSuperAdminByConfirmAccountToken.
+func (mr *MockConfirmAccountTokenPortMockRecorder) GetSuperAdminByConfirmAccountToken(tokenString any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).GetUserByConfirmAccountToken), tokenString)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSuperAdminByConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).GetSuperAdminByConfirmAccountToken), tokenString)
+}
+
+// GetSuperAdminConfirmAccountToken mocks base method.
+func (m *MockConfirmAccountTokenPort) GetSuperAdminConfirmAccountToken(tokenString string) (auth.ConfirmAccountToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSuperAdminConfirmAccountToken", tokenString)
+	ret0, _ := ret[0].(auth.ConfirmAccountToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSuperAdminConfirmAccountToken indicates an expected call of GetSuperAdminConfirmAccountToken.
+func (mr *MockConfirmAccountTokenPortMockRecorder) GetSuperAdminConfirmAccountToken(tokenString any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSuperAdminConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).GetSuperAdminConfirmAccountToken), tokenString)
+}
+
+// GetTenantConfirmAccountToken mocks base method.
+func (m *MockConfirmAccountTokenPort) GetTenantConfirmAccountToken(tenantId, tokenString string) (auth.ConfirmAccountToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTenantConfirmAccountToken", tenantId, tokenString)
+	ret0, _ := ret[0].(auth.ConfirmAccountToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTenantConfirmAccountToken indicates an expected call of GetTenantConfirmAccountToken.
+func (mr *MockConfirmAccountTokenPortMockRecorder) GetTenantConfirmAccountToken(tenantId, tokenString any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).GetTenantConfirmAccountToken), tenantId, tokenString)
+}
+
+// GetTenantMemberByConfirmAccountToken mocks base method.
+func (m *MockConfirmAccountTokenPort) GetTenantMemberByConfirmAccountToken(tenantId uuid.UUID, tokenString string) (user.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTenantMemberByConfirmAccountToken", tenantId, tokenString)
+	ret0, _ := ret[0].(user.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTenantMemberByConfirmAccountToken indicates an expected call of GetTenantMemberByConfirmAccountToken.
+func (mr *MockConfirmAccountTokenPortMockRecorder) GetTenantMemberByConfirmAccountToken(tenantId, tokenString any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantMemberByConfirmAccountToken", reflect.TypeOf((*MockConfirmAccountTokenPort)(nil).GetTenantMemberByConfirmAccountToken), tenantId, tokenString)
 }
 
 // NewConfirmAccountToken mocks base method.
