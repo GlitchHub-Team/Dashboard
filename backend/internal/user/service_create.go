@@ -62,15 +62,15 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 		return User{}, tenant.ErrTenantNotFound
 	}
 
-	// 2. Controlla autorizzazione tenant
+	// Controlla autorizzazione tenant
 	// NOTA: rimosso static check per chiarezza
 	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
 	if !superAdminAccess && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {    //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 
-	// 3. Controlla user
-	checkedUser, err := service.getUserPort.GetTenantUserByEmail(cmd.TenantId, cmd.Email)
+	// 2. Controlla user
+	checkedUser, err := service.getUserPort.GetUserByEmail(&cmd.TenantId, cmd.Email)
 	if err != nil {
 		return User{}, err
 	}
@@ -78,7 +78,7 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 		return User{}, ErrUserAlreadyExists
 	}
 
-	// 4. Crea user
+	// 3. Crea user
 	user, err := service.createUserPort.SaveUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
@@ -90,16 +90,16 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 		return User{}, err
 	}
 
-	// 5. Crea token di conferma
+	// 4. Crea token di conferma
 	confirmAccountToken, err := service.confirmAccountTokenPort.NewConfirmAccountToken(user)
 	if err != nil {
 		return User{}, err
 	}
 
-	// 6. Invia email per token di conferma
+	// 5. Invia email per token di conferma
 	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
 	if err != nil {
-		// 7. Elimina account se invio mail fallisce
+		// 6. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteTenantUser(*user.TenantId, user.Id)
 		if deletionErr != nil {
 			return User{}, deletionErr
@@ -131,7 +131,7 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 	}
 
 	// 3. Controlla user
-	user, err := service.getUserPort.GetTenantAdminByEmail(cmd.TenantId, cmd.Email)
+	user, err := service.getUserPort.GetUserByEmail(&cmd.TenantId, cmd.Email)
 	if err != nil {
 		return User{}, err
 	}
@@ -180,7 +180,7 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 	}
 
 	// 1. Controlla user
-	user, err := service.getUserPort.GetSuperAdminByEmail(cmd.Email)
+	user, err := service.getUserPort.GetUserByEmail(nil, cmd.Email)
 	if err != nil {
 		return User{}, err
 	}

@@ -3,6 +3,7 @@ package connection
 import (
 	"fmt"
 
+	dbPackage "backend/internal/infra/database"
 	"backend/internal/shared/config"
 
 	"gorm.io/driver/postgres"
@@ -21,11 +22,7 @@ func NewDatabaseConnection(cfg *config.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-type Tabler interface {
-	TableName() string
-}
-
-func WithTenantSchema(tenantId string, table Tabler) func(*gorm.DB) *gorm.DB {
+func WithTenantSchema(tenantId string, table dbPackage.Tabler) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Table(
 			fmt.Sprintf("\"tenant_%s\".\"%s\"", tenantId, table.TableName()),

@@ -3,15 +3,29 @@ package auth
 import (
 	"backend/internal/shared/crypto"
 	"backend/internal/user"
+
+	"github.com/google/uuid"
 )
 
-//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ChangePasswordTokenPort,SendChangePasswordEmailPort
+//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ForgotPasswordTokenPort,SendChangePasswordEmailPort
 
-type ChangePasswordTokenPort interface {
-	NewChangePasswordToken(user user.User) (string, error)
-	DeleteChangePasswordToken(token ForgotPasswordToken) error
-	GetChangePasswordToken(tokenString string) (ForgotPasswordToken, error)
-	GetUserByChangePasswordToken(tokenString string) (user.User, error)
+type ForgotPasswordTokenPort interface {
+	NewForgotPasswordToken(user user.User) (string, error)
+	DeleteForgotPasswordToken(token ForgotPasswordToken) error
+
+	GetTenantMemberByForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
+		userFound user.User, err error,
+	)
+	GetSuperAdminByForgotPasswordToken(tokenString string) (
+		userFound user.User, err error,
+	)
+
+	GetTenantForgotPasswordToken(tenantId string, tokenString string) (
+		token ForgotPasswordToken, err error,
+	)
+	GetSuperAdminForgotPasswordToken(tokenString string) (
+		token ForgotPasswordToken, err error,
+	)
 }
 
 type SendChangePasswordEmailPort interface {
@@ -25,7 +39,7 @@ type ChangePasswordService struct {
 	tokenGenerator crypto.SecurityTokenGenerator
 	hasher         crypto.SecretHasher // NOTA: dev'essere lo stesso hasher con cui si è creato il token
 
-	changePasswordTokenPort     ChangePasswordTokenPort
+	forgotPasswordTokenPort     ForgotPasswordTokenPort
 	sendChangePasswordEmailPort SendChangePasswordEmailPort
 	getUserPort                 user.GetUserPort
 	saveUserPort                user.SaveUserPort
@@ -41,7 +55,7 @@ var (
 func NewChangePasswordService(
 	tokenGenerator crypto.SecurityTokenGenerator,
 	hasher crypto.SecretHasher,
-	changePasswordTokenPort ChangePasswordTokenPort,
+	changePasswordTokenPort ForgotPasswordTokenPort,
 	sendChangePasswordEmailPort SendChangePasswordEmailPort,
 	getUserPort user.GetUserPort,
 	saveUserPort user.SaveUserPort,
@@ -49,7 +63,7 @@ func NewChangePasswordService(
 	return &ChangePasswordService{
 		tokenGenerator:              tokenGenerator,
 		hasher:                      hasher,
-		changePasswordTokenPort:     changePasswordTokenPort,
+		forgotPasswordTokenPort:     changePasswordTokenPort,
 		sendChangePasswordEmailPort: sendChangePasswordEmailPort,
 		getUserPort:                 getUserPort,
 		saveUserPort:                saveUserPort,
@@ -57,11 +71,26 @@ func NewChangePasswordService(
 }
 
 /*
-Ritorna l'oggetto ForgotPasswordToken relativo al token plain tokenString.
+Ritorna l'oggetto ForgotPasswordToken relativo al token plain tokenString nel tenant con id tenantId.
 Se il token è scaduto, elimina il token e ritorna tokenObj vuoto ed ErrTokenExpired
 */
-func (service *ChangePasswordService) getValidToken(tokenString string) (tokenObj ForgotPasswordToken, err error) {
-	tokenObj, err = service.changePasswordTokenPort.GetChangePasswordToken(tokenString)
+func (service *ChangePasswordService) getValidTenantToken(tenantId uuid.UUID, tokenString string) (tokenObj ForgotPasswordToken, err error) {
+	tokenObj, err = service.forgotPasswordTokenPort.GetTenantForgotPasswordToken(tenantId.String(), tokenString)
+	if err != nil {
+		return ForgotPasswordToken{}, err
+	}
+	if tokenObj.IsExpired() {
+		return ForgotPasswordToken{}, ErrTokenExpired
+	}
+	return tokenObj, err
+}
+
+/*
+Ritorna l'oggetto ForgotPasswordToken relativo al token plain tokenString per super admin.
+Se il token è scaduto, elimina il token e ritorna tokenObj vuoto ed ErrTokenExpired
+*/
+func (service *ChangePasswordService) getValidSuperAdminToken(tokenString string) (tokenObj ForgotPasswordToken, err error) {
+	tokenObj, err = service.forgotPasswordTokenPort.GetSuperAdminForgotPasswordToken(tokenString)
 	if err != nil {
 		return ForgotPasswordToken{}, err
 	}
@@ -75,9 +104,16 @@ func (service *ChangePasswordService) getValidToken(tokenString string) (tokenOb
 Verifica esistenza del token forgot password.
 Se il token esiste ritorna nil, altrimenti ritorna errore non-nil.
 */
-func (service *ChangePasswordService) VerifyForgotPasswordToken(cmd VerifyForgotPasswordTokenCommand) error {
-	_, err := service.getValidToken(cmd.Token)
-	return err
+func (service *ChangePasswordService) VerifyForgotPasswordToken(cmd VerifyForgotPasswordTokenCommand) (err error) {
+	// Super Admin
+	if cmd.TenantId == nil {
+		_, err = service.getValidSuperAdminToken(cmd.Token)
+	} else
+	// Tenant Member
+	{
+		_, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+	}
+	return
 }
 
 /*
@@ -98,7 +134,7 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 	}
 
 	// 2. Crea token
-	tokenString, err := service.changePasswordTokenPort.NewChangePasswordToken(userFound)
+	tokenString, err := service.forgotPasswordTokenPort.NewForgotPasswordToken(userFound)
 	if err != nil {
 		return err
 	}
@@ -115,11 +151,20 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 /*
 Conferma la richiesta di cambio password dimenticata.
 */
-func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPasswordCommand) error {
-	// 1. Get token
-	tokenObj, err := service.getValidToken(cmd.Token)
+func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPasswordCommand) (err error) {
+	// 1. Get token:
+	var tokenObj ForgotPasswordToken
+
+	// - Super Admin
+	if cmd.TenantId == nil {
+		tokenObj, err = service.getValidSuperAdminToken(cmd.Token)
+	} else
+	// - Tenant Member
+	{
+		tokenObj, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+	}
 	if err != nil {
-		return err
+		return
 	}
 
 	// 2. Controlla token con plaintext ricevuto
@@ -150,7 +195,7 @@ func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPas
 	}
 
 	// 6. Elimina token
-	err = service.changePasswordTokenPort.DeleteChangePasswordToken(tokenObj)
+	err = service.forgotPasswordTokenPort.DeleteForgotPasswordToken(tokenObj)
 	if err != nil {
 		return err
 	}

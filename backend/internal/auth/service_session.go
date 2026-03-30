@@ -2,11 +2,7 @@ package auth
 
 import (
 	"backend/internal/shared/crypto"
-	"backend/internal/shared/identity"
 	"backend/internal/user"
-
-	"github.com/google/uuid"
-	// "go.uber.org/zap"
 )
 
 /*
@@ -49,21 +45,19 @@ func (service *SessionService) LoginUser(cmd LoginUserCommand) (
 	foundUser user.User, err error,
 ) {
 	// Get user
-	var tenantId uuid.UUID
-	if cmd.TenantId != nil {
-		tenantId = *cmd.TenantId
-	}
 
-	switch cmd.Role {
-	case identity.ROLE_SUPER_ADMIN:
-		foundUser, err = service.getUserPort.GetSuperAdminByEmail(cmd.Email)
-	case identity.ROLE_TENANT_ADMIN:
-		foundUser, err = service.getUserPort.GetTenantAdminByEmail(tenantId, cmd.Email)
-	case identity.ROLE_TENANT_USER:
-		foundUser, err = service.getUserPort.GetTenantUserByEmail(tenantId, cmd.Email)
-	default:
-		err = identity.ErrUnknownRole
-	}
+	// switch cmd.Role {
+	// case identity.ROLE_SUPER_ADMIN:
+	// 	foundUser, err = service.getUserPort.GetSuperAdminByEmail(nil, cmd.Email)
+	// case identity.ROLE_TENANT_ADMIN:
+	// 	foundUser, err = service.getUserPort.GetTenantAdminByEmail(tenantId, cmd.Email)
+	// case identity.ROLE_TENANT_USER:
+	// 	foundUser, err = service.getUserPort.GetTenantUserByEmail(tenantId, cmd.Email)
+	// default:
+	// 	err = identity.ErrUnknownRole
+	// }
+
+	foundUser, err = service.getUserPort.GetUserByEmail(cmd.TenantId, cmd.Email)
 	if err != nil {
 		return user.User{}, err
 	}
