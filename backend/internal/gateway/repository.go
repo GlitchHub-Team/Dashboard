@@ -21,17 +21,6 @@ type gatewayEntity struct {
 
 func (gatewayEntity) TableName() string { return "gateways" }
 
-func (e *gatewayEntity) fromDomain(g Gateway) {
-	e.ID = g.Id.String()
-	e.Name = g.Name
-	if g.TenantId != nil {
-		e.TenantId = g.TenantId.String()
-	}
-	e.Status = string(g.Status)
-	e.IntervalLimit = g.IntervalLimit
-	e.PublicIdentifier = g.PublicIdentifier
-}
-
 func (e *gatewayEntity) toDomain() Gateway {
 	id, _ := uuid.Parse(e.ID)
 	var tenantId *uuid.UUID
