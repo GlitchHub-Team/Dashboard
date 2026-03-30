@@ -13,14 +13,14 @@ type InterruptSensorService struct {
 	sendInterruptCmdPort    SendInterruptCmdPort
 	getSensorPort           GetSensorByIdPort
 	getGatewayPort          gateway.GetGatewayPort
-	updatedSensorStatusPort UpdatedSensorStatusPort
+	updatedSensorStatusPort UpdateSensorStatusPort
 }
 
 type ResumeSensorService struct {
 	sendResumeCmdPort       SendResumeCmdPort
 	getSensorPort           GetSensorByIdPort
 	getGatewayPort          gateway.GetGatewayPort
-	updatedSensorStatusPort UpdatedSensorStatusPort
+	updatedSensorStatusPort UpdateSensorStatusPort
 }
 
 type SendResumeCmdPort interface {
@@ -31,11 +31,11 @@ type SendInterruptCmdPort interface {
 	SendInterrupt(sensorId uuid.UUID, gatewayId uuid.UUID) error
 }
 
-type UpdatedSensorStatusPort interface {
+type UpdateSensorStatusPort interface {
 	UpdateSensorStatus(sensor Sensor, status SensorStatus) error
 }
 
-func NewInterruptSensorService(sendInterruptCmdPort SendInterruptCmdPort, getSensorPort GetSensorByIdPort, getGatewayPort gateway.GetGatewayPort, updatedSensorStatusPort UpdatedSensorStatusPort) *InterruptSensorService {
+func NewInterruptSensorService(sendInterruptCmdPort SendInterruptCmdPort, getSensorPort GetSensorByIdPort, getGatewayPort gateway.GetGatewayPort, updatedSensorStatusPort UpdateSensorStatusPort) *InterruptSensorService {
 	return &InterruptSensorService{
 		sendInterruptCmdPort:    sendInterruptCmdPort,
 		getSensorPort:           getSensorPort,
@@ -86,7 +86,7 @@ func (s *InterruptSensorService) InterruptSensor(cmd InterruptSensorCommand) err
 	return s.updatedSensorStatusPort.UpdateSensorStatus(sensor, Inactive)
 }
 
-func NewResumeSensorService(sendResumeCmdPort SendResumeCmdPort, getSensorPort GetSensorByIdPort, getGatewayPort gateway.GetGatewayPort, updatedSensorStatusPort UpdatedSensorStatusPort) *ResumeSensorService {
+func NewResumeSensorService(sendResumeCmdPort SendResumeCmdPort, getSensorPort GetSensorByIdPort, getGatewayPort gateway.GetGatewayPort, updatedSensorStatusPort UpdateSensorStatusPort) *ResumeSensorService {
 	return &ResumeSensorService{
 		sendResumeCmdPort:       sendResumeCmdPort,
 		getSensorPort:           getSensorPort,

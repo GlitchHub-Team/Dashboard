@@ -9,22 +9,22 @@ import (
 
 type DbSensorAdapter struct {
 	log  *zap.Logger
-	repo *sensorPostgreRepository
+	repo DatabaseRepository
 }
 
 type SendCmdAdapter struct {
 	log  *zap.Logger
-	repo *sensorNatsRepository
+	repo MessageBrokerRepository
 }
 
-func NewDbSensorAdapter(log *zap.Logger, repository *sensorPostgreRepository) *DbSensorAdapter {
+func NewDbSensorAdapter(log *zap.Logger, repository DatabaseRepository) *DbSensorAdapter {
 	return &DbSensorAdapter{
 		log:  log,
 		repo: repository,
 	}
 }
 
-func NewSendCmdAdapter(log *zap.Logger, repository *sensorNatsRepository) *SendCmdAdapter {
+func NewSendCmdAdapter(log *zap.Logger, repository MessageBrokerRepository) *SendCmdAdapter {
 	return &SendCmdAdapter{
 		log:  log,
 		repo: repository,

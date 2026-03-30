@@ -13,13 +13,13 @@ var (
 	_ GetSensorsByGatewayIdPort = (*DbSensorAdapter)(nil)
 )
 
-func (adapater *DbSensorAdapter) GetSensorsByGatewayId(gatewayId uuid.UUID, page int, limit int) ([]Sensor, uint, error) {
+func (adapter *DbSensorAdapter) GetSensorsByGatewayId(gatewayId uuid.UUID, page int, limit int) ([]Sensor, uint, error) {
 	offset, err := pagination.PageLimitToOffset(page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	entities, count, err := adapater.repo.GetSensorsByGatewayId(gatewayId.String(), offset, limit)
+	entities, count, err := adapter.repo.GetSensorsByGatewayId(gatewayId.String(), offset, limit)
 	if err != nil {
 		return nil, 0, err
 	}

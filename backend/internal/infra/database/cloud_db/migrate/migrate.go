@@ -3,6 +3,7 @@ package migrate
 import (
 	"fmt"
 
+	"backend/internal/sensor"
 	"backend/internal/shared/config"
 	"backend/internal/tenant"
 	"backend/internal/user"
@@ -41,6 +42,7 @@ func (migrator *PostgreMigrator) Migrate() error {
 	publicEntities := []any{
 		&user.SuperAdminEntity{},
 		&tenant.TenantEntity{},
+		&sensor.SensorEntity{},
 	}
 
 	/* Entity da associare a uno schema tenant specifico */

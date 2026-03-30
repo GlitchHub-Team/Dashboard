@@ -19,6 +19,25 @@ const (
 	TIMEOUT_DURATION             = 10 * time.Second
 )
 
+//go:generate mockgen -destination=../../tests/sensor/mocks/database_repository.go -package=mocks . DatabaseRepository
+//go:generate mockgen -destination=../../tests/sensor/mocks/message_broker_repository.go -package=mocks . MessageBrokerRepository
+
+type DatabaseRepository interface {
+	CreateSensor(entity *SensorEntity) error
+	DeleteSensor(entity *SensorEntity) error
+	UpdateSensor(sensorId string, status string) error
+	GetSensorsByGatewayId(gatewayId string, offset int, limit int) ([]SensorEntity, uint, error)
+	GetSensorById(sensorId string) (SensorEntity, error)
+	GetSensorsByTenantId(tenantId string, offset int, limit int) ([]SensorEntity, uint, error)
+}
+
+type MessageBrokerRepository interface {
+	SendCreateSensorCmd(cmd *CreateSensorCmdEntity) error
+	SendDeleteSensorCmd(cmd *DeleteSensorCmdEntity) error
+	SendInterruptSensorCmd(cmd *InterruptSensorCmdEntity) error
+	SendResumeSensorCmd(cmd *ResumeSensorCmdEntity) error
+}
+
 type sensorPostgreRepository struct {
 	log *zap.Logger
 	db  *gorm.DB
@@ -33,6 +52,11 @@ type sensorNatsRepository struct {
 	log *zap.Logger
 	nc  *nats.Conn
 }
+
+var (
+	_ DatabaseRepository      = (*sensorPostgreRepository)(nil)
+	_ MessageBrokerRepository = (*sensorNatsRepository)(nil)
+)
 
 func NewSensorPostgreRepository(log *zap.Logger, db *gorm.DB) *sensorPostgreRepository {
 	return &sensorPostgreRepository{

@@ -62,7 +62,7 @@ func (c *SensorController) DeleteSensor(ctx *gin.Context) {
 	sensorIdParam := ctx.Param("sensorId")
 	sensorId, err := uuid.Parse(sensorIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, errors.New("invalid sensor ID"))
+		transportHttp.RequestError(ctx, ErrInvalidSensorID)
 		return
 	}
 

@@ -4,25 +4,25 @@ import "github.com/google/uuid"
 
 // Compile-time checks
 var (
-	_ SendResumeCmdPort       = (*SendCmdAdapter)(nil)
-	_ SendInterruptCmdPort    = (*SendCmdAdapter)(nil)
-	_ UpdatedSensorStatusPort = (*DbSensorAdapter)(nil)
+	_ SendResumeCmdPort      = (*SendCmdAdapter)(nil)
+	_ SendInterruptCmdPort   = (*SendCmdAdapter)(nil)
+	_ UpdateSensorStatusPort = (*DbSensorAdapter)(nil)
 )
 
-func (adapater *SendCmdAdapter) SendResume(sensorId uuid.UUID, gatewayId uuid.UUID) error {
-	return adapater.repo.SendResumeSensorCmd(&ResumeSensorCmdEntity{
+func (adapter *SendCmdAdapter) SendResume(sensorId uuid.UUID, gatewayId uuid.UUID) error {
+	return adapter.repo.SendResumeSensorCmd(&ResumeSensorCmdEntity{
 		SensorId:  sensorId.String(),
 		GatewayId: gatewayId.String(),
 	})
 }
 
-func (adapater *SendCmdAdapter) SendInterrupt(sensorId uuid.UUID, gatewayId uuid.UUID) error {
-	return adapater.repo.SendInterruptSensorCmd(&InterruptSensorCmdEntity{
+func (adapter *SendCmdAdapter) SendInterrupt(sensorId uuid.UUID, gatewayId uuid.UUID) error {
+	return adapter.repo.SendInterruptSensorCmd(&InterruptSensorCmdEntity{
 		SensorId:  sensorId.String(),
 		GatewayId: gatewayId.String(),
 	})
 }
 
-func (adapater *DbSensorAdapter) UpdateSensorStatus(sensor Sensor, status SensorStatus) error {
-	return adapater.repo.UpdateSensor(sensor.Id.String(), string(status))
+func (adapter *DbSensorAdapter) UpdateSensorStatus(sensor Sensor, status SensorStatus) error {
+	return adapter.repo.UpdateSensor(sensor.Id.String(), string(status))
 }
