@@ -6,10 +6,16 @@
         <span
           >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
         >
-        <button mat-button color="primary" (click)="onBackToTenants()">
-          <mat-icon>arrow_back</mat-icon>
-          Torna ai Tenant
-        </button>
+        <div class="banner-actions">
+          <button mat-button color="accent" (click)="onGoToTenantUsers()">
+            <mat-icon>people</mat-icon>
+            Gestione Utenti
+          </button>
+          <button mat-button color="primary" (click)="onBackToTenants()">
+            <mat-icon>arrow_back</mat-icon>
+            Torna ai Tenant
+          </button>
+        </div>
       </div>
     }
     @if (currentRole === UserRole.SUPER_ADMIN && !activeTenantId()) {
