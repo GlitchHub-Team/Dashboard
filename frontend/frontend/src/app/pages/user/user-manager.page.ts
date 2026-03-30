@@ -5,7 +5,6 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { combineLatest } from 'rxjs';
 import { filter, switchMap } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -16,9 +15,6 @@ import { UserTableComponent } from './components/user-table/user-table.component
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserRole } from '../../models/user/user-role.enum';
-import { UserConfig } from '../../models/user/user-config.model';
-import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserRole } from '../../models/user/user-role.enum';
 
 interface UserManagerContext {
@@ -55,19 +51,18 @@ export class UserManagerPage implements OnInit {
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
   protected readonly UserRole = UserRole;
-  private readonly userSession = inject(UserSessionService);
-  protected readonly currentRole = this.userSession.currentRole;
+  protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly activeTenantId = signal<string | null>(null);
 
   public ngOnInit(): void {
-  /*  combineLatest([
+    combineLatest([
       this.activatedRoute.data,
       this.activatedRoute.queryParams
     ]).subscribe(([data, params]) => {
       const baseContext = data['userManagerContext'] || this.context();
       const urlTenantId = params['tenantId'];
-      const currentUserRole = this.currentRole();
-      const currentUserTenant = this.userSession.currentTenant();
+      const currentUserRole = this.currentRole;
+      const currentUserTenant = this.userSession.currentUser()?.tenantId;
 
       const resolvedTenantId = currentUserRole === UserRole.SUPER_ADMIN 
         ? (urlTenantId || null) 
@@ -78,14 +73,7 @@ export class UserManagerPage implements OnInit {
 
       if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
         this.refreshUsers();
-      }*/
-    this.activatedRoute.data.subscribe((data) => {
-      const routeContext = data['userManagerContext'];
-      this.context.set({
-        ...routeContext,
-        tenantId: this.userSession.currentUser()?.tenantId,
-      });
-      this.refreshUsers();
+      }
     });
   }
 

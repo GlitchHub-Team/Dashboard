@@ -17,7 +17,7 @@
       </button>
     </div>
   }
-  @if (currentRole() === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_USER && !activeTenantId()) {
+  @if (currentRole === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_USER && !activeTenantId()) {
     <div class="info-banner warning-banner">
       <span>Per visualizzare i dati, devi selezionare un tenant.</span>
       <button mat-button color="primary" (click)="onBackToTenants()">

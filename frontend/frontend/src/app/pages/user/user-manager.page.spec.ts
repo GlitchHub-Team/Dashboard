@@ -4,13 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { Observable, of, Subject } from 'rxjs';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserManagerPage } from './user-manager.page';
 import { UserService } from '../../services/user/user.service';
-import { UserSessionService } from '../../services/user-session/user-session.service';
 import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
@@ -87,7 +85,7 @@ describe('UserManagerPage', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [UserManagerPage, NoopAnimationsModule],
+      imports: [UserManagerPage],
       providers: [
         { provide: UserService, useValue: userServiceMock },
         { provide: UserSessionService, useValue: userSessionMock },
@@ -285,4 +283,5 @@ describe('UserManagerPage', () => {
       sessionTenantId,
     );
   });
+});
 });
