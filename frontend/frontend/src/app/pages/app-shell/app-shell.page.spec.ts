@@ -3,6 +3,7 @@ import { signal, WritableSignal, Component, input, output } from '@angular/core'
 import { RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
+import { of, EMPTY } from 'rxjs';
 
 import { AppShellPage } from './app-shell.page';
 import { HeaderComponent } from './components/header/header.component';
@@ -10,9 +11,13 @@ import { SideBarComponent } from './components/side-bar/side-bar.component';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { PermissionService } from '../../services/permission/permission.service';
+import { UserService } from '../../services/user/user.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { ChangePasswordDialog } from './dialogs/change-password/change-password.dialog';
 import { UserRole } from '../../models/user/user-role.enum';
+import { UserSession } from '../../models/auth/user-session.model';
 import { User } from '../../models/user/user.model';
+import { Tenant } from '../../models/tenant/tenant.model';
 import { NavItem } from '../../models/nav_items/nav-item.model';
 import { Permission } from '../../models/permission.enum';
 
@@ -37,6 +42,12 @@ describe('AppShellPage (Unit)', () => {
   let component: AppShellPage;
   let fixture: ComponentFixture<AppShellPage>;
 
+  const mockSession: UserSession = {
+    userId: '1',
+    role: UserRole.SUPER_ADMIN,
+    tenantId: 'tenant-1',
+  };
+
   const mockUser: User = {
     id: '1',
     username: 'admin',
@@ -45,10 +56,16 @@ describe('AppShellPage (Unit)', () => {
     tenantId: 'tenant-1',
   };
 
-  let currentUserSignal: WritableSignal<User | null>;
-  let currentRoleSignal: WritableSignal<UserRole | null>;
-  let currentTenantSignal: WritableSignal<string | null>;
+  const mockTenant: Tenant = {
+    id: 'tenant-1',
+    name: 'Tenant 1',
+    canImpersonate: false,
+  };
 
+  let currentUserSignal: WritableSignal<UserSession | null>;
+
+  const userServiceMock = { getUser: vi.fn() };
+  const tenantServiceMock = { getTenant: vi.fn() };
   const authSessionServiceMock = { logout: vi.fn() };
   const permissionServiceMock = { canAny: vi.fn() };
   const dialogMock = { open: vi.fn() };
@@ -62,22 +79,20 @@ describe('AppShellPage (Unit)', () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     permissionServiceMock.canAny.mockReturnValue(true);
+    userServiceMock.getUser.mockReturnValue(of(mockUser));
+    tenantServiceMock.getTenant.mockReturnValue(of(mockTenant));
 
-    currentUserSignal = signal<User | null>(mockUser);
-    currentRoleSignal = signal<UserRole | null>(UserRole.SUPER_ADMIN);
-    currentTenantSignal = signal<string | null>('tenant-1');
+    currentUserSignal = signal<UserSession | null>(mockSession);
 
     await TestBed.configureTestingModule({
       imports: [AppShellPage],
       providers: [
         {
           provide: UserSessionService,
-          useValue: {
-            currentUser: currentUserSignal.asReadonly(),
-            currentRole: currentRoleSignal.asReadonly(),
-            currentTenant: currentTenantSignal.asReadonly(),
-          },
+          useValue: { currentUser: currentUserSignal.asReadonly() },
         },
+        { provide: UserService, useValue: userServiceMock },
+        { provide: TenantService, useValue: tenantServiceMock },
         { provide: AuthSessionService, useValue: authSessionServiceMock },
         { provide: PermissionService, useValue: permissionServiceMock },
         { provide: MatDialog, useValue: dialogMock },
@@ -116,14 +131,14 @@ describe('AppShellPage (Unit)', () => {
 
     it('should pass user email, role, and tenant to header', () => {
       const h = getHeader();
-      expect(h.username()).toBe('admin@test.com');
+      expect(h.username()).toBe('admin');
       expect(h.currentUserRole()).toBe(UserRole.SUPER_ADMIN);
-      expect(h.currentTenant()).toBe('tenant-1');
+      expect(h.currentTenant()).toBe('Tenant 1');
     });
 
-    it('should pass null username when user is null', () => {
-      currentUserSignal.set(null);
-      fixture.detectChanges();
+    it('should pass null username when user service emits no value', () => {
+      userServiceMock.getUser.mockReturnValue(EMPTY);
+      rebuildComponent();
       expect(getHeader().username()).toBeNull();
     });
 
@@ -134,21 +149,24 @@ describe('AppShellPage (Unit)', () => {
     });
 
     it('should update header bindings when user changes', () => {
-      currentUserSignal.set({
+      const newUser: User = {
         id: '2',
         username: 'newuser',
         email: 'new@test.com',
         role: UserRole.TENANT_USER,
         tenantId: 'tenant-2',
-      });
-      currentRoleSignal.set(UserRole.TENANT_USER);
-      currentTenantSignal.set('tenant-2');
-      fixture.detectChanges();
+      };
+      const newTenant: Tenant = { id: 'tenant-2', name: 'Tenant 2', canImpersonate: false };
+
+      currentUserSignal.set({ userId: '2', role: UserRole.TENANT_USER, tenantId: 'tenant-2' });
+      userServiceMock.getUser.mockReturnValue(of(newUser));
+      tenantServiceMock.getTenant.mockReturnValue(of(newTenant));
+      rebuildComponent();
 
       const h = getHeader();
-      expect(h.username()).toBe('new@test.com');
+      expect(h.username()).toBe('newuser');
       expect(h.currentUserRole()).toBe(UserRole.TENANT_USER);
-      expect(h.currentTenant()).toBe('tenant-2');
+      expect(h.currentTenant()).toBe('Tenant 2');
     });
   });
 

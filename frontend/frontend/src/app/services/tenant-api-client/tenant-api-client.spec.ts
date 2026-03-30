@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { TenantApiClientService } from './tenant-api-client.service';
 import { environment } from '../../../environments/environment';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 import { TenantBackend } from '../../models/tenant/tenant-backend.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';
 
@@ -14,10 +14,10 @@ describe('TenantApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const paginatedTenantResponse: PaginatedResponse<TenantBackend> = {
+  const paginatedTenantResponse: PaginatedTenantResponse<TenantBackend> = {
     count: 2,
     total: 2,
-    data: [
+    tenants: [
       { tenant_id: 'tenant-01', name: 'Tenant 1', can_impersonate: false },
       { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
     ],
@@ -48,8 +48,20 @@ describe('TenantApiClientService', () => {
   });
 
   describe('getTenant', () => {
+    it('should send GET request to fetch tenant by id', () => {
+      service.getTenant('tenant-01').subscribe((tenant) => {
+        expect(tenant).toEqual(paginatedTenantResponse.tenants[0]);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
+      expect(req.request.method).toBe('GET');
+      req.flush(paginatedTenantResponse.tenants[0]);
+    });
+  });
+
+  describe('getTenants', () => {
     it('should send GET request with page and limit query params', () => {
-      service.getTenant(1, 20).subscribe((response) => {
+      service.getTenants(1, 20).subscribe((response) => {
         expect(response).toEqual(paginatedTenantResponse);
       });
 
@@ -72,7 +84,10 @@ describe('TenantApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/tenant`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(tenantConfig);
+      expect(req.request.body).toEqual({
+        name: tenantConfig.name,
+        can_impersonate: tenantConfig.canImpersonate,
+      });
       req.flush(createdTenant);
     });
   });

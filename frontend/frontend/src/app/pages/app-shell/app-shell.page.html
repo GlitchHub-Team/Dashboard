@@ -3,9 +3,9 @@
 
   <div class="main-content">
     <app-header
-      [username]="currentUser()?.email ?? null"
-      [currentTenant]="currentTenant()"
-      [currentUserRole]="currentUserRole()"
+      [username]="currentUser()?.username ?? null"
+      [currentTenant]="currentTenant()?.name ?? null"
+      [currentUserRole]="currentUser()?.role ?? null"
       (logoutRequested)="onLogout()"
       (changePasswordRequested)="onChangePassword()"
     />

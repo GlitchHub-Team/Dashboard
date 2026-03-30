@@ -5,13 +5,13 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { AuthApiClientService } from './auth-api-client.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
-import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { PasswordChange } from '../../models/auth/password-change.model';
 import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
 import { environment } from '../../../environments/environment';
+import { userRoleMapper } from '../../utils/user-role.utils';
 
 describe('AuthApiClientService', () => {
   let service: AuthApiClientService;
@@ -28,7 +28,6 @@ describe('AuthApiClientService', () => {
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  // Fail se una richiesta viene fatta ma non gestita
   afterEach(() => {
     httpMock.verify();
   });
@@ -39,15 +38,15 @@ describe('AuthApiClientService', () => {
 
   describe('login', () => {
     it('should POST credentials to /auth/login', () => {
-      const mockRequest: LoginRequest = { email: 'test@example.com', password: 'password' };
-      const mockUser: User = {
-        id: '1',
+      // The component maps the role before building the request
+      const mappedRole = userRoleMapper.toBackend(UserRole.TENANT_USER);
+      const mockRequest: LoginRequest = {
         email: 'test@example.com',
-        username: 'testuser',
-        role: UserRole.TENANT_USER,
+        password: 'password',
+        userRole: mappedRole,
         tenantId: 'tenant-01',
       };
-      const mockResponse: AuthResponse = { user: mockUser, token: 'mock-token' };
+      const mockResponse: AuthResponse = { jwt: 'mock-token' };
 
       service.login(mockRequest).subscribe((response) => {
         expect(response).toEqual(mockResponse);
@@ -55,28 +54,31 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/login`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        email: 'test@example.com',
+        password: 'password',
+        user_role: mappedRole,
+        tenant_id: 'tenant-01',
+      });
       req.flush(mockResponse);
     });
   });
 
   describe('logout', () => {
     it('should POST userId to /auth/logout', () => {
-      const userId = '1';
-
-      service.logout(userId).subscribe((response) => {
+      service.logout().subscribe((response) => {
         expect(response).toBeNull();
       });
 
       const req = httpMock.expectOne(`${apiUrl}/logout`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ userId });
+      expect(req.request.body).toEqual({});
       req.flush(null);
     });
   });
 
   describe('verifyForgotPasswordToken', () => {
-    it('should GET to /auth/forgot_password/verify_token/:token and return boolean', () => {
+    it('should GET to /auth/forgot_password/verify_token/:token and return true when result is true', () => {
       const token = 'reset-token';
 
       service.verifyForgotPasswordToken(token).subscribe((response) => {
@@ -85,7 +87,18 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token/${token}`);
       expect(req.request.method).toBe('GET');
-      req.flush(true);
+      req.flush({ result: true });
+    });
+
+    it('should return false when result is false', () => {
+      const token = 'reset-token';
+
+      service.verifyForgotPasswordToken(token).subscribe((response) => {
+        expect(response).toBe(false);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token/${token}`);
+      req.flush({ result: false });
     });
   });
 
@@ -102,7 +115,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/request`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        email: 'test@example.com',
+        tenant_id: 'tenant-01',
+      });
       req.flush(null);
     });
 
@@ -113,7 +129,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/request`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        email: 'test@example.com',
+        tenant_id: undefined,
+      });
       req.flush(null);
     });
   });
@@ -131,7 +150,10 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        token: 'reset-token',
+        new_password: 'new-password',
+      });
       req.flush(null);
     });
   });
@@ -146,13 +168,16 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/change_password`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(data);
+      expect(req.request.body).toEqual({
+        old_password: 'old-password',
+        new_password: 'new-password',
+      });
       req.flush(null);
     });
   });
 
   describe('verifyAccountToken', () => {
-    it('should GET to /auth/confirm_account/verify_token/:token and return boolean', () => {
+    it('should GET to /auth/confirm_account/verify_token/:token and return true when result is true', () => {
       const token = 'account-token';
 
       service.verifyAccountToken(token).subscribe((response) => {
@@ -161,7 +186,18 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/${token}`);
       expect(req.request.method).toBe('GET');
-      req.flush(true);
+      req.flush({ result: true });
+    });
+
+    it('should return false when result is false', () => {
+      const token = 'account-token';
+
+      service.verifyAccountToken(token).subscribe((response) => {
+        expect(response).toBe(false);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/${token}`);
+      req.flush({ result: false });
     });
   });
 
@@ -178,14 +214,23 @@ describe('AuthApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/confirm_account`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockRequest);
+      expect(req.request.body).toEqual({
+        token: 'account-token',
+        new_password: 'new-password',
+      });
       req.flush(null);
     });
   });
 
   describe('error handling', () => {
     it('should propagate HTTP errors on login', () => {
-      const mockRequest: LoginRequest = { email: 'test@example.com', password: 'password' };
+      const mappedRole = userRoleMapper.toBackend(UserRole.TENANT_USER);
+      const mockRequest: LoginRequest = {
+        email: 'test@example.com',
+        password: 'password',
+        userRole: mappedRole,
+        tenantId: 'tenant-01',
+      };
       const mockError = { status: 401, statusText: 'Unauthorized' };
 
       service.login(mockRequest).subscribe({
@@ -202,10 +247,9 @@ describe('AuthApiClientService', () => {
     });
 
     it('should propagate server errors on logout', () => {
-      const userId = '1';
       const mockError = { status: 500, statusText: 'Internal Server Error' };
 
-      service.logout(userId).subscribe({
+      service.logout().subscribe({
         next: () => expect.unreachable('expected an error'),
         error: (error) => {
           expect(error.status).toBe(500);

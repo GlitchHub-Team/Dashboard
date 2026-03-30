@@ -45,6 +45,7 @@ export class ConfirmAccountFormComponent {
       return;
     }
 
+    // Il token viene recuperato dalla page
     this.submitConfirmAccount.emit({
       token: '',
       newPassword: this.confirmAccountForm.value.newPassword!,

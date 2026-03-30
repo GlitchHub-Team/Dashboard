@@ -3,11 +3,14 @@ import { of, throwError, noop } from 'rxjs';
 
 import { AuthActionsService } from './auth-actions.service';
 import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
+import { TokenStorageService } from '../token-storage/token-storage.service';
+import { UserSessionService } from '../user-session/user-session.service';
 import { ApiError } from '../../models/api-error.model';
 import { PasswordChange } from '../../models/auth/password-change.model';
 import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
+import { AuthResponse } from '../../models/auth/auth-response.model';
 
 describe('AuthActionsService', () => {
   let service: AuthActionsService;
@@ -21,6 +24,14 @@ describe('AuthActionsService', () => {
     confirmAccountCreation: vi.fn(),
   };
 
+  const tokenStorageMock = {
+    saveToken: vi.fn(),
+  };
+
+  const userSessionMock = {
+    initSession: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.resetAllMocks();
 
@@ -28,6 +39,8 @@ describe('AuthActionsService', () => {
       providers: [
         AuthActionsService,
         { provide: AuthApiClientService, useValue: authApiClientMock },
+        { provide: TokenStorageService, useValue: tokenStorageMock },
+        { provide: UserSessionService, useValue: userSessionMock },
       ],
     });
 
@@ -123,15 +136,28 @@ describe('AuthActionsService', () => {
   describe('confirmPasswordReset', () => {
     const mockReq: ForgotPasswordResponse = { token: 'reset-token', newPassword: 'newSecret456' };
 
-    it('should call confirmPasswordReset and clear loading on success', () => {
+    it('should call verifyForgotPasswordToken, then confirmPasswordReset, set passwordChangeResult=true, and clear loading on success', () => {
       authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(true));
       authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
 
       service.confirmPasswordReset(mockReq).subscribe();
 
+      expect(authApiClientMock.verifyForgotPasswordToken).toHaveBeenCalledWith(mockReq.token);
       expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
+      expect(service.passwordChangeResult()).toBe(true);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
+    });
+
+    it('should proceed to call confirmPasswordReset even when verifyForgotPasswordToken returns false', () => {
+      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(false));
+      authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
+
+      service.confirmPasswordReset(mockReq).subscribe();
+
+      expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
+      expect(service.passwordChangeResult()).toBe(true);
+      expect(service.loading()).toBe(false);
     });
 
     it('should clear previous error before a new request', () => {
@@ -163,16 +189,32 @@ describe('AuthActionsService', () => {
 
   describe('confirmAccount', () => {
     const mockReq: ConfirmAccountResponse = { token: 'account-token', newPassword: 'newSecret456' };
+    const mockAuthResponse: AuthResponse = { jwt: 'jwt-token' };
 
-    it('should call confirmAccountCreation and clear loading on success', () => {
+    it('should call verifyAccountToken, then confirmAccountCreation, save the JWT, init session, and clear loading on success', () => {
       authApiClientMock.verifyAccountToken.mockReturnValue(of(true));
-      authApiClientMock.confirmAccountCreation.mockReturnValue(of(undefined));
+      authApiClientMock.confirmAccountCreation.mockReturnValue(of(mockAuthResponse));
+
+      service.confirmAccount(mockReq).subscribe();
+
+      expect(authApiClientMock.verifyAccountToken).toHaveBeenCalledWith(mockReq.token);
+      expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
+      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.jwt);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);
+      expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
+    });
+
+    it('should proceed to call confirmAccountCreation even when verifyAccountToken returns false', () => {
+      authApiClientMock.verifyAccountToken.mockReturnValue(of(false));
+      authApiClientMock.confirmAccountCreation.mockReturnValue(of(mockAuthResponse));
 
       service.confirmAccount(mockReq).subscribe();
 
       expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
+      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.jwt);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);
       expect(service.loading()).toBe(false);
-      expect(service.error()).toBeNull();
     });
 
     it.each([

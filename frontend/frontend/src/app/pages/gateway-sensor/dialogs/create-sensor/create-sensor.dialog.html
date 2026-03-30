@@ -27,7 +27,7 @@
       <mat-label>Profilo</mat-label>
       <mat-select formControlName="profile">
         @for (profile of profiles; track profile.key) {
-          <mat-option [value]="profile.key">{{ profile.label | titlecase }}</mat-option>
+          <mat-option [value]="profile.label">{{ profile.label | titlecase }}</mat-option>
         }
       </mat-select>
       @if (sensorForm.controls.profile.hasError('required')) {

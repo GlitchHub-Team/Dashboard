@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { TenantAdapter } from './tenant.adapter';
-import { TenantBackend } from '../models/tenant/tenant-backend.model';
-import { Tenant } from '../models/tenant/tenant.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { TenantBackend } from '../../models/tenant/tenant-backend.model';
+import { Tenant } from '../../models/tenant/tenant.model';
+import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class TenantApiAdapter extends TenantAdapter {
@@ -14,11 +14,13 @@ export class TenantApiAdapter extends TenantAdapter {
     };
   }
 
-  fromPaginatedDTO(response: PaginatedResponse<TenantBackend>): PaginatedResponse<Tenant> {
+  fromPaginatedDTO(
+    response: PaginatedTenantResponse<TenantBackend>,
+  ): PaginatedTenantResponse<Tenant> {
     return {
       count: response.count,
       total: response.total,
-      data: response.data.map((dto) => this.fromDTO(dto)),
+      tenants: response.tenants.map((dto) => this.fromDTO(dto)),
     };
   }
 }

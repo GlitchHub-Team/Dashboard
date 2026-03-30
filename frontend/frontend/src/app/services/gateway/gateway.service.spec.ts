@@ -3,11 +3,11 @@ import { of, throwError } from 'rxjs';
 
 import { GatewayService } from './gateway.service';
 import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { GatewayAdapter } from '../../adapters/gateway.adapter';
+import { GatewayAdapter } from '../../adapters/gateway/gateway.adapter';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
 import { Status } from '../../models/gateway-sensor-status.enum';
 
 describe('GatewayService', () => {
@@ -18,10 +18,10 @@ describe('GatewayService', () => {
     { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway 2', status: Status.INACTIVE, interval: 60 },
   ];
 
-  const mockBackendResponse: PaginatedResponse<GatewayBackend> = {
+  const mockBackendResponse: PaginatedGatewayResponse<GatewayBackend> = {
     count: 2,
     total: 10,
-    data: [
+    gateways: [
       {
         gateway_id: 'gw-1',
         name: 'Gateway 1',
@@ -39,13 +39,17 @@ describe('GatewayService', () => {
     ],
   };
 
-  const mockAdaptedResponse: PaginatedResponse<Gateway> = {
+  const mockAdaptedResponse: PaginatedGatewayResponse<Gateway> = {
     count: 2,
     total: 10,
-    data: mockGateways,
+    gateways: mockGateways,
   };
-  const emptyBackend: PaginatedResponse<GatewayBackend> = { count: 0, total: 0, data: [] };
-  const emptyAdapted: PaginatedResponse<Gateway> = { count: 0, total: 0, data: [] };
+  const emptyBackend: PaginatedGatewayResponse<GatewayBackend> = {
+    count: 0,
+    total: 0,
+    gateways: [],
+  };
+  const emptyAdapted: PaginatedGatewayResponse<Gateway> = { count: 0, total: 0, gateways: [] };
 
   const mockNewBackend: GatewayBackend = {
     gateway_id: 'gw-3',

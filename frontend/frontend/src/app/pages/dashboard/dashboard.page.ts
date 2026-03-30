@@ -52,17 +52,26 @@ export class DashboardPage implements OnInit, OnDestroy {
     () => this.dashboardService.gatewayError() ?? this.dashboardService.sensorError(),
   );
 
-  protected readonly currentRole = this.userSession.currentRole;
+  // Riceve sicuramente il role da app-shell
+  protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly UserRole = UserRole;
 
+  // Utilizzato solo quando si fa impersonation di un tenant da SUPER_ADMIN, altrimenti è null e viene ignorato
   protected readonly activeTenantId = signal<string | null>(null);
 
+  // In base al tenant impersonato mostra la rispettiva dashboard
+  // Altrimenti se non si è SUPER_ADMIN mostra la dashboard del tenant dell'utente
   public ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
-      const tenantId = params['tenantId'];
-      this.activeTenantId.set(tenantId || null);
+    if (this.currentRole === UserRole.SUPER_ADMIN) {
+      this.route.queryParams.subscribe((params) => {
+        const tenantId: string | undefined = params['tenantId'];
+        this.activeTenantId.set(tenantId ?? null);
+        this.dashboardService.loadDashboard(tenantId);
+      });
+    } else {
+      const tenantId = this.userSession.currentUser()?.tenantId;
       this.dashboardService.loadDashboard(tenantId);
-    });
+    }
   }
 
   protected onBackToTenants(): void {

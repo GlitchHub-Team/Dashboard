@@ -30,8 +30,8 @@ import { getSensorProfileDisplay } from '../../../../models/chart/sensor-profile
 export class ChartContainerComponent implements OnDestroy {
   private readonly chartService = inject(SensorChartService);
 
-  public chartRequest = input<ChartRequest | null>(null);
-  public chartClosed = output<void>();
+  public readonly chartRequest = input.required<ChartRequest>();
+  public readonly chartClosed = output<void>();
 
   protected readonly historicReadings = this.chartService.historicReadings;
   protected readonly liveReadings = this.chartService.liveReadings;
@@ -40,11 +40,11 @@ export class ChartContainerComponent implements OnDestroy {
   protected readonly error = this.chartService.error;
 
   protected readonly isHistoricChart = computed(() => {
-    return this.chartRequest()?.chartType === ChartType.HISTORIC;
+    return this.chartRequest().chartType === ChartType.HISTORIC;
   });
 
   protected readonly isLiveChart = computed(() => {
-    return this.chartRequest()?.chartType === ChartType.REALTIME;
+    return this.chartRequest().chartType === ChartType.REALTIME;
   });
 
   protected readonly statusLabel = computed(() => {

@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { UserBackend } from '../../models/user/user-backend.model';
 import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedUserResponse } from '../../models/user/paginated-user-response.model';
 
 const GET_USERS_CASES = [
   {
@@ -50,33 +50,33 @@ describe('UserApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const paginatedUserResponse: PaginatedResponse<UserBackend> = {
+  const paginatedUserResponse: PaginatedUserResponse<UserBackend> = {
     count: 2,
     total: 2,
-    data: [
+    users: [
       {
-        id: '1',
+        user_id: 1,
         username: 'admin',
         email: 'admin@test.com',
-        role: UserRole.TENANT_ADMIN,
-        tenantId: 'tenant-1',
+        user_role: UserRole.TENANT_ADMIN,
+        tenant_id: 'tenant-1',
       },
       {
-        id: '2',
+        user_id: 2,
         username: 'user',
         email: 'user@test.com',
-        role: UserRole.TENANT_USER,
-        tenantId: 'tenant-1',
+        user_role: UserRole.TENANT_USER,
+        tenant_id: 'tenant-1',
       },
     ],
   };
 
   const userBackend: UserBackend = {
-    id: '3',
+    user_id: 3,
     username: 'newuser',
     email: 'new@test.com',
-    role: UserRole.TENANT_USER,
-    tenantId: 'tenant-1',
+    user_role: UserRole.TENANT_USER,
+    tenant_id: 'tenant-1',
   };
 
   const expectRequest = (method: string, url: string) => {
@@ -134,26 +134,26 @@ describe('UserApiClientService', () => {
       {
         id: '1',
         role: UserRole.SUPER_ADMIN,
-        tenantId: undefined,
+        tenant_id: undefined,
         url: 'super_admin/1',
         response: {
-          id: '1',
+          user_id: 1,
           email: 'super@test.com',
           username: 'super',
-          role: UserRole.SUPER_ADMIN,
-          tenantId: '',
+          user_role: UserRole.SUPER_ADMIN,
+          tenant_id: '',
         } satisfies UserBackend,
       },
       {
         id: '3',
         role: UserRole.TENANT_USER,
-        tenantId: 'tenant-1',
+        tenant_id: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user/3',
         response: userBackend,
       },
-    ])('should GET $url and return dto response', ({ id, role, tenantId, url, response }) => {
+    ])('should GET $url and return dto response', ({ id, role, tenant_id, url, response }) => {
       let result: UserBackend | undefined;
-      service.getUser(id, role, tenantId).subscribe((user) => {
+      service.getUser(id, role, tenant_id).subscribe((user) => {
         result = user;
       });
 
@@ -175,11 +175,11 @@ describe('UserApiClientService', () => {
         tenantId: undefined,
         url: 'super_admin',
         response: {
-          id: '10',
+          user_id: 10,
           email: 'super@test.com',
           username: 'super',
-          role: UserRole.SUPER_ADMIN,
-          tenantId: '',
+          user_role: UserRole.SUPER_ADMIN,
+          tenant_id: '',
         } satisfies UserBackend,
       },
       {
@@ -196,7 +196,7 @@ describe('UserApiClientService', () => {
       'should POST to $url and return dto response',
       ({ config, role, tenantId, url, response }) => {
         let result: UserBackend | undefined;
-        service.createUser(config, tenantId, role).subscribe((user) => {
+        service.createUser(config, role, tenantId).subscribe((user) => {
           result = user;
         });
 
@@ -214,7 +214,7 @@ describe('UserApiClientService', () => {
         username: 'newuser',
       };
 
-      expect(() => service.createUser(config, undefined, UserRole.TENANT_ADMIN)).toThrow(
+      expect(() => service.createUser(config, UserRole.TENANT_ADMIN, undefined)).toThrow(
         'tenantId is required for TENANT_ADMIN',
       );
     });
@@ -248,7 +248,7 @@ describe('UserApiClientService', () => {
     });
 
     it('should throw when tenantId is missing for tenant-scoped deletion', () => {
-      expect(() => service.deleteUser('1', UserRole.TENANT_USER)).toThrow(
+      expect(() => service.deleteUser('1', UserRole.TENANT_USER, undefined)).toThrow(
         'tenantId is required for TENANT_USER',
       );
     });

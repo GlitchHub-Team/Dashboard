@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { TenantService } from './tenant.service';
-import { TenantApiAdapter } from '../../adapters/tenant-api.adapter';
+import { TenantApiAdapter } from '../../adapters/tenant/tenant-api.adapter';
 import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
 import { ApiError } from '../../models/api-error.model';
 import { TenantBackend } from '../../models/tenant/tenant-backend.model';
 import { Tenant } from '../../models/tenant/tenant.model';
@@ -19,10 +19,10 @@ describe('TenantService', () => {
     { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
   ];
 
-  const paginatedBackendResponse: PaginatedResponse<TenantBackend> = {
+  const paginatedBackendResponse: PaginatedTenantResponse<TenantBackend> = {
     count: 2,
     total: 2,
-    data: tenantBackendList,
+    tenants: tenantBackendList,
   };
 
   const mappedTenants: Tenant[] = [
@@ -33,7 +33,7 @@ describe('TenantService', () => {
   const mappedPaginatedResponse = {
     count: 2,
     total: 2,
-    data: mappedTenants,
+    tenants: mappedTenants,
   };
 
   const mockConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
@@ -50,6 +50,7 @@ describe('TenantService', () => {
 
   const tenantApiMock = {
     getTenant: vi.fn(),
+    getTenants: vi.fn(),
     createTenant: vi.fn(),
     deleteTenant: vi.fn(),
   };
@@ -81,14 +82,14 @@ describe('TenantService', () => {
     expect(service.limit()).toBe(10);
   });
 
-  describe('retrieveTenant', () => {
+  describe('retrieveTenants', () => {
     it('should retrieve tenants and update state', () => {
-      tenantApiMock.getTenant.mockReturnValue(of(paginatedBackendResponse));
+      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
       tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
 
-      service.retrieveTenant();
+      service.retrieveTenants();
 
-      expect(tenantApiMock.getTenant).toHaveBeenCalledWith(0, 10);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(0, 10);
       expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual(mappedTenants);
@@ -103,11 +104,11 @@ describe('TenantService', () => {
       },
       { error: { status: 500 } as ApiError, expected: 'Failed to fetch tenants' },
     ])('should handle retrieval errors', ({ error, expected }) => {
-      tenantApiMock.getTenant.mockReturnValue(throwError(() => error));
+      tenantApiMock.getTenants.mockReturnValue(throwError(() => error));
 
-      service.retrieveTenant();
+      service.retrieveTenants();
 
-      expect(tenantApiMock.getTenant).toHaveBeenCalledWith(0, 10);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(0, 10);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual([]);
       expect(service.error()).toBe(expected);
@@ -116,14 +117,14 @@ describe('TenantService', () => {
 
   describe('changePage', () => {
     it('should update pagination state and retrieve tenants', () => {
-      tenantApiMock.getTenant.mockReturnValue(of(paginatedBackendResponse));
+      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
       tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
 
       service.changePage(2, 25);
 
       expect(service.pageIndex()).toBe(2);
       expect(service.limit()).toBe(25);
-      expect(tenantApiMock.getTenant).toHaveBeenCalledWith(2, 25);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(2, 25);
     });
   });
 
@@ -143,34 +144,12 @@ describe('TenantService', () => {
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
-
-    it.each([
-      {
-        error: { status: 400, message: 'Failed to create' } as ApiError,
-        expected: 'Failed to create',
-      },
-      { error: { status: 400 } as ApiError, expected: 'Failed to create tenant' },
-    ])('should handle create errors', ({ error, expected }) => {
-      tenantApiMock.createTenant.mockReturnValue(throwError(() => error));
-
-      let thrownError: unknown;
-      service.addNewTenant(mockConfig).subscribe({
-        error: (err) => {
-          thrownError = err;
-        },
-      });
-
-      expect(tenantApiMock.createTenant).toHaveBeenCalledWith(mockConfig);
-      expect(thrownError).toBe(error);
-      expect(service.loading()).toBe(false);
-      expect(service.error()).toBe(expected);
-    });
   });
 
   describe('removeTenant', () => {
     it('should delete a tenant and refetch current page', () => {
       tenantApiMock.deleteTenant.mockReturnValue(of(void 0));
-      tenantApiMock.getTenant.mockReturnValue(of(paginatedBackendResponse));
+      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
       tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
 
       let completed = false;
@@ -181,7 +160,7 @@ describe('TenantService', () => {
       });
 
       expect(tenantApiMock.deleteTenant).toHaveBeenCalledWith('tenant-03');
-      expect(tenantApiMock.getTenant).toHaveBeenCalledWith(0, 10);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(0, 10);
       expect(service.tenantList()).toEqual(mappedTenants);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();

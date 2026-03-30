@@ -42,11 +42,13 @@ export class HistoricChartFiltersDialog {
 
   protected readonly filtersForm = this.formBuilder.nonNullable.group(
     {
-      dataPointsCounter: [100, [Validators.required, Validators.min(1)]],
-      from: [new Date(Date.now() - 24 * 60 * 60 * 1000), Validators.required],
-      to: [new Date(), Validators.required],
-      lowerBound: [0, Validators.required],
-      upperBound: [100, Validators.required],
+      dataPointsCounter: [null as number | null, [Validators.required, Validators.min(1)]],
+      from: [null as Date | null],
+      fromTime: [null as string | null],
+      to: [null as Date | null],
+      toTime: [null as string | null],
+      lowerBound: [null as number | null],
+      upperBound: [null as number | null],
     },
     {
       validators: [this.dateRangeValidator, this.valueRangeValidator],
@@ -59,22 +61,26 @@ export class HistoricChartFiltersDialog {
       return;
     }
 
-    const timeInterval: TimeInterval = {
-      from: this.filtersForm.value.from!,
-      to: this.filtersForm.value.to!,
-    };
+    const { from, fromTime, to, toTime, lowerBound, upperBound, dataPointsCounter } =
+      this.filtersForm.value;
 
-    const valuesInterval: ValuesInterval = {
-      lowerBound: this.filtersForm.value.lowerBound!,
-      upperBound: this.filtersForm.value.upperBound!,
-    };
+    const timeInterval: TimeInterval | undefined =
+      from && to
+        ? {
+            from: this.combineDateAndTime(from, fromTime ?? '00:00'),
+            to: this.combineDateAndTime(to, toTime ?? '23:59'),
+          }
+        : undefined;
+
+    const valuesInterval: ValuesInterval | undefined =
+      lowerBound != null && upperBound != null ? { lowerBound, upperBound } : undefined;
 
     const chartRequest: ChartRequest = {
       chartType: this.data.chartType,
       sensor: this.data.sensor,
-      timeInterval,
-      valuesInterval,
-      dataPointsCounter: this.filtersForm.value.dataPointsCounter!,
+      ...(timeInterval && { timeInterval }),
+      ...(valuesInterval && { valuesInterval }),
+      ...(dataPointsCounter != null && { dataPointsCounter }),
     };
 
     this.dialogRef.close(chartRequest);
@@ -84,10 +90,31 @@ export class HistoricChartFiltersDialog {
     this.dialogRef.close();
   }
 
+  private combineDateAndTime(date: Date, time: string): Date {
+    const [hours, minutes] = time.split(':').map(Number);
+    const combined = new Date(date);
+    combined.setHours(hours, minutes, 0, 0);
+    return combined;
+  }
+
   private dateRangeValidator(control: AbstractControl): ValidationErrors | null {
     const from = control.get('from')?.value;
+    const fromTime = control.get('fromTime')?.value ?? '00:00';
     const to = control.get('to')?.value;
-    return from && to && from >= to ? { invalidDateRange: true } : null;
+    const toTime = control.get('toTime')?.value ?? '23:59';
+
+    if (!from || !to) return null;
+
+    const [fh, fm] = fromTime.split(':').map(Number);
+    const [th, tm] = toTime.split(':').map(Number);
+
+    const fromDate = new Date(from);
+    fromDate.setHours(fh, fm, 0, 0);
+
+    const toDate = new Date(to);
+    toDate.setHours(th, tm, 0, 0);
+
+    return fromDate >= toDate ? { invalidDateRange: true } : null;
   }
 
   private valueRangeValidator(control: AbstractControl): ValidationErrors | null {

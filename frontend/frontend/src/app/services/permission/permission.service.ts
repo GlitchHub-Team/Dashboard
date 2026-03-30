@@ -28,8 +28,14 @@ export class PermissionService {
     ],
   };
 
+  // Recupera il role dell'utente a partire dal signal strutturato come
+  // UserSession, e verifica se il role ha il permesso richiesto in 3 modalità:
+  // - can: verifica se il role ha un singolo permesso
+  // - canAny: verifica se il role ha almeno uno dei permessi richiesti
+  // - canAll: verifica se il role ha tutti i permessi richiesti
+
   public can(permission: Permission): boolean {
-    const role = this.userSession.currentRole();
+    const role = this.userSession.currentUser()?.role;
     if (!role) {
       return false;
     }
@@ -37,7 +43,7 @@ export class PermissionService {
   }
 
   public canAny(permissions: Permission[]): boolean {
-    const role = this.userSession.currentRole();
+    const role = this.userSession.currentUser()?.role;
     if (!role) {
       return false;
     }
@@ -45,7 +51,7 @@ export class PermissionService {
   }
 
   public canAll(permissions: Permission[]): boolean {
-    const role = this.userSession.currentRole();
+    const role = this.userSession.currentUser()?.role;
     if (!role) {
       return false;
     }

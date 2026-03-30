@@ -116,13 +116,13 @@ describe('ConfirmAccountPage', () => {
       });
     });
 
-    it('should navigate to /login on success', () => {
+    it('should navigate to /dashboard on success', () => {
       authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
 
       confirmFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
       fixture.detectChanges();
 
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
     it('should not navigate when service returns EMPTY', () => {

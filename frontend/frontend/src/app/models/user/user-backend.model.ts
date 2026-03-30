@@ -1,7 +1,7 @@
 export interface UserBackend {
-  id: string;
+  user_id: number;
   username: string;
   email: string;
-  role: string;
-  tenantId?: string;
+  user_role: string;
+  tenant_id?: string;
 }

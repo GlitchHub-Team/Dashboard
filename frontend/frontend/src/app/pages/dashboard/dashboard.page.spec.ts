@@ -22,6 +22,7 @@ import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserRole } from '../../models/user/user-role.enum';
+import { UserSession } from '../../models/auth/user-session.model';
 
 @Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
 class StubGatewayTable {
@@ -108,7 +109,7 @@ describe('DashboardPage (Unit)', () => {
   let snackBarMock: { open: ReturnType<typeof vi.fn> };
   let routerMock: { navigate: ReturnType<typeof vi.fn> };
   let activatedRouteMock: { queryParams: Observable<Record<string, unknown>> };
-  let userSessionMock: { currentRole: WritableSignal<UserRole | null> };
+  let userSessionMock: { currentUser: () => UserSession | null };
 
   const getGatewayTable = () =>
     fixture.debugElement.query(By.directive(StubGatewayTable))
@@ -167,7 +168,9 @@ describe('DashboardPage (Unit)', () => {
     snackBarMock = { open: vi.fn() };
     routerMock = { navigate: vi.fn() };
     activatedRouteMock = { queryParams: of({}) };
-    userSessionMock = { currentRole: signal<UserRole | null>(UserRole.TENANT_ADMIN) };
+    userSessionMock = {
+      currentUser: () => ({ userId: '1', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-01' }),
+    };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPage],
@@ -200,8 +203,9 @@ describe('DashboardPage (Unit)', () => {
   });
 
   describe('lifecycle', () => {
-    it('should call loadDashboard on init', () => {
+    it('should call loadDashboard with session tenantId on init', () => {
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledOnce();
+      expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith('tenant-01');
     });
 
     it('should call closeChart on destroy', () => {
@@ -428,6 +432,62 @@ describe('DashboardPage (Unit)', () => {
       gatewayErrorSig.set(null);
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+    });
+  });
+
+  describe('SUPER_ADMIN ngOnInit', () => {
+    const setupAsSuperAdmin = async (queryParams: Record<string, unknown>) => {
+      vi.resetAllMocks();
+      activatedRouteMock = { queryParams: of(queryParams) };
+      userSessionMock = { currentUser: () => ({ userId: 'admin', role: UserRole.SUPER_ADMIN }) };
+
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [DashboardPage],
+        providers: [
+          { provide: DashboardService, useValue: dashboardServiceMock },
+          { provide: MatSnackBar, useValue: snackBarMock },
+          { provide: MatDialog, useValue: {} },
+          { provide: Router, useValue: routerMock },
+          { provide: ActivatedRoute, useValue: activatedRouteMock },
+          { provide: UserSessionService, useValue: userSessionMock },
+        ],
+      })
+        .overrideComponent(DashboardPage, {
+          remove: {
+            imports: [
+              DashboardGatewayTableComponent,
+              DashboardSensorTableComponent,
+              ChartContainerComponent,
+            ],
+          },
+          add: { imports: [StubGatewayTable, StubSensorTable, StubChartContainer] },
+        })
+        .compileComponents();
+
+      fixture = TestBed.createComponent(DashboardPage);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    };
+
+    it('should call loadDashboard with tenantId from queryParams', async () => {
+      await setupAsSuperAdmin({ tenantId: 'super-tenant' });
+      expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith('super-tenant');
+    });
+
+    it('should set activeTenantId from queryParams', async () => {
+      await setupAsSuperAdmin({ tenantId: 'super-tenant' });
+      expect(component['activeTenantId']()).toBe('super-tenant');
+    });
+
+    it('should call loadDashboard with undefined when no tenantId in queryParams', async () => {
+      await setupAsSuperAdmin({});
+      expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith(undefined);
+    });
+
+    it('should set activeTenantId to null when no tenantId in queryParams', async () => {
+      await setupAsSuperAdmin({});
+      expect(component['activeTenantId']()).toBeNull();
     });
   });
 });

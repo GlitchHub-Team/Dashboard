@@ -1,16 +1,19 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { filter, switchMap } from 'rxjs';
 
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-tenant-manager-page',
@@ -23,15 +26,18 @@ export class TenantManagerPage implements OnInit {
   private readonly tenantService = inject(TenantService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly tenants = this.tenantService.tenantList;
   protected readonly total = this.tenantService.total;
   protected readonly pageIndex = this.tenantService.pageIndex;
   protected readonly limit = this.tenantService.limit;
   protected readonly loading = this.tenantService.loading;
+  protected readonly error = this.tenantService.error;
 
   public ngOnInit(): void {
-    this.tenantService.retrieveTenant();
+    this.tenantService.retrieveTenants();
   }
 
   protected onCreateTenant(): void {
@@ -41,10 +47,13 @@ export class TenantManagerPage implements OnInit {
         data: null,
       })
       .afterClosed()
-      .subscribe((created) => {
-        if (created) {
-          this.tenantService.retrieveTenant();
-        }
+      .pipe(
+        filter((created) => !!created),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.tenantService.retrieveTenants();
+        this.snackBar.open('Tenant creato con successo', 'Close', { duration: 3000 });
       });
   }
 
@@ -58,10 +67,13 @@ export class TenantManagerPage implements OnInit {
         },
       })
       .afterClosed()
-      .subscribe((confirmed) => {
-        if (confirmed) {
-          this.tenantService.removeTenant(tenant.id).subscribe();
-        }
+      .pipe(
+        filter((confirmed) => !!confirmed),
+        switchMap(() => this.tenantService.removeTenant(tenant.id)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.snackBar.open('Tenant eliminato con successo', 'Close', { duration: 3000 });
       });
   }
 

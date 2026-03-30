@@ -40,19 +40,22 @@ describe('GatewayCommandApiClientService', () => {
   });
 
   describe('commissionGateway', () => {
-    it('should send POST request with gateway id in the URL', () => {
-      service.commissionGateway('gw-1').subscribe((gateway) => {
+    it('should send POST request with gateway id in the URL and tenant id and commission token in the body', () => {
+      service.commissionGateway('gw-1', 'tenant-1', 'commission-token').subscribe((gateway) => {
         expect(gateway).toEqual(mockGateway);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/commission`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({});
+      expect(req.request.body).toEqual({
+        tenant_id: 'tenant-1',
+        commission_token: 'commission-token',
+      });
       req.flush(mockGateway);
     });
 
     it('should return a GatewayBackend', () => {
-      service.commissionGateway('gw-1').subscribe((gateway) => {
+      service.commissionGateway('gw-1', 'tenant-1', 'commission-token').subscribe((gateway) => {
         expect(gateway.gateway_id).toBe('gw-1');
         expect(gateway.name).toBe('Gateway 1');
         expect(gateway.status).toBe('active');

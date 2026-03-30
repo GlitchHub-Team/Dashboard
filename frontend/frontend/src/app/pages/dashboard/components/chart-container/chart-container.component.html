@@ -17,14 +17,20 @@
     </mat-card-header>
 
     <mat-card-content>
-      @if (error()) {
-        <div class="chart-error">{{ error() }}</div>
-      } @else if (loading()) {
+      @if (loading()) {
         <mat-spinner diameter="40" />
       } @else {
-        @if (isHistoricChart()) {
+        @if (error()) {
+          <div [class]="connectionStatus() === 'reconnecting' ? 'chart-warning' : 'chart-error'">
+            {{ error() }}
+          </div>
+        }
+
+        @if (isHistoricChart() && historicReadings().length > 0) {
           <app-historic-chart [readings]="historicReadings()" [sensor]="chartRequest()!.sensor" />
-        } @else {
+        }
+
+        @if (isLiveChart() && liveReadings().length > 0) {
           <app-real-time-chart [readings]="liveReadings()" [sensor]="chartRequest()!.sensor" />
         }
       }

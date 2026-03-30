@@ -13,6 +13,7 @@ import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { SensorService } from '../../../../services/sensor/sensor.service';
 import { SensorConfig } from '../../../../models/sensor/sensor-config.model';
 import { ApiError } from '../../../../models/api-error.model';
+import { sensorProfilesMapper } from '../../../../utils/sensor-profile.utils';
 
 @Component({
   selector: 'app-create-sensor',
@@ -43,7 +44,7 @@ export class CreateSensorDialog {
 
   protected sensorForm = this.formBuilder.nonNullable.group({
     name: ['', Validators.required],
-    profile: ['', Validators.required],
+    profile: [null as SensorProfiles | null, Validators.required],
     interval: [1000, [Validators.required, Validators.min(100)]],
   });
 
@@ -62,7 +63,7 @@ export class CreateSensorDialog {
     const sensorConfig: SensorConfig = {
       gatewayId: this.data.id,
       name: this.sensorForm.value.name!,
-      profile: this.sensorForm.value.profile!,
+      profile: sensorProfilesMapper.toBackend(this.sensorForm.value.profile! as SensorProfiles),
       dataInterval: this.sensorForm.value.interval!,
     };
 

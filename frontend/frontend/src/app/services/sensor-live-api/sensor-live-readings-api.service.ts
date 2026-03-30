@@ -15,6 +15,7 @@ export class SensorLiveReadingsApiService {
   private socket$: WebSocketSubject<RealTimeReading> | null = null;
   private readonly disconnect$ = new Subject<void>();
 
+  // Connette al WS e ritorna l'Observable per recuperare le letture
   public connect(sensor: Sensor): Observable<RealTimeReading> {
     this.disconnect();
 

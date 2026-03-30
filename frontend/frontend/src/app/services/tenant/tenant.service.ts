@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
 
-import { TenantApiAdapter } from '../../adapters/tenant-api.adapter';
+import { TenantApiAdapter } from '../../adapters/tenant/tenant-api.adapter';
 import { ApiError } from '../../models/api-error.model';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';
@@ -28,15 +28,31 @@ export class TenantService {
   public readonly pageIndex = this._pageIndex.asReadonly();
   public readonly limit = this._limit.asReadonly();
 
-  public retrieveTenant(): void {
+  public getTenant(id: string): Observable<Tenant> {
+    this.setLoadingState();
+
+    return this.tenantApi.getTenant(id).pipe(
+      map((dto) => this.adapter.fromDTO(dto)),
+      tap({
+        error: (err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to fetch tenant');
+          return EMPTY;
+        },
+      }),
+      finalize(() => this._loading.set(false)),
+    );
+  }
+
+  public retrieveTenants(): void {
     this.setGettingTenantsState();
 
     this.tenantApi
-      .getTenant(this._pageIndex(), this._limit())
+      .getTenants(this.pageIndex(), this.limit())
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._tenantList.set(result.data);
+          this._tenantList.set(result.tenants);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {
@@ -51,21 +67,12 @@ export class TenantService {
   public changePage(pageIndex: number, limit: number): void {
     this._pageIndex.set(pageIndex);
     this._limit.set(limit);
-    this.retrieveTenant();
+    this.retrieveTenants();
   }
 
+  // Il dialog si occupa del loading/errors
   public addNewTenant(config: TenantConfig): Observable<Tenant> {
-    this.setLoadingState();
-
-    return this.tenantApi.createTenant(config).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
-      tap({
-        error: (err: ApiError) => {
-          this._error.set(err.message ?? 'Failed to create tenant');
-        },
-      }),
-      finalize(() => this._loading.set(false)),
-    );
+    return this.tenantApi.createTenant(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
   }
 
   public removeTenant(id: string): Observable<void> {

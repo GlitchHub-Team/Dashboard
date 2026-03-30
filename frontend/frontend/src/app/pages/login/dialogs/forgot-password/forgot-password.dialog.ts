@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
 import { TenantService } from '../../../../services/tenant/tenant.service';
+import { ForgotPasswordRequest } from '../../../../models/auth/forgot-password-request.model';
 
 @Component({
   selector: 'app-forgot-password.dialog',
@@ -39,14 +40,14 @@ export class ForgotPasswordDialog {
 
   protected readonly forgotPasswordForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    tenantId: ['', Validators.required],
+    tenantId: [''],
   });
 
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;
 
   constructor() {
-    this.tenantService.retrieveTenant();
+    this.tenantService.retrieveTenants();
     this.setupAutoClear();
   }
 
@@ -56,7 +57,8 @@ export class ForgotPasswordDialog {
       return;
     }
 
-    const forgotPasswordRequest = {
+    // Confeziona e invia la richiesta di reset password, chiude il dialog alla risposta positiva
+    const forgotPasswordRequest: ForgotPasswordRequest = {
       email: this.forgotPasswordForm.controls.email.value!,
       tenantId: this.forgotPasswordForm.controls.tenantId.value!,
     };
@@ -93,7 +95,7 @@ export class ForgotPasswordDialog {
     return 'Invalid value';
   }
 
-  // Clear general error when user starts typing
+  // Pulisce errori quando l'utente digita nei campi
   private setupAutoClear(): void {
     for (const key of Object.keys(this.forgotPasswordForm.controls)) {
       this.forgotPasswordForm

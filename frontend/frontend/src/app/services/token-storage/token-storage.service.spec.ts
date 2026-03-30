@@ -18,7 +18,7 @@ describe('TokenStorageService', () => {
   const expiredToken = createFakeToken(pastExp);
 
   beforeEach(() => {
-    localStorage.clear();
+    window.sessionStorage.clear();
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
@@ -35,9 +35,9 @@ describe('TokenStorageService', () => {
     });
   });
 
-  describe('initialization from localStorage', () => {
+  describe('initialization from window.sessionStorage', () => {
     it('should be valid if localStorage has a non-expired token', () => {
-      localStorage.setItem('', validToken);
+      window.sessionStorage.setItem('jwt', validToken);
 
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({});
@@ -46,8 +46,8 @@ describe('TokenStorageService', () => {
       expect(freshService.isValid()).toBe(true);
     });
 
-    it('should be invalid if localStorage has an expired token', () => {
-      localStorage.setItem('', expiredToken);
+    it('should be invalid if window.sessionStorage has an expired token', () => {
+      window.sessionStorage.setItem('jwt', expiredToken);
 
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({});
@@ -58,10 +58,10 @@ describe('TokenStorageService', () => {
   });
 
   describe('saveToken', () => {
-    it('should persist token to localStorage', () => {
+    it('should persist token to window.sessionStorage', () => {
       service.saveToken(validToken);
 
-      expect(localStorage.getItem('')).toBe(validToken);
+      expect(window.sessionStorage.getItem('jwt')).toBe(validToken);
     });
 
     it('should set isValid to true for a non-expired token', () => {
@@ -82,7 +82,7 @@ describe('TokenStorageService', () => {
 
       service.saveToken(validToken);
       expect(service.isValid()).toBe(true);
-      expect(localStorage.getItem('')).toBe(validToken);
+      expect(window.sessionStorage.getItem('jwt')).toBe(validToken);
     });
   });
 
@@ -99,11 +99,11 @@ describe('TokenStorageService', () => {
   });
 
   describe('clearToken', () => {
-    it('should remove token from localStorage', () => {
+    it('should remove token from window.sessionStorage', () => {
       service.saveToken(validToken);
       service.clearToken();
 
-      expect(localStorage.getItem('')).toBeNull();
+      expect(window.sessionStorage.getItem('jwt')).toBeNull();
     });
 
     it('should set isValid to false', () => {
@@ -134,13 +134,13 @@ describe('TokenStorageService', () => {
     });
 
     it('should return false for a malformed token', () => {
-      localStorage.setItem('', 'not-a-jwt');
+      window.sessionStorage.setItem('', 'not-a-jwt');
 
       expect(service.isTokenValid()).toBe(false);
     });
 
     it('should return false for a token with invalid base64 payload', () => {
-      localStorage.setItem('', 'header.!!!invalid!!!.signature');
+      window.sessionStorage.setItem('jwt', 'header.!!!invalid!!!.signature');
 
       expect(service.isTokenValid()).toBe(false);
     });

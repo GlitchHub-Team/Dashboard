@@ -3,123 +3,150 @@ import { Observable, of, delay } from 'rxjs';
 import { UserConfig } from '../models/user/user-config.model';
 import { UserRole } from '../models/user/user-role.enum';
 import { UserBackend } from '../models/user/user-backend.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedUserResponse } from '../models/user/paginated-user-response.model';
 import { userRoleMapper } from '../utils/user-role.utils';
 
 @Injectable({ providedIn: 'root' })
 export class UserApiClientMockService {
   private mockUsers: UserBackend[] = [
     {
-      id: 'user-5741',
+      user_id: 1,
+      username: 'Tullio',
+      email: 'super@test.com',
+      user_role: 'super_admin',
+    },
+    {
+      user_id: 2,
+      username: 'Stefano',
+      email: 'admin@test.com',
+      user_role: 'tenant_admin',
+      tenant_id: 'tenant-1',
+    },
+    {
+      user_id: 3,
+      username: 'Tullio x Stefano',
+      email: 'user@test.com',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-1',
+    },
+    {
+      user_id: 4,
       username: 'admin',
       email: 'admin@example.com',
-      role: 'tenant_admin',
-      tenantId: 'tenant-01',
+      user_role: 'tenant_admin',
+      tenant_id: 'tenant-1',
     },
     {
-      id: 'user-3592',
+      user_id: 5,
       username: 'editor',
       email: 'editor@example.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-01',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-1',
     },
     {
-      id: 'user-3876',
+      user_id: 6,
       username: 'viewer',
       email: 'viewer@example.com',
-      role: 'super_admin',
-      tenantId: 'tenant-02',
+      user_role: 'super_admin',
+      tenant_id: 'tenant-2',
     },
     {
-      id: 'user-6779',
+      user_id: 7,
       username: 'supersuper',
       email: 'supersuper@example.com',
-      role: 'super_admin',
-      tenantId: 'tenant-01',
+      user_role: 'super_admin',
+      tenant_id: 'tenant 1',
     },
     {
-      id: 'user-4160',
+      user_id: 8,
+      username: 'supersuper',
+      email: 'supersuper@example.com',
+      user_role: 'super_admin',
+      tenant_id: 'tenant 1',
+    },
+    {
+      user_id: 9,
       username: 'alice.smith',
       email: 'alice.smith@tenant-1.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-01',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-1',
     },
     {
-      id: 'user-5386',
+      user_id: 10,
       username: 'bob.jones',
       email: 'bob.jones@tenant-1.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-01',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-1',
     },
     {
-      id: 'user-6397',
+      user_id: 11,
       username: 'charlie.brown',
       email: 'charlie.brown@tenant-2.com',
-      role: 'tenant_admin',
-      tenantId: 'tenant-02',
+      user_role: 'tenant_admin',
+      tenant_id: 'tenant-2',
     },
     {
-      id: 'user-7351',
+      user_id: 12,
       username: 'diana.prince',
       email: 'diana.prince@tenant-2.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-02',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-2',
     },
     {
-      id: 'user-8888',
+      user_id: 13,
       username: 'eve.davis',
       email: 'eve.davis@tenant-3.com',
-      role: 'tenant_admin',
-      tenantId: 'tenant-03',
+      user_role: 'tenant_admin',
+      tenant_id: 'tenant-3',
     },
     {
-      id: 'user-9765',
+      user_id: 14,
       username: 'frank.miller',
       email: 'frank.miller@tenant-3.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-03',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-3',
     },
     {
-      id: 'user-1027',
+      user_id: 15,
       username: 'grace.hopper',
       email: 'grace.hopper@tenant-3.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-03',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-3',
     },
     {
-      id: 'user-1136',
+      user_id: 16,
       username: 'heidi.klum',
       email: 'heidi.klum@tenant-1.com',
-      role: 'tenant_admin',
-      tenantId: 'tenant-01',
+      user_role: 'tenant_admin',
+      tenant_id: 'tenant-1',
     },
     {
-      id: 'user-1283',
+      user_id: 17,
       username: 'ivan.drago',
       email: 'ivan.drago@tenant-2.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-02',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-2',
     },
     {
-      id: 'user-1390',
+      user_id: 18,
       username: 'judy.garland',
       email: 'judy.garland@tenant-3.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-03',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-3',
     },
     {
-      id: 'user-1482',
+      user_id: 19,
       username: 'kevin.bacon',
       email: 'kevin.bacon@tenant-1.com',
-      role: 'tenant_user',
-      tenantId: 'tenant-01',
+      user_role: 'tenant_user',
+      tenant_id: 'tenant-1',
     },
     {
-      id: 'user-1516',
+      user_id: 20,
       username: 'laura.croft',
       email: 'laura.croft@tenant-2.com',
-      role: 'tenant_admin',
-      tenantId: 'tenant-02',
+      user_role: 'tenant_admin',
+      tenant_id: 'tenant-2',
     },
   ];
 
@@ -128,27 +155,27 @@ export class UserApiClientMockService {
     page = 0,
     size = 10,
     tenantId?: string,
-  ): Observable<PaginatedResponse<UserBackend>> {
+  ): Observable<PaginatedUserResponse<UserBackend>> {
     const roleString = userRoleMapper.toBackend(role);
     let filteredUsers = [...this.mockUsers];
     if (role) {
-      filteredUsers = filteredUsers.filter((user) => user.role === roleString);
+      filteredUsers = filteredUsers.filter((user) => user.user_role === roleString);
     }
     if (tenantId) {
-      filteredUsers = filteredUsers.filter((user) => user.tenantId === tenantId);
+      filteredUsers = filteredUsers.filter((user) => user.tenant_id === tenantId);
     }
     const total = filteredUsers.length;
-    const data = filteredUsers.slice(page * size, (page + 1) * size);
-    return of({ count: data.length, total, data }).pipe(delay(500));
+    const users = filteredUsers.slice(page * size, (page + 1) * size);
+    return of({ count: users.length, total, users }).pipe(delay(500));
   }
 
   public getUser(id: string, role: UserRole, tenantId?: string): Observable<UserBackend> {
     const roleString = userRoleMapper.toBackend(role);
     const user = this.mockUsers.find(
       (u) =>
-        u.id === id &&
-        u.role === roleString &&
-        (role === UserRole.SUPER_ADMIN || u.tenantId === tenantId),
+        u.user_id === Number(id) &&
+        u.user_role === roleString &&
+        (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId),
     );
     if (!user) {
       throw new Error('User not found');
@@ -156,16 +183,20 @@ export class UserApiClientMockService {
     return of(user).pipe(delay(500));
   }
 
-  public createUser(config: UserConfig, tenantId?: string, role?: UserRole): Observable<UserBackend> {
-    const newId = `user-${Math.floor(Math.random() * 10000)}`;
+  public createUser(
+    config: UserConfig,
+    role: UserRole,
+    tenantId?: string,
+  ): Observable<UserBackend> {
+    const newId = Math.floor(Math.random() * 10000);
     const newTenantId = tenantId || 'mock-tenant-id';
 
     const newUser: UserBackend = {
-      id: newId,
+      user_id: newId,
       username: config.username || config.email.split('@')[0],
       email: config.email,
-      role: userRoleMapper.toBackend(role ?? UserRole.TENANT_USER),
-      tenantId: newTenantId,
+      user_role: userRoleMapper.toBackend(role),
+      tenant_id: newTenantId,
     };
     this.mockUsers.push(newUser);
     return of(newUser).pipe(delay(500));
@@ -176,9 +207,9 @@ export class UserApiClientMockService {
     this.mockUsers = this.mockUsers.filter(
       (u) =>
         !(
-          u.id === id &&
-          u.role === roleString &&
-          (role === UserRole.SUPER_ADMIN || u.tenantId === tenantId)
+          u.user_id === Number(id) &&
+          u.user_role === roleString &&
+          (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId)
         ),
     );
     return of(void 0).pipe(delay(500));

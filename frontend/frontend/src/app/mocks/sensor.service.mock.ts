@@ -5,8 +5,9 @@ import { delay } from 'rxjs/operators';
 
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../models/sensor/sensor-config.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-response.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +23,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Heart Rate Monitor A',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-02',
@@ -30,7 +31,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Thermometer A',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-03',
@@ -38,7 +39,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ECG Monitor A',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-04',
@@ -46,7 +47,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Pulse Oximeter A',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-05',
@@ -54,7 +55,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Environment Sensor A',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-06',
@@ -62,7 +63,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Heart Rate Monitor B',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-07',
@@ -70,7 +71,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Thermometer B',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-08',
@@ -78,7 +79,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ECG Monitor B',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-09',
@@ -86,7 +87,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Pulse Oximeter B',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-10',
@@ -94,7 +95,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Environment Sensor B',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-11',
@@ -102,7 +103,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Heart Rate Monitor C',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-12',
@@ -110,7 +111,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Thermometer C',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-13',
@@ -118,7 +119,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ECG Monitor C',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-14',
@@ -126,7 +127,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Pulse Oximeter C',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-15',
@@ -134,7 +135,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Environment Sensor C',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
       ],
     ],
@@ -147,7 +148,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Heart Rate',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-21',
@@ -155,7 +156,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Pulse Oximeter',
           sensor_interval: 60,
           profile: 'pulse_oximeter_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-22',
@@ -163,7 +164,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Thermometer',
           sensor_interval: 60,
           profile: 'health_thermometer_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-23',
@@ -171,7 +172,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU ECG',
           sensor_interval: 60,
           profile: 'custom_ecg_service',
-          status: 'active',
+          status: 'attivo',
         },
         {
           sensor_id: 'sensor-24',
@@ -179,7 +180,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'ICU Environment',
           sensor_interval: 60,
           profile: 'environmental_sensing_service',
-          status: 'active',
+          status: 'attivo',
         },
       ],
     ],
@@ -193,7 +194,7 @@ export class SensorApiClientServiceMock {
           sensor_name: 'Ward C Heart Rate',
           sensor_interval: 60,
           profile: 'heart_rate_service',
-          status: 'active',
+          status: 'attivo',
         },
       ],
     ],
@@ -201,18 +202,30 @@ export class SensorApiClientServiceMock {
   ]);
 
   private readonly tenantGatewayMap: Record<string, string[]> = {
-    'tenant-01': ['gateway-01', 'gateway-02'],
-    'tenant-02': ['gateway-04'],
-    'tenant-03': [],
-    'tenant-04': [],
-    'tenant-05': [],
+    'tenant-1': ['gateway-01', 'gateway-02'],
+    'tenant-2': ['gateway-04'],
+    'tenant-3': [],
+    'tenant-4': [],
+    'tenant-5': [],
   };
 
   public getSensorListByGateway(
     gatewayId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<SensorBackend>> {
+  ): Observable<PaginatedSensorResponse<SensorBackend>> {
+    const shouldFail = false;
+
+    if (shouldFail) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'Bad Request',
+            error: { error: 'tenant already exists' },
+          }),
+      ).pipe(delay(500));
+    }
     const all = this.mockSensors.get(gatewayId) ?? [];
     return of(this.paginate(all, page, limit)).pipe(delay(600));
   }
@@ -221,7 +234,7 @@ export class SensorApiClientServiceMock {
     tenantId: string,
     page: number,
     limit: number,
-  ): Observable<PaginatedResponse<SensorBackend>> {
+  ): Observable<PaginatedSensorResponse<SensorBackend>> {
     const gatewayIds = this.tenantGatewayMap[tenantId] ?? [];
     const all = gatewayIds.flatMap((id) => this.mockSensors.get(id) ?? []);
     return of(this.paginate(all, page, limit)).pipe(delay(800));
@@ -242,8 +255,8 @@ export class SensorApiClientServiceMock {
       gateway_id: config.gatewayId,
       sensor_name: config.name,
       sensor_interval: config.dataInterval,
-      profile: SensorProfiles[config.profile as keyof typeof SensorProfiles],
-      status: 'active',
+      profile: config.profile,
+      status: 'attivo',
     };
 
     gatewaySensors.push(newSensor);
@@ -273,14 +286,14 @@ export class SensorApiClientServiceMock {
     return of(undefined).pipe(delay(400));
   }
 
-  private paginate<T>(items: T[], page: number, limit: number): PaginatedResponse<T> {
+  private paginate<T>(items: T[], page: number, limit: number): PaginatedSensorResponse<T> {
     const start = page * limit;
-    const data = items.slice(start, start + limit);
+    const sensors = items.slice(start, start + limit);
 
     return {
-      count: data.length,
+      count: sensors.length,
       total: items.length,
-      data,
+      sensors,
     };
   }
 }

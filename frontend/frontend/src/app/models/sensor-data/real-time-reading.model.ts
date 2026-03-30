@@ -1,4 +1,4 @@
 export interface RealTimeReading {
-  value: number;
+  datum: number;
   timestamp: number;
 }

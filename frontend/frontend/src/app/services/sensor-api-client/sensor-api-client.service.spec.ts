@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
-import { PaginatedResponse } from '../../models/paginated-response.model';
+import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 
 describe('SensorApiClientService', () => {
   let service: SensorApiClientService;
@@ -34,10 +34,10 @@ describe('SensorApiClientService', () => {
     },
   ];
 
-  const mockPaginatedResponse: PaginatedResponse<SensorBackend> = {
+  const mockPaginatedResponse: PaginatedSensorResponse<SensorBackend> = {
     count: 2,
     total: 10,
-    data: mockSensors,
+    sensors: mockSensors,
   };
 
   beforeEach(() => {
@@ -76,9 +76,9 @@ describe('SensorApiClientService', () => {
       service.getSensorListByGateway('gw-1', 1, 20).subscribe((response) => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
-        expect(response.data.length).toBe(2);
-        expect(response.data[0].sensor_id).toBe('s-1');
-        expect(response.data[1].sensor_id).toBe('s-2');
+        expect(response.sensors.length).toBe(2);
+        expect(response.sensors[0].sensor_id).toBe('s-1');
+        expect(response.sensors[1].sensor_id).toBe('s-2');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/sensors?page=1&limit=20`);
@@ -103,13 +103,13 @@ describe('SensorApiClientService', () => {
       service.getSensorListByTenant('tenant-1', 1, 10).subscribe((response) => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
-        expect(response.data.length).toBe(2);
-        expect(response.data[0].sensor_id).toBe('s-1');
-        expect(response.data[0].sensor_name).toBe('Temperature');
-        expect(response.data[0].sensor_interval).toBe(60);
-        expect(response.data[1].sensor_id).toBe('s-2');
-        expect(response.data[1].sensor_name).toBe('Humidity');
-        expect(response.data[1].sensor_interval).toBe(60);
+        expect(response.sensors.length).toBe(2);
+        expect(response.sensors[0].sensor_id).toBe('s-1');
+        expect(response.sensors[0].sensor_name).toBe('Temperature');
+        expect(response.sensors[0].sensor_interval).toBe(60);
+        expect(response.sensors[1].sensor_id).toBe('s-2');
+        expect(response.sensors[1].sensor_name).toBe('Humidity');
+        expect(response.sensors[1].sensor_interval).toBe(60);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/sensors?page=1&limit=10`);
@@ -141,7 +141,12 @@ describe('SensorApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/sensor`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockConfig);
+      expect(req.request.body).toEqual({
+        gateway_id: mockConfig.gatewayId,
+        sensor_name: mockConfig.name,
+        profile: 'health thermometer',
+        sensor_interval: mockConfig.dataInterval,
+      });
       req.flush(mockResponse);
     });
 

@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 
 import { GatewayAdapter } from './gateway.adapter';
-import { GatewayBackend } from '../models/gateway/gateway-backend.model';
-import { Gateway } from '../models/gateway/gateway.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
-import { statusMapper } from '../utils/status.utils';
+import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
+import { statusMapper } from '../../utils/status.utils';
 
 @Injectable()
 export class GatewayApiAdapter extends GatewayAdapter {
@@ -18,11 +18,13 @@ export class GatewayApiAdapter extends GatewayAdapter {
     };
   }
 
-  fromPaginatedDTO(response: PaginatedResponse<GatewayBackend>): PaginatedResponse<Gateway> {
+  fromPaginatedDTO(
+    response: PaginatedGatewayResponse<GatewayBackend>,
+  ): PaginatedGatewayResponse<Gateway> {
     return {
       count: response.count,
       total: response.total,
-      data: response.data.map((dto) => this.fromDTO(dto)),
+      gateways: response.gateways.map((dto) => this.fromDTO(dto)),
     };
   }
 }

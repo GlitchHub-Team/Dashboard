@@ -57,16 +57,13 @@ describe('AuthSessionService', () => {
   });
 
   describe('login', () => {
-    const mockRequest: LoginRequest = { email: 'user@example.com', password: 'secret123' };
+    const mockRequest: LoginRequest = {
+      email: 'user@example.com',
+      password: 'secret123',
+      userRole: UserRole.SUPER_ADMIN,
+    };
     const mockResponse: AuthResponse = {
-      token: 'jwt-token-abc',
-      user: {
-        id: '1',
-        email: 'user@example.com',
-        username: 'user',
-        role: UserRole.SUPER_ADMIN,
-        tenantId: 'tenant-1',
-      },
+      jwt: 'jwt-token-abc',
     };
 
     it('should call API, save token, init session, return response, and clear loading on success', () => {
@@ -78,7 +75,7 @@ describe('AuthSessionService', () => {
 
       expect(authApiClientMock.login).toHaveBeenCalledWith(mockRequest);
       expect(tokenStorageMock.saveToken).toHaveBeenCalledWith('jwt-token-abc');
-      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockResponse.user);
+      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockResponse.jwt);
       expect(service.loading()).toBe(false);
     });
 
@@ -125,7 +122,7 @@ describe('AuthSessionService', () => {
 
       service.logout();
 
-      expect(authApiClientMock.logout).toHaveBeenCalledWith('user-42');
+      expect(authApiClientMock.logout).toHaveBeenCalledWith();
       expect(tokenStorageMock.clearToken).toHaveBeenCalled();
       expect(userSessionMock.clearSession).toHaveBeenCalled();
       expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
@@ -141,20 +138,6 @@ describe('AuthSessionService', () => {
       expect(userSessionMock.clearSession).toHaveBeenCalled();
       expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
     });
-
-    it.each([
-      ['null user', null],
-      ['user with no id', { ...mockUser, id: '' }],
-    ])('should skip API call but still clear and redirect when %s', (_, user) => {
-      userSessionMock.currentUser.mockReturnValue(user);
-
-      service.logout();
-
-      expect(authApiClientMock.logout).not.toHaveBeenCalled();
-      expect(tokenStorageMock.clearToken).toHaveBeenCalled();
-      expect(userSessionMock.clearSession).toHaveBeenCalled();
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
-    });
   });
 
   describe('clearError', () => {
@@ -162,7 +145,13 @@ describe('AuthSessionService', () => {
       authApiClientMock.login.mockReturnValue(
         throwError(() => ({ status: 401, message: 'some error' }) as ApiError),
       );
-      service.login({ email: 'x', password: 'y' }).subscribe({ error: noop });
+      service
+        .login({
+          email: 'error@test.com',
+          password: 'skibiditoilet',
+          userRole: UserRole.SUPER_ADMIN,
+        })
+        .subscribe({ error: noop });
       expect(service.error()).toBe('some error');
 
       service.clearError();

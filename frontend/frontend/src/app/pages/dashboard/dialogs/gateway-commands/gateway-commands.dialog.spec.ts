@@ -10,12 +10,17 @@ import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
 
-const COMMAND_CASES = [
-  ['commission', 'commissionGateway'],
-  ['decommission', 'decommissionGateway'],
-  ['restart', 'resetGateway'],
-  ['reboot', 'rebootGateway'],
-] as const;
+// Mappa tipo di comando agli args che il form ritorna
+const COMMAND_CASES: [
+  string,
+  'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway',
+  string[],
+][] = [
+  ['commission', 'commissionGateway', ['gw-1', 'tenant-1', 'commission-token']],
+  ['decommission', 'decommissionGateway', ['gw-1']],
+  ['restart', 'resetGateway', ['gw-1']],
+  ['reboot', 'rebootGateway', ['gw-1']],
+];
 
 describe('GatewayCommandsDialog (Unit)', () => {
   let fixture: ComponentFixture<GatewayCommandsDialog>;
@@ -30,7 +35,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
 
   const mockGateway: Gateway = {
     id: 'gw-1',
-    tenantId: 'tenant-01',
+    tenantId: undefined,
     name: 'Main Lobby Gateway',
     status: Status.ACTIVE,
     interval: 60,
@@ -43,6 +48,12 @@ describe('GatewayCommandsDialog (Unit)', () => {
       .find((btn) => btn.nativeElement.textContent.includes('Annulla'))!;
   const selectCommand = (value: string) => {
     component['commandForm'].controls.command.setValue(value);
+
+    if (value === 'commission') {
+      component['commandForm'].controls.tenantId.setValue('tenant-1');
+      component['commandForm'].controls.token.setValue('commission-token');
+    }
+
     fixture.detectChanges();
   };
 
@@ -119,11 +130,11 @@ describe('GatewayCommandsDialog (Unit)', () => {
   describe('command execution', () => {
     it.each(COMMAND_CASES)(
       '%s: should call %s with gateway id and close with true on success',
-      (command, method) => {
+      (command, method, args) => {
         gatewayServiceMock[method].mockReturnValue(of(void 0));
         selectCommand(command);
         sendBtn().nativeElement.click();
-        expect(gatewayServiceMock[method]).toHaveBeenCalledWith('gw-1');
+        expect(gatewayServiceMock[method]).toHaveBeenCalledWith(...args);
         expect(dialogRefMock.close).toHaveBeenCalledWith(true);
       },
     );

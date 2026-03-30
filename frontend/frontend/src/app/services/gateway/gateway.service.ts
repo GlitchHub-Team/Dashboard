@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
 
 import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { GatewayAdapter } from '../../adapters/gateway.adapter';
+import { GatewayAdapter } from '../../adapters/gateway/gateway.adapter';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { ApiError } from '../../models/api-error.model';
@@ -41,9 +41,10 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayListByTenant(tenantId, page, limit)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._gatewayList.set(result.data);
+          this._gatewayList.set(result.gateways);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {
@@ -64,9 +65,10 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayList(page, limit)
       .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
-          this._gatewayList.set(result.data);
+          this._gatewayList.set(result.gateways);
           this._total.set(result.total);
         }),
         catchError((err: ApiError) => {
@@ -95,8 +97,8 @@ export class GatewayService {
     );
   }
 
-  public commissionGateway(id: string): Observable<Gateway> {
-    return this.gatewayCommandApi.commissionGateway(id).pipe(
+  public commissionGateway(id: string, tenantId: string, token: string): Observable<Gateway> {
+    return this.gatewayCommandApi.commissionGateway(id, tenantId, token).pipe(
       map((dto) => this.adapter.fromDTO(dto)),
       tap(() => this.refetchCurrentPage()),
     );
@@ -108,10 +110,12 @@ export class GatewayService {
       .pipe(tap(() => this.refetchCurrentPage()));
   }
 
+  // Comando di reset completo del gateway allo stato iniziale
   public resetGateway(id: string): Observable<void> {
     return this.gatewayCommandApi.resetGateway(id);
   }
 
+  // Comando di riavvio del gateway
   public rebootGateway(id: string): Observable<void> {
     return this.gatewayCommandApi.rebootGateway(id);
   }

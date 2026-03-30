@@ -14,25 +14,25 @@
 
 <form [formGroup]="confirmAccountForm" (ngSubmit)="onSubmit()">
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>New Password</mat-label>
+    <mat-label>Nuova password</mat-label>
     <input matInput type="password" formControlName="newPassword" />
     @if (confirmAccountForm.controls.newPassword; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>New Password is required</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     }
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Confirm New Password</mat-label>
+    <mat-label>Conferma password</mat-label>
     <input matInput type="password" formControlName="confirmNewPassword" />
     @if (confirmAccountForm.controls.confirmNewPassword; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>Confirm New Password is required</mat-error>
+        <mat-error>Campo obbligatorio</mat-error>
       }
     }
     @if (confirmAccountForm.hasError('passwordsMismatch') && confirmAccountForm.touched) {
-      <mat-error>Passwords do not match</mat-error>
+      <mat-error>Le password non coincidono</mat-error>
     }
   </mat-form-field>
 
@@ -40,6 +40,6 @@
     @if (loading()) {
       <mat-icon class="spin">sync</mat-icon>
     }
-    Confirm Account
+    Conferma account
   </button>
 </form>

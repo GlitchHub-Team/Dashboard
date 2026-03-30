@@ -4,8 +4,8 @@ import { of, Subject, throwError } from 'rxjs';
 import { SensorChartService } from './sensor-chart.service';
 import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
 import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
-import { SensorHistoricAdapter } from '../../adapters/sensor-historic.adapter';
-import { SensorLiveReadingAdapter } from '../../adapters/sensor-live-reading.adapter';
+import { SensorHistoricAdapter } from '../../adapters/sensor-historic/sensor-historic.adapter';
+import { SensorLiveReadingAdapter } from '../../adapters/sensor-live/sensor-live-reading.adapter';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -51,7 +51,7 @@ describe('SensorChartService', () => {
 
   const mockRawReading: RealTimeReading = {
     timestamp: new Date('2026-01-01T00:00:00.000Z').getTime(),
-    value: 36.6,
+    datum: 36.6,
   };
 
   const mockAdaptedReading: SensorReading = {

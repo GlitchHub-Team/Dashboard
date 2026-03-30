@@ -1,11 +1,16 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { combineLatest } from 'rxjs';
+import { filter, switchMap } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { UserService } from '../../services/user/user.service';
+import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { UserTableComponent } from './components/user-table/user-table.component';
 import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
@@ -14,6 +19,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserConfig } from '../../models/user/user-config.model';
 import { UserSessionService } from '../../services/user-session/user-session.service';
+import { UserRole } from '../../models/user/user-role.enum';
 
 interface UserManagerContext {
   title: string;
@@ -30,9 +36,12 @@ interface UserManagerContext {
 })
 export class UserManagerPage implements OnInit {
   private readonly userService = inject(UserService);
+  private readonly userSession = inject(UserSessionService);
   private readonly dialog = inject(MatDialog);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly context = signal<UserManagerContext>({
     title: 'User Management',
@@ -51,7 +60,7 @@ export class UserManagerPage implements OnInit {
   protected readonly activeTenantId = signal<string | null>(null);
 
   public ngOnInit(): void {
-    combineLatest([
+  /*  combineLatest([
       this.activatedRoute.data,
       this.activatedRoute.queryParams
     ]).subscribe(([data, params]) => {
@@ -69,7 +78,14 @@ export class UserManagerPage implements OnInit {
 
       if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
         this.refreshUsers();
-      }
+      }*/
+    this.activatedRoute.data.subscribe((data) => {
+      const routeContext = data['userManagerContext'];
+      this.context.set({
+        ...routeContext,
+        tenantId: this.userSession.currentUser()?.tenantId,
+      });
+      this.refreshUsers();
     });
   }
 
@@ -79,22 +95,16 @@ export class UserManagerPage implements OnInit {
     this.dialog
       .open(UserFormDialogComponent, {
         width: '400px',
-        data: { user: null, role: context.role },
+        data: { role: context.role, tenantId: context.tenantId },
       })
       .afterClosed()
-      .subscribe((result: (UserConfig & { tenantId?: string }) | undefined) => {
-        if (result) {
-          const userConfig: UserConfig = {
-            email: result.email,
-            username: result.username,
-          };
-
-          const tenantIdToPass = result.tenantId || context.tenantId;
-
-          this.userService.addNewUser(userConfig, tenantIdToPass, context.role).subscribe(() => {
-            this.refreshUsers();
-          });
-        }
+      .pipe(
+        filter((result) => !!result),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.refreshUsers();
+        this.snackBar.open('Utente creato con successo', 'Close', { duration: 3000 });
       });
   }
 
@@ -108,12 +118,14 @@ export class UserManagerPage implements OnInit {
         },
       })
       .afterClosed()
-      .subscribe((confirmed) => {
-        if (confirmed) {
-          this.userService.removeUser(user).subscribe(() => {
-            this.refreshUsers();
-          });
-        }
+      .pipe(
+        filter((confirmed) => !!confirmed),
+        switchMap(() => this.userService.removeUser(user)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.refreshUsers();
+        this.snackBar.open('Utente eliminato con successo', 'Close', { duration: 3000 });
       });
   }
 

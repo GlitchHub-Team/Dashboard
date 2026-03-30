@@ -29,16 +29,13 @@ describe('LoginPage', () => {
   const routerMock = { navigate: vi.fn() };
   const dialogMock = { open: vi.fn() };
 
-  const mockRequest: LoginRequest = { email: 'user@example.com', password: 'secret123' };
+  const mockRequest: LoginRequest = {
+    email: 'user@example.com',
+    password: 'secret123',
+    userRole: UserRole.SUPER_ADMIN,
+  };
   const mockResponse: AuthResponse = {
-    token: 'jwt-token',
-    user: {
-      id: '1',
-      username: 'user',
-      email: 'user@example.com',
-      role: UserRole.SUPER_ADMIN,
-      tenantId: 'tenant-1',
-    },
+    jwt: 'jwt-token',
   };
 
   beforeEach(async () => {

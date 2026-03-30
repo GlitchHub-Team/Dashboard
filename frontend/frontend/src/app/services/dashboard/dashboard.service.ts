@@ -39,11 +39,15 @@ export class DashboardService {
   public readonly sensorError = this.sensorService.error;
 
   public loadDashboard(tenantId?: string): void {
-    const targetTenantId = tenantId || 'tenant-01';
+    if (!tenantId) return;
     if (this.canSendCommands()) {
-      this.gatewayService.getGatewaysByTenant(targetTenantId, 0, 10);
+      this.gatewayService.getGatewaysByTenant(
+        tenantId,
+        this.gatewayPageIndex(),
+        this.gatewayLimit(),
+      );
     } else {
-      this.sensorService.getSensorsByTenant(targetTenantId, 0, 10);
+      this.sensorService.getSensorsByTenant(tenantId, this.sensorPageIndex(), this.sensorLimit());
     }
   }
 

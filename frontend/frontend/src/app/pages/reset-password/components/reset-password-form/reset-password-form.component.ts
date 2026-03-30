@@ -52,6 +52,7 @@ export class ResetPasswordFormComponent {
       return;
     }
 
+    // Come per confirm-account il token viene recuperato dalla page
     const forgotPasswordResponse: ForgotPasswordResponse = {
       token: '',
       newPassword: this.resetPasswordForm.controls.newPassword.value!,

@@ -22,6 +22,28 @@
         <mat-error>Campo obbligatorio</mat-error>
       }
     </mat-form-field>
+
+    @if (showCommissionFields) {
+      <mat-form-field appearance="outline">
+        <mat-label>Tenant</mat-label>
+        <mat-select formControlName="tenantId">
+          @for (tenant of displayedTenants(); track tenant.id) {
+            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+          }
+        </mat-select>
+        @if (commandForm.controls.tenantId.invalid && commandForm.controls.tenantId.touched) {
+          <mat-error>Devi indicare il tenant del gateway</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label> Token di commission </mat-label>
+        <input matInput formControlName="token" type="text" />
+        <mat-icon>lock</mat-icon>
+      </mat-form-field>
+      @if (commandForm.controls.token.invalid && commandForm.controls.token.touched) {
+        <mat-error>Devi inserire il token di commission</mat-error>
+      }
+    }
   </form>
 </mat-dialog-content>
 
