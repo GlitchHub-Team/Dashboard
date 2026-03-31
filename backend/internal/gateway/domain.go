@@ -22,10 +22,6 @@ type Gateway struct {
 }
 
 func (g Gateway) IsZero() bool {
-	return g.Id == uuid.Nil
-}
-
-func (g Gateway) IsZero() bool {
 	return g == (Gateway{})
 }
 

@@ -33,26 +33,27 @@ func NewGatewayHelloService(
 func (s *gatewayHelloService) ProcessHello(msg GatewayHelloMessage) error {
 	gwID, err := uuid.Parse(msg.GatewayId)
 	if err != nil {
-		s.logger.Error("Invalid gateway ID format", zap.Error(err))
+		s.logger.Error("Invalid gateway ID format", zap.Error(err), zap.String("gatewayId", msg.GatewayId))
 		return err
 	}
 
-	gw, err := s.getGateway.GetById(gwID)
+	gw, err := s.getGateway.GetById(gwID.String())
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			s.logger.Error("Gateway not found in database", zap.String("gatewayId", msg.GatewayId))
-			return err
-		}
 		s.logger.Error("Error retrieving gateway from database", zap.Error(err))
 		return err
+	}
+
+	if gw.Id == uuid.Nil {
+		s.logger.Error("Gateway not found in database", zap.String("gatewayId", msg.GatewayId))
+		return gorm.ErrRecordNotFound
 	}
 
 	if gw.PublicIdentifier != msg.PublicIdentifier {
 		gw.PublicIdentifier = msg.PublicIdentifier
 		gw.Status = gateway.GATEWAY_STATUS_ACTIVE
 
-		if err := s.saveGateway.Save(gw); err != nil {
-			s.logger.Error("Error saving gateway", zap.Error(err))
+		if _, err := s.saveGateway.Save(gw); err != nil {
+			s.logger.Error("Error saving gateway", zap.Error(err), zap.String("gatewayId", gw.Id.String()))
 			return err
 		}
 	}
