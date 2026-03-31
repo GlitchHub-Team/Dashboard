@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-#!/usr/bin/env bash
-go test -coverpkg=./... -coverprofile=coverage.out ./tests/... -count=1 && go tool cover -html=coverage.out -o coverage.html
-=======
 if [ -z "$(find internal -maxdepth 1 -type d -ls)" ]; then
     echo ERRORE: Esegui questo script nella root del backend
     exit 1
@@ -40,4 +36,3 @@ rm tmp.out
 go tool cover -html=_coverage/coverage.out -o _coverage/coverage.html
 
 echo I file HTML e CSV si trovano nella cartella _coverage
->>>>>>> issue-95
