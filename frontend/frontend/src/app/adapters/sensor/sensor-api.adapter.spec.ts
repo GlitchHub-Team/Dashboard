@@ -29,11 +29,11 @@ describe('SensorApiAdapter', () => {
     });
 
     it.each([
-      ['heart_rate_service', SensorProfiles.HEART_RATE_SERVICE],
-      ['pulse_oximeter_service', SensorProfiles.PULSE_OXIMETER_SERVICE],
-      ['custom_ecg_service', SensorProfiles.CUSTOM_ECG_SERVICE],
-      ['health_thermometer_service', SensorProfiles.HEALTH_THERMOMETER_SERVICE],
-      ['environmental_sensing_service', SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE],
+      ['heart_rate', SensorProfiles.HEART_RATE_SERVICE],
+      ['pulse_oximeter', SensorProfiles.PULSE_OXIMETER_SERVICE],
+      ['custom_ecg', SensorProfiles.CUSTOM_ECG_SERVICE],
+      ['health_thermometer', SensorProfiles.HEALTH_THERMOMETER_SERVICE],
+      ['environmental_sensing', SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE],
     ])('should map profile "%s" correctly', (backendProfile, expected) => {
       expect(adapter.fromDTO({ ...dto, profile: backendProfile }).profile).toBe(expected);
     });
