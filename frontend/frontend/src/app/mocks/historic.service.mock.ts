@@ -11,7 +11,7 @@ export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
-    const shouldFail = true;
+    const shouldFail = false;
 
     if (shouldFail) {
       return throwError(

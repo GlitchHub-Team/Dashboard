@@ -40,7 +40,7 @@ export class UserService {
     );
   }
 
-  public retrieveUser(role: UserRole, tenantId?: string): void {
+  public retrieveUsers(role: UserRole, tenantId?: string): void {
     this.setGettingUsersState();
 
     this.userApi
@@ -64,7 +64,7 @@ export class UserService {
   public changePage(pageIndex: number, limit: number, role: UserRole, tenantId?: string): void {
     this._pageIndex.set(pageIndex);
     this._limit.set(limit);
-    this.retrieveUser(role, tenantId);
+    this.retrieveUsers(role, tenantId);
   }
 
   public addNewUser(config: UserConfig, role: UserRole, tenantId?: string): Observable<User> {
@@ -87,7 +87,7 @@ export class UserService {
   }
 
   private refetchCurrentPage(role: UserRole, tenantId?: string): void {
-    this.retrieveUser(role, tenantId);
+    this.retrieveUsers(role, tenantId);
   }
 
   private setGettingUsersState(): void {

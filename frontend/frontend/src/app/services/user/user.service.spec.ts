@@ -131,12 +131,12 @@ describe('UserService', () => {
     });
   });
 
-  describe('retrieveUser', () => {
+  describe('retrieveUsers', () => {
     it('should retrieve users and update the list', () => {
       userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
       userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
-      service.retrieveUser(UserRole.TENANT_ADMIN);
+      service.retrieveUsers(UserRole.TENANT_ADMIN);
 
       expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 0, 10, undefined);
       expect(userAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(rawPaginatedResponse);
@@ -150,7 +150,7 @@ describe('UserService', () => {
       userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
       userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
-      service.retrieveUser(UserRole.TENANT_USER, 'tenant-1');
+      service.retrieveUsers(UserRole.TENANT_USER, 'tenant-1');
 
       expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 0, 10, 'tenant-1');
     });
@@ -161,7 +161,7 @@ describe('UserService', () => {
     ])('should handle retrieval errors', ({ error, expected }) => {
       userApiMock.getUsers.mockReturnValue(throwError(() => error));
 
-      service.retrieveUser(UserRole.TENANT_ADMIN);
+      service.retrieveUsers(UserRole.TENANT_ADMIN);
 
       expect(service.loading()).toBe(false);
       expect(service.userList()).toEqual([]);

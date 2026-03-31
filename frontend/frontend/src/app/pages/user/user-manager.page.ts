@@ -55,26 +55,26 @@ export class UserManagerPage implements OnInit {
   protected readonly activeTenantId = signal<string | null>(null);
 
   public ngOnInit(): void {
-    combineLatest([
-      this.activatedRoute.data,
-      this.activatedRoute.queryParams
-    ]).subscribe(([data, params]) => {
-      const baseContext = data['userManagerContext'] || this.context();
-      const urlTenantId = params['tenantId'];
-      const currentUserRole = this.currentRole;
-      const currentUserTenant = this.userSession.currentUser()?.tenantId;
+    combineLatest([this.activatedRoute.data, this.activatedRoute.queryParams]).subscribe(
+      ([data, params]) => {
+        const baseContext = data['userManagerContext'] || this.context();
+        const urlTenantId = params['tenantId'];
+        const currentUserRole = this.currentRole;
+        const currentUserTenant = this.userSession.currentUser()?.tenantId;
 
-      const resolvedTenantId = currentUserRole === UserRole.SUPER_ADMIN 
-        ? (urlTenantId || null) 
-        : (currentUserTenant || null);
+        const resolvedTenantId =
+          currentUserRole === UserRole.SUPER_ADMIN
+            ? urlTenantId || null
+            : currentUserTenant || null;
 
-      this.activeTenantId.set(resolvedTenantId);
-      this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
+        this.activeTenantId.set(resolvedTenantId);
+        this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
 
-      if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
-        this.refreshUsers();
-      }
-    });
+        if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
+          this.refreshUsers();
+        }
+      },
+    );
   }
 
   protected onCreateUser(): void {
@@ -137,6 +137,6 @@ export class UserManagerPage implements OnInit {
 
   private refreshUsers(): void {
     const context = this.context();
-    this.userService.retrieveUser(context.role, context.tenantId);
+    this.userService.retrieveUsers(context.role, context.tenantId);
   }
 }
