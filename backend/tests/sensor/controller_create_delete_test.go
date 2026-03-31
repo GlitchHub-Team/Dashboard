@@ -362,7 +362,7 @@ func TestSensorController_DeleteSensor(t *testing.T) {
 	}
 
 	mountMethod := "DELETE"
-	mountURL := "/sensor/:sensorId"
+	mountURL := "/sensor/:sensor_id"
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {

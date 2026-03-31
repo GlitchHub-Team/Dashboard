@@ -92,11 +92,11 @@ func TestDbSensorAdapter_CreateSensor(t *testing.T) {
 		return mockBundle.databaseRepo.EXPECT().
 			CreateSensor(gomock.AssignableToTypeOf(&sensor.SensorEntity{})).
 			DoAndReturn(func(entity *sensor.SensorEntity) error {
-				if entity.Id != targetSensorId.String() {
-					t.Fatalf("expected entity Id %s, got %s", targetSensorId.String(), entity.Id)
+				if entity.ID != targetSensorId.String() {
+					t.Fatalf("expected entity Id %s, got %s", targetSensorId.String(), entity.ID)
 				}
-				if entity.GatewayId != targetGatewayId.String() {
-					t.Fatalf("expected entity GatewayId %s, got %s", targetGatewayId.String(), entity.GatewayId)
+				if entity.GatewayID != targetGatewayId.String() {
+					t.Fatalf("expected entity GatewayId %s, got %s", targetGatewayId.String(), entity.GatewayID)
 				}
 				if entity.Name != targetName {
 					t.Fatalf("expected entity Name %s, got %s", targetName, entity.Name)
@@ -199,11 +199,11 @@ func TestDbSensorAdapter_DeleteSensor(t *testing.T) {
 		return mockBundle.databaseRepo.EXPECT().
 			DeleteSensor(gomock.AssignableToTypeOf(&sensor.SensorEntity{})).
 			DoAndReturn(func(entity *sensor.SensorEntity) error {
-				if entity.Id != targetSensorId.String() {
-					t.Fatalf("expected entity Id %s, got %s", targetSensorId.String(), entity.Id)
+				if entity.ID != targetSensorId.String() {
+					t.Fatalf("expected entity Id %s, got %s", targetSensorId.String(), entity.ID)
 				}
 
-				entity.GatewayId = targetGatewayId.String()
+				entity.GatewayID = targetGatewayId.String()
 				entity.Name = targetName
 				entity.Interval = targetInterval.Milliseconds()
 				entity.Profile = string(targetProfile)

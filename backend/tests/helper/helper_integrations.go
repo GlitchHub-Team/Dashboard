@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	sensordb "backend/internal/infra/database/sensor_db"
 	"backend/internal/infra/modules"
 	natsutils "backend/internal/infra/nats"
+	sharedCrypto "backend/internal/shared/crypto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nats-io/nats.go"
@@ -26,23 +28,29 @@ type TestCase struct {
 	Name   string
 	Method string
 	Path   string
+	Header http.Header
 	Body   io.Reader
 
 	WantStatusCode   int
 	WantResponseBody string
-	Checks           []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool
+	ResponseChecks   []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool
 
 	PostSetups []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream)
 }
 
-func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream, context.Context) {
-	err := os.Chdir("../../../")
-	if err != nil {
-		t.Fatalf("Impossibile cambiare directory: %v", err)
-	}
-
+func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream, sharedCrypto.AuthTokenManager, context.Context) {
 	if testing.Short() {
 		t.Skip("integration test skipped in short mode")
+	}
+	if _, err := os.Stat(".env"); err != nil {
+		if os.IsNotExist(err) {
+			err = os.Chdir("../../../")
+			if err != nil {
+				t.Fatalf("Impossibile cambiare directory: %v", err)
+			}
+		} else {
+			t.Fatalf("Impossibile verificare il file .env: %v", err)
+		}
 	}
 
 	var router *gin.Engine
@@ -51,6 +59,7 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 	var natsConn *nats.Conn
 	var natsTestConn natsutils.NatsTestConnection
 	var jetstreamCtx jetstream.JetStream
+	var jwtManager sharedCrypto.AuthTokenManager
 	app := fx.New(
 		modules.AppModules(),
 		fx.Populate(&router),
@@ -59,6 +68,8 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 		fx.Populate(&natsConn),
 		fx.Populate(&natsTestConn),
 		fx.Populate(&jetstreamCtx),
+		fx.Populate(&jwtManager),
+
 		fx.NopLogger,
 	)
 
@@ -77,7 +88,7 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 		t.Fatalf("Failed to create JetStream context for test connection: %v", err)
 	}
 
-	return router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, ctx
+	return router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx
 }
 
 func RunTests(
@@ -94,10 +105,15 @@ func RunTests(
 ) {
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			for _, preSetup := range tt.PreSetups {
+			if len(tt.PreSetups) != len(tt.PostSetups) {
+				t.Fatalf("Number of PreSetups and PostSetups must be the same for test case %s", tt.Name)
+			}
+
+			for index, preSetup := range tt.PreSetups {
 				if !preSetup(clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx) {
 					t.Errorf("Pre-setup failed for test case %s", tt.Name)
 				}
+				defer tt.PostSetups[index](clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx)
 			}
 
 			w := httptest.NewRecorder()
@@ -108,6 +124,11 @@ func RunTests(
 			}
 
 			req.Header.Set("Content-Type", "application/json")
+			for key, values := range tt.Header {
+				for _, value := range values {
+					req.Header.Add(key, value)
+				}
+			}
 
 			router.ServeHTTP(w, req)
 
@@ -116,19 +137,15 @@ func RunTests(
 			}
 
 			if tt.WantResponseBody != "" {
-				if w.Body.String() != tt.WantResponseBody {
-					t.Errorf("Expected body %s, got %s", tt.WantResponseBody, w.Body.String())
+				if !strings.Contains(w.Body.String(), tt.WantResponseBody) {
+					t.Errorf("Expected body with %s, got %s", tt.WantResponseBody, w.Body.String())
 				}
 			}
 
-			for _, check := range tt.Checks {
-				if !check(clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx) {
-					t.Errorf("Check failed for test case %s", tt.Name)
+			for _, responseCheck := range tt.ResponseChecks {
+				if !responseCheck(w, clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx) {
+					t.Errorf("Response check failed for test case %s", tt.Name)
 				}
-			}
-
-			for _, postSetup := range tt.PostSetups {
-				postSetup(clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx)
 			}
 		})
 	}

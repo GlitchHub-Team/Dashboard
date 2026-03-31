@@ -23,9 +23,9 @@ type DB any // TODO: solo per test
 // entity =============================================================================================
 
 type GatewayEntity struct {
-	GatewayId string  `gorm:"type:uuid;primaryKey"`
-	Name      string  `gorm:"type:varchar(255);not null"`
-	TenantId  *string `gorm:"type:uuid;index"`
+	ID       string  `gorm:"type:uuid;primaryKey"`
+	Name     string  `gorm:"type:varchar(255);not null"`
+	TenantId *string `gorm:"type:uuid;index"`
 	// il modo giusto per fare il fk per assurdo
 	Tenant    *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Status    string         `gorm:"type:varchar(50);not null"`
@@ -50,7 +50,7 @@ func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) 
 // methods ============================================================================================
 
 func (entity *GatewayEntity) fromGateway(g Gateway) {
-	entity.GatewayId = g.Id.String()
+	entity.ID = g.Id.String()
 	entity.Name = g.Name
 	entity.Status = string(g.Status)
 
@@ -63,7 +63,7 @@ func (entity *GatewayEntity) fromGateway(g Gateway) {
 }
 
 func (entity *GatewayEntity) toGateway() Gateway {
-	id, _ := uuid.Parse(entity.GatewayId)
+	id, _ := uuid.Parse(entity.ID)
 	var tenantId *uuid.UUID
 	if entity.TenantId != nil {
 		parsed, _ := uuid.Parse(*entity.TenantId)
@@ -83,7 +83,7 @@ func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
 
 	existing := &GatewayEntity{}
 	db := (*gorm.DB)(repo.db)
-	err := db.Where("gateway_id = ? AND tenant_id IS NOT NULL", entity.GatewayId).First(existing).Error
+	err := db.Where("id = ? AND tenant_id IS NOT NULL", entity.ID).First(existing).Error
 
 	if err == nil {
 		return ErrGatewayAlreadyAssigned
@@ -102,7 +102,7 @@ func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 	db := (*gorm.DB)(repo.db)
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("gateway_id = ?", gateway.Id).
+		if err := tx.Where("id = ?", gateway.Id).
 			Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(entity).Error; err != nil {
 			return err
@@ -116,7 +116,7 @@ func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayE
 	var entity GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
-		Where("gateway_id = ?", gatewayId).
+		Where("id = ?", gatewayId).
 		First(&entity).
 		Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {

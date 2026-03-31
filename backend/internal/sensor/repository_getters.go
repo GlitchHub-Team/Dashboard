@@ -1,6 +1,10 @@
 package sensor
 
-import "gorm.io/gorm"
+import (
+	"errors"
+
+	"gorm.io/gorm"
+)
 
 func (repo *sensorPostgreRepository) GetSensorsByGatewayId(gatewayId string, offset int, limit int) ([]SensorEntity, uint, error) {
 	var sensorEntities []SensorEntity
@@ -36,6 +40,9 @@ func (repo *sensorPostgreRepository) GetSensorById(sensorId string) (SensorEntit
 		Where("id = ?", sensorId).
 		First(&sensorEntity).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return SensorEntity{}, ErrSensorNotFound
+		}
 		return SensorEntity{}, err
 	}
 	return sensorEntity, nil
