@@ -216,12 +216,12 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 	// 2. Esegui comando
 	// NOTA: La verifica del token avviene nel service
 	confirmedUser, err := controller.confirmAccountUseCase.ConfirmAccount(ConfirmAccountCommand{
-		TenantId: tenantId,
+		TenantId:    tenantId,
 		Token:       bodyDto.Token,
 		NewPassword: bodyDto.NewPassword,
 	})
 	if err != nil {
-		
+
 		if errors.Is(err, ErrAccountAlreadyConfirmed) {
 			transportHttp.RequestNotFound(ctx, err)
 			return

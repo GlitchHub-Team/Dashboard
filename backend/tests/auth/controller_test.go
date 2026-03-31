@@ -1234,13 +1234,13 @@ func TestController_ChangePassword(t *testing.T) {
 	}
 
 	targetCommand := auth.ChangePasswordCommand{
-		Requester: requester,
+		Requester:   requester,
 		OldPassword: targetOldPassword,
 		NewPassword: targetNewPassword,
 	}
 
 	targetCommand_WrongCredentials := auth.ChangePasswordCommand{
-		Requester: requester,
+		Requester:   requester,
 		OldPassword: wrongOldPassword,
 		NewPassword: targetNewPassword,
 	}
@@ -1305,7 +1305,7 @@ func TestController_ChangePassword(t *testing.T) {
 			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockChangePasswordUseCase]{
 				useCaseTokenNeverCalled,
 			},
-			ExpectedStatus:   http.StatusUnauthorized,
+			ExpectedStatus: http.StatusUnauthorized,
 			ExpectedResponse: gin.H{
 				"error": transportHttp.ErrMissingIdentity.Error(),
 			},

@@ -83,7 +83,7 @@ func (service *ConfirmUserAccountService) getValidSuperAdminToken(token string) 
 	if tokenObj.IsExpired() {
 		return ConfirmAccountToken{}, ErrTokenExpired
 	}
-	
+
 	return tokenObj, err
 }
 
@@ -127,7 +127,6 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 		return user.User{}, ErrTokenNotFound
 	}
 
-
 	// 3. Create hash
 	hash, err := service.hasher.HashSecret(cmd.NewPassword)
 	if err != nil {
@@ -156,9 +155,9 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	deleteErr := service.confirmAccountTokenPort.DeleteConfirmAccountToken(tokenObj)
 	if deleteErr != nil {
 		service.log.Error(
-			"Cannot delete token", 
-			zap.String("token", cmd.Token), 
-			zap.String("type", "confirm_account"), 
+			"Cannot delete token",
+			zap.String("token", cmd.Token),
+			zap.String("type", "confirm_account"),
 			zap.Error(err),
 		)
 	}

@@ -762,9 +762,9 @@ func TestChangePasswordTokenPgAdapter_GetTenantForgotPasswordToken(t *testing.T)
 
 	expectedDomainToken := auth.ForgotPasswordToken{
 		HashedToken: expectedHashedToken,
-		TenantId: &targetTenantId,
-		UserId: targetUserId,
-		ExpiryDate: targetExpiry,
+		TenantId:    &targetTenantId,
+		UserId:      targetUserId,
+		ExpiryDate:  targetExpiry,
 	}
 
 	// Step 1: hash token
@@ -886,16 +886,16 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminForgotPasswordToken(t *testin
 	targetUserId := uint(1)
 
 	expectedTenantMemberEntity := &auth.SuperAdminPasswordTokenEntity{
-		Token:  expectedHashedToken,
-		UserId: targetUserId,
+		Token:     expectedHashedToken,
+		UserId:    targetUserId,
 		ExpiresAt: targetExpiryDate,
 	}
 
 	expectedDomainToken := auth.ForgotPasswordToken{
 		HashedToken: expectedHashedToken,
-		TenantId: nil,
-		UserId: targetUserId,
-		ExpiryDate: targetExpiryDate,
+		TenantId:    nil,
+		UserId:      targetUserId,
+		ExpiryDate:  targetExpiryDate,
 	}
 	// Step 1: hash token
 	step1HashTokenOk := func(

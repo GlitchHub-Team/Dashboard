@@ -36,33 +36,33 @@ func TestLoginUser(t *testing.T) {
 	}
 
 	expectedTenantAdmin := user.User{
-		Id:        targetUserId,
-		Name:      targetUserName,
-		Email:     targetUserEmail,
+		Id:           targetUserId,
+		Name:         targetUserName,
+		Email:        targetUserEmail,
 		PasswordHash: &expectedHash,
-		Role:      identity.ROLE_TENANT_ADMIN,
-		TenantId:  &targetTenantId,
-		Confirmed: targetConfirmed,
+		Role:         identity.ROLE_TENANT_ADMIN,
+		TenantId:     &targetTenantId,
+		Confirmed:    targetConfirmed,
 	}
 
 	expectedSuperAdmin := user.User{
-		Id:        targetUserId,
-		Name:      targetUserName,
-		Email:     targetUserEmail,
+		Id:           targetUserId,
+		Name:         targetUserName,
+		Email:        targetUserEmail,
 		PasswordHash: &expectedHash,
-		Role:      identity.ROLE_SUPER_ADMIN,
-		TenantId:  &targetTenantId,
-		Confirmed: targetConfirmed,
+		Role:         identity.ROLE_SUPER_ADMIN,
+		TenantId:     &targetTenantId,
+		Confirmed:    targetConfirmed,
 	}
 
 	expectedUnconfirmedUser := user.User{
-		Id:        targetUserId,
-		Name:      targetUserName,
-		Email:     targetUserEmail,
+		Id:           targetUserId,
+		Name:         targetUserName,
+		Email:        targetUserEmail,
 		PasswordHash: nil,
-		Role:      identity.ROLE_TENANT_USER, // Non importa ruolo
-		TenantId:  &targetTenantId,
-		Confirmed: false,
+		Role:         identity.ROLE_TENANT_USER, // Non importa ruolo
+		TenantId:     &targetTenantId,
+		Confirmed:    false,
 	}
 
 	targetWrongPassword := "wrong_hash"
@@ -162,7 +162,6 @@ func TestLoginUser(t *testing.T) {
 		Email:    targetUserEmail,
 		Password: targetCorrectPassword,
 	}
-
 
 	input_wrongPassword := auth.LoginUserCommand{
 		TenantId: &targetTenantId,

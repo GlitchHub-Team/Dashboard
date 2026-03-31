@@ -514,14 +514,13 @@ func TestConfirmForgotPassword(t *testing.T) {
 		ExpiryDate:  targetExpiryDate,
 		UserId:      targetUserId,
 	}
-	
+
 	expectedExpiredTokenObj := auth.ForgotPasswordToken{
 		HashedToken: expectedTokenHash,
 		TenantId:    &targetTenantId,
 		ExpiryDate:  time.Now().Add(time.Hour * -4),
 		UserId:      targetUserId,
 	}
-
 
 	// test case
 	type testCase struct {
@@ -631,7 +630,6 @@ func TestConfirmForgotPassword(t *testing.T) {
 			Return(user.User{}, errMockStep2).
 			Times(1)
 	}
-
 
 	// Step 3: crea hash ------------------------------------------------------------
 	errMockStep3 := errors.New("unexpected error in step 3")
@@ -956,218 +954,217 @@ func TestConfirmForgotPassword(t *testing.T) {
 }
 
 func TestChangePassword(t *testing.T) {
-    targetTenantId := uuid.New()
-    targetUserId := uint(100)
-    targetOldPassword := "old_password"
-    targetNewPassword := "new_password"
-    targetOldHash := "old_hash_123"
-    targetNewHash := "new_hash_456"
+	targetTenantId := uuid.New()
+	targetUserId := uint(100)
+	targetOldPassword := "old_password"
+	targetNewPassword := "new_password"
+	targetOldHash := "old_hash_123"
+	targetNewHash := "new_hash_456"
 
-    // Base user for successful retrieval
-    expectedConfirmedUser := user.User{
-        Id:           targetUserId,
-        TenantId:     &targetTenantId,
-        Confirmed:    true,
-        PasswordHash: &targetOldHash,
-    }
+	// Base user for successful retrieval
+	expectedConfirmedUser := user.User{
+		Id:           targetUserId,
+		TenantId:     &targetTenantId,
+		Confirmed:    true,
+		PasswordHash: &targetOldHash,
+	}
 
-    // User state failing the account confirmation check
-    expectedUnconfirmedUser := user.User{
-        Id:           targetUserId,
-        TenantId:     &targetTenantId,
-        Confirmed:    false,
-        PasswordHash: &targetOldHash,
-    }
+	// User state failing the account confirmation check
+	expectedUnconfirmedUser := user.User{
+		Id:           targetUserId,
+		TenantId:     &targetTenantId,
+		Confirmed:    false,
+		PasswordHash: &targetOldHash,
+	}
 
-    // Expected state after domain entity update (SetPasswordHash)
-    expectedUserAfterChange := user.User{
-        Id:           targetUserId,
-        TenantId:     &targetTenantId,
-        Confirmed:    true,
-        PasswordHash: &targetNewHash,
-    }
+	// Expected state after domain entity update (SetPasswordHash)
+	expectedUserAfterChange := user.User{
+		Id:           targetUserId,
+		TenantId:     &targetTenantId,
+		Confirmed:    true,
+		PasswordHash: &targetNewHash,
+	}
 
-    type testCase struct {
-        name          string
-        input         auth.ChangePasswordCommand
-        setupSteps    []mockSetupFunc_ChangePasswordService
-        expectedError error
-    }
+	type testCase struct {
+		name          string
+		input         auth.ChangePasswordCommand
+		setupSteps    []mockSetupFunc_ChangePasswordService
+		expectedError error
+	}
 
-    // Step 1: Get user --------------------------------------------------------------------------------------
-    step1GetUserOk := func(
+	// Step 1: Get user --------------------------------------------------------------------------------------
+	step1GetUserOk := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockGetUserPort.EXPECT().
-            GetUser(&targetTenantId, targetUserId).
-            Return(expectedConfirmedUser, nil).
-            Times(1)
-    }
+		return mockGetUserPort.EXPECT().
+			GetUser(&targetTenantId, targetUserId).
+			Return(expectedConfirmedUser, nil).
+			Times(1)
+	}
 
-    step1GetUserUnconfirmed := func(
+	step1GetUserUnconfirmed := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockGetUserPort.EXPECT().
-            GetUser(&targetTenantId, targetUserId).
-            Return(expectedUnconfirmedUser, nil).
-            Times(1)
-    }
+		return mockGetUserPort.EXPECT().
+			GetUser(&targetTenantId, targetUserId).
+			Return(expectedUnconfirmedUser, nil).
+			Times(1)
+	}
 
-    errMockStep1 := errors.New("database error getting user")
-    step1GetUserError := func(
+	errMockStep1 := errors.New("database error getting user")
+	step1GetUserError := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockGetUserPort.EXPECT().
-            GetUser(&targetTenantId, targetUserId).
-            Return(user.User{}, errMockStep1).
-            Times(1)
-    }
+		return mockGetUserPort.EXPECT().
+			GetUser(&targetTenantId, targetUserId).
+			Return(user.User{}, errMockStep1).
+			Times(1)
+	}
 
-    // Step 3: Check old password ----------------------------------------------------------------------------
-    step3CompareHashOk := func(
+	// Step 3: Check old password ----------------------------------------------------------------------------
+	step3CompareHashOk := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockSecretHasher.EXPECT().
-            CompareHashAndSecret(targetOldHash, targetOldPassword).
-            Return(nil).
-            Times(1)
-    }
+		return mockSecretHasher.EXPECT().
+			CompareHashAndSecret(targetOldHash, targetOldPassword).
+			Return(nil).
+			Times(1)
+	}
 
-    step3CompareHashError := func(
+	step3CompareHashError := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockSecretHasher.EXPECT().
-            CompareHashAndSecret(targetOldHash, targetOldPassword).
-            Return(errors.New("hash mismatch")).
-            Times(1)
-    }
+		return mockSecretHasher.EXPECT().
+			CompareHashAndSecret(targetOldHash, targetOldPassword).
+			Return(errors.New("hash mismatch")).
+			Times(1)
+	}
 
 	step3NeverCalled := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
-            CompareHashAndSecret(gomock.Any(), gomock.Any()).
-            Times(0)
+			CompareHashAndSecret(gomock.Any(), gomock.Any()).
+			Times(0)
 	}
 
-    // Step 4: Generate new hash -----------------------------------------------------------------------------
-    step4HashSecretOk := func(
+	// Step 4: Generate new hash -----------------------------------------------------------------------------
+	step4HashSecretOk := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockSecretHasher.EXPECT().
-            HashSecret(targetNewPassword).
-            Return(targetNewHash, nil).
-            Times(1)
-    }
+		return mockSecretHasher.EXPECT().
+			HashSecret(targetNewPassword).
+			Return(targetNewHash, nil).
+			Times(1)
+	}
 
-    errMockStep4 := errors.New("error hashing new password")
-    step4HashSecretError := func(
+	errMockStep4 := errors.New("error hashing new password")
+	step4HashSecretError := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockSecretHasher.EXPECT().
-            HashSecret(targetNewPassword).
-            Return("", errMockStep4).
-            Times(1)
-    }
+		return mockSecretHasher.EXPECT().
+			HashSecret(targetNewPassword).
+			Return("", errMockStep4).
+			Times(1)
+	}
 
-    // Step 6: Save user -------------------------------------------------------------------------------------
-    step6SaveUserOk := func(
+	// Step 6: Save user -------------------------------------------------------------------------------------
+	step6SaveUserOk := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockSaveUserPort.EXPECT().
-            SaveUser(expectedUserAfterChange).
-            Return(expectedUserAfterChange, nil).
-            Times(1)
-    }
+		return mockSaveUserPort.EXPECT().
+			SaveUser(expectedUserAfterChange).
+			Return(expectedUserAfterChange, nil).
+			Times(1)
+	}
 
-    errMockStep6 := errors.New("database error saving user")
-    step6SaveUserError := func(
+	errMockStep6 := errors.New("database error saving user")
+	step6SaveUserError := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
-        return mockSaveUserPort.EXPECT().
-            SaveUser(expectedUserAfterChange).
-            Return(user.User{}, errMockStep6).
-            Times(1)
-    }
-
+		return mockSaveUserPort.EXPECT().
+			SaveUser(expectedUserAfterChange).
+			Return(user.User{}, errMockStep6).
+			Times(1)
+	}
 
 	// Il ruolo dell'utente non importa
-    baseInput := auth.ChangePasswordCommand{
-        // RequesterTenantId: &targetTenantId,
-        // RequesterUserId:   targetUserId,
+	baseInput := auth.ChangePasswordCommand{
+		// RequesterTenantId: &targetTenantId,
+		// RequesterUserId:   targetUserId,
 		Requester: identity.Requester{
-			RequesterUserId: targetUserId,
+			RequesterUserId:   targetUserId,
 			RequesterTenantId: &targetTenantId,
-			RequesterRole: identity.ROLE_TENANT_USER,
+			RequesterRole:     identity.ROLE_TENANT_USER,
 		},
-        OldPassword:       targetOldPassword,
-        NewPassword:       targetNewPassword,
-    }
+		OldPassword: targetOldPassword,
+		NewPassword: targetNewPassword,
+	}
 
-    cases := []testCase{
-        {
-            name:  "Success",
-            input: baseInput,
-            setupSteps: []mockSetupFunc_ChangePasswordService{
-                step1GetUserOk,
-                step3CompareHashOk,
-                step4HashSecretOk,
-                step6SaveUserOk,
-            },
-            expectedError: nil,
-        },
-        {
-            name:  "Fail (Step 1): Unexpected error getting user",
-            input: baseInput,
-            setupSteps: []mockSetupFunc_ChangePasswordService{
-                step1GetUserError,
-            },
-            expectedError: errMockStep1,
-        },
-        {
-            name:  "Fail (Step 2): Account not confirmed",
-            input: baseInput,
-            setupSteps: []mockSetupFunc_ChangePasswordService{
-                step1GetUserUnconfirmed,
+	cases := []testCase{
+		{
+			name:  "Success",
+			input: baseInput,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetUserOk,
+				step3CompareHashOk,
+				step4HashSecretOk,
+				step6SaveUserOk,
+			},
+			expectedError: nil,
+		},
+		{
+			name:  "Fail (Step 1): Unexpected error getting user",
+			input: baseInput,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetUserError,
+			},
+			expectedError: errMockStep1,
+		},
+		{
+			name:  "Fail (Step 2): Account not confirmed",
+			input: baseInput,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetUserUnconfirmed,
 				step3NeverCalled,
-            },
-            expectedError: auth.ErrAccountNotConfirmed,
-        },
-        {
-            name:  "Fail (Step 3): Wrong old credentials",
-            input: baseInput,
-            setupSteps: []mockSetupFunc_ChangePasswordService{
-                step1GetUserOk,
-                step3CompareHashError,
-            },
-            expectedError: auth.ErrWrongCredentials,
-        },
-        {
-            name:  "Fail (Step 4): Error generating new hash",
-            input: baseInput,
-            setupSteps: []mockSetupFunc_ChangePasswordService{
-                step1GetUserOk,
-                step3CompareHashOk,
-                step4HashSecretError,
-            },
-            expectedError: errMockStep4,
-        },
-        {
-            name:  "Fail (Step 6): Unexpected error saving user",
-            input: baseInput,
-            setupSteps: []mockSetupFunc_ChangePasswordService{
-                step1GetUserOk,
-                step3CompareHashOk,
-                step4HashSecretOk,
-                step6SaveUserError,
-            },
-            expectedError: errMockStep6,
-        },
-    }
+			},
+			expectedError: auth.ErrAccountNotConfirmed,
+		},
+		{
+			name:  "Fail (Step 3): Wrong old credentials",
+			input: baseInput,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetUserOk,
+				step3CompareHashError,
+			},
+			expectedError: auth.ErrWrongCredentials,
+		},
+		{
+			name:  "Fail (Step 4): Error generating new hash",
+			input: baseInput,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetUserOk,
+				step3CompareHashOk,
+				step4HashSecretError,
+			},
+			expectedError: errMockStep4,
+		},
+		{
+			name:  "Fail (Step 6): Unexpected error saving user",
+			input: baseInput,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetUserOk,
+				step3CompareHashOk,
+				step4HashSecretOk,
+				step6SaveUserError,
+			},
+			expectedError: errMockStep6,
+		},
+	}
 
-    for _, tc := range cases {
-        t.Run(tc.name, func(t *testing.T) {
-            mockController := gomock.NewController(t)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockController := gomock.NewController(t)
 
 			mockLogger := zaptest.NewLogger(t)
 			mockTokenGen := cryptoMocks.NewMockSecurityTokenGenerator(mockController)
@@ -1202,6 +1199,6 @@ func TestChangePassword(t *testing.T) {
 			if err != tc.expectedError {
 				t.Errorf("expected error %v, got %v", tc.expectedError, err)
 			}
-        })
-    }
+		})
+	}
 }

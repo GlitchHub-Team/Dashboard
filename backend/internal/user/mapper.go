@@ -47,6 +47,7 @@ func UserToTenantMemberEntity(user User) *TenantMemberEntity {
 
 /*
 Mappa struct *SuperAdminEntity a User.
+
 NOTA: ritorna sempre errore nil, ma serve per essere compatibile con backend/internal/infra/database.MapEntityListToDomain()
 */
 func SuperAdminEntityToUser(entity *SuperAdminEntity) (user User, err error) {

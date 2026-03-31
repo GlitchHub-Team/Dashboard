@@ -64,6 +64,7 @@ func (TenantConfirmTokenEntity) TableName() string { return "confirm_tokens" }
 type tenantConfirmTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+
 var _ TenantConfirmTokenRepository = (*tenantConfirmTokenPgRepository)(nil)
 
 func newTenantConfirmTokenPgRepository(db clouddb.CloudDBConnection) *tenantConfirmTokenPgRepository {
@@ -166,6 +167,7 @@ func (TenantPasswordTokenEntity) TableName() string { return "forgot_password_to
 type tenantPasswordTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+
 var _ TenantPasswordTokenRepository = (*tenantPasswordTokenPgRepository)(nil)
 
 func newTenantPasswordTokenPgRepository(db clouddb.CloudDBConnection) *tenantPasswordTokenPgRepository {

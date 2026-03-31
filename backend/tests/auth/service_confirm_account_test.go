@@ -492,7 +492,7 @@ func TestConfirmAccount(t *testing.T) {
 				step4SaveUserOk_SuperAdmin,
 				step5DeleteTokenOk,
 			},
-			expectedUser: targetConfirmedSuperAdmin,
+			expectedUser:  targetConfirmedSuperAdmin,
 			expectedError: nil,
 		},
 
@@ -624,179 +624,179 @@ func TestConfirmAccount(t *testing.T) {
 }
 
 func TestVerifyConfirmAccountToken(t *testing.T) {
-    // Dati test
-    targetTenantId := uuid.New()
-    targetUserId := uint(100)
-    targetCorrectToken := "token123"
-    expectedTokenHash := "hash"
-    targetExpiryDate := time.Now().Add(time.Hour * 4)
+	// Dati test
+	targetTenantId := uuid.New()
+	targetUserId := uint(100)
+	targetCorrectToken := "token123"
+	expectedTokenHash := "hash"
+	targetExpiryDate := time.Now().Add(time.Hour * 4)
 
-    expectedTokenObj := auth.ConfirmAccountToken{
-        HashedToken: expectedTokenHash,
-        TenantId:    &targetTenantId,
-        ExpiryDate:  targetExpiryDate,
-        UserId:      targetUserId,
-    }
+	expectedTokenObj := auth.ConfirmAccountToken{
+		HashedToken: expectedTokenHash,
+		TenantId:    &targetTenantId,
+		ExpiryDate:  targetExpiryDate,
+		UserId:      targetUserId,
+	}
 
-    type mockSetupFunc func(
-        mockLogger *zap.Logger,
-        mockSecretHasher *cryptoMocks.MockSecretHasher,
-        mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort,
-        mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call
+	type mockSetupFunc func(
+		mockLogger *zap.Logger,
+		mockSecretHasher *cryptoMocks.MockSecretHasher,
+		mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort,
+		mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call
 
-    type testCase struct {
-        name          string
-        input         auth.VerifyConfirmAccountTokenCommand
-        setupSteps    []mockSetupFunc
-        expectedError error
-    }
+	type testCase struct {
+		name          string
+		input         auth.VerifyConfirmAccountTokenCommand
+		setupSteps    []mockSetupFunc
+		expectedError error
+	}
 
-    // Step 1: get token -------------------------------------------------------------------------------------
+	// Step 1: get token -------------------------------------------------------------------------------------
 
-    // - Tenant Member
-    stepGetTokenOk_TenantMember := func(
-        mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call {
-        return mockConfirmTokenPort.EXPECT().
-            GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
-            Return(expectedTokenObj, nil).
-            Times(1)
-    }
+	// - Tenant Member
+	stepGetTokenOk_TenantMember := func(
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockConfirmTokenPort.EXPECT().
+			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
+			Return(expectedTokenObj, nil).
+			Times(1)
+	}
 
-    stepGetTokenExpired_TenantMember := func(
-        mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call {
-        return mockConfirmTokenPort.EXPECT().
-            GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
-            Return(auth.ConfirmAccountToken{}, auth.ErrTokenExpired).
-            Times(1)
-    }
+	stepGetTokenExpired_TenantMember := func(
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockConfirmTokenPort.EXPECT().
+			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
+			Return(auth.ConfirmAccountToken{}, auth.ErrTokenExpired).
+			Times(1)
+	}
 
-    errMockGetToken := errors.New("unexpected database error")
-    stepGetTokenError_TenantMember := func(
-        mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call {
-        return mockConfirmTokenPort.EXPECT().
-            GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
-            Return(auth.ConfirmAccountToken{
+	errMockGetToken := errors.New("unexpected database error")
+	stepGetTokenError_TenantMember := func(
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockConfirmTokenPort.EXPECT().
+			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
+			Return(auth.ConfirmAccountToken{
 				ExpiryDate: time.Now().Add(1 * time.Hour),
 			}, errMockGetToken).
-            Times(1)
-    }
+			Times(1)
+	}
 
-    // - Super Admin
-    stepGetTokenOk_SuperAdmin := func(
-        mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call {
-        return mockConfirmTokenPort.EXPECT().
-            GetSuperAdminConfirmAccountToken(targetCorrectToken).
-            Return(expectedTokenObj, nil).
-            Times(1)
-    }
+	// - Super Admin
+	stepGetTokenOk_SuperAdmin := func(
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockConfirmTokenPort.EXPECT().
+			GetSuperAdminConfirmAccountToken(targetCorrectToken).
+			Return(expectedTokenObj, nil).
+			Times(1)
+	}
 
-    stepGetTokenExpired_SuperAdmin := func(
-        mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call {
-        return mockConfirmTokenPort.EXPECT().
-            GetSuperAdminConfirmAccountToken(targetCorrectToken).
-            Return(auth.ConfirmAccountToken{}, auth.ErrTokenExpired).
-            Times(1)
-    }
+	stepGetTokenExpired_SuperAdmin := func(
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockConfirmTokenPort.EXPECT().
+			GetSuperAdminConfirmAccountToken(targetCorrectToken).
+			Return(auth.ConfirmAccountToken{}, auth.ErrTokenExpired).
+			Times(1)
+	}
 
-    stepGetTokenError_SuperAdmin := func(
-        mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-    ) *gomock.Call {
-        return mockConfirmTokenPort.EXPECT().
-            GetSuperAdminConfirmAccountToken(targetCorrectToken).
-            Return(auth.ConfirmAccountToken{
+	stepGetTokenError_SuperAdmin := func(
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockConfirmTokenPort.EXPECT().
+			GetSuperAdminConfirmAccountToken(targetCorrectToken).
+			Return(auth.ConfirmAccountToken{
 				ExpiryDate: time.Now().Add(1 * time.Hour),
 			}, errMockGetToken).
-            Times(1)
-    }
+			Times(1)
+	}
 
-    // --- Inputs ---
-    baseInput_TenantMember := auth.VerifyConfirmAccountTokenCommand{
-        TenantId: &targetTenantId,
-        Token:    targetCorrectToken,
-    }
+	// --- Inputs ---
+	baseInput_TenantMember := auth.VerifyConfirmAccountTokenCommand{
+		TenantId: &targetTenantId,
+		Token:    targetCorrectToken,
+	}
 
-    baseInput_SuperAdmin := auth.VerifyConfirmAccountTokenCommand{
-        TenantId: nil,
-        Token:    targetCorrectToken,
-    }
+	baseInput_SuperAdmin := auth.VerifyConfirmAccountTokenCommand{
+		TenantId: nil,
+		Token:    targetCorrectToken,
+	}
 
-    cases := []testCase{
-        // TENANT MEMBER ------------------------------------------------------------------------------
-        {
-            name:          "(Tenant Member) Success",
-            input:         baseInput_TenantMember,
-            setupSteps:    []mockSetupFunc{stepGetTokenOk_TenantMember},
-            expectedError: nil,
-        },
-        {
-            name:          "(Tenant Member) Fail: token expired",
-            input:         baseInput_TenantMember,
-            setupSteps:    []mockSetupFunc{stepGetTokenExpired_TenantMember},
-            expectedError: auth.ErrTokenExpired,
-        },
-        {
-            name:          "(Tenant Member) Fail: unexpected error",
-            input:         baseInput_TenantMember,
-            setupSteps:    []mockSetupFunc{stepGetTokenError_TenantMember},
-            expectedError: errMockGetToken,
-        },
+	cases := []testCase{
+		// TENANT MEMBER ------------------------------------------------------------------------------
+		{
+			name:          "(Tenant Member) Success",
+			input:         baseInput_TenantMember,
+			setupSteps:    []mockSetupFunc{stepGetTokenOk_TenantMember},
+			expectedError: nil,
+		},
+		{
+			name:          "(Tenant Member) Fail: token expired",
+			input:         baseInput_TenantMember,
+			setupSteps:    []mockSetupFunc{stepGetTokenExpired_TenantMember},
+			expectedError: auth.ErrTokenExpired,
+		},
+		{
+			name:          "(Tenant Member) Fail: unexpected error",
+			input:         baseInput_TenantMember,
+			setupSteps:    []mockSetupFunc{stepGetTokenError_TenantMember},
+			expectedError: errMockGetToken,
+		},
 
-        // SUPER ADMIN ---------------------------------------------------------------------------------
-        {
-            name:          "(Super Admin) Success",
-            input:         baseInput_SuperAdmin,
-            setupSteps:    []mockSetupFunc{stepGetTokenOk_SuperAdmin},
-            expectedError: nil,
-        },
-        {
-            name:          "(Super Admin) Fail: token expired",
-            input:         baseInput_SuperAdmin,
-            setupSteps:    []mockSetupFunc{stepGetTokenExpired_SuperAdmin},
-            expectedError: auth.ErrTokenExpired,
-        },
-        {
-            name:          "(Super Admin) Fail: unexpected error",
-            input:         baseInput_SuperAdmin,
-            setupSteps:    []mockSetupFunc{stepGetTokenError_SuperAdmin},
-            expectedError: errMockGetToken,
-        },
-    }
+		// SUPER ADMIN ---------------------------------------------------------------------------------
+		{
+			name:          "(Super Admin) Success",
+			input:         baseInput_SuperAdmin,
+			setupSteps:    []mockSetupFunc{stepGetTokenOk_SuperAdmin},
+			expectedError: nil,
+		},
+		{
+			name:          "(Super Admin) Fail: token expired",
+			input:         baseInput_SuperAdmin,
+			setupSteps:    []mockSetupFunc{stepGetTokenExpired_SuperAdmin},
+			expectedError: auth.ErrTokenExpired,
+		},
+		{
+			name:          "(Super Admin) Fail: unexpected error",
+			input:         baseInput_SuperAdmin,
+			setupSteps:    []mockSetupFunc{stepGetTokenError_SuperAdmin},
+			expectedError: errMockGetToken,
+		},
+	}
 
-    for _, tc := range cases {
-        t.Run(tc.name, func(t *testing.T) {
-            mockController := gomock.NewController(t)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockController := gomock.NewController(t)
 
-            mockLogger := zaptest.NewLogger(t)
-            mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
-            mockTokenPort := mocks.NewMockConfirmAccountTokenPort(mockController)
-            mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
+			mockLogger := zaptest.NewLogger(t)
+			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
+			mockTokenPort := mocks.NewMockConfirmAccountTokenPort(mockController)
+			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
 
-            var expectedCalls []any
+			var expectedCalls []any
 
-            for _, step := range tc.setupSteps {
-                call := step(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
-                if call != nil {
-                    expectedCalls = append(expectedCalls, call)
-                }
-            }
+			for _, step := range tc.setupSteps {
+				call := step(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
+				if call != nil {
+					expectedCalls = append(expectedCalls, call)
+				}
+			}
 
-            if len(expectedCalls) > 0 {
-                gomock.InOrder(expectedCalls...)
-            }
+			if len(expectedCalls) > 0 {
+				gomock.InOrder(expectedCalls...)
+			}
 
-            service := auth.NewConfirmUserAccountService(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
+			service := auth.NewConfirmUserAccountService(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
 
-            err := service.VerifyConfirmAccountToken(tc.input)
+			err := service.VerifyConfirmAccountToken(tc.input)
 
-            if err != tc.expectedError {
-                t.Errorf("expected error %v, got %v", tc.expectedError, err)
-            }
-        })
-    }
+			if err != tc.expectedError {
+				t.Errorf("expected error %v, got %v", tc.expectedError, err)
+			}
+		})
+	}
 }

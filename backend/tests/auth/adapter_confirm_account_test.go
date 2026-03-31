@@ -762,9 +762,9 @@ func TestConfirmAccountTokenPgAdapter_GetTenantConfirmAccountToken(t *testing.T)
 
 	expectedDomainToken := auth.ConfirmAccountToken{
 		HashedToken: expectedHashedToken,
-		TenantId: &targetTenantId,
-		UserId: targetUserId,
-		ExpiryDate: targetExpiry,
+		TenantId:    &targetTenantId,
+		UserId:      targetUserId,
+		ExpiryDate:  targetExpiry,
 	}
 
 	// Step 1: hash token
@@ -886,16 +886,16 @@ func TestConfirmAccountTokenPgAdapter_GetSuperAdminConfirmAccountToken(t *testin
 	targetUserId := uint(1)
 
 	expectedTenantMemberEntity := &auth.SuperAdminConfirmTokenEntity{
-		Token:  expectedHashedToken,
-		UserId: targetUserId,
+		Token:     expectedHashedToken,
+		UserId:    targetUserId,
 		ExpiresAt: targetExpiryDate,
 	}
 
 	expectedDomainToken := auth.ConfirmAccountToken{
 		HashedToken: expectedHashedToken,
-		TenantId: nil,
-		UserId: targetUserId,
-		ExpiryDate: targetExpiryDate,
+		TenantId:    nil,
+		UserId:      targetUserId,
+		ExpiryDate:  targetExpiryDate,
 	}
 	// Step 1: hash token
 	step1HashTokenOk := func(

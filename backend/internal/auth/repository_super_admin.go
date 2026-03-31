@@ -46,6 +46,7 @@ func (SuperAdminConfirmTokenEntity) TableName() string { return "super_admin_con
 type superAdminConfirmTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+
 var _ SuperAdminConfirmTokenRepository = (*superAdminConfirmTokenPgRepository)(nil)
 
 func newSuperAdminConfirmTokenPgRepository(db clouddb.CloudDBConnection) *superAdminConfirmTokenPgRepository {
@@ -127,6 +128,7 @@ func (SuperAdminPasswordTokenEntity) TableName() string { return "super_admin_fo
 type superAdminPasswordTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+
 var _ SuperAdminPasswordTokenRepository = (*superAdminPasswordTokenPgRepository)(nil)
 
 func newSuperAdminPasswordTokenPgRepository(db clouddb.CloudDBConnection) *superAdminPasswordTokenPgRepository {
