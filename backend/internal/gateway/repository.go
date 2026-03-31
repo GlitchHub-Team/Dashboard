@@ -1,14 +1,11 @@
 package gateway
 
 import (
+	"backend/internal/infra/database/cloud_db/connection"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-type GatewayRepository interface {
-	GetById(id uuid.UUID) (Gateway, error)
-	Save(g Gateway) error
-}
 
 type gatewayEntity struct {
 	ID               string `gorm:"primaryKey;size:36"`
@@ -39,10 +36,10 @@ func (e *gatewayEntity) toDomain() Gateway {
 }
 
 type gatewayPostgreRepository struct {
-	db *gorm.DB
+	db connection.CloudDBConnection
 }
 
-func NewGatewayPostgreRepository(db *gorm.DB) GatewayRepository {
+func NewGatewayPostgreRepository(db connection.CloudDBConnection) *gatewayPostgreRepository {
 	return &gatewayPostgreRepository{db: db}
 }
 
@@ -52,7 +49,8 @@ func MigrateGateway(db *gorm.DB) error {
 
 func (repo *gatewayPostgreRepository) GetById(id uuid.UUID) (Gateway, error) {
 	var entity gatewayEntity
-	err := repo.db.Where("id = ?", id.String()).First(&entity).Error
+	gdb := (*gorm.DB)(repo.db)
+	err := gdb.Where("id = ?", id.String()).First(&entity).Error
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -61,8 +59,8 @@ func (repo *gatewayPostgreRepository) GetById(id uuid.UUID) (Gateway, error) {
 
 func (repo *gatewayPostgreRepository) Save(g Gateway) error {
 	var existing gatewayEntity
-
-	err := repo.db.Where("id = ?", g.Id.String()).First(&existing).Error
+	gdb := (*gorm.DB)(repo.db)
+	err := gdb.Where("id = ?", g.Id.String()).First(&existing).Error
 
 	if err != nil {
 		return err
@@ -73,7 +71,7 @@ func (repo *gatewayPostgreRepository) Save(g Gateway) error {
 		tenantVal = g.TenantId.String()
 	}
 
-	return repo.db.Model(&gatewayEntity{}).
+	return gdb.Model(&gatewayEntity{}).
 		Where("id = ?", g.Id.String()).
 		Updates(map[string]interface{}{
 			"name":              g.Name,

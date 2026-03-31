@@ -17,10 +17,10 @@ type GetGatewayPort interface {
 }
 
 type GatewayPostgreAdapter struct {
-	repository GatewayRepository
+	repository gatewayPostgreRepository
 }
 
-func NewGatewayPostgreAdapter(repository GatewayRepository) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
+func NewGatewayPostgreAdapter(repository gatewayPostgreRepository) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
 	adapter := &GatewayPostgreAdapter{
 		repository: repository,
 	}
