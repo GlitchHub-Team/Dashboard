@@ -38,12 +38,9 @@ describe('AuthApiClientService', () => {
 
   describe('login', () => {
     it('should POST credentials to /auth/login', () => {
-      // The component maps the role before building the request
-      const mappedRole = userRoleMapper.toBackend(UserRole.TENANT_USER);
       const mockRequest: LoginRequest = {
         email: 'test@example.com',
         password: 'password',
-        userRole: mappedRole,
         tenantId: 'tenant-01',
       };
       const mockResponse: AuthResponse = { jwt: 'mock-token' };
@@ -57,7 +54,6 @@ describe('AuthApiClientService', () => {
       expect(req.request.body).toEqual({
         email: 'test@example.com',
         password: 'password',
-        user_role: mappedRole,
         tenant_id: 'tenant-01',
       });
       req.flush(mockResponse);
@@ -224,11 +220,9 @@ describe('AuthApiClientService', () => {
 
   describe('error handling', () => {
     it('should propagate HTTP errors on login', () => {
-      const mappedRole = userRoleMapper.toBackend(UserRole.TENANT_USER);
       const mockRequest: LoginRequest = {
         email: 'test@example.com',
         password: 'password',
-        userRole: mappedRole,
         tenantId: 'tenant-01',
       };
       const mockError = { status: 401, statusText: 'Unauthorized' };

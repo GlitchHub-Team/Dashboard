@@ -48,7 +48,6 @@ export class AuthServiceMock {
     if (
       entry &&
       entry.password === req.password &&
-      entry.role === req.userRole &&
       (entry.tenantId === req.tenantId || !entry.tenantId)
     ) {
       const jwt = this.buildJwt(entry.userId, entry.role, entry.tenantId);

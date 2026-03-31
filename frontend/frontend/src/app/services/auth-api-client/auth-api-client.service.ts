@@ -22,7 +22,6 @@ export class AuthApiClientService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, {
       email: req.email,
       password: req.password,
-      user_role: req.userRole,
       tenant_id: req.tenantId,
     });
   }

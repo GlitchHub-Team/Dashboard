@@ -11,7 +11,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { LoginRequest } from '../../../../models/auth/login-request.model';
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { UserRole } from '../../../../models/user/user-role.enum';
-import { userRoleMapper } from '../../../../utils/user-role.utils';
 
 @Component({
   selector: 'app-login-form',
@@ -86,12 +85,11 @@ export class LoginFormComponent {
       return;
     }
 
-    // Formatta la loginRequest, mappa il ruolo selezionato da ENUM a string e include
+    // Formatta la loginRequest e include
     // tenantId solo se necessario (non per SUPER_ADMIN)
     const loginRequest: LoginRequest = {
       email: this.loginForm.get('email')!.value,
       password: this.loginForm.get('password')!.value,
-      userRole: userRoleMapper.toBackend(this.loginForm.get('role')!.value),
       tenantId: this.showTenantDropdown
         ? this.loginForm.get('tenantId')?.value || undefined
         : undefined,

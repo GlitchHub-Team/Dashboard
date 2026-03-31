@@ -60,7 +60,6 @@ describe('AuthSessionService', () => {
     const mockRequest: LoginRequest = {
       email: 'user@example.com',
       password: 'secret123',
-      userRole: UserRole.SUPER_ADMIN,
     };
     const mockResponse: AuthResponse = {
       jwt: 'jwt-token-abc',
@@ -149,7 +148,6 @@ describe('AuthSessionService', () => {
         .login({
           email: 'error@test.com',
           password: 'skibiditoilet',
-          userRole: UserRole.SUPER_ADMIN,
         })
         .subscribe({ error: noop });
       expect(service.error()).toBe('some error');

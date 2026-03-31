@@ -32,7 +32,6 @@ describe('LoginPage', () => {
   const mockRequest: LoginRequest = {
     email: 'user@example.com',
     password: 'secret123',
-    userRole: UserRole.SUPER_ADMIN,
   };
   const mockResponse: AuthResponse = {
     jwt: 'jwt-token',

@@ -203,7 +203,6 @@ describe('LoginFormComponent', () => {
       const expected: LoginRequest = {
         email: 'admin@example.com',
         password: 'secret123',
-        userRole: 'super_admin',
         tenantId: undefined,
       };
       expect(emitSpy).toHaveBeenCalledWith(expected);
@@ -223,7 +222,6 @@ describe('LoginFormComponent', () => {
       const expected: LoginRequest = {
         email: 'user@example.com',
         password: 'secret123',
-        userRole: 'tenant_admin',
         tenantId: 'tenant-01',
       };
       expect(emitSpy).toHaveBeenCalledWith(expected);
