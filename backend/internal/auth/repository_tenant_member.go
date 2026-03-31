@@ -64,6 +64,7 @@ func (TenantConfirmTokenEntity) TableName() string { return "confirm_tokens" }
 type tenantConfirmTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+var _ TenantConfirmTokenRepository = (*tenantConfirmTokenPgRepository)(nil)
 
 func newTenantConfirmTokenPgRepository(db clouddb.CloudDBConnection) *tenantConfirmTokenPgRepository {
 	return &tenantConfirmTokenPgRepository{
@@ -132,7 +133,7 @@ type TenantPasswordTokenEntity struct {
 	ExpiresAt time.Time
 }
 
-func ForgotPasswordTokenToTenantEntity(tokenObj ForgotPasswordToken) *TenantPasswordTokenEntity {
+func ForgotPasswordTokenToTenantTokenEntity(tokenObj ForgotPasswordToken) *TenantPasswordTokenEntity {
 	var tenantId *string
 	if tokenObj.TenantId != nil {
 		str := tokenObj.TenantId.String()
@@ -165,6 +166,7 @@ func (TenantPasswordTokenEntity) TableName() string { return "forgot_password_to
 type tenantPasswordTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+var _ TenantPasswordTokenRepository = (*tenantPasswordTokenPgRepository)(nil)
 
 func newTenantPasswordTokenPgRepository(db clouddb.CloudDBConnection) *tenantPasswordTokenPgRepository {
 	return &tenantPasswordTokenPgRepository{
