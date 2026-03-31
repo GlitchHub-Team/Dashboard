@@ -102,9 +102,7 @@ func RunTests(
 
 			w := httptest.NewRecorder()
 
-			path := "http://localhost:80/api/v1" + tt.Path
-
-			req, err := http.NewRequestWithContext(ctx, tt.Method, path, tt.Body)
+			req, err := http.NewRequestWithContext(ctx, tt.Method, tt.Path, tt.Body)
 			if err != nil {
 				t.Fatalf("Failed to create request: %v", err)
 			}
