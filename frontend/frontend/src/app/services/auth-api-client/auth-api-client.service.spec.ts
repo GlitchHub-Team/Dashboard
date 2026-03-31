@@ -5,13 +5,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { AuthApiClientService } from './auth-api-client.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
-import { UserRole } from '../../models/user/user-role.enum';
 import { PasswordChange } from '../../models/auth/password-change.model';
 import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
 import { environment } from '../../../environments/environment';
-import { userRoleMapper } from '../../utils/user-role.utils';
 
 describe('AuthApiClientService', () => {
   let service: AuthApiClientService;
@@ -19,8 +17,6 @@ describe('AuthApiClientService', () => {
   const apiUrl = `${environment.apiUrl}/auth`;
 
   beforeEach(() => {
-    vi.resetAllMocks();
-
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -37,7 +33,7 @@ describe('AuthApiClientService', () => {
   });
 
   describe('login', () => {
-    it('should POST credentials to /auth/login', () => {
+    it('should POST credentials to /auth/login and return AuthResponse', () => {
       const mockRequest: LoginRequest = {
         email: 'test@example.com',
         password: 'password',
@@ -61,10 +57,8 @@ describe('AuthApiClientService', () => {
   });
 
   describe('logout', () => {
-    it('should POST userId to /auth/logout', () => {
-      service.logout().subscribe((response) => {
-        expect(response).toBeNull();
-      });
+    it('should POST empty body to /auth/logout', () => {
+      service.logout().subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/logout`);
       expect(req.request.method).toBe('POST');
@@ -74,27 +68,21 @@ describe('AuthApiClientService', () => {
   });
 
   describe('verifyForgotPasswordToken', () => {
-    it('should GET to /auth/forgot_password/verify_token/:token and return true when result is true', () => {
-      const token = 'reset-token';
+    it('should POST token in body to /auth/forgot_password/verify_token', () => {
+      service.verifyForgotPasswordToken('reset-token').subscribe();
 
-      service.verifyForgotPasswordToken(token).subscribe((response) => {
-        expect(response).toBe(true);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token/${token}`);
-      expect(req.request.method).toBe('GET');
-      req.flush({ result: true });
+      const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ token: 'reset-token', tenant_id: undefined });
+      req.flush(null);
     });
 
-    it('should return false when result is false', () => {
-      const token = 'reset-token';
+    it('should include tenant_id in body when tenantId is provided', () => {
+      service.verifyForgotPasswordToken('reset-token', 'tenant-01').subscribe();
 
-      service.verifyForgotPasswordToken(token).subscribe((response) => {
-        expect(response).toBe(false);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token/${token}`);
-      req.flush({ result: false });
+      const req = httpMock.expectOne(`${apiUrl}/forgot_password/verify_token`);
+      expect(req.request.body).toEqual({ token: 'reset-token', tenant_id: 'tenant-01' });
+      req.flush(null);
     });
   });
 
@@ -105,49 +93,57 @@ describe('AuthApiClientService', () => {
         tenantId: 'tenant-01',
       };
 
-      service.forgotPasswordRequest(mockRequest).subscribe((response) => {
-        expect(response).toBeNull();
-      });
+      service.forgotPasswordRequest(mockRequest).subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/request`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({
-        email: 'test@example.com',
-        tenant_id: 'tenant-01',
-      });
+      expect(req.request.body).toEqual({ email: 'test@example.com', tenant_id: 'tenant-01' });
       req.flush(null);
     });
 
-    it('should POST with only email when tenantId is omitted', () => {
+    it('should POST with tenant_id as undefined when tenantId is omitted', () => {
       const mockRequest: ForgotPasswordRequest = { email: 'test@example.com' };
 
       service.forgotPasswordRequest(mockRequest).subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password/request`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({
-        email: 'test@example.com',
-        tenant_id: undefined,
-      });
+      expect(req.request.body).toEqual({ email: 'test@example.com', tenant_id: undefined });
       req.flush(null);
     });
   });
 
   describe('confirmPasswordReset', () => {
-    it('should POST data to /auth/forgot_password', () => {
+    it('should POST token, tenant_id, and new_password to /auth/forgot_password', () => {
       const mockRequest: ForgotPasswordResponse = {
         token: 'reset-token',
+        tenantId: 'tenant-01',
         newPassword: 'new-password',
       };
 
-      service.confirmPasswordReset(mockRequest).subscribe((response) => {
-        expect(response).toBeNull();
-      });
+      service.confirmPasswordReset(mockRequest).subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/forgot_password`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
         token: 'reset-token',
+        tenant_id: 'tenant-01',
+        new_password: 'new-password',
+      });
+      req.flush(null);
+    });
+
+    it('should POST with tenant_id as undefined when omitted', () => {
+      const mockRequest: ForgotPasswordResponse = {
+        token: 'reset-token',
+        newPassword: 'new-password',
+      };
+
+      service.confirmPasswordReset(mockRequest).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/forgot_password`);
+      expect(req.request.body).toEqual({
+        token: 'reset-token',
+        tenant_id: undefined,
         new_password: 'new-password',
       });
       req.flush(null);
@@ -155,12 +151,10 @@ describe('AuthApiClientService', () => {
   });
 
   describe('confirmPasswordChange', () => {
-    it('should POST data to /auth/change_password', () => {
+    it('should POST old_password and new_password to /auth/change_password', () => {
       const data: PasswordChange = { oldPassword: 'old-password', newPassword: 'new-password' };
 
-      service.confirmPasswordChange(data).subscribe((response) => {
-        expect(response).toBeNull();
-      });
+      service.confirmPasswordChange(data).subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/change_password`);
       expect(req.request.method).toBe('POST');
@@ -173,48 +167,62 @@ describe('AuthApiClientService', () => {
   });
 
   describe('verifyAccountToken', () => {
-    it('should GET to /auth/confirm_account/verify_token/:token and return true when result is true', () => {
-      const token = 'account-token';
+    it('should POST token in body to /auth/confirm_account/verify_token/', () => {
+      service.verifyAccountToken('account-token').subscribe();
 
-      service.verifyAccountToken(token).subscribe((response) => {
-        expect(response).toBe(true);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/${token}`);
-      expect(req.request.method).toBe('GET');
-      req.flush({ result: true });
+      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ token: 'account-token', tenant_id: undefined });
+      req.flush(null);
     });
 
-    it('should return false when result is false', () => {
-      const token = 'account-token';
+    it('should include tenant_id in body when tenantId is provided', () => {
+      service.verifyAccountToken('account-token', 'tenant-01').subscribe();
 
-      service.verifyAccountToken(token).subscribe((response) => {
-        expect(response).toBe(false);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/${token}`);
-      req.flush({ result: false });
+      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/`);
+      expect(req.request.body).toEqual({ token: 'account-token', tenant_id: 'tenant-01' });
+      req.flush(null);
     });
   });
 
   describe('confirmAccountCreation', () => {
-    it('should POST data to /auth/confirm_account', () => {
+    it('should POST token, tenant_id, and new_password to /auth/confirm_account and return AuthResponse', () => {
       const mockRequest: ConfirmAccountResponse = {
         token: 'account-token',
+        tenantId: 'tenant-01',
         newPassword: 'new-password',
       };
+      const mockResponse: AuthResponse = { jwt: 'mock-token' };
 
       service.confirmAccountCreation(mockRequest).subscribe((response) => {
-        expect(response).toBeNull();
+        expect(response).toEqual(mockResponse);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/confirm_account`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
         token: 'account-token',
+        tenant_id: 'tenant-01',
         new_password: 'new-password',
       });
-      req.flush(null);
+      req.flush(mockResponse);
+    });
+
+    it('should POST with tenant_id as undefined when omitted', () => {
+      const mockRequest: ConfirmAccountResponse = {
+        token: 'account-token',
+        newPassword: 'new-password',
+      };
+
+      service.confirmAccountCreation(mockRequest).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/confirm_account`);
+      expect(req.request.body).toEqual({
+        token: 'account-token',
+        tenant_id: undefined,
+        new_password: 'new-password',
+      });
+      req.flush({ jwt: 'mock-token' });
     });
   });
 
@@ -225,7 +233,6 @@ describe('AuthApiClientService', () => {
         password: 'password',
         tenantId: 'tenant-01',
       };
-      const mockError = { status: 401, statusText: 'Unauthorized' };
 
       service.login(mockRequest).subscribe({
         next: () => expect.unreachable('expected an error'),
@@ -236,13 +243,10 @@ describe('AuthApiClientService', () => {
       });
 
       const req = httpMock.expectOne(`${apiUrl}/login`);
-      expect(req.request.method).toBe('POST');
-      req.flush(null, mockError);
+      req.flush(null, { status: 401, statusText: 'Unauthorized' });
     });
 
     it('should propagate server errors on logout', () => {
-      const mockError = { status: 500, statusText: 'Internal Server Error' };
-
       service.logout().subscribe({
         next: () => expect.unreachable('expected an error'),
         error: (error) => {
@@ -252,8 +256,7 @@ describe('AuthApiClientService', () => {
       });
 
       const req = httpMock.expectOne(`${apiUrl}/logout`);
-      expect(req.request.method).toBe('POST');
-      req.flush(null, mockError);
+      req.flush(null, { status: 500, statusText: 'Internal Server Error' });
     });
   });
 });

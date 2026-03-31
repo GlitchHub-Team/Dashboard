@@ -1,18 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA, signal, WritableSignal } from '@angular/core';
+import { signal, WritableSignal, Component, input, output } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { By } from '@angular/platform-browser';
+import { DebugElement } from '@angular/core';
 import { of, EMPTY } from 'rxjs';
 
 import { ConfirmAccountPage } from './confirm-account.page';
+import { ConfirmAccountFormComponent } from './components/confirm-account-form/confirm-account-form.component';
 import { AuthActionsService } from '../../services/auth/auth-actions.service';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
+
+@Component({ selector: 'app-confirm-account-form', template: '', standalone: true })
+class StubConfirmAccountForm {
+  loading = input(false);
+  generalError = input<string | null>(null);
+  submitConfirmAccount = output<ConfirmAccountResponse>();
+  dismissError = output<void>();
+}
 
 describe('ConfirmAccountPage', () => {
   let component: ConfirmAccountPage;
   let fixture: ComponentFixture<ConfirmAccountPage>;
-  // ESLint whining
-  let confirmFormDebug: any;
+  let confirmFormDebug: DebugElement;
 
   let loadingSignal: WritableSignal<boolean>;
   let errorSignal: WritableSignal<string | null>;
@@ -29,7 +38,11 @@ describe('ConfirmAccountPage', () => {
   const activatedRouteMock = {
     snapshot: {
       queryParamMap: {
-        get: vi.fn().mockReturnValue(null),
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'token') return null;
+          if (key === 'tenant_id') return null;
+          return null;
+        }),
       },
     },
   };
@@ -54,14 +67,18 @@ describe('ConfirmAccountPage', () => {
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
       ],
-      schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    })
+      .overrideComponent(ConfirmAccountPage, {
+        remove: { imports: [ConfirmAccountFormComponent] },
+        add: { imports: [StubConfirmAccountForm] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(ConfirmAccountPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    confirmFormDebug = fixture.debugElement.query(By.css('app-confirm-account-form'));
+    confirmFormDebug = fixture.debugElement.query(By.directive(StubConfirmAccountForm));
   });
 
   describe('initial state', () => {
@@ -87,7 +104,7 @@ describe('ConfirmAccountPage', () => {
   describe('onConfirmAccount', () => {
     const mockRequest: ConfirmAccountResponse = { token: '', newPassword: 'newSecret123' };
 
-    it('should call confirmAccount with the emitted request and empty token when route has no token', () => {
+    it('should call confirmAccount with empty token and undefined tenant_id when route has none', () => {
       authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
 
       confirmFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
@@ -96,16 +113,20 @@ describe('ConfirmAccountPage', () => {
       expect(authActionsServiceMock.confirmAccount).toHaveBeenCalledWith({
         ...mockRequest,
         token: '',
+        tenant_id: undefined,
       });
     });
 
-    it('should call confirmAccount with the token from the route merged in', () => {
-      activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue('route-token');
+    it('should merge token from route into the request', () => {
+      activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+        if (key === 'token') return 'route-token';
+        return null;
+      });
       authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
 
       const tokenFixture = TestBed.createComponent(ConfirmAccountPage);
       tokenFixture.detectChanges();
-      const tokenFormDebug = tokenFixture.debugElement.query(By.css('app-confirm-account-form'));
+      const tokenFormDebug = tokenFixture.debugElement.query(By.directive(StubConfirmAccountForm));
 
       tokenFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
       tokenFixture.detectChanges();
@@ -113,6 +134,31 @@ describe('ConfirmAccountPage', () => {
       expect(authActionsServiceMock.confirmAccount).toHaveBeenCalledWith({
         ...mockRequest,
         token: 'route-token',
+        tenant_id: undefined,
+      });
+    });
+
+    it('should merge tenant_id from route into the request', () => {
+      activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+        if (key === 'token') return 'route-token';
+        if (key === 'tenant_id') return 'tenant-01';
+        return null;
+      });
+      authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
+
+      const tenantFixture = TestBed.createComponent(ConfirmAccountPage);
+      tenantFixture.detectChanges();
+      const tenantFormDebug = tenantFixture.debugElement.query(
+        By.directive(StubConfirmAccountForm),
+      );
+
+      tenantFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
+      tenantFixture.detectChanges();
+
+      expect(authActionsServiceMock.confirmAccount).toHaveBeenCalledWith({
+        ...mockRequest,
+        token: 'route-token',
+        tenantId: 'tenant-01',
       });
     });
 

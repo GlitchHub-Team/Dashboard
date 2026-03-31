@@ -1,5 +1,5 @@
 export interface ConfirmAccountResponse {
-  // TODO: tenant_id?: string;
+  tenantId?: string;
   token: string;
   newPassword: string;
 }

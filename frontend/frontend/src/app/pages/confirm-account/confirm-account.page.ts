@@ -18,24 +18,27 @@ export class ConfirmAccountPage {
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  // Token recuperato dall'URL
+  // Token e tenantId recuperati dall'URL
   private readonly token = this.activatedRoute.snapshot.queryParamMap.get('token') ?? '';
+  private readonly tenantId =
+    this.activatedRoute.snapshot.queryParamMap.get('tenant_id') ?? undefined;
 
   protected readonly loading = this.authActionsService.loading;
-  protected readonly genenralError = this.authActionsService.error;
+  protected readonly generalError = this.authActionsService.error;
 
   protected onConfirmAccount(req: ConfirmAccountResponse): void {
     const requestWithToken: ConfirmAccountResponse = {
       ...req,
       token: this.token,
+      tenantId: this.tenantId,
     };
     // La conferma di un account ritorna il JWT dell'utente appena confermato,
     // quindi logga automaticamente l'utente dopo la conferma
     this.authActionsService
       .confirmAccount(requestWithToken)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.router.navigate(['/dashboard']);
+      .subscribe({
+        next: () => this.router.navigate(['/dashboard']),
       });
   }
 

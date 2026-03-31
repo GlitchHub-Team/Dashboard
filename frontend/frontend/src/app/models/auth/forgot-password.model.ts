@@ -1,5 +1,5 @@
 export interface ForgotPasswordResponse {
-  // TODO: mettere tenant_id?: string;
+  tenantId?: string;
   token: string;
   newPassword: string;
 }

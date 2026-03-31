@@ -45,11 +45,14 @@ export class ConfirmAccountFormComponent {
       return;
     }
 
-    // Il token viene recuperato dalla page
-    this.submitConfirmAccount.emit({
-      token: '',
+    const confirmAccountResponse: ConfirmAccountResponse = {
+      token: '', // Il token viene recuperato dalla page, non dal form
+      tenantId: undefined, // Il tenantId viene recuperato dalla page, non dal form
       newPassword: this.confirmAccountForm.value.newPassword!,
-    });
+    };
+
+    // Il token viene recuperato dalla page
+    this.submitConfirmAccount.emit(confirmAccountResponse);
   }
 
   private passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
