@@ -15,9 +15,6 @@ type Config struct {
 	// Porta su cui aprire il backend
 	Port string `json:"PORT"`
 
-	// URL per il Cloud DB
-	CloudDBUrl string `json:"CLOUD_DB_URL"`
-
 	// Quale mail adapter utilizzare, può essere o "terminal" o "mailtrap"
 	MailAdapter string `json:"MAIL_ADAPTER"`
 
