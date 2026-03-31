@@ -82,6 +82,41 @@ describe('TenantService', () => {
     expect(service.limit()).toBe(10);
   });
 
+  describe('getTenant', () => {
+    const rawDto: TenantBackend = tenantBackendList[0];
+    const adaptedTenant: Tenant = mappedTenants[0];
+
+    it('should call API with correct id, adapt the DTO and return the tenant', () => {
+      tenantApiMock.getTenant.mockReturnValue(of(rawDto));
+      tenantAdapterMock.fromDTO.mockReturnValue(adaptedTenant);
+
+      let result: Tenant | undefined;
+      service.getTenant('tenant-01').subscribe((tenant) => {
+        result = tenant;
+      });
+
+      expect(tenantApiMock.getTenant).toHaveBeenCalledWith('tenant-01');
+      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(rawDto);
+      expect(result).toEqual(adaptedTenant);
+      expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
+    });
+
+    it.each([
+      { error: { status: 500, message: 'Server error' } as ApiError, expected: 'Server error' },
+      { error: { status: 500 } as ApiError, expected: 'Failed to fetch tenant' },
+    ])('should set error "$expected", reset loading and propagate error', ({ error, expected }) => {
+      tenantApiMock.getTenant.mockReturnValue(throwError(() => error));
+
+      let propagatedError: ApiError | undefined;
+      service.getTenant('tenant-01').subscribe({ error: (err) => (propagatedError = err) });
+
+      expect(service.error()).toBe(expected);
+      expect(service.loading()).toBe(false);
+      expect(propagatedError).toEqual(error);
+    });
+  });
+
   describe('retrieveTenants', () => {
     it('should retrieve tenants and update state', () => {
       tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));

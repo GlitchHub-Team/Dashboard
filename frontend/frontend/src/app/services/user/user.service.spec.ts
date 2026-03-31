@@ -42,6 +42,7 @@ describe('UserService', () => {
   };
 
   const userApiMock = {
+    getUser: vi.fn(),
     getUsers: vi.fn(),
     createUser: vi.fn(),
     deleteUser: vi.fn(),
@@ -78,6 +79,56 @@ describe('UserService', () => {
     expect(service.total()).toBe(0);
     expect(service.pageIndex()).toBe(0);
     expect(service.limit()).toBe(10);
+  });
+
+  describe('getUser', () => {
+    const rawDto = { id: '1', username: 'admin', email: 'admin@test.com' };
+    const adaptedUser: User = mockUsers[0];
+
+    beforeEach(() => {
+      userApiMock.getUser = vi.fn();
+    });
+
+    it('should call API with correct params, adapt the DTO and return the user', () => {
+      userApiMock.getUser.mockReturnValue(of(rawDto));
+      userAdapterMock.fromDTO.mockReturnValue(adaptedUser);
+
+      let result: User | undefined;
+      service.getUser('1', UserRole.TENANT_ADMIN, 'tenant-1').subscribe((user) => {
+        result = user;
+      });
+
+      expect(userApiMock.getUser).toHaveBeenCalledWith('1', UserRole.TENANT_ADMIN, 'tenant-1');
+      expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(rawDto);
+      expect(result).toEqual(adaptedUser);
+      expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
+    });
+
+    it('should pass undefined when tenantId is omitted', () => {
+      userApiMock.getUser.mockReturnValue(of(rawDto));
+      userAdapterMock.fromDTO.mockReturnValue(adaptedUser);
+
+      service.getUser('1', UserRole.TENANT_ADMIN).subscribe();
+
+      expect(userApiMock.getUser).toHaveBeenCalledWith('1', UserRole.TENANT_ADMIN, undefined);
+    });
+
+    it.each([
+      { error: { status: 500, message: 'Server error' } as ApiError, expected: 'Server error' },
+      { error: { status: 500 } as ApiError, expected: 'Failed to load user' },
+    ])('should set error "$expected", reset loading and propagate error', ({ error, expected }) => {
+      userApiMock.getUser.mockReturnValue(throwError(() => error));
+
+      let propagatedError: ApiError | undefined;
+      service
+        .getUser('1', UserRole.TENANT_ADMIN)
+        .subscribe({ error: (err) => (propagatedError = err) });
+
+      expect(service.error()).toBe(expected);
+      expect(service.loading()).toBe(false);
+      expect(propagatedError).toEqual(error);
+    });
   });
 
   describe('retrieveUser', () => {
