@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type GatewayHelloService interface {
@@ -43,9 +42,9 @@ func (s *gatewayHelloService) ProcessHello(msg GatewayHelloMessage) error {
 		return err
 	}
 
-	if gw.Id == uuid.Nil {
+	if gw.IsZero() {
 		s.logger.Error("Gateway not found in database", zap.String("gatewayId", msg.GatewayId))
-		return gorm.ErrRecordNotFound
+		return gateway.ErrGatewayNotFound
 	}
 
 	if gw.PublicIdentifier != msg.PublicIdentifier {

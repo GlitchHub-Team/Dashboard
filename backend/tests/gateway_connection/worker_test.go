@@ -77,7 +77,7 @@ func (t *testJetMsg) TermWithReason(reason string) error        { return nil }
 func TestProcessMsg_MalformedJSON_TermCalled(t *testing.T) {
 	logger := zap.NewNop()
 	svc := &mockService{shouldErr: false}
-	worker := gateway_connection.NewNATSWorker(nil, svc, logger)
+	worker := gateway_connection.NewNATSWorker(jetstream.JetStream(nil), svc, logger)
 
 	simple := &mockMsgSimple{data: []byte("not-json")}
 	msg := newTestJetMsgFromSimple(simple)
@@ -95,7 +95,7 @@ func TestProcessMsg_MalformedJSON_TermCalled(t *testing.T) {
 func TestProcessMsg_ServiceError_NakCalled(t *testing.T) {
 	logger := zap.NewNop()
 	svc := &mockService{shouldErr: true}
-	worker := gateway_connection.NewNATSWorker(nil, svc, logger)
+	worker := gateway_connection.NewNATSWorker(jetstream.JetStream(nil), svc, logger)
 
 	hello := gateway_connection.GatewayHelloMessage{
 		GatewayId:        "00000000-0000-0000-0000-000000000000",
@@ -122,7 +122,7 @@ func TestProcessMsg_ServiceError_NakCalled(t *testing.T) {
 func TestProcessMsg_Success_AckCalled(t *testing.T) {
 	logger := zap.NewNop()
 	svc := &mockService{shouldErr: false}
-	worker := gateway_connection.NewNATSWorker(nil, svc, logger)
+	worker := gateway_connection.NewNATSWorker(jetstream.JetStream(nil), svc, logger)
 
 	hello := gateway_connection.GatewayHelloMessage{
 		GatewayId:        "00000000-0000-0000-0000-000000000000",

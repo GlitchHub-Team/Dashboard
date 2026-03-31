@@ -4,20 +4,19 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type NATSWorker struct {
-	nc      *nats.Conn
+	js      jetstream.JetStream
 	service GatewayHelloService
 	logger  *zap.Logger
 }
 
-func NewNATSWorker(nc *nats.Conn, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
-	return &NATSWorker{nc: nc, service: service, logger: logger}
+func NewNATSWorker(js jetstream.JetStream, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
+	return &NATSWorker{js: js, service: service, logger: logger}
 }
 
 func (w *NATSWorker) Run(lc fx.Lifecycle) {
@@ -51,13 +50,7 @@ func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 }
 
 func (w *NATSWorker) ListenHelloMessages(ctx context.Context) {
-	js, err := jetstream.New(w.nc)
-	if err != nil {
-		w.logger.Error("jetstream.New failed", zap.Error(err))
-		return
-	}
-
-	cons, err := js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
+	cons, err := w.js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
 	if err != nil {
 		w.logger.Error("js.Consumer failed", zap.Error(err))
 		return

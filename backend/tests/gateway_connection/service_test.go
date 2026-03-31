@@ -76,6 +76,9 @@ func TestProcessHello_GatewayNotFound_Nak(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error when gateway not found, got nil")
 	}
+	if !errors.Is(err, gateway.ErrGatewayNotFound) {
+		t.Fatalf("expected gateway.ErrGatewayNotFound, got %v", err)
+	}
 	if !get.calledGetBy {
 		t.Fatalf("expected GetById to be called")
 	}
