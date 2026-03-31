@@ -16,7 +16,7 @@ func TestSuccessfulSensorCreation(t *testing.T) {
 			Path:      "/sensor",
 			Body:      nil, // TODO: add request body
 
-			WantStatusCode:   404,
+			WantStatusCode:   401,
 			WantResponseBody: "", // TODO: add expected response body
 			Checks:           nil,
 
