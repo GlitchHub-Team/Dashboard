@@ -9,17 +9,41 @@ var Module = fx.Module(
 
 	// Metodi pubblici
 	fx.Provide(
-
-		// Use Cases (inbound ports)
-
 		NewGatewayController,
 
-		// Outbound ports
-		NewGatewayPostgreAdapter,
-	),
+		fx.Annotate(
+			NewCreateGatewayService,
+			fx.As(new(CreateGatewayUseCase)),
+		),
 
-	// Metodi privati
-	fx.Provide(
-		fx.Private,
+		fx.Annotate(
+			NewDeleteGatewayService,
+			fx.As(new(DeleteGatewayUseCase)),
+		),
+
+		fx.Annotate(
+			NewGetGatewayService,
+			fx.As(new(GetGatewayUseCase)),
+		),
+
+		fx.Annotate(
+			NewGetAllGatewaysService,
+			fx.As(new(GetAllGatewaysUseCase)),
+		),
+
+		fx.Annotate(
+			NewGetGatewaysByTenantService,
+			fx.As(new(GetGatewaysByTenantUseCase)),
+		),
+
+		fx.Annotate(
+			NewGatewayPostgreAdapter,
+			fx.As(new(SaveGatewayPort)),
+			fx.As(new(RemoveGatewayPort)),
+			fx.As(new(GetGatewayPort)),
+			fx.As(new(GetGatewaysPort)),
+		),
+
+		NewGatewayPostgreRepository,
 	),
 )

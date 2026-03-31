@@ -28,6 +28,26 @@ type GetAllGateways interface {
 
 //  Costruttore Globale -------------------------------------------------------------------------------
 
+func NewCreateGatewayService(log *zap.Logger, saveGatewayPort SaveGatewayPort) *CreateGatewayService {
+	return &CreateGatewayService{log: log, saveGatewayPort: saveGatewayPort}
+}
+
+func NewDeleteGatewayService(removeGatewayPort RemoveGatewayPort) *DeleteGatewayService {
+	return &DeleteGatewayService{removeGatewayPort: removeGatewayPort}
+}
+
+func NewGetGatewayService(getGatewayPort GetGatewayPort) *GetGatewayService {
+	return &GetGatewayService{getGatewayPort: getGatewayPort}
+}
+
+func NewGetAllGatewaysService(getGatewaysPort GetGatewaysPort) *GetGatewayListService {
+	return &GetGatewayListService{getGatewaysPort: getGatewaysPort}
+}
+
+func NewGetGatewaysByTenantService(getGatewaysPort GetGatewaysPort) *GetGatewaysByTenantService {
+	return &GetGatewaysByTenantService{getGatewaysPort: getGatewaysPort}
+}
+
 func NewGatewayServices(
 	log *zap.Logger,
 	saveGatewayPort SaveGatewayPort,
