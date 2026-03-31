@@ -32,6 +32,13 @@ jobs:
       DASHBOARD_CREDS_PATH: dashboard.creds
       TEST_CREDS_PATH: admin_test.creds
       CA_PEM_PATH: ca.pem
+      PORT: ${{ vars.PORT }}
+      MAIL_ADAPTER: ${{ vars.MAIL_ADAPTER }}
+      TOKEN_LENGTH: ${{ vars.TOKEN_LENGTH }}
+      TOKEN_DURATION: ${{ vars.TOKEN_DURATION }}
+      BCRYPT_COST: ${{ vars.BCRYPT_COST }}
+      AUTH_TOKEN_DURATION: ${{ vars.AUTH_TOKEN_DURATION }}
+      AUTH_TOKEN_SECRET: ${{ secrets.AUTH_TOKEN_SECRET }}
 
     steps:
       - name: Checkout
