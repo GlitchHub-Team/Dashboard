@@ -25,17 +25,17 @@ type SuperAdminConfirmTokenEntity struct {
 
 func ConfirmAccountTokenToSuperAdminEntity(tokenObj ConfirmAccountToken) *SuperAdminConfirmTokenEntity {
 	return &SuperAdminConfirmTokenEntity{
-		Token:     tokenObj.hashedToken,
-		UserId:    tokenObj.userId,
-		ExpiresAt: tokenObj.expiryDate,
+		Token:     tokenObj.HashedToken,
+		UserId:    tokenObj.UserId,
+		ExpiresAt: tokenObj.ExpiryDate,
 	}
 }
 
 func SuperAdminConfirmTokenEntityToConfirmAccountToken(entity *SuperAdminConfirmTokenEntity) ConfirmAccountToken {
 	return ConfirmAccountToken{
-		hashedToken: entity.Token,
-		userId:      entity.UserId,
-		expiryDate:  entity.ExpiresAt,
+		HashedToken: entity.Token,
+		UserId:      entity.UserId,
+		ExpiryDate:  entity.ExpiresAt,
 	}
 }
 
@@ -105,17 +105,17 @@ type SuperAdminPasswordTokenEntity struct {
 
 func ForgotPasswordTokenToSuperAdminEntity(tokenObj ForgotPasswordToken) *SuperAdminPasswordTokenEntity {
 	return &SuperAdminPasswordTokenEntity{
-		Token:     tokenObj.hashedToken,
-		UserId:    tokenObj.userId,
-		ExpiresAt: tokenObj.expiryDate,
+		Token:     tokenObj.HashedToken,
+		UserId:    tokenObj.UserId,
+		ExpiresAt: tokenObj.ExpiryDate,
 	}
 }
 
 func SuperAdminPasswordTokenEntityToForgotPasswordToken(entity *SuperAdminPasswordTokenEntity) ForgotPasswordToken {
 	return ForgotPasswordToken{
-		hashedToken: entity.Token,
-		userId:      entity.UserId,
-		expiryDate:  entity.ExpiresAt,
+		HashedToken: entity.Token,
+		UserId:      entity.UserId,
+		ExpiryDate:  entity.ExpiresAt,
 	}
 }
 

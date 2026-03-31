@@ -12,6 +12,7 @@ import (
 // ConfirmToken =======================================================================================
 
 type ConfirmTokenPostgreAdapter struct {
+	hasher           crypto.SecretHasher
 	tokenGenerator   crypto.SecurityTokenGenerator
 	superAdminRepo   *superAdminConfirmTokenPgRepository
 	tenantMemberRepo *tenantConfirmTokenPgRepository
@@ -20,11 +21,13 @@ type ConfirmTokenPostgreAdapter struct {
 var _ ConfirmAccountTokenPort = (*ConfirmTokenPostgreAdapter)(nil) // Compile-time check
 
 func NewConfirmAccountTokenPostgreAdapter(
+	hasher crypto.SecretHasher,
 	tokenGenerator crypto.SecurityTokenGenerator,
 	superAdminRepo *superAdminConfirmTokenPgRepository,
 	tenantMemberRepo *tenantConfirmTokenPgRepository,
 ) *ConfirmTokenPostgreAdapter {
 	return &ConfirmTokenPostgreAdapter{
+		hasher:           hasher,
 		tokenGenerator:   tokenGenerator,
 		superAdminRepo:   superAdminRepo,
 		tenantMemberRepo: tenantMemberRepo,
@@ -70,7 +73,7 @@ func (adapter *ConfirmTokenPostgreAdapter) NewConfirmAccountToken(user user.User
 
 func (adapter *ConfirmTokenPostgreAdapter) DeleteConfirmAccountToken(token ConfirmAccountToken) (err error) {
 	// Super Admin
-	if token.tenantId == nil {
+	if token.TenantId == nil {
 		entity := ConfirmAccountTokenToSuperAdminEntity(token)
 		err = adapter.superAdminRepo.DeleteToken(entity)
 	} else
@@ -87,13 +90,19 @@ func (adapter *ConfirmTokenPostgreAdapter) DeleteConfirmAccountToken(token Confi
 func (adapter *ConfirmTokenPostgreAdapter) GetTenantMemberByConfirmAccountToken(tenantId uuid.UUID, tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Get token
-	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
 	if err != nil {
-		return user.User{}, err
+		return
 	}
 
-	// 2. Get user from token
+	// 2. Get token
+	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), hashedTokenString)
+	if err != nil {
+		return
+	}
+
+	// 3. Get user from token
 	userFound, err = user.TenantMemberEntityToUser(&tokenEntity.TenantMember)
 	return
 }
@@ -101,23 +110,36 @@ func (adapter *ConfirmTokenPostgreAdapter) GetTenantMemberByConfirmAccountToken(
 func (adapter *ConfirmTokenPostgreAdapter) GetSuperAdminByConfirmAccountToken(tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Get token
-	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
 	if err != nil {
 		return
 	}
 
-	// 2. Get user from token
+	// 2. Get token
+	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(hashedTokenString)
+	if err != nil {
+		return
+	}
+
+	// 3. Get user from token
 	userFound, err = user.SuperAdminEntityToUser(&tokenEntity.SuperAdmin)
 	return
 }
 
 // Get token ------------------------------------------------------------------------------------------
 
-func (adapter *ConfirmTokenPostgreAdapter) GetTenantConfirmAccountToken(tenantId string, tokenString string) (
+func (adapter *ConfirmTokenPostgreAdapter) GetTenantConfirmAccountToken(tenantId uuid.UUID, tokenString string) (
 	token ConfirmAccountToken, err error,
 ) {
-	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId, tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	if err != nil {
+		return
+	}
+
+	// 2. Get token
+	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), hashedTokenString)
 	if err != nil {
 		return
 	}
@@ -128,7 +150,14 @@ func (adapter *ConfirmTokenPostgreAdapter) GetTenantConfirmAccountToken(tenantId
 func (adapter *ConfirmTokenPostgreAdapter) GetSuperAdminConfirmAccountToken(tokenString string) (
 	token ConfirmAccountToken, err error,
 ) {
-	tokenEntity, err := adapter.superAdminRepo.GetToken(tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	if err != nil {
+		return
+	}
+
+	// 2. Get token
+	tokenEntity, err := adapter.superAdminRepo.GetToken(hashedTokenString)
 	if err != nil {
 		return
 	}
@@ -139,6 +168,7 @@ func (adapter *ConfirmTokenPostgreAdapter) GetSuperAdminConfirmAccountToken(toke
 // ChangePasswordToken ============================================================================
 
 type ChangePasswordTokenPostgreAdapter struct {
+	hasher         crypto.SecretHasher
 	tokenGenerator crypto.SecurityTokenGenerator
 
 	// repository *superAdminPasswordTokenPgRepository
@@ -149,11 +179,13 @@ type ChangePasswordTokenPostgreAdapter struct {
 var _ ForgotPasswordTokenPort = (*ChangePasswordTokenPostgreAdapter)(nil) // Compile-time check
 
 func NewChangePasswordTokenPostgreAdapter(
+	hasher crypto.SecretHasher,
 	tokenGenerator crypto.SecurityTokenGenerator,
 	tenantMemberRepo *tenantPasswordTokenPgRepository,
 	superAdminRepo *superAdminPasswordTokenPgRepository,
 ) *ChangePasswordTokenPostgreAdapter {
 	return &ChangePasswordTokenPostgreAdapter{
+		hasher:           hasher,
 		tokenGenerator:   tokenGenerator,
 		tenantMemberRepo: tenantMemberRepo,
 		superAdminRepo:   superAdminRepo,
@@ -199,7 +231,7 @@ func (adapter *ChangePasswordTokenPostgreAdapter) NewForgotPasswordToken(user us
 
 func (adapter *ChangePasswordTokenPostgreAdapter) DeleteForgotPasswordToken(token ForgotPasswordToken) (err error) {
 	// Super Admin
-	if token.tenantId == nil {
+	if token.TenantId == nil {
 		entity := ForgotPasswordTokenToSuperAdminEntity(token)
 		err = adapter.superAdminRepo.DeleteToken(entity)
 	} else
@@ -216,13 +248,19 @@ func (adapter *ChangePasswordTokenPostgreAdapter) DeleteForgotPasswordToken(toke
 func (adapter *ChangePasswordTokenPostgreAdapter) GetTenantMemberByForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Get token
-	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	if err != nil {
+		return
+	}
+
+	// 2. Get token
+	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), hashedTokenString)
 	if err != nil {
 		return user.User{}, err
 	}
 
-	// 2. Get user from token
+	// 3. Get user from token
 	userFound, err = user.TenantMemberEntityToUser(&tokenEntity.TenantMember)
 	return
 }
@@ -230,23 +268,36 @@ func (adapter *ChangePasswordTokenPostgreAdapter) GetTenantMemberByForgotPasswor
 func (adapter *ChangePasswordTokenPostgreAdapter) GetSuperAdminByForgotPasswordToken(tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Get token
-	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
 	if err != nil {
 		return
 	}
 
-	// 2. Get user from token
+	// 2. Get token
+	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(hashedTokenString)
+	if err != nil {
+		return
+	}
+
+	// 3. Get user from token
 	userFound, err = user.SuperAdminEntityToUser(&tokenEntity.SuperAdmin)
 	return
 }
 
 // Get token ------------------------------------------------------------------------------------------
 
-func (adapter *ChangePasswordTokenPostgreAdapter) GetTenantForgotPasswordToken(tenantId string, tokenString string) (
+func (adapter *ChangePasswordTokenPostgreAdapter) GetTenantForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
 	token ForgotPasswordToken, err error,
 ) {
-	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId, tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	if err != nil {
+		return
+	}
+
+	// 2. Get token
+	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), hashedTokenString)
 	if err != nil {
 		return
 	}
@@ -257,7 +308,14 @@ func (adapter *ChangePasswordTokenPostgreAdapter) GetTenantForgotPasswordToken(t
 func (adapter *ChangePasswordTokenPostgreAdapter) GetSuperAdminForgotPasswordToken(tokenString string) (
 	token ForgotPasswordToken, err error,
 ) {
-	tokenEntity, err := adapter.superAdminRepo.GetToken(tokenString)
+	// 1. Hash token
+	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	if err != nil {
+		return
+	}
+
+	// 2. Get token
+	tokenEntity, err := adapter.superAdminRepo.GetToken(hashedTokenString)
 	if err != nil {
 		return
 	}

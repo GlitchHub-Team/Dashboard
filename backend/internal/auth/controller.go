@@ -120,7 +120,7 @@ func (controller *Controller) LoginUser(ctx *gin.Context) {
 		TenantId: tenantId,
 		Email:    bodyDto.Email,
 		Password: bodyDto.Password,
-		Role:     identity.UserRole(bodyDto.UserRole),
+		// Role:     identity.UserRole(bodyDto.UserRole),
 	}
 	userLogged, err := controller.loginUserUseCase.LoginUser(cmd)
 	if err != nil {

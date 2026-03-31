@@ -30,15 +30,15 @@ type TenantConfirmTokenEntity struct {
 
 func ConfirmAccountTokenToTenantEntity(tokenObj ConfirmAccountToken) *TenantConfirmTokenEntity {
 	var tenantId *string
-	if tokenObj.tenantId != nil {
-		str := tokenObj.tenantId.String()
+	if tokenObj.TenantId != nil {
+		str := tokenObj.TenantId.String()
 		tenantId = &str
 	}
 	return &TenantConfirmTokenEntity{
-		Token:     tokenObj.hashedToken,
+		Token:     tokenObj.HashedToken,
 		TenantId:  tenantId,
-		UserId:    tokenObj.userId,
-		ExpiresAt: tokenObj.expiryDate,
+		UserId:    tokenObj.UserId,
+		ExpiresAt: tokenObj.ExpiryDate,
 	}
 }
 
@@ -50,10 +50,10 @@ func TenantConfirmTokenEntityToConfirmAccountToken(entity *TenantConfirmTokenEnt
 		return ConfirmAccountToken{}, err
 	}
 	return ConfirmAccountToken{
-		hashedToken: entity.Token,
-		tenantId:    &tenantId,
-		userId:      entity.UserId,
-		expiryDate:  entity.ExpiresAt,
+		HashedToken: entity.Token,
+		TenantId:    &tenantId,
+		UserId:      entity.UserId,
+		ExpiryDate:  entity.ExpiresAt,
 	}, nil
 }
 
@@ -134,15 +134,15 @@ type TenantPasswordTokenEntity struct {
 
 func ForgotPasswordTokenToTenantEntity(tokenObj ForgotPasswordToken) *TenantPasswordTokenEntity {
 	var tenantId *string
-	if tokenObj.tenantId != nil {
-		str := tokenObj.tenantId.String()
+	if tokenObj.TenantId != nil {
+		str := tokenObj.TenantId.String()
 		tenantId = &str
 	}
 	return &TenantPasswordTokenEntity{
-		Token:     tokenObj.hashedToken,
+		Token:     tokenObj.HashedToken,
 		TenantId:  tenantId,
-		UserId:    tokenObj.userId,
-		ExpiresAt: tokenObj.expiryDate,
+		UserId:    tokenObj.UserId,
+		ExpiresAt: tokenObj.ExpiryDate,
 	}
 }
 
@@ -152,10 +152,10 @@ func TenantPasswordTokenEntityToForgotPasswordToken(entity *TenantPasswordTokenE
 		return ForgotPasswordToken{}, err
 	}
 	return ForgotPasswordToken{
-		hashedToken: entity.Token,
-		tenantId:    &tenantId,
-		userId:      entity.UserId,
-		expiryDate:  entity.ExpiresAt,
+		HashedToken: entity.Token,
+		TenantId:    &tenantId,
+		UserId:      entity.UserId,
+		ExpiryDate:  entity.ExpiresAt,
 	}, nil
 }
 

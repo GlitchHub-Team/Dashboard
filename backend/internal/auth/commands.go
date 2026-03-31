@@ -10,7 +10,7 @@ type LoginUserCommand struct {
 	TenantId *uuid.UUID
 	Email    string
 	Password string
-	Role     identity.UserRole
+	// Role     identity.UserRole
 }
 
 type LogoutUserCommand struct {

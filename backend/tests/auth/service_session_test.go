@@ -82,47 +82,38 @@ func TestLoginUser(t *testing.T) {
 		expectedError error
 	}
 
-	step1GetUserOk_CaseSuperAdmin := func(
+	step1GetUserOk_SuperAdmin := func(
 		mockSecretHasher *cryptoMocks.MockSecretHasher, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
-			GetSuperAdminByEmail(targetUserEmail).
+			GetUserByEmail(nil, targetUserEmail).
 			Return(expectedSuperAdmin, nil).
 			Times(1)
 	}
 
-	step1GetUserOk_CaseTenantAdmin := func(
+	step1GetUserOk_TenantAdmin := func(
 		mockSecretHasher *cryptoMocks.MockSecretHasher, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
-			GetTenantAdminByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(expectedTenantAdmin, nil).
 			Times(1)
 	}
 
-	step1GetUserOk_CaseTenantUser := func(
+	step1GetUserOk_TenantUser := func(
 		mockSecretHasher *cryptoMocks.MockSecretHasher, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
-			GetTenantUserByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(expectedTenantUser, nil).
 			Times(1)
-	}
-
-	step1GetUserErr_NoRole := func(
-		mockSecretHasher *cryptoMocks.MockSecretHasher, mockGetUserPort *userMocks.MockGetUserPort,
-	) *gomock.Call {
-		return mockGetUserPort.EXPECT().
-			GetTenantUserByEmail(gomock.Any(), gomock.Any()).
-			// Return(expectedRolelessUser, identity.ErrUnknownRole).
-			Times(0)
 	}
 
 	step1GetUserErr_NotConfirmed := func(
 		mockSecretHasher *cryptoMocks.MockSecretHasher, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
-			GetTenantUserByEmail(targetTenantId, targetUserEmail).
+			GetUserByEmail(&targetTenantId, targetUserEmail).
 			Return(expectedUnconfirmedUser, nil).
 			Times(1)
 	}
@@ -158,34 +149,25 @@ func TestLoginUser(t *testing.T) {
 		TenantId: &targetTenantId,
 		Email:    targetUserEmail,
 		Password: targetCorrectPassword,
-		Role:     identity.ROLE_TENANT_USER,
 	}
 
 	input_tenantAdmin := auth.LoginUserCommand{
 		TenantId: &targetTenantId,
 		Email:    targetUserEmail,
 		Password: targetCorrectPassword,
-		Role:     identity.ROLE_TENANT_ADMIN,
 	}
 
 	input_superAdmin := auth.LoginUserCommand{
-		TenantId: &targetTenantId,
+		TenantId: nil,
 		Email:    targetUserEmail,
 		Password: targetCorrectPassword,
-		Role:     identity.ROLE_SUPER_ADMIN,
 	}
 
-	input_noRole := auth.LoginUserCommand{
-		TenantId: &targetTenantId,
-		Email:    targetUserEmail,
-		Password: targetCorrectPassword,
-	}
 
 	input_wrongPassword := auth.LoginUserCommand{
 		TenantId: &targetTenantId,
 		Email:    targetUserEmail,
 		Password: targetWrongPassword,
-		Role:     identity.ROLE_TENANT_USER,
 	}
 
 	cases := []testCase{
@@ -193,7 +175,7 @@ func TestLoginUser(t *testing.T) {
 			name:  "Success: Login Tenant User",
 			input: input_tenantUser,
 			setupSteps: []mockSetupFunc{
-				step1GetUserOk_CaseTenantUser,
+				step1GetUserOk_TenantUser,
 				step2Ok,
 			},
 			expectedUser:  expectedTenantUser,
@@ -203,7 +185,7 @@ func TestLoginUser(t *testing.T) {
 			name:  "Success: Login Tenant Admin",
 			input: input_tenantAdmin,
 			setupSteps: []mockSetupFunc{
-				step1GetUserOk_CaseTenantAdmin,
+				step1GetUserOk_TenantAdmin,
 				step2Ok,
 			},
 			expectedUser:  expectedTenantAdmin,
@@ -213,7 +195,7 @@ func TestLoginUser(t *testing.T) {
 			name:  "Success: Login Super Admin",
 			input: input_superAdmin,
 			setupSteps: []mockSetupFunc{
-				step1GetUserOk_CaseSuperAdmin,
+				step1GetUserOk_SuperAdmin,
 				step2Ok,
 			},
 			expectedUser:  expectedSuperAdmin,
@@ -221,16 +203,6 @@ func TestLoginUser(t *testing.T) {
 		},
 
 		// Step 1
-		{
-			name:  "Fail: Unknown role",
-			input: input_noRole,
-			setupSteps: []mockSetupFunc{
-				step1GetUserErr_NoRole,
-				step2NeverCalled,
-			},
-			expectedUser:  user.User{},
-			expectedError: identity.ErrUnknownRole,
-		},
 		{
 			name:  "Fail: User not confirmed",
 			input: input_tenantUser,
@@ -247,7 +219,7 @@ func TestLoginUser(t *testing.T) {
 			name:  "Fail: Wrong password",
 			input: input_wrongPassword,
 			setupSteps: []mockSetupFunc{
-				step1GetUserOk_CaseTenantUser,
+				step1GetUserOk_TenantUser,
 				step2Fail,
 			},
 			expectedUser:  user.User{},
