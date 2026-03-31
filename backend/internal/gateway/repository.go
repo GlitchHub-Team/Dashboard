@@ -1,83 +1,139 @@
 package gateway
 
 import (
-	"backend/internal/infra/database/cloud_db/connection"
+	"errors"
+	"time"
+
+	"backend/internal/tenant"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+
+	clouddb "backend/internal/infra/database/cloud_db/connection"
 )
 
 type gatewayEntity struct {
-	ID               string `gorm:"primaryKey;size:36"`
-	Name             string `gorm:"size:128;not null"`
-	TenantId         string `gorm:"size:36;index"`
-	Status           string `gorm:"not null;size:32"`
-	IntervalLimit    int64  `gorm:"not null"`
-	PublicIdentifier string `gorm:"size:128;not null"`
+	ID   string `gorm:"primaryKey;size:36"`
+	Name string `gorm:"size:128;not null"`
 }
 
-func (gatewayEntity) TableName() string { return "gateways" }
+// entity =============================================================================================
 
-func (e *gatewayEntity) toDomain() Gateway {
-	id, _ := uuid.Parse(e.ID)
-	var tenantId *uuid.UUID
-	if e.TenantId != "" {
-		tid, _ := uuid.Parse(e.TenantId)
-		tenantId = &tid
-	}
-	return Gateway{
-		Id:               id,
-		Name:             e.Name,
-		PublicIdentifier: e.PublicIdentifier,
-		TenantId:         tenantId,
-		Status:           GatewayStatus(e.Status),
-		IntervalLimit:    e.IntervalLimit,
-	}
+type GatewayEntity struct {
+	GatewayId string  `gorm:"type:uuid;primaryKey"`
+	Name      string  `gorm:"type:varchar(255);not null"`
+	TenantId  *string `gorm:"type:uuid;index"`
+	// il modo giusto per fare il fk per assurdo
+	Tenant    *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Status    string         `gorm:"type:varchar(50);not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
+
+func (GatewayEntity) TableName() string { return "gateways" }
 
 type gatewayPostgreRepository struct {
-	db connection.CloudDBConnection
+	log *zap.Logger
+	db  clouddb.CloudDBConnection
 }
 
-func NewGatewayPostgreRepository(db connection.CloudDBConnection) *gatewayPostgreRepository {
-	return &gatewayPostgreRepository{db: db}
-}
-
-func MigrateGateway(db *gorm.DB) error {
-	return db.AutoMigrate(&gatewayEntity{})
-}
-
-func (repo *gatewayPostgreRepository) GetById(id uuid.UUID) (Gateway, error) {
-	var entity gatewayEntity
-	gdb := (*gorm.DB)(repo.db)
-	err := gdb.Where("id = ?", id.String()).First(&entity).Error
-	if err != nil {
-		return Gateway{}, err
+func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) *gatewayPostgreRepository {
+	return &gatewayPostgreRepository{
+		log: log,
+		db:  db,
 	}
-	return entity.toDomain(), nil
 }
 
-func (repo *gatewayPostgreRepository) Save(g Gateway) error {
-	var existing gatewayEntity
-	gdb := (*gorm.DB)(repo.db)
-	err := gdb.Where("id = ?", g.Id.String()).First(&existing).Error
+// methods ============================================================================================
 
-	if err != nil {
+func (entity *GatewayEntity) fromGateway(g Gateway) {
+	entity.GatewayId = g.Id.String()
+	entity.Name = g.Name
+	entity.Status = string(g.Status)
+
+	if g.TenantId != nil {
+		tenantIdStr := g.TenantId.String()
+		entity.TenantId = &tenantIdStr
+	} else {
+		entity.TenantId = nil
+	}
+}
+
+func (entity *GatewayEntity) toGateway() Gateway {
+	id, _ := uuid.Parse(entity.GatewayId)
+	var tenantId *uuid.UUID
+	if entity.TenantId != nil {
+		parsed, _ := uuid.Parse(*entity.TenantId)
+		tenantId = &parsed
+	}
+	return Gateway{
+		Id:       id,
+		Name:     entity.Name,
+		Status:   (GatewayStatus)(entity.Status),
+		TenantId: tenantId,
+	}
+}
+
+func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
+	entity := &GatewayEntity{}
+	entity.fromGateway(gateway)
+
+	existing := &GatewayEntity{}
+	db := (*gorm.DB)(repo.db)
+	err := db.Where("gateway_id = ? AND tenant_id IS NOT NULL", entity.GatewayId).First(existing).Error
+
+	if err == nil {
+		return ErrGatewayAlreadyAssigned
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
-	tenantVal := ""
-	if g.TenantId != nil {
-		tenantVal = g.TenantId.String()
-	}
+	return db.Save(entity).Error
+}
 
-	return gdb.Model(&gatewayEntity{}).
-		Where("id = ?", g.Id.String()).
-		Updates(map[string]interface{}{
-			"name":              g.Name,
-			"public_identifier": g.PublicIdentifier,
-			"status":            string(g.Status),
-			"interval_limit":    g.IntervalLimit,
-			"tenant_id":         tenantVal,
-		}).Error
+func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
+	entity := &GatewayEntity{}
+
+	db := (*gorm.DB)(repo.db)
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("gateway_id = ?", gateway.Id).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			First(entity).Error; err != nil {
+			return err
+		}
+
+		return tx.Delete(entity).Error
+	})
+}
+
+func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayEntity, error) {
+	var entity GatewayEntity
+	db := (*gorm.DB)(repo.db)
+	err := db.
+		Where("gateway_id = ?", gatewayId).
+		First(&entity).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return GatewayEntity{}, nil
+	}
+	return entity, err
+}
+
+func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]GatewayEntity, error) {
+	var entities []GatewayEntity
+	db := (*gorm.DB)(repo.db)
+	err := db.Where("tenant_id = ?", tenantId).Find(&entities).Error
+	return entities, err
+}
+
+func (repo *gatewayPostgreRepository) GetAllGateways() ([]GatewayEntity, error) {
+	var entities []GatewayEntity
+	db := (*gorm.DB)(repo.db)
+	err := db.Find(&entities).Error
+	return entities, err
 }

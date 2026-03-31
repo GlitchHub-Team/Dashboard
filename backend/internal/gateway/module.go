@@ -11,10 +11,8 @@ var Module = fx.Module(
 	fx.Provide(
 
 		// Use Cases (inbound ports)
-		NewGatewayController,
 
-		NewCreateGatewayService,
-		NewDeleteGatewayService,
+		NewGatewayController,
 
 		// Outbound ports
 		NewGatewayPostgreAdapter,
@@ -23,6 +21,5 @@ var Module = fx.Module(
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		NewGatewayPostgreRepository,
 	),
 )
