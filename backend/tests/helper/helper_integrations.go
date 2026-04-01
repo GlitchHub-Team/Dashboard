@@ -42,16 +42,6 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 	if testing.Short() {
 		t.Skip("integration test skipped in short mode")
 	}
-	if _, err := os.Stat(".env"); err != nil {
-		if os.IsNotExist(err) {
-			err = os.Chdir("../../../")
-			if err != nil {
-				t.Fatalf("Impossibile cambiare directory: %v", err)
-			}
-		} else {
-			t.Fatalf("Impossibile verificare il file .env: %v", err)
-		}
-	}
 
 	var router *gin.Engine
 	var cloudDB clouddb.CloudDBConnection
@@ -69,6 +59,12 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 		fx.Populate(&natsTestConn),
 		fx.Populate(&jetstreamCtx),
 		fx.Populate(&jwtManager),
+
+		fx.Replace(
+			natsutils.NatsCredsPath("../../../"+os.Getenv("DASHBOARD_CREDS_PATH")),
+			natsutils.NatsTestCredsPath("../../../"+os.Getenv("TEST_CREDS_PATH")),
+			natsutils.NatsCAPemPath("../../../"+os.Getenv("CA_PEM_PATH")),
+		),
 
 		fx.NopLogger,
 	)

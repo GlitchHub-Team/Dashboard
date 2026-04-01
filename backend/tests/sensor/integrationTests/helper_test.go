@@ -55,6 +55,14 @@ func preSetupCreateGateway(
 	gatewayID string,
 	name string,
 ) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+	return preSetupCreateGatewayWithTenant(gatewayID, name, nil)
+}
+
+func preSetupCreateGatewayWithTenant(
+	gatewayID string,
+	name string,
+	tenantID *string,
+) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
 	return func(
 		cloudDB clouddb.CloudDBConnection,
 		_ sensordb.SensorDBConnection,
@@ -65,9 +73,10 @@ func preSetupCreateGateway(
 	) bool {
 		db := (*gorm.DB)(cloudDB)
 		entity := gateway.GatewayEntity{
-			ID:     gatewayID,
-			Name:   name,
-			Status: string(gateway.GATEWAY_STATUS_ACTIVE),
+			ID:       gatewayID,
+			Name:     name,
+			TenantId: tenantID,
+			Status:   string(gateway.GATEWAY_STATUS_ACTIVE),
 		}
 		return db.Create(&entity).Error == nil
 	}
@@ -209,6 +218,29 @@ func checkSensorNotExists(
 		var count int64
 		err := db.Model(&sensor.SensorEntity{}).Where("id = ?", sensorID).Count(&count).Error
 		return err == nil && count == 0
+	}
+}
+
+func checkSensorStatus(
+	sensorID string,
+	status sensor.SensorStatus,
+) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+	return func(
+		_ *httptest.ResponseRecorder,
+		cloudDB clouddb.CloudDBConnection,
+		_ sensordb.SensorDBConnection,
+		_ *nats.Conn,
+		_ natsutils.NatsTestConnection,
+		_ jetstream.JetStream,
+		_ jetstream.JetStream,
+	) bool {
+		db := (*gorm.DB)(cloudDB)
+		var entity sensor.SensorEntity
+		if err := db.Where("id = ?", sensorID).First(&entity).Error; err != nil {
+			return false
+		}
+
+		return entity.Status == string(status)
 	}
 }
 

@@ -54,7 +54,7 @@ func (repo *sensorPostgreRepository) GetSensorsByTenantId(tenantId string, offse
 
 	db := (*gorm.DB)(repo.db)
 	query := db.Model(&SensorEntity{}).
-		Joins("JOIN gateways ON gateways.gateway_id = sensors.gateway_id").
+		Joins("JOIN gateways ON gateways.id = sensors.gateway_id").
 		Where("gateways.tenant_id = ?", tenantId)
 
 	if err := query.Count(&count).Error; err != nil {
