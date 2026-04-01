@@ -5,6 +5,8 @@ import (
 
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
+
+	"github.com/google/uuid"
 )
 
 //go:generate mockgen -destination=../../tests/user/mocks/ports_create.go -package=mocks . GenerateTokenPort,SendConfirmAccountEmailPort
@@ -14,7 +16,7 @@ type GenerateTokenPort interface {
 }
 
 type SendConfirmAccountEmailPort interface {
-	SendConfirmAccountEmail(toAddr string, token string) error
+	SendConfirmAccountEmail(toAddr string, tenantId *uuid.UUID, tokenString string) error
 }
 
 /*
@@ -97,7 +99,7 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 	}
 
 	// 5. Invia email per token di conferma
-	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
+	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, &cmd.TenantId, confirmAccountToken)
 	if err != nil {
 		// 6. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteTenantUser(*user.TenantId, user.Id)
@@ -158,7 +160,7 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 	}
 
 	// 6. Invia email per token di conferma
-	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
+	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, &cmd.TenantId, confirmAccountToken)
 	if err != nil {
 		// 7. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteTenantAdmin(*user.TenantId, user.Id)
@@ -207,7 +209,7 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 	}
 
 	// 4. Invia token di conferma
-	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, confirmAccountToken)
+	err = service.sendEmailPort.SendConfirmAccountEmail(user.Email, nil, confirmAccountToken)
 	if err != nil {
 		// 5. Elimina account se invio mail fallisce
 		_, deletionErr := service.deleteUserPort.DeleteSuperAdmin(user.Id)

@@ -15,7 +15,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestLoginUser(t *testing.T) {
+func TestAuthSessionService_LoginUser(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	targetUserId := uint(100)
@@ -267,7 +267,7 @@ func TestLoginUser(t *testing.T) {
 	}
 }
 
-func TestLogoutUser(t *testing.T) {
+func TestAuthSessionService_LogoutUser(t *testing.T) {
 	mockController := gomock.NewController(t)
 
 	mockHasher := cryptoMocks.NewMockSecretHasher(mockController)

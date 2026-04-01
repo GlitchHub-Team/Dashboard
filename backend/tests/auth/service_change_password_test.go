@@ -25,18 +25,18 @@ type mockSetupFunc_ChangePasswordService func(
 	mockSecretHasher *cryptoMocks.MockSecretHasher,
 
 	mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort,
-	mockSendEmailPort *mocks.MockSendChangePasswordEmailPort,
+	mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort,
 	mockGetUserPort *userMocks.MockGetUserPort,
 	mockSaveUserPort *userMocks.MockSaveUserPort,
 ) *gomock.Call
 
-func TestVerifyForgotPasswordToken(t *testing.T) {
+func TestChangePasswordService_VerifyForgotPasswordToken(t *testing.T) {
 	// type mockSetupFunc func(
 	// 	mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator,
 	// 	mockSecretHasher *cryptoMocks.MockSecretHasher,
 
 	// 	mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort,
-	// 	mockSendEmailPort *mocks.MockSendChangePasswordEmailPort,
+	// 	mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort,
 	// 	mockGetUserPort *userMocks.MockGetUserPort,
 	// 	mockSaveUserPort *userMocks.MockSaveUserPort,
 	// ) *gomock.Call
@@ -73,7 +73,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 
 	// - Tenant Member
 	stepGetTokenOk_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -82,7 +82,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 	}
 
 	stepGetTokenExpired_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -92,7 +92,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 
 	errMockGetToken := errors.New("unexpected database error")
 	stepGetTokenError_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -104,7 +104,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 
 	// - Super Admin
 	stepGetTokenOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminForgotPasswordToken(targetCorrectToken).
@@ -113,7 +113,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 	}
 
 	stepGetTokenExpired_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminForgotPasswordToken(targetCorrectToken).
@@ -122,7 +122,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 	}
 
 	stepGetTokenError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminForgotPasswordToken(targetCorrectToken).
@@ -194,7 +194,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
 
 			mockTokenPort := mocks.NewMockForgotPasswordTokenPort(mockController)
-			mockEmailPort := mocks.NewMockSendChangePasswordEmailPort(mockController)
+			mockEmailPort := mocks.NewMockSendForgotPasswordEmailPort(mockController)
 			mockGetUserPort := userMocks.NewMockGetUserPort(mockController)
 			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
 
@@ -222,7 +222,7 @@ func TestVerifyForgotPasswordToken(t *testing.T) {
 	}
 }
 
-func TestRequestForgotPassword(t *testing.T) {
+func TestChangePasswordService_RequestForgotPassword(t *testing.T) {
 	type testCase struct {
 		name          string
 		input         auth.RequestForgotPasswordCommand
@@ -263,7 +263,7 @@ func TestRequestForgotPassword(t *testing.T) {
 	// Step 1: get user -------------------------------------------------------------------------------------
 
 	step1GetUserOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -273,7 +273,7 @@ func TestRequestForgotPassword(t *testing.T) {
 
 	errMockStep1 := errors.New("unexpected error in step 1")
 	step1UserError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -282,7 +282,7 @@ func TestRequestForgotPassword(t *testing.T) {
 	}
 
 	step1UserNotConfirmed := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -291,7 +291,7 @@ func TestRequestForgotPassword(t *testing.T) {
 	}
 
 	step1UserNotFound := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -301,7 +301,7 @@ func TestRequestForgotPassword(t *testing.T) {
 
 	// Step 2: crea token
 	step2CreateTokenOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			NewForgotPasswordToken(expectedUser).
@@ -311,7 +311,7 @@ func TestRequestForgotPassword(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error step 3")
 	step2CreateTokenError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			NewForgotPasswordToken(expectedUser).
@@ -321,20 +321,20 @@ func TestRequestForgotPassword(t *testing.T) {
 
 	// Step 3: Invia mail
 	step3SendMailOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSendEmailPort.EXPECT().
-			SendChangePasswordEmail(targetUserEmail, expectedToken).
+			SendForgotPasswordEmail(targetUserEmail, &targetTenantId, expectedToken).
 			Return(nil).
 			Times(1)
 	}
 
 	errMockStep3 := errors.New("unexpected error step 3")
 	step3SendMailError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSendEmailPort.EXPECT().
-			SendChangePasswordEmail(targetUserEmail, expectedToken).
+			SendForgotPasswordEmail(targetUserEmail, &targetTenantId, expectedToken).
 			Return(errMockStep3).
 			Times(1)
 	}
@@ -417,7 +417,7 @@ func TestRequestForgotPassword(t *testing.T) {
 			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
 
 			mockTokenPort := mocks.NewMockForgotPasswordTokenPort(mockController)
-			mockEmailPort := mocks.NewMockSendChangePasswordEmailPort(mockController)
+			mockEmailPort := mocks.NewMockSendForgotPasswordEmailPort(mockController)
 			mockGetUserPort := userMocks.NewMockGetUserPort(mockController)
 			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
 
@@ -445,7 +445,7 @@ func TestRequestForgotPassword(t *testing.T) {
 	}
 }
 
-func TestConfirmForgotPassword(t *testing.T) {
+func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	targetUserId := uint(100)
@@ -535,7 +535,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	// - Tenant Member
 	step1GetTokenOk_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -544,7 +544,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step1GetTokenExpired_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -554,7 +554,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	errMockStep1 := errors.New("unexpected error 1")
 	step1GetTokenError_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -564,7 +564,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	// - Super Admin
 	step1GetTokenOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminForgotPasswordToken(targetCorrectToken).
@@ -573,7 +573,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step1GetTokenExpired_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminForgotPasswordToken(targetCorrectToken).
@@ -582,7 +582,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step1GetTokenError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminForgotPasswordToken(targetCorrectToken).
@@ -594,7 +594,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	// - Tenant Member
 	step2GetUserOk_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantMemberByForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -604,7 +604,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error 2")
 	step2GetUserError_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetTenantMemberByForgotPasswordToken(targetTenantId, targetCorrectToken).
@@ -614,7 +614,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	// - Super Admin
 	step2GetUserOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminByForgotPasswordToken(targetCorrectToken).
@@ -623,7 +623,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step2GetUserError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminByForgotPasswordToken(targetCorrectToken).
@@ -634,7 +634,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	// Step 3: crea hash ------------------------------------------------------------
 	errMockStep3 := errors.New("unexpected error in step 3")
 	step3CreateHashOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			HashSecret(targetNewPassword).
@@ -643,7 +643,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step3CreateHashError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			HashSecret(targetNewPassword).
@@ -653,7 +653,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	// Step 4: imposta campi utente ------------------------------------------------------------
 	step4SaveUserOk_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedTenantUser).
@@ -663,7 +663,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	errMockStep4 := errors.New("unexpected error in step 4")
 	step4SaveUserError_TenantMember := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedTenantUser).
@@ -672,7 +672,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step4SaveUserOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedSuperAdmin).
@@ -681,7 +681,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 
 	step4SaveUserError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedSuperAdmin).
@@ -699,7 +699,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 
 	// Step 5: elimina token -----------------------------------------------------------------------
 	step5DeleteTokenOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			DeleteForgotPasswordToken(expectedTokenObj).
@@ -710,7 +710,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	err5MockStep := errors.New("unexpected error in step 5")
 
 	step5DeleteTokenError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockForgotPasswordPort.EXPECT().
 			DeleteForgotPasswordToken(expectedTokenObj).
@@ -921,7 +921,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
 
 			mockTokenPort := mocks.NewMockForgotPasswordTokenPort(mockController)
-			mockEmailPort := mocks.NewMockSendChangePasswordEmailPort(mockController)
+			mockEmailPort := mocks.NewMockSendForgotPasswordEmailPort(mockController)
 			mockGetUserPort := userMocks.NewMockGetUserPort(mockController)
 			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
 
@@ -953,7 +953,7 @@ func TestConfirmForgotPassword(t *testing.T) {
 	}
 }
 
-func TestChangePassword(t *testing.T) {
+func TestChangePasswordService_ChangePassword(t *testing.T) {
 	targetTenantId := uuid.New()
 	targetUserId := uint(100)
 	targetOldPassword := "old_password"
@@ -994,7 +994,7 @@ func TestChangePassword(t *testing.T) {
 
 	// Step 1: Get user --------------------------------------------------------------------------------------
 	step1GetUserOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUser(&targetTenantId, targetUserId).
@@ -1003,7 +1003,7 @@ func TestChangePassword(t *testing.T) {
 	}
 
 	step1GetUserUnconfirmed := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUser(&targetTenantId, targetUserId).
@@ -1013,7 +1013,7 @@ func TestChangePassword(t *testing.T) {
 
 	errMockStep1 := errors.New("database error getting user")
 	step1GetUserError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockGetUserPort.EXPECT().
 			GetUser(&targetTenantId, targetUserId).
@@ -1023,7 +1023,7 @@ func TestChangePassword(t *testing.T) {
 
 	// Step 3: Check old password ----------------------------------------------------------------------------
 	step3CompareHashOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			CompareHashAndSecret(targetOldHash, targetOldPassword).
@@ -1032,7 +1032,7 @@ func TestChangePassword(t *testing.T) {
 	}
 
 	step3CompareHashError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			CompareHashAndSecret(targetOldHash, targetOldPassword).
@@ -1041,7 +1041,7 @@ func TestChangePassword(t *testing.T) {
 	}
 
 	step3NeverCalled := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			CompareHashAndSecret(gomock.Any(), gomock.Any()).
@@ -1050,7 +1050,7 @@ func TestChangePassword(t *testing.T) {
 
 	// Step 4: Generate new hash -----------------------------------------------------------------------------
 	step4HashSecretOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			HashSecret(targetNewPassword).
@@ -1060,7 +1060,7 @@ func TestChangePassword(t *testing.T) {
 
 	errMockStep4 := errors.New("error hashing new password")
 	step4HashSecretError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			HashSecret(targetNewPassword).
@@ -1070,7 +1070,7 @@ func TestChangePassword(t *testing.T) {
 
 	// Step 6: Save user -------------------------------------------------------------------------------------
 	step6SaveUserOk := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(expectedUserAfterChange).
@@ -1080,7 +1080,7 @@ func TestChangePassword(t *testing.T) {
 
 	errMockStep6 := errors.New("database error saving user")
 	step6SaveUserError := func(
-		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendChangePasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(expectedUserAfterChange).
@@ -1171,7 +1171,7 @@ func TestChangePassword(t *testing.T) {
 			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
 
 			mockTokenPort := mocks.NewMockForgotPasswordTokenPort(mockController)
-			mockEmailPort := mocks.NewMockSendChangePasswordEmailPort(mockController)
+			mockEmailPort := mocks.NewMockSendForgotPasswordEmailPort(mockController)
 			mockGetUserPort := userMocks.NewMockGetUserPort(mockController)
 			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
 

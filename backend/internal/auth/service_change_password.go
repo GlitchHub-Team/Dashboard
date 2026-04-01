@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -destination=../../tests/auth/mocks/ports_change_password.go -package=mocks . ForgotPasswordTokenPort,SendChangePasswordEmailPort
+//go:generate mockgen -destination=../../tests/auth/mocks/ports_change_password.go -package=mocks . ForgotPasswordTokenPort,SendForgotPasswordEmailPort
 
 type ForgotPasswordTokenPort interface {
 	NewForgotPasswordToken(user user.User) (string, error)
@@ -29,8 +29,8 @@ type ForgotPasswordTokenPort interface {
 	)
 }
 
-type SendChangePasswordEmailPort interface {
-	SendChangePasswordEmail(toAddr string, token string) error
+type SendForgotPasswordEmailPort interface {
+	SendForgotPasswordEmail(toAddr string, tenantId *uuid.UUID, tokenString string) error
 }
 
 /*
@@ -42,7 +42,7 @@ type ChangePasswordService struct {
 	hasher         crypto.SecretHasher
 
 	forgotPasswordTokenPort     ForgotPasswordTokenPort
-	sendChangePasswordEmailPort SendChangePasswordEmailPort
+	sendChangePasswordEmailPort SendForgotPasswordEmailPort
 	getUserPort                 user.GetUserPort
 	saveUserPort                user.SaveUserPort
 }
@@ -60,7 +60,7 @@ func NewChangePasswordService(
 	hasher crypto.SecretHasher,
 
 	changePasswordTokenPort ForgotPasswordTokenPort,
-	sendChangePasswordEmailPort SendChangePasswordEmailPort,
+	sendChangePasswordEmailPort SendForgotPasswordEmailPort,
 	getUserPort user.GetUserPort,
 	saveUserPort user.SaveUserPort,
 ) *ChangePasswordService {
@@ -153,7 +153,7 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 	}
 
 	// 3. Invia mail cambio password
-	err = service.sendChangePasswordEmailPort.SendChangePasswordEmail(cmd.Email, tokenString)
+	err = service.sendChangePasswordEmailPort.SendForgotPasswordEmail(cmd.Email, cmd.TenantId, tokenString)
 	if err != nil {
 		return err
 	}

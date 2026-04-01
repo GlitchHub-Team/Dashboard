@@ -20,7 +20,7 @@ import (
 	userMocks "backend/tests/user/mocks"
 )
 
-func TestConfirmAccount(t *testing.T) {
+func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	targetUserId := uint(100)
@@ -623,7 +623,7 @@ func TestConfirmAccount(t *testing.T) {
 	}
 }
 
-func TestVerifyConfirmAccountToken(t *testing.T) {
+func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 	// Dati test
 	targetTenantId := uuid.New()
 	targetUserId := uint(100)
