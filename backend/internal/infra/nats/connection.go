@@ -10,15 +10,32 @@ import (
 )
 
 type (
-	NatsAddress   string
-	NatsPort      int
-	NatsToken     string
-	NatsSeed      string
-	NatsCredsPath string
-	NatsCAPemPath string
+	NatsAddress        string
+	NatsPort           int
+	NatsToken          string
+	NatsSeed           string
+	NatsCredsPath      string
+	NatsTestCredsPath  string
+	NatsCAPemPath      string
+	NatsTestConnection *nats.Conn
 )
 
 func NewNATSConnection(address NatsAddress, port NatsPort, credsPath NatsCredsPath, caPemPath NatsCAPemPath) *nats.Conn {
+	options := make([]nats.Option, 0, 2)
+	if string(credsPath) != "" {
+		options = append(options, CredsFileAuth(string(credsPath)))
+	}
+	options = append(options, CAPemAuth(string(caPemPath)))
+
+	nc, err := nats.Connect("nats://"+string(address)+":"+strconv.Itoa(int(port)), options...)
+	if err != nil {
+		log.Fatalf("Error while connecting to NATS server: %v", err)
+	}
+
+	return nc
+}
+
+func NewNATSTestConnection(address NatsAddress, port NatsPort, credsPath NatsTestCredsPath, caPemPath NatsCAPemPath) NatsTestConnection {
 	options := make([]nats.Option, 0, 2)
 	if string(credsPath) != "" {
 		options = append(options, CredsFileAuth(string(credsPath)))

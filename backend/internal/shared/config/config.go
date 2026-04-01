@@ -3,10 +3,21 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
 )
+
+var configFields = map[string]string{
+	"PORT":                "",
+	"MAIL_ADAPTER":        "",
+	"TOKEN_DURATION":      "",
+	"TOKEN_LENGTH":        "",
+	"BCRYPT_COST":         "",
+	"AUTH_TOKEN_DURATION": "",
+	"AUTH_TOKEN_SECRET":   "",
+}
 
 type Config struct {
 	// Nome dell'applicativo
@@ -90,7 +101,9 @@ func (st *stringInt) UnmarshalJSON(b []byte) error {
 func ReadConfigFromEnv() (*Config, error) {
 	envDict, err := godotenv.Read(".env")
 	if err != nil {
-		return nil, fmt.Errorf("impossibile leggere file .env: %v", err)
+		for key := range configFields {
+			envDict[key] = os.Getenv(key)
+		}
 	}
 	jsonBody, err := json.Marshal(&envDict)
 	if err != nil {

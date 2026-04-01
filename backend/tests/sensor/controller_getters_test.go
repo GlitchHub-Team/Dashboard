@@ -168,7 +168,7 @@ func TestSensorController_GetSensor(t *testing.T) {
 	}
 
 	mountMethod := "GET"
-	mountURL := "/sensor/:sensorId"
+	mountURL := "/sensor/:sensor_id"
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -413,7 +413,7 @@ func TestSensorController_GetSensorsByGateway(t *testing.T) {
 	}
 
 	mountMethod := "GET"
-	mountURL := "/gateway/:gatewayId/sensors"
+	mountURL := "/gateway/:gateway_id/sensors"
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -649,7 +649,7 @@ func TestSensorController_GetSensorsByTenant(t *testing.T) {
 	}
 
 	mountMethod := "GET"
-	mountURL := "/tenant/:tenantId/sensors"
+	mountURL := "/tenant/:tenant_id/sensors"
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {

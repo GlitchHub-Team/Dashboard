@@ -166,7 +166,7 @@ func TestSensorController_InterruptSensor(t *testing.T) {
 	}
 
 	mountMethod := "POST"
-	mountURL := "/sensor/:sensorId/interrupt"
+	mountURL := "/sensor/:sensor_id/interrupt"
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -348,7 +348,7 @@ func TestSensorController_ResumeSensor(t *testing.T) {
 	}
 
 	mountMethod := "POST"
-	mountURL := "/sensor/:sensorId/resume"
+	mountURL := "/sensor/:sensor_id/resume"
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {

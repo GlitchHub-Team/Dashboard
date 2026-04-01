@@ -18,7 +18,7 @@ func (c *SensorController) InterruptSensor(ctx *gin.Context) {
 		return
 	}
 
-	sensorIdParam := ctx.Param("sensorId")
+	sensorIdParam := ctx.Param("sensor_id")
 	sensorId, err := uuid.Parse(sensorIdParam)
 	if err != nil {
 		transportHttp.RequestError(ctx, ErrInvalidSensorID)
@@ -50,7 +50,7 @@ func (c *SensorController) ResumeSensor(ctx *gin.Context) {
 		return
 	}
 
-	sensorIdParam := ctx.Param("sensorId")
+	sensorIdParam := ctx.Param("sensor_id")
 	sensorId, err := uuid.Parse(sensorIdParam)
 	if err != nil {
 		transportHttp.RequestError(ctx, ErrInvalidSensorID)
