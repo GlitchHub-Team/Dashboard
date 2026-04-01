@@ -120,7 +120,7 @@ func (controller *Controller) LoginUser(ctx *gin.Context) {
 		TenantId: tenantId,
 		Email:    bodyDto.Email,
 		Password: bodyDto.Password,
-		Role:     identity.UserRole(bodyDto.UserRole),
+		// Role:     identity.UserRole(bodyDto.UserRole),
 	}
 	userLogged, err := controller.loginUserUseCase.LoginUser(cmd)
 	if err != nil {
@@ -173,7 +173,7 @@ func (controller *Controller) LogoutUser(ctx *gin.Context) {
 func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 	// 1. Binding URI
 	var bodyDto VerifyConfirmAccountTokenBodyDTO
-	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
+	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
 	}
@@ -189,10 +189,7 @@ func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 		Token:    bodyDto.Token,
 	})
 	if err != nil {
-		ctx.JSON(404, gin.H{
-			"error":  ErrTokenNotFound.Error(),
-			"result": false,
-		})
+		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
 	}
 
@@ -216,31 +213,28 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 		tenantId = &parsed
 	}
 
-	// 2. Verifica token di confirma
-	err := controller.verifyConfirmAccountTokenUseCase.VerifyConfirmAccountToken(VerifyConfirmAccountTokenCommand{
-		TenantId: tenantId,
-		Token:    bodyDto.Token,
-	})
-	if err != nil {
-		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
-		return
-	}
-
-	// 3. Esegui comando
+	// 2. Esegui comando
+	// NOTA: La verifica del token avviene nel service
 	confirmedUser, err := controller.confirmAccountUseCase.ConfirmAccount(ConfirmAccountCommand{
+		TenantId:    tenantId,
 		Token:       bodyDto.Token,
 		NewPassword: bodyDto.NewPassword,
 	})
 	if err != nil {
-		if errors.Is(err, ErrTokenNotFound) || errors.Is(err, ErrAccountAlreadyConfirmed) {
+
+		if errors.Is(err, ErrAccountAlreadyConfirmed) {
 			transportHttp.RequestNotFound(ctx, err)
+			return
+		}
+		if errors.Is(err, ErrTokenNotFound) || errors.Is(err, ErrTokenExpired) {
+			transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 			return
 		}
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
-	// 4. Crea token di autenticazione da restituire all'utente
+	// 3. Crea token di autenticazione da restituire all'utente
 	authToken, err := controller.authTokenManager.GenerateForRequester(identity.Requester{
 		RequesterUserId:   confirmedUser.Id,
 		RequesterTenantId: confirmedUser.TenantId,
@@ -251,7 +245,7 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 		return
 	}
 
-	// 5. Invia risposta
+	// 4. Invia risposta
 	responseDto := LoginResponseDTO{
 		JWT: authToken,
 	}
@@ -263,7 +257,7 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 func (controller *Controller) VerifyForgotPasswordToken(ctx *gin.Context) {
 	// 1. Binding JSON
 	var bodyDto VerifyForgotPasswordTokenBodyDTO
-	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
+	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/internal/user"
-	emailMocks "backend/tests/email/mocks"
 	tenantMocks "backend/tests/tenant/mocks"
 	"backend/tests/user/mocks"
 
@@ -21,12 +20,12 @@ type mockSetupFunc_CreateUserService func(
 	getUserPort *mocks.MockGetUserPort,
 	getTenantPort *tenantMocks.MockGetTenantPort,
 	confirmAccountTokenPort *mocks.MockGenerateTokenPort,
-	sendEmailPort *emailMocks.MockSendEmailPort,
+	sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 ) *gomock.Call
 
 func newStepTenantOk_CreateUserService(targetTenantId uuid.UUID, canImpersonate bool) mockSetupFunc_CreateUserService {
 	return func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -40,7 +39,7 @@ func newStepTenantOk_CreateUserService(targetTenantId uuid.UUID, canImpersonate 
 
 func newStepTenantNotFound_CreateUserService(targetTenantId uuid.UUID) mockSetupFunc_CreateUserService {
 	return func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -51,7 +50,7 @@ func newStepTenantNotFound_CreateUserService(targetTenantId uuid.UUID) mockSetup
 
 func newStepTenantError_CreateUserService(targetTenantId uuid.UUID, err error) mockSetupFunc_CreateUserService {
 	return func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getTenantPort.EXPECT().
 			GetTenant(targetTenantId).
@@ -107,7 +106,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	// Step 2: Get user
 	step2GetUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -116,7 +115,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 	}
 
 	step2UserExistsFail := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -125,7 +124,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(gomock.Any(), gomock.Any()).
@@ -134,7 +133,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error in step 2")
 	step2GetUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -144,7 +143,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	// Step 3: create user
 	step3CreateUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return createUserPort.EXPECT().
 			SaveUser(targetUserToCreate).
@@ -154,7 +153,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	errMockStep3 := errors.New("unexpected error in step 3")
 	step3CreateUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return createUserPort.EXPECT().
 			SaveUser(targetUserToCreate).
@@ -164,7 +163,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	// Step 4: create token
 	step4CreateTokenOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return confirmAccountTokenPort.EXPECT().
 			NewConfirmAccountToken(expectedUser).
@@ -174,7 +173,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	errMockStep4 := errors.New("unexpected error in step 4")
 	step4CreateTokenError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return confirmAccountTokenPort.EXPECT().
 			NewConfirmAccountToken(expectedUser).
@@ -184,27 +183,27 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	// Step 5: Send email
 	step5SendEmailOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return sendEmailPort.EXPECT().
-			SendConfirmAccountEmail(targetUserEmail, expectedToken).
+			SendConfirmAccountEmail(targetUserEmail, &targetTenantId, expectedToken).
 			Return(nil).
 			Times(1)
 	}
 
 	errMockStep5 := errors.New("unexpected error in step 5")
 	step5SendEmailError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return sendEmailPort.EXPECT().
-			SendConfirmAccountEmail(targetUserEmail, expectedToken).
+			SendConfirmAccountEmail(targetUserEmail, &targetTenantId, expectedToken).
 			Return(errMockStep5).
 			Times(1)
 	}
 
 	// Step 6: rollback user
 	step6DeleteUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantUser(targetTenantId, targetUserId).
@@ -214,7 +213,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 
 	errMockStep6 := errors.New("unexpected error in step 6")
 	step6DeleteUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantUser(targetTenantId, targetUserId).
@@ -432,7 +431,7 @@ func TestService_CreateTenantUser(t *testing.T) {
 			mockGetPort := mocks.NewMockGetUserPort(mockController)
 			mockTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
 			mockConfirmTokenPort := mocks.NewMockGenerateTokenPort(mockController)
-			mockSendEmailPort := emailMocks.NewMockSendEmailPort(mockController)
+			mockSendEmailPort := mocks.NewMockSendConfirmAccountEmailPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -516,7 +515,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	// Step 2: get user
 	step2GetUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -525,7 +524,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 	}
 
 	step2UserExistsFail := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -534,7 +533,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 	}
 
 	step2NeverCalled := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(gomock.Any(), gomock.Any()).
@@ -543,7 +542,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error in step 2")
 	step2GetUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(&targetTenantId, targetUserEmail).
@@ -553,7 +552,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	// Step 3: create user
 	step3CreateUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return createUserPort.EXPECT().
 			SaveUser(targetUserToCreate).
@@ -563,7 +562,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	errMockStep3 := errors.New("unexpected error in step 3")
 	step3CreateUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return createUserPort.EXPECT().
 			SaveUser(targetUserToCreate).
@@ -573,7 +572,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	// Step 4: create token
 	step4CreateTokenOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return confirmAccountTokenPort.EXPECT().
 			NewConfirmAccountToken(expectedUser).
@@ -583,7 +582,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	errMockStep4 := errors.New("unexpected error in step 4")
 	step4CreateTokenError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return confirmAccountTokenPort.EXPECT().
 			NewConfirmAccountToken(expectedUser).
@@ -593,27 +592,27 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	// Step 5: send email
 	step5SendEmailOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return sendEmailPort.EXPECT().
-			SendConfirmAccountEmail(targetUserEmail, expectedToken).
+			SendConfirmAccountEmail(targetUserEmail, &targetTenantId, expectedToken).
 			Return(nil).
 			Times(1)
 	}
 
 	errMockStep5 := errors.New("unexpected error in step 5")
 	step5SendEmailError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return sendEmailPort.EXPECT().
-			SendConfirmAccountEmail(targetUserEmail, expectedToken).
+			SendConfirmAccountEmail(targetUserEmail, &targetTenantId, expectedToken).
 			Return(errMockStep5).
 			Times(1)
 	}
 
 	// Step 6: rollback user
 	step6DeleteUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantAdmin(targetTenantId, targetUserId).
@@ -623,7 +622,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 
 	errMockStep6 := errors.New("unexpected error in step 6")
 	step6DeleteUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteTenantAdmin(targetTenantId, targetUserId).
@@ -841,7 +840,7 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 			mockGetPort := mocks.NewMockGetUserPort(mockController)
 			mockTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
 			mockConfirmTokenPort := mocks.NewMockGenerateTokenPort(mockController)
-			mockSendEmailPort := emailMocks.NewMockSendEmailPort(mockController)
+			mockSendEmailPort := mocks.NewMockSendConfirmAccountEmailPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
@@ -915,7 +914,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	// Step 1: get user
 	step1GetUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(nil, targetUserEmail).
@@ -924,7 +923,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 	}
 
 	step1GetExistingUserFail := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(nil, targetUserEmail).
@@ -934,7 +933,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	errMockStep1 := errors.New("unexpected error in step 1")
 	step1GetUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(nil, targetUserEmail).
@@ -943,7 +942,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 	}
 
 	step1NeverCalled := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return getUserPort.EXPECT().
 			GetUserByEmail(nil, gomock.Any()).
@@ -952,7 +951,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	// step 2: create user
 	step2CreateUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return createUserPort.EXPECT().
 			SaveUser(targetUserToCreate).
@@ -962,7 +961,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	errMockStep2 := errors.New("unexpected error in step 3")
 	step2CreateUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return createUserPort.EXPECT().
 			SaveUser(targetUserToCreate).
@@ -972,7 +971,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	// Step 3: create token
 	step3CreateTokenOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return confirmAccountTokenPort.EXPECT().
 			NewConfirmAccountToken(expectedUser).
@@ -982,7 +981,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	errMockStep3 := errors.New("unexpected error in step 4")
 	step3CreateTokenError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return confirmAccountTokenPort.EXPECT().
 			NewConfirmAccountToken(expectedUser).
@@ -992,27 +991,27 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	// Step 4: send email
 	step4SendEmailOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return sendEmailPort.EXPECT().
-			SendConfirmAccountEmail(targetUserEmail, expectedToken).
+			SendConfirmAccountEmail(targetUserEmail, nil, expectedToken).
 			Return(nil).
 			Times(1)
 	}
 
 	errMockStep4 := errors.New("unexpected error in step 5")
 	step4SendEmailError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return sendEmailPort.EXPECT().
-			SendConfirmAccountEmail(targetUserEmail, expectedToken).
+			SendConfirmAccountEmail(targetUserEmail, nil, expectedToken).
 			Return(errMockStep4).
 			Times(1)
 	}
 
 	// Step 5: rollback user
 	step5DeleteUserOk := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteSuperAdmin(targetUserId).
@@ -1022,7 +1021,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 
 	errMockStep5 := errors.New("unexpected error in step 6")
 	step5DeleteUserError := func(
-		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *emailMocks.MockSendEmailPort,
+		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,
 	) *gomock.Call {
 		return deleteUserPort.EXPECT().
 			DeleteSuperAdmin(targetUserId).
@@ -1175,7 +1174,7 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 			mockGetPort := mocks.NewMockGetUserPort(mockController)
 			mockTenantPort := tenantMocks.NewMockGetTenantPort(mockController)
 			mockConfirmTokenPort := mocks.NewMockGenerateTokenPort(mockController)
-			mockSendEmailPort := emailMocks.NewMockSendEmailPort(mockController)
+			mockSendEmailPort := mocks.NewMockSendConfirmAccountEmailPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta

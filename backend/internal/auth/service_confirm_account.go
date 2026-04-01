@@ -8,10 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ConfirmAccountTokenPort
+//go:generate mockgen -destination=../../tests/auth/mocks/ports_confirm_account.go -package=mocks . ConfirmAccountTokenPort
 
-// TODO: Non sono sicuro che i metodi NewConfirmAccountToken e GetConfirmAccountTokenByUserId
-// debbano prendere tenantId in input
 type ConfirmAccountTokenPort interface {
 	NewConfirmAccountToken(user user.User) (string, error)
 	DeleteConfirmAccountToken(token ConfirmAccountToken) error
@@ -23,7 +21,7 @@ type ConfirmAccountTokenPort interface {
 		userFound user.User, err error,
 	)
 
-	GetTenantConfirmAccountToken(tenantId string, tokenString string) (
+	GetTenantConfirmAccountToken(tenantId uuid.UUID, tokenString string) (
 		token ConfirmAccountToken, err error,
 	)
 	GetSuperAdminConfirmAccountToken(tokenString string) (
@@ -60,24 +58,32 @@ func NewConfirmUserAccountService(
 }
 
 func (service *ConfirmUserAccountService) getValidTenantToken(tenantId uuid.UUID, token string) (ConfirmAccountToken, error) {
-	tokenObj, err := service.confirmAccountTokenPort.GetTenantConfirmAccountToken(tenantId.String(), token)
+	tokenObj, err := service.confirmAccountTokenPort.GetTenantConfirmAccountToken(tenantId, token)
 	if err != nil {
-		return ConfirmAccountToken{}, nil
+		return ConfirmAccountToken{}, err
+	}
+	if tokenObj == (ConfirmAccountToken{}) {
+		return ConfirmAccountToken{}, ErrTokenNotFound
 	}
 	if tokenObj.IsExpired() {
 		return ConfirmAccountToken{}, ErrTokenExpired
 	}
+
 	return tokenObj, err
 }
 
 func (service *ConfirmUserAccountService) getValidSuperAdminToken(token string) (ConfirmAccountToken, error) {
 	tokenObj, err := service.confirmAccountTokenPort.GetSuperAdminConfirmAccountToken(token)
 	if err != nil {
-		return ConfirmAccountToken{}, nil
+		return ConfirmAccountToken{}, err
+	}
+	if tokenObj == (ConfirmAccountToken{}) {
+		return ConfirmAccountToken{}, ErrTokenNotFound
 	}
 	if tokenObj.IsExpired() {
 		return ConfirmAccountToken{}, ErrTokenExpired
 	}
+
 	return tokenObj, err
 }
 
@@ -97,7 +103,7 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	}
 
 	if err != nil {
-		return user.User{}, ErrTokenNotFound
+		return
 	}
 
 	// 2. Get user
@@ -113,21 +119,23 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 		confirmedUser, err = service.confirmAccountTokenPort.GetTenantMemberByConfirmAccountToken(*cmd.TenantId, cmd.Token)
 	}
 
-	if err != nil {
-		return user.User{}, ErrTokenNotFound
-	}
-
 	if confirmedUser.Confirmed {
 		return user.User{}, ErrAccountAlreadyConfirmed
 	}
 
-	// 3. Set password and confirmed status
+	if err != nil {
+		return user.User{}, ErrTokenNotFound
+	}
 
-	// - Password
+	// 3. Create hash
 	hash, err := service.hasher.HashSecret(cmd.NewPassword)
 	if err != nil {
 		return user.User{}, err
 	}
+
+	// Imposta password e confirmed status
+
+	// - Password
 	err = confirmedUser.SetPasswordHash(hash)
 	if err != nil {
 		return user.User{}, err
@@ -143,9 +151,15 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	}
 
 	// 5. Delete token
-	err = service.confirmAccountTokenPort.DeleteConfirmAccountToken(tokenObj)
-	if err != nil {
-		service.log.Error("Cannot delete token", zap.String("token", cmd.Token), zap.Error(err))
+	// NOTA: questo errore non è bloccante
+	deleteErr := service.confirmAccountTokenPort.DeleteConfirmAccountToken(tokenObj)
+	if deleteErr != nil {
+		service.log.Error(
+			"Cannot delete token",
+			zap.String("token", cmd.Token),
+			zap.String("type", "confirm_account"),
+			zap.Error(err),
+		)
 	}
 
 	return

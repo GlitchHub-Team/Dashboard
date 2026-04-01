@@ -29,7 +29,7 @@ func (u *User) SetPasswordHash(newPasswordHash string) error {
 		return ErrEmptyPassword
 	}
 
-	if newPasswordHash == *u.PasswordHash {
+	if u.PasswordHash != nil && newPasswordHash == *u.PasswordHash {
 		return ErrSamePassword
 	}
 

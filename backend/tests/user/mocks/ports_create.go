@@ -13,6 +13,7 @@ import (
 	user "backend/internal/user"
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -80,15 +81,15 @@ func (m *MockSendConfirmAccountEmailPort) EXPECT() *MockSendConfirmAccountEmailP
 }
 
 // SendConfirmAccountEmail mocks base method.
-func (m *MockSendConfirmAccountEmailPort) SendConfirmAccountEmail(toAddr, token string) error {
+func (m *MockSendConfirmAccountEmailPort) SendConfirmAccountEmail(toAddr string, tenantId *uuid.UUID, tokenString string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendConfirmAccountEmail", toAddr, token)
+	ret := m.ctrl.Call(m, "SendConfirmAccountEmail", toAddr, tenantId, tokenString)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendConfirmAccountEmail indicates an expected call of SendConfirmAccountEmail.
-func (mr *MockSendConfirmAccountEmailPortMockRecorder) SendConfirmAccountEmail(toAddr, token any) *gomock.Call {
+func (mr *MockSendConfirmAccountEmailPortMockRecorder) SendConfirmAccountEmail(toAddr, tenantId, tokenString any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConfirmAccountEmail", reflect.TypeOf((*MockSendConfirmAccountEmailPort)(nil).SendConfirmAccountEmail), toAddr, token)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConfirmAccountEmail", reflect.TypeOf((*MockSendConfirmAccountEmailPort)(nil).SendConfirmAccountEmail), toAddr, tenantId, tokenString)
 }

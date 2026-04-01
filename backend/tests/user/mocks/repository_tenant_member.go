@@ -69,21 +69,6 @@ func (mr *MockTenantMemberRepositoryMockRecorder) DeleteTenantMember(tenantMembe
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTenantMember", reflect.TypeOf((*MockTenantMemberRepository)(nil).DeleteTenantMember), tenantMember)
 }
 
-// GetTenantAdmin mocks base method.
-func (m *MockTenantMemberRepository) GetTenantAdmin(tenantId string, by user.UserRepositoryGetUserBy) (*user.TenantMemberEntity, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTenantAdmin", tenantId, by)
-	ret0, _ := ret[0].(*user.TenantMemberEntity)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTenantAdmin indicates an expected call of GetTenantAdmin.
-func (mr *MockTenantMemberRepositoryMockRecorder) GetTenantAdmin(tenantId, by any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantAdmin", reflect.TypeOf((*MockTenantMemberRepository)(nil).GetTenantAdmin), tenantId, by)
-}
-
 // GetTenantAdmins mocks base method.
 func (m *MockTenantMemberRepository) GetTenantAdmins(tenantId string, offset, limit int) ([]user.TenantMemberEntity, int64, error) {
 	m.ctrl.T.Helper()
@@ -113,21 +98,6 @@ func (m *MockTenantMemberRepository) GetTenantMember(tenantId string, by user.Us
 func (mr *MockTenantMemberRepositoryMockRecorder) GetTenantMember(tenantId, by any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantMember", reflect.TypeOf((*MockTenantMemberRepository)(nil).GetTenantMember), tenantId, by)
-}
-
-// GetTenantUser mocks base method.
-func (m *MockTenantMemberRepository) GetTenantUser(tenantId string, by user.UserRepositoryGetUserBy) (*user.TenantMemberEntity, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTenantUser", tenantId, by)
-	ret0, _ := ret[0].(*user.TenantMemberEntity)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTenantUser indicates an expected call of GetTenantUser.
-func (mr *MockTenantMemberRepositoryMockRecorder) GetTenantUser(tenantId, by any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTenantUser", reflect.TypeOf((*MockTenantMemberRepository)(nil).GetTenantUser), tenantId, by)
 }
 
 // GetTenantUsers mocks base method.
