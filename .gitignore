@@ -41,3 +41,5 @@ Infrastructure
 *.env
 *.creds
 *.key
+
+.github/*.md

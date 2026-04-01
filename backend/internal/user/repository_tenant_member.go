@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	cloud_db "backend/internal/infra/database/cloud_db/connection"
+	clouddb "backend/internal/infra/database/cloud_db/connection"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -61,14 +61,14 @@ type TenantMemberRepository interface {
 
 type tenantMemberPgRepository struct {
 	log *zap.Logger
-	db  *gorm.DB
+	db  clouddb.CloudDBConnection
 }
 
 var _ TenantMemberRepository = (*tenantMemberPgRepository)(nil) // Compile-time check
 
 func newTenantMemberPgRepository(
 	log *zap.Logger,
-	db *gorm.DB,
+	db clouddb.CloudDBConnection,
 ) *tenantMemberPgRepository {
 	return &tenantMemberPgRepository{
 		log: log,
@@ -79,8 +79,9 @@ func newTenantMemberPgRepository(
 // Save -------------------------------------------------------------------------------------------
 
 func (repo *tenantMemberPgRepository) SaveTenantMember(tenantMember *TenantMemberEntity) error {
-	err := repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err := db.
+		Scopes(clouddb.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
 		Save(tenantMember).
 		Error
 	return err
@@ -97,8 +98,9 @@ func (repo *tenantMemberPgRepository) DeleteTenantMember(tenantMember *TenantMem
 		return errors.New("cannot delete tenant member with no tenant")
 	}
 
-	err := repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err := db.
+		Scopes(clouddb.WithTenantSchema(tenantMember.TenantId, &TenantMemberEntity{})).
 		Clauses(clause.Returning{}).
 		Delete(&tenantMember).
 		Error
@@ -139,8 +141,9 @@ func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRe
 		return &TenantMemberEntity{}, err
 	}
 
-	err = repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where(where, params...).
 		Find(&tenantMember).
 		Error
@@ -156,8 +159,9 @@ func (repo *tenantMemberPgRepository) GetTenantUser(tenantId string, by UserRepo
 		return &TenantMemberEntity{}, err
 	}
 
-	err = repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_user").
 		Where(where, params...).
 		Find(&tenantMember).
@@ -174,8 +178,9 @@ func (repo *tenantMemberPgRepository) GetTenantAdmin(tenantId string, by UserRep
 		return &TenantMemberEntity{}, err
 	}
 
-	err = repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin").
 		Where(where, params...).
 		Find(&tenantMember).
@@ -189,8 +194,9 @@ func (repo *tenantMemberPgRepository) GetTenantAdmin(tenantId string, by UserRep
 func (repo *tenantMemberPgRepository) GetTenantUsers(tenantId string, offset, limit int) (
 	tenantUsers []TenantMemberEntity, count int64, err error,
 ) {
-	baseQuery := repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	baseQuery := db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_user")
 
 	// Get count
@@ -214,8 +220,9 @@ func (repo *tenantMemberPgRepository) GetTenantUsers(tenantId string, offset, li
 func (repo *tenantMemberPgRepository) GetTenantAdmins(tenantId string, offset, limit int) (
 	tenantAdmins []TenantMemberEntity, total int64, err error,
 ) {
-	baseQuery := repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	baseQuery := db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin")
 
 	// Ottieni count
@@ -240,8 +247,9 @@ func (repo *tenantMemberPgRepository) GetTenantAdmins(tenantId string, offset, l
 // Conteggio ------------------------------------------------------------------------------------------
 
 func (repo *tenantMemberPgRepository) CountTenantAdminsByTenant(tenantId string) (total int64, err error) {
-	err = repo.db.
-		Scopes(cloud_db.WithTenantSchema(tenantId, &TenantMemberEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin").
 		Count(&total).
 		Error

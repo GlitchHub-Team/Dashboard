@@ -19,3 +19,17 @@ type Gateway struct {
 	Status        GatewayStatus
 	IntervalLimit int64
 }
+
+func (g Gateway) IsZero() bool {
+	return g == (Gateway{})
+}
+
+func (g Gateway) IsCommissioned() bool {
+	return g.TenantId != nil
+}
+
+func (g *Gateway) GetId() uuid.UUID { return g.Id }
+
+func (g *Gateway) BelongsToTenant(userTenantId uuid.UUID) bool {
+	return g.TenantId != nil && *g.TenantId == userTenantId
+}

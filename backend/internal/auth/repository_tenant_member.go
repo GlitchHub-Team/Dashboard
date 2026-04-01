@@ -6,10 +6,10 @@ import (
 	"backend/internal/tenant"
 	"backend/internal/user"
 
+	clouddb "backend/internal/infra/database/cloud_db/connection"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-
-	"backend/internal/infra/database/cloud_db/connection"
 )
 
 /*
@@ -62,26 +62,28 @@ func (TenantConfirmTokenEntity) TableName() string { return "confirm_tokens" }
 // repository -----------------------------------------------------------------------------------------
 
 type tenantConfirmTokenPgRepository struct {
-	db *gorm.DB
+	db clouddb.CloudDBConnection
 }
 
-func newTenantConfirmTokenPgRepository(db *gorm.DB) *tenantConfirmTokenPgRepository {
+func newTenantConfirmTokenPgRepository(db clouddb.CloudDBConnection) *tenantConfirmTokenPgRepository {
 	return &tenantConfirmTokenPgRepository{
 		db: db,
 	}
 }
 
 func (repo *tenantConfirmTokenPgRepository) SaveToken(entity *TenantConfirmTokenEntity) (err error) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(*entity.TenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(*entity.TenantId, &TenantConfirmTokenEntity{})).
 		Save(entity).
 		Error
 	return
 }
 
 func (repo *tenantConfirmTokenPgRepository) DeleteToken(entity *TenantConfirmTokenEntity) (err error) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(*entity.TenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(*entity.TenantId, &TenantConfirmTokenEntity{})).
 		Delete(entity).
 		Error
 	return
@@ -90,8 +92,9 @@ func (repo *tenantConfirmTokenPgRepository) DeleteToken(entity *TenantConfirmTok
 func (repo *tenantConfirmTokenPgRepository) GetToken(tenantId string, tokenString string) (
 	entity *TenantConfirmTokenEntity, err error,
 ) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
 		Where("token = ?", tokenString).
 		First(&entity).
 		Error
@@ -101,9 +104,10 @@ func (repo *tenantConfirmTokenPgRepository) GetToken(tenantId string, tokenStrin
 func (repo *tenantConfirmTokenPgRepository) GetTokenWithUser(tenantId string, tokenString string) (
 	entity *TenantConfirmTokenEntity, err error,
 ) {
-	err = repo.db.
+	db := (*gorm.DB)(repo.db)
+	err = db.
 		Joins("User").
-		Scopes(connection.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
 		Where("token = ?", tokenString).
 		First(&entity).
 		Error
@@ -159,26 +163,28 @@ func (TenantPasswordTokenEntity) TableName() string { return "forgot_password_to
 
 // repository -----------------------------------------------------------------------------------------
 type tenantPasswordTokenPgRepository struct {
-	db *gorm.DB
+	db clouddb.CloudDBConnection
 }
 
-func newTenantPasswordTokenPgRepository(db *gorm.DB) *tenantPasswordTokenPgRepository {
+func newTenantPasswordTokenPgRepository(db clouddb.CloudDBConnection) *tenantPasswordTokenPgRepository {
 	return &tenantPasswordTokenPgRepository{
 		db: db,
 	}
 }
 
 func (repo *tenantPasswordTokenPgRepository) SaveToken(entity *TenantPasswordTokenEntity) (err error) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(*entity.TenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(*entity.TenantId, &TenantPasswordTokenEntity{})).
 		Save(entity).
 		Error
 	return
 }
 
 func (repo *tenantPasswordTokenPgRepository) DeleteToken(entity *TenantPasswordTokenEntity) (err error) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(*entity.TenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(*entity.TenantId, &TenantPasswordTokenEntity{})).
 		Delete(entity).
 		Error
 	return
@@ -187,8 +193,9 @@ func (repo *tenantPasswordTokenPgRepository) DeleteToken(entity *TenantPasswordT
 func (repo *tenantPasswordTokenPgRepository) GetToken(tenantId string, tokenString string) (
 	entity *TenantPasswordTokenEntity, err error,
 ) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantPasswordTokenEntity{})).
 		Where("token = ?", tokenString).
 		First(&entity).
 		Error
@@ -198,8 +205,9 @@ func (repo *tenantPasswordTokenPgRepository) GetToken(tenantId string, tokenStri
 func (repo *tenantPasswordTokenPgRepository) GetTokenWithUser(tenantId string, tokenString string) (
 	entity *TenantPasswordTokenEntity, err error,
 ) {
-	err = repo.db.
-		Scopes(connection.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
+	db := (*gorm.DB)(repo.db)
+	err = db.
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantPasswordTokenEntity{})).
 		Joins("User").
 		Where("token = ?", tokenString).
 		First(&entity).

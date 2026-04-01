@@ -40,12 +40,16 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY ".devcontainer/bin" "/home/vscode/.local/bin"
+
+USER vscode
+
+COPY --chown=vscode:vscode ".devcontainer/bin" "/home/vscode/.local/bin"
+
 
 ENV GOPATH=/home/vscode/go
 ENV PATH=/usr/local/go/bin:${GOPATH}/bin:${PATH}
 
-USER vscode
+RUN chmod +x /home/vscode/.local/bin/*.sh
 
 RUN CGO_ENABLED=0 go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
     && CGO_ENABLED=0 go install golang.org/x/tools/gopls@${GOPLS_VERSION} \
