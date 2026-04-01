@@ -12,6 +12,12 @@ type Config struct {
 	// Nome dell'applicativo
 	Name string `json:"NAME"`
 
+	/*
+		URL su cui si trova il front-end dell'applicativo. Viene usato dal package email
+		per l'invio dei token di conferma/cambio password
+	*/
+	AppURL string `json:"APP_URL"`
+
 	// Porta su cui aprire il backend
 	Port string `json:"PORT"`
 
@@ -39,6 +45,23 @@ type Config struct {
 		NOTA: Ha lunghezza 512 bit da decoded, la codifica base 64 ha lunghezza maggiore
 	*/
 	AuthTokenSecret string `json:"AUTH_TOKEN_SECRET"`
+
+	// SMTP =========================================================================
+
+	/* Hostname dell'URL SMTP */
+	SMTPHost string `json:"SMTP_HOST"`
+
+	/* Numero porta URL SMTP */
+	SMTPPort stringInt `json:"SMTP_PORT"`
+
+	/* Nome utente SMTP */
+	SMTPUser string `json:"SMTP_USER"`
+
+	/* Password SMTP */
+	SMTPPass string `json:"SMTP_PASS"`
+
+	/* Indirizzo email da cui inviare email tramite SMTP */
+	SMTPFrom string `json:"SMTP_FROM"`
 }
 
 type stringInt int
