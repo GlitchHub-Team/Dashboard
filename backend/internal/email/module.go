@@ -1,10 +1,11 @@
 package email
 
 import (
+	"fmt"
+
 	"backend/internal/auth"
 	"backend/internal/shared/config"
 	"backend/internal/user"
-	"fmt"
 
 	"go.uber.org/fx"
 	"go.uber.org/zap"

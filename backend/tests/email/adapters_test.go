@@ -202,14 +202,14 @@ func TestSendEmailTerminalAdapter_SendConfirmAccountEmail(t *testing.T) {
 
 	cases := []testCase{
 		{
-			name:           "Super Admin Case",
-			inputTo:        targetTo,
+			name:          "Super Admin Case",
+			inputTo:       targetTo,
 			inputTenantId: nil,
 			inputToken:    targetToken,
 		},
 		{
-			name:           "Tenant Member Case",
-			inputTo:        targetTo,
+			name:          "Tenant Member Case",
+			inputTo:       targetTo,
 			inputTenantId: &targetTenantId,
 			inputToken:    targetToken,
 		},
@@ -293,14 +293,14 @@ func TestSendEmailTerminalAdapter_SendForgotPasswordEmail(t *testing.T) {
 
 	cases := []testCase{
 		{
-			name:           "Super Admin Case",
-			inputTo:        targetTo,
+			name:          "Super Admin Case",
+			inputTo:       targetTo,
 			inputTenantId: nil,
 			inputToken:    targetToken,
 		},
 		{
-			name:           "Tenant Member Case",
-			inputTo:        targetTo,
+			name:          "Tenant Member Case",
+			inputTo:       targetTo,
 			inputTenantId: &targetTenantId,
 			inputToken:    targetToken,
 		},

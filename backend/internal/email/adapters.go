@@ -31,10 +31,10 @@ func NewSendEmailSMTPAdapter(
 	cfg *config.Config, sender smtpSender, createMsgStrategy createMessageStrategy,
 ) *SendEmailSMTPAdapter {
 	return &SendEmailSMTPAdapter{
-		fromAddress: cfg.SMTPFrom,
-		sender:      sender,
+		fromAddress:       cfg.SMTPFrom,
+		sender:            sender,
 		createMsgStrategy: createMsgStrategy,
-		appUrl:      cfg.AppURL,
+		appUrl:            cfg.AppURL,
 	}
 }
 

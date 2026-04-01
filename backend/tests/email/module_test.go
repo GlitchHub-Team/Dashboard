@@ -12,15 +12,14 @@ import (
 )
 
 func TestNewEmailAdapterFactory(t *testing.T) {
-
 	ctrl := gomock.NewController(t)
 	mockSender := mocks.NewMocksmtpSender(ctrl)
 	mockMsgStrategy := mocks.NewMockcreateMessageStrategy(ctrl)
 	mockLogger := zaptest.NewLogger(t)
 
-	t.Run("Case terminal", func (t *testing.T) {
+	t.Run("Case terminal", func(t *testing.T) {
 		port, err := email.NewEmailAdapterFactory(
-			&config.Config{MailAdapter: "terminal",},
+			&config.Config{MailAdapter: "terminal"},
 			mockSender,
 			mockMsgStrategy,
 			mockLogger,
@@ -33,11 +32,10 @@ func TestNewEmailAdapterFactory(t *testing.T) {
 			t.Errorf("want nil error, got: %v", err)
 		}
 	})
-	
 
-	t.Run("Case smtp", func (t *testing.T) {
+	t.Run("Case smtp", func(t *testing.T) {
 		port, err := email.NewEmailAdapterFactory(
-			&config.Config{MailAdapter: "smtp",},
+			&config.Config{MailAdapter: "smtp"},
 			mockSender,
 			mockMsgStrategy,
 			mockLogger,
@@ -51,9 +49,9 @@ func TestNewEmailAdapterFactory(t *testing.T) {
 		}
 	})
 
-	t.Run("Case unknown", func (t *testing.T) {
+	t.Run("Case unknown", func(t *testing.T) {
 		_, err := email.NewEmailAdapterFactory(
-			&config.Config{MailAdapter: "invalid-value",},
+			&config.Config{MailAdapter: "invalid-value"},
 			mockSender,
 			mockMsgStrategy,
 			mockLogger,

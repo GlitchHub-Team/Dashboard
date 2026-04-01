@@ -13,7 +13,6 @@ Se non sei stato tu a richiedere il cambio password, puoi ignorare questo messag
 
 //go:generate mockgen -destination=../../tests/email/mocks/message_strategy.go -package=mocks . createMessageStrategy
 
-
 /*
 Interfaccia da rispettare per creare messaggi mail in maniere diverse (plain, html, etc.)
 */
