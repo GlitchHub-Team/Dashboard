@@ -19,9 +19,8 @@ export class ConfirmAccountPage {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   // Token e tenantId recuperati dall'URL
-  private readonly token = this.activatedRoute.snapshot.queryParamMap.get('token') ?? '';
-  private readonly tenantId =
-    this.activatedRoute.snapshot.queryParamMap.get('tenant_id') ?? undefined;
+  private readonly token = this.activatedRoute.snapshot.paramMap.get('token') ?? '';
+  private readonly tenantId = this.activatedRoute.snapshot.queryParamMap.get('tid') ?? undefined;
 
   protected readonly loading = this.authActionsService.loading;
   protected readonly generalError = this.authActionsService.error;

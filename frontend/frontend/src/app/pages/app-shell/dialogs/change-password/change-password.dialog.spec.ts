@@ -140,9 +140,9 @@ describe('ChangePasswordDialog', () => {
     }
 
     function fillForm(): void {
-      component['form'].controls.oldPassword.setValue('oldPass');
-      component['form'].controls.newPassword.setValue('newPass');
-      component['form'].controls.confirmNewPassword.setValue('newPass');
+      component['form'].controls.oldPassword.setValue('oldPass1');
+      component['form'].controls.newPassword.setValue('newPass12');
+      component['form'].controls.confirmNewPassword.setValue('newPass12');
     }
 
     it('should mark all fields touched and not call service when form is invalid', () => {
@@ -161,8 +161,8 @@ describe('ChangePasswordDialog', () => {
       submitForm();
 
       expect(authActionsServiceMock.confirmPasswordChange).toHaveBeenCalledWith({
-        oldPassword: 'oldPass',
-        newPassword: 'newPass',
+        oldPassword: 'oldPass1',
+        newPassword: 'newPass12',
       });
       expect(authActionsServiceMock.clearMessages).toHaveBeenCalled();
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);

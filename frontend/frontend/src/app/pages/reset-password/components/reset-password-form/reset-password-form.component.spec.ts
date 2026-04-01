@@ -68,7 +68,9 @@ describe('ResetPasswordFormComponent', () => {
 
       const successBanner = fixture.debugElement.query(By.css('.success-banner'));
       expect(successBanner).toBeTruthy();
-      expect(successBanner.nativeElement.textContent).toContain('Reimpostazione della password riuscita.');
+      expect(successBanner.nativeElement.textContent).toContain(
+        'Reimpostazione della password riuscita.',
+      );
       expect(fixture.debugElement.query(By.css('form'))).toBeFalsy();
 
       const goToLoginButton = fixture.debugElement.query(By.css('button'));
@@ -103,6 +105,7 @@ describe('ResetPasswordFormComponent', () => {
       ['only newPassword', 'secret123', ''],
       ['only confirmNewPassword', '', 'secret123'],
       ['mismatched passwords', 'secret123', 'different'],
+      ['less than 8 chars', 'short', 'short'],
     ])('should be invalid with %s', (_, newPassword, confirmNewPassword) => {
       component['resetPasswordForm'].controls.newPassword.setValue(newPassword);
       component['resetPasswordForm'].controls.confirmNewPassword.setValue(confirmNewPassword);
@@ -114,6 +117,12 @@ describe('ResetPasswordFormComponent', () => {
       component['resetPasswordForm'].controls.confirmNewPassword.setValue('secret123');
       expect(component['resetPasswordForm'].valid).toBe(true);
       expect(component['resetPasswordForm'].hasError('passwordMismatch')).toBe(false);
+    });
+
+    it('should have minlength error when password is too short', () => {
+      component['resetPasswordForm'].controls.newPassword.setValue('short');
+      component['resetPasswordForm'].controls.confirmNewPassword.setValue('short');
+      expect(component['resetPasswordForm'].controls.newPassword.hasError('minlength')).toBe(true);
     });
 
     it('should have passwordMismatch error when passwords do not match', () => {

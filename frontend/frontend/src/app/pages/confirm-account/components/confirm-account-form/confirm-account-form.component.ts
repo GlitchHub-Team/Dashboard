@@ -33,7 +33,7 @@ export class ConfirmAccountFormComponent {
 
   protected confirmAccountForm = this.formBuilder.nonNullable.group(
     {
-      newPassword: ['', Validators.required],
+      newPassword: ['', [Validators.required, Validators.minLength(8)]],
       confirmNewPassword: ['', Validators.required],
     },
     { validators: this.passwordsMatchValidator },

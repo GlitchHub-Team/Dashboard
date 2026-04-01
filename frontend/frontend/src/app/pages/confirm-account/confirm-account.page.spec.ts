@@ -37,10 +37,15 @@ describe('ConfirmAccountPage', () => {
 
   const activatedRouteMock = {
     snapshot: {
-      queryParamMap: {
+      paramMap: {
         get: vi.fn().mockImplementation((key: string) => {
           if (key === 'token') return null;
-          if (key === 'tenant_id') return null;
+          return null;
+        }),
+      },
+      queryParamMap: {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'tid') return null;
           return null;
         }),
       },
@@ -49,6 +54,14 @@ describe('ConfirmAccountPage', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    activatedRouteMock.snapshot.paramMap.get.mockImplementation((key: string) => {
+      if (key === 'token') return null;
+      return null;
+    });
+    activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+      if (key === 'tid') return null;
+      return null;
+    });
 
     loadingSignal = signal(false);
     errorSignal = signal<string | null>(null);
@@ -104,7 +117,7 @@ describe('ConfirmAccountPage', () => {
   describe('onConfirmAccount', () => {
     const mockRequest: ConfirmAccountResponse = { token: '', newPassword: 'newSecret123' };
 
-    it('should call confirmAccount with empty token and undefined tenant_id when route has none', () => {
+    it('should call confirmAccount with empty token and undefined tenantId when route has none', () => {
       authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
 
       confirmFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
@@ -113,12 +126,12 @@ describe('ConfirmAccountPage', () => {
       expect(authActionsServiceMock.confirmAccount).toHaveBeenCalledWith({
         ...mockRequest,
         token: '',
-        tenant_id: undefined,
+        tenantId: undefined,
       });
     });
 
-    it('should merge token from route into the request', () => {
-      activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+    it('should merge token from route param into the request', () => {
+      activatedRouteMock.snapshot.paramMap.get.mockImplementation((key: string) => {
         if (key === 'token') return 'route-token';
         return null;
       });
@@ -134,14 +147,17 @@ describe('ConfirmAccountPage', () => {
       expect(authActionsServiceMock.confirmAccount).toHaveBeenCalledWith({
         ...mockRequest,
         token: 'route-token',
-        tenant_id: undefined,
+        tenantId: undefined,
       });
     });
 
-    it('should merge tenant_id from route into the request', () => {
-      activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+    it('should merge tenantId from tid query param into the request', () => {
+      activatedRouteMock.snapshot.paramMap.get.mockImplementation((key: string) => {
         if (key === 'token') return 'route-token';
-        if (key === 'tenant_id') return 'tenant-01';
+        return null;
+      });
+      activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+        if (key === 'tid') return 'tenant-01';
         return null;
       });
       authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));

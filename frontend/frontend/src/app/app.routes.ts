@@ -10,12 +10,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
-    path: 'reset-password',
+    path: 'forgot_password/:token',
     loadComponent: () =>
       import('./pages/reset-password/reset-password.page').then((m) => m.ResetPasswordPage),
   },
   {
-    path: 'confirm-account',
+    path: 'confirm_account/:token',
     loadComponent: () =>
       import('./pages/confirm-account/confirm-account.page').then((m) => m.ConfirmAccountPage),
   },

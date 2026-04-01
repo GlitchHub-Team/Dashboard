@@ -84,6 +84,7 @@ describe('ConfirmAccountFormComponent', () => {
       ['only newPassword filled', 'secret123', ''],
       ['only confirmNewPassword filled', '', 'secret123'],
       ['mismatched passwords', 'secret123', 'different'],
+      ['less than 8 chars', 'short', 'short'],
     ])('should be invalid with %s', (_, newPassword, confirmNewPassword) => {
       component['confirmAccountForm'].controls.newPassword.setValue(newPassword);
       component['confirmAccountForm'].controls.confirmNewPassword.setValue(confirmNewPassword);
@@ -94,6 +95,12 @@ describe('ConfirmAccountFormComponent', () => {
       component['confirmAccountForm'].controls.newPassword.setValue('secret123');
       component['confirmAccountForm'].controls.confirmNewPassword.setValue('secret123');
       expect(component['confirmAccountForm'].valid).toBe(true);
+    });
+
+    it('should have minlength error when newPassword is less than 8 characters', () => {
+      component['confirmAccountForm'].controls.newPassword.setValue('short');
+      component['confirmAccountForm'].controls.confirmNewPassword.setValue('short');
+      expect(component['confirmAccountForm'].controls.newPassword.hasError('minlength')).toBe(true);
     });
 
     it('should have passwordMismatch error when passwords differ', () => {

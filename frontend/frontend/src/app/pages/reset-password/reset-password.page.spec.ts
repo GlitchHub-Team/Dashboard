@@ -42,10 +42,15 @@ describe('ResetPasswordPage', () => {
 
   const activatedRouteMock = {
     snapshot: {
-      queryParamMap: {
+      paramMap: {
         get: vi.fn().mockImplementation((key: string) => {
           if (key === 'token') return 'reset-token';
-          if (key === 'tenant_id') return null;
+          return null;
+        }),
+      },
+      queryParamMap: {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'tid') return null;
           return null;
         }),
       },
@@ -54,9 +59,12 @@ describe('ResetPasswordPage', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+    activatedRouteMock.snapshot.paramMap.get.mockImplementation((key: string) => {
       if (key === 'token') return 'reset-token';
-      if (key === 'tenant_id') return null;
+      return null;
+    });
+    activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
+      if (key === 'tid') return null;
       return null;
     });
 
@@ -119,7 +127,7 @@ describe('ResetPasswordPage', () => {
       newPassword: 'newSecret123',
     };
 
-    it('should merge token from route and undefined tenant_id into the request', () => {
+    it('should merge token from route param and undefined tenantId into the request', () => {
       authActionsServiceMock.confirmPasswordReset.mockReturnValue(of(undefined));
 
       resetFormDebug.triggerEventHandler('submitReset', mockResponse);
@@ -128,14 +136,13 @@ describe('ResetPasswordPage', () => {
       expect(authActionsServiceMock.confirmPasswordReset).toHaveBeenCalledWith({
         ...mockResponse,
         token: 'reset-token',
-        tenant_id: undefined,
+        tenantId: undefined,
       });
     });
 
-    it('should merge tenant_id from route into the request', () => {
+    it('should merge tenantId from tid query param into the request', () => {
       activatedRouteMock.snapshot.queryParamMap.get.mockImplementation((key: string) => {
-        if (key === 'token') return 'reset-token';
-        if (key === 'tenant_id') return 'tenant-01';
+        if (key === 'tid') return 'tenant-01';
         return null;
       });
       authActionsServiceMock.confirmPasswordReset.mockReturnValue(of(undefined));
