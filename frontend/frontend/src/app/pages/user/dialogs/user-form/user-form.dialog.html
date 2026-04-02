@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>{{ 'Aggiungi Nuovo' }} Utente</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Username</mat-label>
+      <input matInput formControlName="username" type="text" required />
+      @if (form.controls.username.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" required />
+      @if (form.controls.email.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      } @else if (form.controls.email.hasError('email')) {
+        <mat-error>Inserisci un'email valida</mat-error>
+      }
+    </mat-form-field>
+
+    @if (data.role === UserRole.TENANT_ADMIN) {
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Tenant</mat-label>
+        <mat-select formControlName="tenantId" required>
+          @for (tenant of tenantList(); track tenant.id) {
+            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.tenantId.hasError('required')) {
+          <mat-error>Campo obbligatorio</mat-error>
+        }
+      </mat-form-field>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Annulla</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="form.invalid">
+    Salva
+  </button>
+</mat-dialog-actions>

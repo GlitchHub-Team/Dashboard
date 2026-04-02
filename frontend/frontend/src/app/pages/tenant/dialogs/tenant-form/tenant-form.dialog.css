@@ -1,0 +1,9 @@
+.w-100 {
+  width: 100%;
+}
+
+.error-text {
+  color: red;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
