@@ -68,6 +68,8 @@
         <mat-error>Campo obbligatorio</mat-error>
       } @else if (filtersForm.controls.dataPointsCounter.hasError('min')) {
         <mat-error>Almeno 1 punto dati</mat-error>
+      } @else if (filtersForm.controls.dataPointsCounter.hasError('max')) {
+        <mat-error>Al massimo 300 punti dati</mat-error>
       }
     </mat-form-field>
   </form>

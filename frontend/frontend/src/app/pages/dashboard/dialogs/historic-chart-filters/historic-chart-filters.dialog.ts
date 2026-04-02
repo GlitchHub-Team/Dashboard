@@ -42,7 +42,7 @@ export class HistoricChartFiltersDialog {
 
   protected readonly filtersForm = this.formBuilder.nonNullable.group(
     {
-      dataPointsCounter: [null as number | null, [Validators.required, Validators.min(1)]],
+      dataPointsCounter: [50, [Validators.required, Validators.min(1), Validators.max(300)]],
       from: [null as Date | null],
       fromTime: [null as string | null],
       to: [null as Date | null],

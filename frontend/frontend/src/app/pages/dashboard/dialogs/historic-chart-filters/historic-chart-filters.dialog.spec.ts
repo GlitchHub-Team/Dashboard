@@ -64,7 +64,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
     it('should have form with default values', () => {
       const form = component['filtersForm'];
-      expect(form.value.dataPointsCounter).toBeNull();
+      expect(form.value.dataPointsCounter).toBe(50);
       expect(form.value.from).toBeNull();
       expect(form.value.fromTime).toBeNull();
       expect(form.value.to).toBeNull();
@@ -73,9 +73,9 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(form.value.upperBound).toBeNull();
     });
 
-    it('should have Apply button disabled (dataPointsCounter empty by default)', () => {
+    it('should have Apply button enabled (form is valid with defaults)', () => {
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
-      expect(applyBtn.nativeElement.disabled).toBe(true);
+      expect(applyBtn.nativeElement.disabled).toBe(false);
     });
 
     it('should have Cancel button enabled', () => {
@@ -95,12 +95,12 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
   });
 
   describe('form validation', () => {
-    it('should be invalid with default values (dataPointsCounter required)', () => {
-      expect(component['filtersForm'].valid).toBe(false);
+    it('should be valid with default values', () => {
+      expect(component['filtersForm'].valid).toBe(true);
     });
 
-    it('should be invalid when dataPointsCounter is null', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(null);
+    it('should be invalid when dataPointsCounter exceeds maximum', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(301);
       expect(component['filtersForm'].valid).toBe(false);
     });
 
@@ -132,8 +132,29 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(component['filtersForm'].valid).toBe(true);
     });
 
-    it('should disable Apply button when dataPointsCounter is null', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(null);
+    it('should be valid when dataPointsCounter is 300', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(300);
+      expect(component['filtersForm'].valid).toBe(true);
+    });
+
+    it('should be invalid when from date is not before to date', () => {
+      component['filtersForm'].controls.from.setValue(new Date('2025-01-02'));
+      component['filtersForm'].controls.fromTime.setValue('12:00');
+      component['filtersForm'].controls.to.setValue(new Date('2025-01-01'));
+      component['filtersForm'].controls.toTime.setValue('12:00');
+      expect(component['filtersForm'].hasError('invalidDateRange')).toBe(true);
+      expect(component['filtersForm'].valid).toBe(false);
+    });
+
+    it('should be invalid when lowerBound is not less than upperBound', () => {
+      component['filtersForm'].controls.lowerBound.setValue(100);
+      component['filtersForm'].controls.upperBound.setValue(50);
+      expect(component['filtersForm'].hasError('invalidValueRange')).toBe(true);
+      expect(component['filtersForm'].valid).toBe(false);
+    });
+
+    it('should disable Apply button when dataPointsCounter exceeds maximum', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(301);
       fixture.detectChanges();
 
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
@@ -150,17 +171,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
   });
 
   describe('validation error messages', () => {
-    it('should show "Data points count is required" error', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(null);
-      component['filtersForm'].controls.dataPointsCounter.markAsTouched();
-      fixture.detectChanges();
-
-      const error = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('Campo obbligatorio'));
-      expect(error).toBeTruthy();
-    });
-
     it('should show "Minimum 1 data point" error', () => {
       component['filtersForm'].controls.dataPointsCounter.setValue(0);
       component['filtersForm'].controls.dataPointsCounter.markAsTouched();
@@ -169,6 +179,39 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       const error = fixture.debugElement
         .queryAll(By.css('mat-error'))
         .find((e) => e.nativeElement.textContent.includes('Almeno 1'));
+      expect(error).toBeTruthy();
+    });
+
+    it('should show "Maximum 300 data points" error', () => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(301);
+      component['filtersForm'].controls.dataPointsCounter.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.debugElement
+        .queryAll(By.css('mat-error'))
+        .find((e) => e.nativeElement.textContent.includes('Al massimo 300'));
+      expect(error).toBeTruthy();
+    });
+
+    it('should show invalid date range error', () => {
+      component['filtersForm'].controls.from.setValue(new Date('2025-01-02'));
+      component['filtersForm'].controls.to.setValue(new Date('2025-01-01'));
+      fixture.detectChanges();
+
+      const error = fixture.debugElement
+        .queryAll(By.css('mat-error'))
+        .find((e) => e.nativeElement.textContent.includes('deve essere precedente'));
+      expect(error).toBeTruthy();
+    });
+
+    it('should show invalid value range error', () => {
+      component['filtersForm'].controls.lowerBound.setValue(100);
+      component['filtersForm'].controls.upperBound.setValue(50);
+      fixture.detectChanges();
+
+      const error = fixture.debugElement
+        .queryAll(By.css('mat-error'))
+        .find((e) => e.nativeElement.textContent.includes('inferiore deve essere più basso'));
       expect(error).toBeTruthy();
     });
   });
@@ -247,7 +290,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
     });
 
     it('should mark all as touched and not close when form is invalid', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(null);
+      component['filtersForm'].controls.dataPointsCounter.setValue(0);
       component['onApply']();
 
       expect(component['filtersForm'].controls.from.touched).toBe(true);

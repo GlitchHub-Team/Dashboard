@@ -80,7 +80,7 @@ describe('SensorHistoricApiService', () => {
         expect(response).toEqual(mockHistoricResponse);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical_data`);
       expect(req.request.method).toBe('GET');
       req.flush(mockHistoricResponse);
     });
@@ -88,7 +88,7 @@ describe('SensorHistoricApiService', () => {
     it('should send correct query params', () => {
       service.getHistoricData(mockChartRequest).subscribe();
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical_data`);
       expect(req.request.params.get('from_time')).toBe('2026-01-01T00:00:00.000Z');
       expect(req.request.params.get('to_time')).toBe('2026-01-02T00:00:00.000Z');
       expect(req.request.params.get('lower_bound')).toBe('0');
@@ -102,7 +102,7 @@ describe('SensorHistoricApiService', () => {
         expect(response).toEqual(mockHistoricResponse);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical_data`);
       req.flush(mockHistoricResponse);
     });
   });
