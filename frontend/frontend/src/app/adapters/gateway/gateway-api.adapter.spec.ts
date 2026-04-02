@@ -9,7 +9,7 @@ describe('GatewayApiAdapter', () => {
   const dto: GatewayBackend = {
     gateway_id: 'gw-1',
     name: 'Gateway 1',
-    status: 'attivo',
+    status: 'active',
     interval: 60,
     tenant_id: 'tenant-01',
   };

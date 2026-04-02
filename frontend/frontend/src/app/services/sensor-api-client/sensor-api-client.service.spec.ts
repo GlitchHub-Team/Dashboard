@@ -145,7 +145,7 @@ describe('SensorApiClientService', () => {
         gateway_id: mockConfig.gatewayId,
         sensor_name: mockConfig.name,
         profile: 'health thermometer',
-        sensor_interval: mockConfig.dataInterval,
+        data_interval: mockConfig.dataInterval,
       });
       req.flush(mockResponse);
     });
