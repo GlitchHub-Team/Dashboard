@@ -8,6 +8,7 @@ ARG GOLANGCI_LINT_VERSION="v2.10.1"
 ARG GOFUMPT_VERSION="v0.9.2"
 ARG GOPLS_VERSION="v0.21.1"
 ARG DLV_VERSION="v1.26.0"
+ARG GOMOCKGEN_VERSION="v0.6.0"
 
 RUN apt-get update \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -39,11 +40,18 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ENV GOPATH=/home/vscode/go
-ENV PATH=/usr/local/go/bin:${GOPATH}/bin:${PATH}
 
 USER vscode
 
+COPY --chown=vscode:vscode ".devcontainer/bin" "/home/vscode/.local/bin"
+
+
+ENV GOPATH=/home/vscode/go
+ENV PATH=/usr/local/go/bin:${GOPATH}/bin:${PATH}
+
+RUN chmod +x /home/vscode/.local/bin/*.sh
+
 RUN CGO_ENABLED=0 go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
     && CGO_ENABLED=0 go install golang.org/x/tools/gopls@${GOPLS_VERSION} \
-    && CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@${DLV_VERSION}
+    && CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@${DLV_VERSION} \
+    && CGO_ENABLED=0 go install go.uber.org/mock/mockgen@${GOMOCKGEN_VERSION}

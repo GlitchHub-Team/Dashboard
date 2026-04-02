@@ -1,23 +1,18 @@
 {
   "name": "Dashboard Dev (Go + Angular)",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
-  "remoteUser": "vscode",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "forwardPorts": [
-    3001,
-    4200
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dashboard",
+  "runServices": [
+    "dashboard",
+    "cloud-db",
+    "adminer",
+    "timescale",
+    "nats",
+    "nats-manager"
   ],
-  "portsAttributes": {
-    "3001": {
-      "label": "Dashboard Backend"
-    },
-    "4200": {
-      "label": "Angular Dev Server"
-    }
-  },
+  "shutdownAction": "stopCompose",
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/app",
   "postCreateCommand": "bash .devcontainer/init.sh",
   "customizations": {
     "vscode": {
@@ -32,15 +27,19 @@
           "gofumpt": "/home/vscode/go/bin/gofumpt",
           "gopls": "/home/vscode/go/bin/gopls",
           "dlv": "/home/vscode/go/bin/dlv"
+        },
+        "gopls": {
+          "gofumpt": true
+        },
+        "[go]": {
+          "editor.defaultFormatter": "golang.go",
+          "editor.formatOnSave": true
         }
       },
       "extensions": [
         "golang.go",
         "angular.ng-template",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "eamodio.gitlens",
-        "tamasfe.even-better-toml"
+        "dbaeumer.vscode-eslint"
       ]
     }
   }
