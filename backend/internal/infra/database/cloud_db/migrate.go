@@ -3,6 +3,7 @@ package cloud_db
 import (
 	"fmt"
 
+	"backend/internal/auth"
 	"backend/internal/gateway"
 	"backend/internal/sensor"
 	"backend/internal/tenant"
@@ -16,6 +17,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// NOTA: SERVIREBBERO 4 e 8 servono per avere UUID valido (es. 11111111-1111-4111-8111-111111111111)
 const (
 	tenant1Id = "11111111-1111-1111-1111-111111111111"
 	tenant2Id = "22222222-2222-2222-2222-222222222222"
@@ -54,6 +56,8 @@ func (migrator *PostgreMigrator) Migrate() error {
 		&gateway.GatewayEntity{},
 		&sensor.SensorEntity{},
 		&user.SuperAdminEntity{},
+		&auth.SuperAdminConfirmTokenEntity{},
+		&auth.SuperAdminPasswordTokenEntity{},
 	}
 
 	/* Entity da associare a uno schema tenant specifico */

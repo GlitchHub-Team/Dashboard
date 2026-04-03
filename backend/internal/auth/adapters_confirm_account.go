@@ -6,7 +6,6 @@ import (
 	"backend/internal/user"
 
 	"github.com/google/uuid"
-	// "github.com/google/uuid"
 )
 
 //go:generate mockgen -destination=../../tests/auth/mocks/repository_confirm_account.go -package=mocks . SuperAdminConfirmTokenRepository,TenantConfirmTokenRepository

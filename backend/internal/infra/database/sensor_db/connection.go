@@ -1,6 +1,7 @@
 package sensordb
 
 import (
+	"backend/internal/shared/config"
 	"context"
 	"fmt"
 	"time"
@@ -11,22 +12,17 @@ import (
 
 type SensorDBConnection *gorm.DB
 
-type (
-	SensorDBAddress  string
-	SensorDBPort     int
-	SensorDBUsername string
-	SensorDBPassword string
-	SensorDBName     string
-)
-
-func NewTimescaleDBConnection(addr SensorDBAddress, port SensorDBPort, user SensorDBUsername, pass SensorDBPassword, dbname SensorDBName) (SensorDBConnection, error) {
+func NewTimescaleDBConnection(
+	// addr SensorDBAddress, port SensorDBPort, user SensorDBUsername, pass SensorDBPassword, dbname SensorDBName,
+	cfg *config.Config,
+) (SensorDBConnection, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		addr, port, user, pass, dbname,
+		cfg.SensorDBHost, int(cfg.SensorDBPort), cfg.SensorDBUser, cfg.SensorDBPassword, cfg.SensorDBName,
 	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("impossibile aprire connessione Postgres: %w", err)
+		return nil, fmt.Errorf("impossibile aprire connessione TimescaleDB: %w", err)
 	}
 
 	sqlDB, err := db.DB()
@@ -37,7 +33,7 @@ func NewTimescaleDBConnection(addr SensorDBAddress, port SensorDBPort, user Sens
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := sqlDB.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("impossibile raggiungere Postgres: %w", err)
+		return nil, fmt.Errorf("impossibile raggiungere TimescaleDB: %w", err)
 	}
 	return db, nil
 }

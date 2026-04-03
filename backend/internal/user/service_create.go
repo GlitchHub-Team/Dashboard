@@ -1,10 +1,9 @@
 package user
 
 import (
-	// "backend/internal/auth"
-
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
+	// "errors"
 
 	"github.com/google/uuid"
 )
@@ -72,13 +71,13 @@ func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) 
 	}
 
 	// 2. Controlla user
-	checkedUser, err := service.getUserPort.GetUserByEmail(&cmd.TenantId, cmd.Email)
-	if err != nil {
-		return User{}, err
-	}
-	if !checkedUser.IsZero() {
-		return User{}, ErrUserAlreadyExists
-	}
+	// _, err = service.getUserPort.GetUserByEmail(&cmd.TenantId, cmd.Email)
+	// if err != nil && !errors.Is(err, ErrUserNotFound) {
+	// 	return User{}, err
+	// }
+	// if err == nil {
+	// 	return User{}, ErrUserAlreadyExists
+	// }
 
 	// 3. Crea user
 	user, err := service.createUserPort.SaveUser(User{
@@ -133,16 +132,16 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 	}
 
 	// 3. Controlla user
-	user, err := service.getUserPort.GetUserByEmail(&cmd.TenantId, cmd.Email)
-	if err != nil {
-		return User{}, err
-	}
-	if !user.IsZero() {
-		return User{}, ErrUserAlreadyExists
-	}
+	// user, err := service.getUserPort.GetUserByEmail(&cmd.TenantId, cmd.Email)
+	// if err != nil {
+	// 	return User{}, err
+	// }
+	// if !user.IsZero() {
+	// 	return User{}, ErrUserAlreadyExists
+	// }
 
 	// 4. Crea user
-	user, err = service.createUserPort.SaveUser(User{
+	user, err := service.createUserPort.SaveUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
 		Role:      identity.ROLE_TENANT_ADMIN,
@@ -182,16 +181,16 @@ func (service *CreateUserService) CreateSuperAdmin(cmd CreateSuperAdminCommand) 
 	}
 
 	// 1. Controlla user
-	user, err := service.getUserPort.GetUserByEmail(nil, cmd.Email)
-	if err != nil {
-		return User{}, err
-	}
-	if !user.IsZero() {
-		return User{}, ErrUserAlreadyExists
-	}
+	// user, err := service.getUserPort.GetUserByEmail(nil, cmd.Email)
+	// if err != nil {
+	// 	return User{}, err
+	// }
+	// if !user.IsZero() {
+	// 	return User{}, ErrUserAlreadyExists
+	// }
 
 	// 2. Crea user
-	user, err = service.createUserPort.SaveUser(User{
+	user, err := service.createUserPort.SaveUser(User{
 		Name:      cmd.Username,
 		Email:     cmd.Email,
 		Role:      identity.ROLE_SUPER_ADMIN,
