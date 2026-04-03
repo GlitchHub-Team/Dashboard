@@ -2365,7 +2365,7 @@ func TestController_GetTenantUsers(t *testing.T) {
 
 	// Input
 
-	validUrl := fmt.Sprintf("/tenant/%v/tenant_users", targetTenantId.String())
+	validUrl := fmt.Sprintf("/tenant/%v/tenant_users?page=1", targetTenantId.String())
 	invalidUrl_tenantId := "/tenant/123/tenant_users"
 	invalidUrl_pagination := validUrl + "?page=invalid&limit=invalid"
 	// invalidUrl_userId := fmt.Sprintf("/tenant/%v/tenant_users/", targetTenantId.String())

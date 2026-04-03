@@ -1,0 +1,58 @@
+@if (loading()) {
+  <mat-spinner diameter="32"></mat-spinner>
+} @else if (tenants().length === 0) {
+  <div class="empty-state">
+    <mat-icon>business</mat-icon>
+    <p>Nessun tenant disponibile</p>
+  </div>
+} @else {
+  <mat-table [dataSource]="tenants()" class="tenant-table">
+    <ng-container matColumnDef="id">
+      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+      <mat-cell *matCellDef="let tenant">{{ tenant.id }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Nome</mat-header-cell>
+      <mat-cell *matCellDef="let tenant">{{ tenant.name }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef class="actions-header">Azioni</mat-header-cell>
+      <mat-cell *matCellDef="let tenant" class="actions-cell">
+        @if (tenant.canImpersonate) {
+          <button
+            mat-icon-button
+            (click)="onGoToDashboard(tenant); $event.stopPropagation()"
+            matTooltip="Go to Dashboard"
+            color="primary"
+            [disabled]="loading()"
+          >
+            <mat-icon>dashboard</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            (click)="onGoToTenantUserManagement(tenant); $event.stopPropagation()"
+            matTooltip="Go to Tenant User Management"
+            color="primary"
+            [disabled]="loading()"
+          >
+            <mat-icon>people</mat-icon>
+          </button>
+        }
+        <button
+          mat-icon-button
+          (click)="onDelete(tenant); $event.stopPropagation()"
+          matTooltip="Delete"
+          color="warn"
+          [disabled]="loading()"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns()"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns()"></mat-row>
+  </mat-table>
+}

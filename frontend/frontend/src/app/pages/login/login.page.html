@@ -1,0 +1,11 @@
+<div class="login-container">
+  <h1>Accedi</h1>
+
+  <app-login-form
+    [loading]="loading()"
+    [generalError]="error()"
+    (submitLogin)="onLogin($event)"
+    (forgotPassword)="onForgotPassword()"
+    (dismissError)="onDismissError()"
+  />
+</div>

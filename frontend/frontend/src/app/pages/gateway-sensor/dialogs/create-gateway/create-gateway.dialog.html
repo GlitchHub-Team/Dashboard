@@ -1,0 +1,48 @@
+<h2 mat-dialog-title>Nuovo Gateway</h2>
+
+<mat-dialog-content>
+  @if (generalError) {
+    <div class="error-banner">
+      <mat-icon>error</mat-icon>
+      <span>{{ generalError }}</span>
+    </div>
+  }
+
+  <form [formGroup]="gatewayForm" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Nome del Gateway</mat-label>
+      <input matInput formControlName="name" />
+      @if (gatewayForm.controls.name.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Intervallo Dati</mat-label>
+      <input matInput type="number" formControlName="interval" />
+      <span matTextSuffix>ms</span>
+      @if (gatewayForm.controls.interval.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      } @else if (gatewayForm.controls.interval.hasError('min')) {
+        <mat-error>Almeno 100ms</mat-error>
+      }
+      <mat-hint>Intervallo dati predefinito per i sensori su questo gateway</mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Annulla</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="gatewayForm.invalid || isSubmitting"
+    (click)="onSubmit()"
+  >
+    @if (isSubmitting) {
+      <mat-spinner diameter="20" />
+    } @else {
+      Create
+    }
+  </button>
+</mat-dialog-actions>

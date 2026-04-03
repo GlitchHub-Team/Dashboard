@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>
+  <mat-icon>terminal</mat-icon>
+  Comando Gateway
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="commandForm" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Gateway</mat-label>
+      <input matInput [value]="data.gateway.name" disabled />
+      <mat-icon matSuffix>router</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Comando</mat-label>
+      <mat-select formControlName="command">
+        @for (option of commands; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+      @if (commandForm.controls.command.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    @if (showCommissionFields) {
+      <mat-form-field appearance="outline">
+        <mat-label>Tenant</mat-label>
+        <mat-select formControlName="tenantId">
+          @for (tenant of displayedTenants(); track tenant.id) {
+            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+          }
+        </mat-select>
+        @if (commandForm.controls.tenantId.invalid && commandForm.controls.tenantId.touched) {
+          <mat-error>Devi indicare il tenant del gateway</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label> Token di commission </mat-label>
+        <mat-icon matSuffix>lock</mat-icon>
+        <input matInput formControlName="token" type="text" />
+      </mat-form-field>
+      @if (commandForm.controls.token.invalid && commandForm.controls.token.touched) {
+        <mat-error>Devi inserire il token di commission</mat-error>
+      }
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Annulla</button>
+  <button mat-raised-button color="primary" [disabled]="commandForm.invalid" (click)="onConfirm()">
+    Manda
+  </button>
+</mat-dialog-actions>

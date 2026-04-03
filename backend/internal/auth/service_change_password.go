@@ -3,30 +3,46 @@ package auth
 import (
 	"backend/internal/shared/crypto"
 	"backend/internal/user"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
-//go:generate mockgen -destination=../../tests/auth/mocks/ports.go -package=mocks . ChangePasswordTokenPort,SendChangePasswordEmailPort
+//go:generate mockgen -destination=../../tests/auth/mocks/ports_change_password.go -package=mocks . ForgotPasswordTokenPort,SendForgotPasswordEmailPort
 
-type ChangePasswordTokenPort interface {
-	NewChangePasswordToken(user user.User) (string, error)
-	DeleteChangePasswordToken(token ForgotPasswordToken) error
-	GetChangePasswordToken(tokenString string) (ForgotPasswordToken, error)
-	GetUserByChangePasswordToken(tokenString string) (user.User, error)
+type ForgotPasswordTokenPort interface {
+	NewForgotPasswordToken(user user.User) (string, error)
+	DeleteForgotPasswordToken(token ForgotPasswordToken) error
+
+	GetTenantMemberByForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
+		userFound user.User, err error,
+	)
+	GetSuperAdminByForgotPasswordToken(tokenString string) (
+		userFound user.User, err error,
+	)
+
+	GetTenantForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
+		token ForgotPasswordToken, err error,
+	)
+	GetSuperAdminForgotPasswordToken(tokenString string) (
+		token ForgotPasswordToken, err error,
+	)
 }
 
-type SendChangePasswordEmailPort interface {
-	SendChangePasswordEmail(toAddr string, token string) error
+type SendForgotPasswordEmailPort interface {
+	SendForgotPasswordEmail(toAddr string, tenantId *uuid.UUID, tokenString string) error
 }
 
 /*
 Service che gestisce i cambi password (che siano forgot password o richiesti da utenti loggati)
 */
 type ChangePasswordService struct {
+	log            *zap.Logger
 	tokenGenerator crypto.SecurityTokenGenerator
-	hasher         crypto.SecretHasher // NOTA: dev'essere lo stesso hasher con cui si è creato il token
+	hasher         crypto.SecretHasher
 
-	changePasswordTokenPort     ChangePasswordTokenPort
-	sendChangePasswordEmailPort SendChangePasswordEmailPort
+	forgotPasswordTokenPort     ForgotPasswordTokenPort
+	sendChangePasswordEmailPort SendForgotPasswordEmailPort
 	getUserPort                 user.GetUserPort
 	saveUserPort                user.SaveUserPort
 }
@@ -39,17 +55,20 @@ var (
 )
 
 func NewChangePasswordService(
+	log *zap.Logger,
 	tokenGenerator crypto.SecurityTokenGenerator,
 	hasher crypto.SecretHasher,
-	changePasswordTokenPort ChangePasswordTokenPort,
-	sendChangePasswordEmailPort SendChangePasswordEmailPort,
+
+	changePasswordTokenPort ForgotPasswordTokenPort,
+	sendChangePasswordEmailPort SendForgotPasswordEmailPort,
 	getUserPort user.GetUserPort,
 	saveUserPort user.SaveUserPort,
 ) *ChangePasswordService {
 	return &ChangePasswordService{
+		log:                         log,
 		tokenGenerator:              tokenGenerator,
 		hasher:                      hasher,
-		changePasswordTokenPort:     changePasswordTokenPort,
+		forgotPasswordTokenPort:     changePasswordTokenPort,
 		sendChangePasswordEmailPort: sendChangePasswordEmailPort,
 		getUserPort:                 getUserPort,
 		saveUserPort:                saveUserPort,
@@ -57,17 +76,40 @@ func NewChangePasswordService(
 }
 
 /*
-Ritorna l'oggetto ForgotPasswordToken relativo al token plain tokenString.
+Ritorna l'oggetto ForgotPasswordToken relativo al token plain tokenString nel tenant con id tenantId.
 Se il token è scaduto, elimina il token e ritorna tokenObj vuoto ed ErrTokenExpired
 */
-func (service *ChangePasswordService) getValidToken(tokenString string) (tokenObj ForgotPasswordToken, err error) {
-	tokenObj, err = service.changePasswordTokenPort.GetChangePasswordToken(tokenString)
+func (service *ChangePasswordService) getValidTenantToken(tenantId uuid.UUID, tokenString string) (tokenObj ForgotPasswordToken, err error) {
+	tokenObj, err = service.forgotPasswordTokenPort.GetTenantForgotPasswordToken(tenantId, tokenString)
 	if err != nil {
 		return ForgotPasswordToken{}, err
+	}
+	if tokenObj == (ForgotPasswordToken{}) {
+		return ForgotPasswordToken{}, ErrTokenNotFound
 	}
 	if tokenObj.IsExpired() {
 		return ForgotPasswordToken{}, ErrTokenExpired
 	}
+
+	return tokenObj, err
+}
+
+/*
+Ritorna l'oggetto ForgotPasswordToken relativo al token plain tokenString per super admin.
+Se il token è scaduto, elimina il token e ritorna tokenObj vuoto ed ErrTokenExpired
+*/
+func (service *ChangePasswordService) getValidSuperAdminToken(tokenString string) (tokenObj ForgotPasswordToken, err error) {
+	tokenObj, err = service.forgotPasswordTokenPort.GetSuperAdminForgotPasswordToken(tokenString)
+	if err != nil {
+		return ForgotPasswordToken{}, err
+	}
+	if tokenObj == (ForgotPasswordToken{}) {
+		return ForgotPasswordToken{}, ErrTokenNotFound
+	}
+	if tokenObj.IsExpired() {
+		return ForgotPasswordToken{}, ErrTokenExpired
+	}
+
 	return tokenObj, err
 }
 
@@ -75,9 +117,16 @@ func (service *ChangePasswordService) getValidToken(tokenString string) (tokenOb
 Verifica esistenza del token forgot password.
 Se il token esiste ritorna nil, altrimenti ritorna errore non-nil.
 */
-func (service *ChangePasswordService) VerifyForgotPasswordToken(cmd VerifyForgotPasswordTokenCommand) error {
-	_, err := service.getValidToken(cmd.Token)
-	return err
+func (service *ChangePasswordService) VerifyForgotPasswordToken(cmd VerifyForgotPasswordTokenCommand) (err error) {
+	// Super Admin
+	if cmd.TenantId == nil {
+		_, err = service.getValidSuperAdminToken(cmd.Token)
+	} else
+	// Tenant Member
+	{
+		_, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+	}
+	return
 }
 
 /*
@@ -98,13 +147,13 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 	}
 
 	// 2. Crea token
-	tokenString, err := service.changePasswordTokenPort.NewChangePasswordToken(userFound)
+	tokenString, err := service.forgotPasswordTokenPort.NewForgotPasswordToken(userFound)
 	if err != nil {
 		return err
 	}
 
 	// 3. Invia mail cambio password
-	err = service.sendChangePasswordEmailPort.SendChangePasswordEmail(cmd.Email, tokenString)
+	err = service.sendChangePasswordEmailPort.SendForgotPasswordEmail(cmd.Email, cmd.TenantId, tokenString)
 	if err != nil {
 		return err
 	}
@@ -115,50 +164,64 @@ func (service *ChangePasswordService) RequestForgotPassword(cmd RequestForgotPas
 /*
 Conferma la richiesta di cambio password dimenticata.
 */
-func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPasswordCommand) error {
+func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPasswordCommand) (err error) {
 	// 1. Get token
-	tokenObj, err := service.getValidToken(cmd.Token)
+	var tokenObj ForgotPasswordToken
+
+	// - Super Admin
+	if cmd.TenantId == nil {
+		tokenObj, err = service.getValidSuperAdminToken(cmd.Token)
+	} else
+	// - Tenant Member
+	{
+		tokenObj, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+	}
 	if err != nil {
-		return err
+		return
 	}
 
-	// 2. Controlla token con plaintext ricevuto
-	err = service.hasher.CompareHashAndSecret(tokenObj.hashedToken, cmd.Token)
-	if err != nil {
-		return err
+	var userFound user.User
+	// 2. Get user
+	if cmd.TenantId == nil {
+		userFound, err = service.forgotPasswordTokenPort.GetSuperAdminByForgotPasswordToken(cmd.Token)
+	} else
+	// - Tenant Member
+	{
+		userFound, err = service.forgotPasswordTokenPort.GetTenantMemberByForgotPasswordToken(*cmd.TenantId, cmd.Token)
 	}
 
-	// 3. Get user
-	userFound, err := service.getUserPort.GetUser(tokenObj.tenantId, tokenObj.userId)
 	if err != nil {
-		return err
-	}
-	if !userFound.Confirmed {
-		return ErrAccountNotConfirmed
+		return ErrTokenNotFound
 	}
 
-	// 4. Crea hash password
+	// 3. Crea hash password
 	newPasswordHash, err := service.hasher.HashSecret(cmd.NewPassword)
 	if err != nil {
 		return err
 	}
 
-	// 5. Cambia password (controllo dominio)
+	// Cambia password (controllo dominio)
 	err = userFound.SetPasswordHash(newPasswordHash)
 	if err != nil {
 		return err
 	}
 
-	// 6. Elimina token
-	err = service.changePasswordTokenPort.DeleteChangePasswordToken(tokenObj)
+	// 4. Save user
+	userFound, err = service.saveUserPort.SaveUser(userFound)
 	if err != nil {
 		return err
 	}
 
-	// 7. Salva user con password modificata
-	_, err = service.saveUserPort.SaveUser(userFound)
-	if err != nil {
-		return err
+	// 5. Delete token
+	// NOTA: questo errore non è bloccante
+	deleteErr := service.forgotPasswordTokenPort.DeleteForgotPasswordToken(tokenObj)
+	if deleteErr != nil {
+		service.log.Error(
+			"Cannot delete token",
+			zap.String("token", cmd.Token),
+			zap.String("type", "forgot_password"),
+			zap.Error(err),
+		)
 	}
 
 	return nil

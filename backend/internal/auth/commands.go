@@ -10,7 +10,7 @@ type LoginUserCommand struct {
 	TenantId *uuid.UUID
 	Email    string
 	Password string
-	Role     identity.UserRole
+	// Role     identity.UserRole
 }
 
 type LogoutUserCommand struct {
@@ -22,19 +22,22 @@ type LogoutUserCommand struct {
 // Confirm account ------------------------------------
 type ConfirmAccountCommand struct {
 	// identity.Requester
+	TenantId    *uuid.UUID
 	Token       string
 	NewPassword string
 }
 
 type VerifyConfirmAccountTokenCommand struct {
 	// identity.Requester
-	Token string
+	TenantId *uuid.UUID
+	Token    string
 }
 
 // Forgot password ---------------------------------------
 type VerifyForgotPasswordTokenCommand struct {
 	// identity.Requester
-	Token string
+	TenantId *uuid.UUID
+	Token    string
 }
 
 type RequestForgotPasswordCommand struct {
@@ -45,6 +48,7 @@ type RequestForgotPasswordCommand struct {
 
 type ConfirmForgotPasswordCommand struct {
 	// identity.Requester
+	TenantId    *uuid.UUID
 	Token       string
 	NewPassword string
 }

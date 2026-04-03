@@ -6,12 +6,13 @@
 //	mockgen -destination=../../tests/email/mocks/ports.go -package=mocks . SendEmailPort
 //
 
-// package mocks is a generated GoMock package.
+// Package mocks is a generated GoMock package.
 package mocks
 
 import (
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -39,30 +40,30 @@ func (m *MockSendEmailPort) EXPECT() *MockSendEmailPortMockRecorder {
 	return m.recorder
 }
 
-// SendChangePasswordEmail mocks base method.
-func (m *MockSendEmailPort) SendChangePasswordEmail(toAddr, token string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendChangePasswordEmail", toAddr, token)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendChangePasswordEmail indicates an expected call of SendChangePasswordEmail.
-func (mr *MockSendEmailPortMockRecorder) SendChangePasswordEmail(toAddr, token any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendChangePasswordEmail", reflect.TypeOf((*MockSendEmailPort)(nil).SendChangePasswordEmail), toAddr, token)
-}
-
 // SendConfirmAccountEmail mocks base method.
-func (m *MockSendEmailPort) SendConfirmAccountEmail(toAddr, token string) error {
+func (m *MockSendEmailPort) SendConfirmAccountEmail(toAddr string, tenantId *uuid.UUID, tokenString string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendConfirmAccountEmail", toAddr, token)
+	ret := m.ctrl.Call(m, "SendConfirmAccountEmail", toAddr, tenantId, tokenString)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendConfirmAccountEmail indicates an expected call of SendConfirmAccountEmail.
-func (mr *MockSendEmailPortMockRecorder) SendConfirmAccountEmail(toAddr, token any) *gomock.Call {
+func (mr *MockSendEmailPortMockRecorder) SendConfirmAccountEmail(toAddr, tenantId, tokenString any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConfirmAccountEmail", reflect.TypeOf((*MockSendEmailPort)(nil).SendConfirmAccountEmail), toAddr, token)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConfirmAccountEmail", reflect.TypeOf((*MockSendEmailPort)(nil).SendConfirmAccountEmail), toAddr, tenantId, tokenString)
+}
+
+// SendForgotPasswordEmail mocks base method.
+func (m *MockSendEmailPort) SendForgotPasswordEmail(toAddr string, tenantId *uuid.UUID, tokenString string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendForgotPasswordEmail", toAddr, tenantId, tokenString)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendForgotPasswordEmail indicates an expected call of SendForgotPasswordEmail.
+func (mr *MockSendEmailPortMockRecorder) SendForgotPasswordEmail(toAddr, tenantId, tokenString any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendForgotPasswordEmail", reflect.TypeOf((*MockSendEmailPort)(nil).SendForgotPasswordEmail), toAddr, tenantId, tokenString)
 }

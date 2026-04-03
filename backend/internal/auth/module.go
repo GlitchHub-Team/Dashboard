@@ -35,20 +35,45 @@ var Module = fx.Module(
 
 		// Outbound ports
 		fx.Annotate(
-			NewConfirmAccountTokenPostgreAdapter,
+			NewConfirmAccountTokenPgAdapter,
 			fx.As(new(ConfirmAccountTokenPort)),
 			fx.As(new(user.GenerateTokenPort)),
 		),
 		fx.Annotate(
-			NewChangePasswordTokenPostgreAdapter,
-			fx.As(new(ChangePasswordTokenPort)),
+			NewChangePasswordTokenPgAdapter,
+			fx.As(new(ForgotPasswordTokenPort)),
+		),
+
+		// Repository
+		fx.Annotate(
+			newTenantConfirmTokenPgRepository,
+			fx.As(new(TenantConfirmTokenRepository)),
+		),
+
+		fx.Annotate(
+			newSuperAdminConfirmTokenPgRepository,
+			fx.As(new(SuperAdminConfirmTokenRepository)),
+		),
+
+		fx.Annotate(
+			newTenantPasswordTokenPgRepository,
+			fx.As(new(TenantPasswordTokenRepository)),
+		),
+
+		fx.Annotate(
+			newSuperAdminPasswordTokenPgRepository,
+			fx.As(new(SuperAdminPasswordTokenRepository)),
 		),
 	),
 
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		newPasswordTokenPostgreRepository,
-		newConfirmTokenPostgreRepository,
+
+		newTenantConfirmTokenPgRepository,
+		newSuperAdminConfirmTokenPgRepository,
+
+		newTenantPasswordTokenPgRepository,
+		newSuperAdminPasswordTokenPgRepository,
 	),
 )

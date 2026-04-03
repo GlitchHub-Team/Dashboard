@@ -6,6 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
+/*
+Possibile miglioria: spezzare classe di dominio in TenantMember e SuperAdmin. Questo
+richiede il refactor dell'intero package
+*/
 type User struct {
 	Id           uint
 	Name         string
@@ -25,7 +29,7 @@ func (u *User) SetPasswordHash(newPasswordHash string) error {
 		return ErrEmptyPassword
 	}
 
-	if newPasswordHash == *u.PasswordHash {
+	if u.PasswordHash != nil && newPasswordHash == *u.PasswordHash {
 		return ErrSamePassword
 	}
 

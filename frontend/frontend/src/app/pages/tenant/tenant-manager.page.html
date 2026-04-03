@@ -1,0 +1,33 @@
+<div class="tenant-manager-container">
+  <div class="header-section">
+    <h1>Gestione Tenant</h1>
+    <button mat-raised-button color="primary" (click)="onCreateTenant()">
+      <mat-icon>add</mat-icon> Aggiungi Nuovo Tenant
+    </button>
+  </div>
+
+  <div class="user-content table-container">
+    @if (error()) {
+      <div class="error-banner">
+        <span>{{ error() }}</span>
+      </div>
+    }
+    <app-tenant-table
+      [tenants]="tenants()"
+      [loading]="loading() || false"
+      (dashboardRequested)="onGoToDashboard($event)"
+      (deleteRequested)="onDeleteTenant($event)"
+      (tenantUserManagementRequested)="onGoToTenantUserManagement($event)" 
+    ></app-tenant-table>
+
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="limit()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[5, 10, 25]"
+      (page)="onPageChange($event)"
+      aria-label="Seleziona pagina"
+    >
+    </mat-paginator>
+  </div>
+</div>

@@ -2,9 +2,10 @@ package historical_data
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+
+	sensordb "backend/internal/infra/database/sensor_db"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -12,12 +13,12 @@ import (
 
 type historicalDataTimescaleRepository struct {
 	log *zap.Logger
-	db  *sql.DB
+	db  sensordb.SensorDBConnection
 }
 
 func newHistoricalDataTimescaleRepository(
 	log *zap.Logger,
-	db *sql.DB,
+	db sensordb.SensorDBConnection,
 ) *historicalDataTimescaleRepository {
 	return &historicalDataTimescaleRepository{
 		log: log,
@@ -34,7 +35,12 @@ func (repo *historicalDataTimescaleRepository) GetSensorHistoricalData(
 
 	query, args := buildHistoricalDataQuery(tenantId, sensorId, filter)
 
-	rows, err := repo.db.QueryContext(context.Background(), query, args...)
+	sqlDB, err := repo.db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := sqlDB.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}

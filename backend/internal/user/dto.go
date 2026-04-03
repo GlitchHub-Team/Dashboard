@@ -46,10 +46,10 @@ type UserListResponseDTO struct {
 }
 
 func NewUserListResponseDTO(userList []User, total uint) UserListResponseDTO {
-	userDtos := make([]UserResponseDTO, 0) // Importante creare un empty slice e non un nil slice!
+	userDtos := make([]UserResponseDTO, len(userList)) // Importante creare slice e non iniz. con slice
 
-	for _, user := range userList {
-		userDtos = append(userDtos, NewUserResponseDTO(user))
+	for i, user := range userList {
+		userDtos[i] = NewUserResponseDTO(user)
 	}
 
 	return UserListResponseDTO{

@@ -1,0 +1,41 @@
+:host {
+  display: block;
+}
+
+mat-toolbar {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 16px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.tenant-badge {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 4px 12px;
+  border-radius: 16px;
+  margin-right: 8px;
+}
+
+.role-badge {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 4px 12px;
+  border-radius: 16px;
+  margin-right: 8px;
+}
+
+.menu-header {
+  padding: 8px 16px;
+  font-weight: 500;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 4px;
+}
