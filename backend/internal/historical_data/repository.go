@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type historicalDataTimescaleRepository struct {
@@ -35,7 +36,9 @@ func (repo *historicalDataTimescaleRepository) GetSensorHistoricalData(
 
 	query, args := buildHistoricalDataQuery(tenantId, sensorId, filter)
 
-	sqlDB, err := repo.db.DB()
+	db := (*gorm.DB)(repo.db)
+
+	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err
 	}
