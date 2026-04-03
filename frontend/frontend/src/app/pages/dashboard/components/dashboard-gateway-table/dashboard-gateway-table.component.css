@@ -1,0 +1,74 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 0;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 8px;
+}
+
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+}
+
+.manager-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+mat-row {
+  cursor: pointer;
+}
+
+mat-row.expanded {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.online {
+  color: #4caf50;
+}
+
+.offline {
+  color: #f44336;
+}
+
+.detail-row {
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.detail-row .mat-mdc-cell {
+  padding: 0;
+  border-bottom-width: 0;
+}
+
+.detail-row.visible {
+  height: auto;
+  min-height: auto;
+}
+
+.detail-row.visible .mat-mdc-cell {
+  padding: 16px 0;
+  border-bottom-width: 1px;
+  width: 100%;
+}
+
+.detail-row.visible .mat-mdc-cell > * {
+  width: 100%;
+}
+
+.mat-column-commands {
+  justify-content: center;
+}

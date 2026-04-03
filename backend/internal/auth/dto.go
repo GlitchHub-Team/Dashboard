@@ -6,14 +6,14 @@ import (
 )
 
 // LOGIN/LOGOUT =======================================================================================
-type LoginUserDto struct {
+type LoginUserDTO struct {
 	dto.TenantIdField_NotRequired
 	dto.EmailField
 	dto.PasswordField
 	dto.UserRoleField
 }
 
-type LogoutUserDto struct {
+type LogoutUserDTO struct {
 	identity.Requester
 }
 
@@ -23,40 +23,40 @@ type LogoutUserDto struct {
 // }
 
 // CONFIRM ACCOUNT ====================================================================================
-// type VerifyConfirmAccountTokenDto struct {
-// 	dto.TokenField
-// }
+type VerifyConfirmAccountTokenBodyDTO struct {
+	dto.TokenFields
+}
 
-type ConfirmUserAccountDto struct {
-	dto.TokenField
+type ConfirmUserAccountBodyDTO struct {
+	dto.TokenFields
 	dto.NewPasswordField
 }
 
 // FORGOT PASSWORD =======================================================================================
-type VerifyForgotPasswordTokenDto struct {
-	dto.TokenField
+type VerifyForgotPasswordTokenBodyDTO struct {
+	dto.TokenFields
 }
 
-type RequestForgotPasswordDto struct {
+type RequestForgotPasswordBodyDTO struct {
 	dto.TenantIdField_NotRequired
 	dto.EmailField
 }
 
-type ConfirmForgotPasswordDto struct {
-	dto.TokenField
+type ConfirmForgotPasswordBodyDTO struct {
+	dto.TokenFields
 	dto.NewPasswordField
 }
 
 // CHANGE PASSWORD ====================================================================================
-type ChangePasswordDto struct {
+type ChangePasswordBodyDTO struct {
 	dto.ChangePasswordFields
 }
 
 // RESPONSE DTO ==============
-type LoginResponseDto struct {
+type LoginResponseDTO struct {
 	JWT string `json:"jwt" binding:"required"`
 }
 
-type ResultDto struct {
+type ResultDTO struct {
 	Result string `json:"result" binding:"required"`
 }

@@ -1,0 +1,17 @@
+<canvas baseChart type="line" [data]="chartData()" [options]="chartOptions()"></canvas>
+
+@if (canScroll()) {
+  <div class="scroll-controls">
+    <button mat-icon-button (click)="onScrollLeft()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <mat-slider [min]="0" [max]="maxOffset()" [step]="scrollStep()" discrete>
+      <input matSliderThumb [value]="offset()" (valueChange)="onOffsetChange($event)" />
+    </mat-slider>
+
+    <button mat-icon-button (click)="onScrollRight()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+}

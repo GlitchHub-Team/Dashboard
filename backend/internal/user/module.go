@@ -18,12 +18,21 @@ var Module = fx.Module(
 		NewGetUserService,
 
 		// Outbound ports
-		NewUserPostgreAdapter,
-	),
+		fx.Annotate(
+			NewUserPostgreAdapter,
+			fx.As(new(SaveUserPort)),
+			fx.As(new(DeleteUserPort)),
+			fx.As(new(GetUserPort)),
+		),
 
-	// Metodi privati
-	fx.Provide(
-		fx.Private,
-		newUserPostgreRepository,
+		// Repositories (faccio provide delle interfacce per TU)
+		fx.Annotate(
+			newTenantMemberPgRepository,
+			fx.As(new(TenantMemberRepository)),
+		),
+		fx.Annotate(
+			newSuperAdminPgRepository,
+			fx.As(new(SuperAdminRepository)),
+		),
 	),
 )

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"backend/internal/historical_data"
+	sensordb "backend/internal/infra/database/sensor_db"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	tenantmocks "backend/tests/tenant/mocks"
@@ -20,6 +21,8 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var (
@@ -102,9 +105,21 @@ func newTestDB(t *testing.T, recorder *queryRecorder) *sql.DB {
 	return db
 }
 
+func newTestSensorDBConnection(t *testing.T, recorder *queryRecorder) sensordb.SensorDBConnection {
+	t.Helper()
+
+	sqlDB := newTestDB(t, recorder)
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to open gorm db: %v", err)
+	}
+
+	return sensordb.SensorDBConnection(gormDB)
+}
+
 func buildUseCaseWithModule(
 	t *testing.T,
-	db *sql.DB,
+	db sensordb.SensorDBConnection,
 	getTenantPort tenant.GetTenantPort,
 ) historical_data.GetSensorHistoricalDataUseCase {
 	t.Helper()
@@ -113,7 +128,7 @@ func buildUseCaseWithModule(
 	app := fx.New(
 		historical_data.Module,
 		fx.Provide(
-			func() *sql.DB { return db },
+			func() sensordb.SensorDBConnection { return db },
 			func() tenant.GetTenantPort { return getTenantPort },
 			func() *zap.Logger { return zap.NewNop() },
 		),
@@ -132,7 +147,7 @@ func TestModule_GetSensorHistoricalData_Success(t *testing.T) {
 	from := time.Date(2026, 3, 29, 12, 0, 0, 0, time.UTC)
 	to := from.Add(time.Hour)
 
-	db := newTestDB(t, &queryRecorder{
+	db := newTestSensorDBConnection(t, &queryRecorder{
 		rows: &stubRows{
 			columns: []string{"sensor_id", "gateway_id", "tenant_id", "profile", "timestamp", "data"},
 			values: [][]driver.Value{
@@ -201,7 +216,7 @@ func TestModule_GetSensorHistoricalData_QueryError(t *testing.T) {
 	targetTenantId := uuid.New()
 	targetSensorId := uuid.New()
 
-	db := newTestDB(t, &queryRecorder{err: errors.New("query failed")})
+	db := newTestSensorDBConnection(t, &queryRecorder{err: errors.New("query failed")})
 
 	ctrl := gomock.NewController(t)
 	getTenantPort := tenantmocks.NewMockGetTenantPort(ctrl)
@@ -232,7 +247,7 @@ func TestModule_GetSensorHistoricalData_ScanError(t *testing.T) {
 	targetTenantId := uuid.New()
 	targetSensorId := uuid.New()
 
-	db := newTestDB(t, &queryRecorder{
+	db := newTestSensorDBConnection(t, &queryRecorder{
 		rows: &stubRows{
 			columns: []string{"sensor_id", "gateway_id", "tenant_id", "profile", "timestamp", "data"},
 			values: [][]driver.Value{
@@ -270,7 +285,7 @@ func TestModule_GetSensorHistoricalData_RowsError(t *testing.T) {
 	targetTenantId := uuid.New()
 	targetSensorId := uuid.New()
 
-	db := newTestDB(t, &queryRecorder{
+	db := newTestSensorDBConnection(t, &queryRecorder{
 		rows: &stubRows{
 			columns: []string{"sensor_id", "gateway_id", "tenant_id", "profile", "timestamp", "data"},
 			nextErr: errors.New("rows error"),

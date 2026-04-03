@@ -3,27 +3,34 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
+var configFields = map[string]string{
+	"PORT":                "",
+	"MAIL_ADAPTER":        "",
+	"TOKEN_DURATION":      "",
+	"TOKEN_LENGTH":        "",
+	"BCRYPT_COST":         "",
+	"AUTH_TOKEN_DURATION": "",
+	"AUTH_TOKEN_SECRET":   "",
+}
+
 type Config struct {
 	// Nome dell'applicativo
 	Name string `json:"NAME"`
 
+	/*
+		URL su cui si trova il front-end dell'applicativo. Viene usato dal package email
+		per l'invio dei token di conferma/cambio password
+	*/
+	AppURL string `json:"APP_URL"`
+
 	// Porta su cui aprire il backend
 	Port string `json:"PORT"`
-
-	// URL per il Cloud DB
-	CloudDBUrl string `json:"CLOUD_DB_URL"`
-
-	// Configurazione DB IoT / TimescaleDB
-	PostgresHost string    `json:"POSTGRES_HOST"`
-	PostgresPort stringInt `json:"POSTGRES_PORT"`
-	PostgresDB   string    `json:"POSTGRES_DB"`
-	PostgresUser string    `json:"POSTGRES_USER"`
-	PostgresPass string    `json:"POSTGRES_PASSWORD"`
 
 	// Quale mail adapter utilizzare, può essere o "terminal" o "mailtrap"
 	MailAdapter string `json:"MAIL_ADAPTER"`
@@ -49,6 +56,23 @@ type Config struct {
 		NOTA: Ha lunghezza 512 bit da decoded, la codifica base 64 ha lunghezza maggiore
 	*/
 	AuthTokenSecret string `json:"AUTH_TOKEN_SECRET"`
+
+	// SMTP =========================================================================
+
+	/* Hostname dell'URL SMTP */
+	SMTPHost string `json:"SMTP_HOST"`
+
+	/* Numero porta URL SMTP */
+	SMTPPort stringInt `json:"SMTP_PORT"`
+
+	/* Nome utente SMTP */
+	SMTPUser string `json:"SMTP_USER"`
+
+	/* Password SMTP */
+	SMTPPass string `json:"SMTP_PASS"`
+
+	/* Indirizzo email da cui inviare email tramite SMTP */
+	SMTPFrom string `json:"SMTP_FROM"`
 }
 
 type stringInt int
@@ -77,7 +101,9 @@ func (st *stringInt) UnmarshalJSON(b []byte) error {
 func ReadConfigFromEnv() (*Config, error) {
 	envDict, err := godotenv.Read(".env")
 	if err != nil {
-		return nil, fmt.Errorf("impossibile leggere file .env: %v", err)
+		for key := range configFields {
+			envDict[key] = os.Getenv(key)
+		}
 	}
 	jsonBody, err := json.Marshal(&envDict)
 	if err != nil {

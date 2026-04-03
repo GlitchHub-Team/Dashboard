@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>Nuovo Sensore</h2>
+
+<mat-dialog-content>
+  @if (generalError) {
+    <div class="error-banner">
+      <mat-icon>error</mat-icon>
+      <span>{{ generalError }}</span>
+    </div>
+  }
+
+  <form [formGroup]="sensorForm" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Gateway</mat-label>
+      <input matInput [value]="data.name" disabled />
+      <mat-hint>{{ data.id }}</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nome del Sensore</mat-label>
+      <input matInput formControlName="name" />
+      @if (sensorForm.controls.name.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Profilo</mat-label>
+      <mat-select formControlName="profile">
+        @for (profile of profiles; track profile.key) {
+          <mat-option [value]="profile.label">{{ profile.label | titlecase }}</mat-option>
+        }
+      </mat-select>
+      @if (sensorForm.controls.profile.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Intervallo Dati</mat-label>
+      <input matInput type="number" formControlName="interval" />
+      <span matTextSuffix>ms</span>
+      @if (sensorForm.controls.interval.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      } @else if (sensorForm.controls.interval.hasError('min')) {
+        <mat-error>Almeno 100ms</mat-error>
+      }
+      <mat-hint>Con quale frequenza il sensore emette una lettura</mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Annulla</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="sensorForm.invalid || isSubmitting"
+    (click)="onSubmit()"
+  >
+    @if (isSubmitting) {
+      <mat-spinner diameter="20" />
+    } @else {
+      Crea
+    }
+  </button>
+</mat-dialog-actions>

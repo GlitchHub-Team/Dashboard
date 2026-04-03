@@ -1,6 +1,7 @@
 package user
 
 import (
+	"backend/internal/infra/database"
 	"backend/internal/infra/database/pagination"
 
 	"backend/internal/shared/identity"
@@ -12,20 +13,22 @@ import (
 //go:generate mockgen -destination=../../tests/user/mocks/ports.go -package=mocks . SaveUserPort,DeleteUserPort,GetUserPort
 
 type UserPostgreAdapter struct {
-	log  *zap.Logger
-	repo *userPostgreRepository
+	log              *zap.Logger
+	tenantMemberRepo TenantMemberRepository
+	superAdminRepo   SuperAdminRepository
 }
 
-func NewUserPostgreAdapter(log *zap.Logger, repository *userPostgreRepository) (
-	SaveUserPort,
-	DeleteUserPort,
-	GetUserPort,
-) {
+func NewUserPostgreAdapter(
+	log *zap.Logger,
+	tenantMemberRepo TenantMemberRepository,
+	superAdminRepo SuperAdminRepository,
+) *UserPostgreAdapter {
 	adapter := &UserPostgreAdapter{
-		log:  log,
-		repo: repository,
+		log:              log,
+		tenantMemberRepo: tenantMemberRepo,
+		superAdminRepo:   superAdminRepo,
 	}
-	return adapter, adapter, adapter
+	return adapter
 }
 
 // Compile-time checks
@@ -40,32 +43,35 @@ type SaveUserPort interface {
 	SaveUser(user User) (User, error)
 }
 
-func (adapter *UserPostgreAdapter) SaveUser(user User) (User, error) {
+func (adapter *UserPostgreAdapter) SaveUser(user User) (
+	savedUser User, err error,
+) {
 	switch user.Role {
 	case identity.ROLE_TENANT_USER, identity.ROLE_TENANT_ADMIN:
+		entity := UserToTenantMemberEntity(user)
 
-		tenantMember := &TenantMemberEntity{}
-		tenantMember.FromUser(user)
-		err := adapter.repo.SaveTenantMember(tenantMember)
+		err = adapter.tenantMemberRepo.SaveTenantMember(entity)
 		if err != nil {
-			return User{}, err
+			return
 		}
 
-		user, err := tenantMember.ToUser()
-		return user, err
+		savedUser, err = TenantMemberEntityToUser(entity)
+		return
 
 	case identity.ROLE_SUPER_ADMIN:
-		superAdmin := (&SuperAdminEntity{}).fromUser(user)
-		err := adapter.repo.SaveSuperAdmin(superAdmin)
+		entity := UserToSuperAdminEntity(user)
+
+		err = adapter.superAdminRepo.SaveSuperAdmin(entity)
 		if err != nil {
-			return User{}, err
+			return
 		}
 
-		user := superAdmin.toUser()
-		return user, err
+		savedUser, err = SuperAdminEntityToUser(entity)
+		return
 
 	default:
-		return User{}, ErrUnknownRole
+		err = identity.ErrUnknownRole
+		return
 	}
 }
 
@@ -76,65 +82,53 @@ type DeleteUserPort interface {
 	DeleteSuperAdmin(userId uint) (User, error)
 }
 
-func (adapter *UserPostgreAdapter) DeleteTenantUser(tenantId uuid.UUID, userId uint) (User, error) {
-	oldMember, err := adapter.repo.GetTenantUser(
-		tenantId.String(),
-		userRepositoryGetUserBy{UserId: &userId},
-	)
+func (adapter *UserPostgreAdapter) deleteTenantMember(tenantId uuid.UUID, userId uint) (
+	user User, err error,
+) {
+	oldMember := TenantMemberEntity{
+		ID:       userId,
+		TenantId: tenantId.String(),
+	}
+	err = adapter.tenantMemberRepo.DeleteTenantMember(&oldMember)
 	if err != nil {
 		return User{}, err
 	}
-	err = adapter.repo.DeleteTenantMember(oldMember)
-	if err != nil {
-		return User{}, err
-	}
-	user, err := oldMember.ToUser()
-	return user, err
+	user, err = TenantMemberEntityToUser(&oldMember)
+	return
 }
 
-func (adapter *UserPostgreAdapter) DeleteTenantAdmin(tenantId uuid.UUID, userId uint) (User, error) {
-	oldMember, err := adapter.repo.GetTenantAdmin(
-		tenantId.String(),
-		userRepositoryGetUserBy{UserId: &userId},
-	)
-	if err != nil {
-		return User{}, err
-	}
-	err = adapter.repo.DeleteTenantMember(oldMember)
-	if err != nil {
-		return User{}, err
-	}
-	user, err := oldMember.ToUser()
-	return user, err
+func (adapter *UserPostgreAdapter) DeleteTenantUser(tenantId uuid.UUID, userId uint) (
+	user User, err error,
+) {
+	user, err = adapter.deleteTenantMember(tenantId, userId)
+	return
 }
 
-func (adapter *UserPostgreAdapter) DeleteSuperAdmin(userId uint) (User, error) {
-	oldMember, err := adapter.repo.GetSuperAdmin(
-		userRepositoryGetUserBy{UserId: &userId},
-	)
+func (adapter *UserPostgreAdapter) DeleteTenantAdmin(tenantId uuid.UUID, userId uint) (
+	user User, err error,
+) {
+	user, err = adapter.deleteTenantMember(tenantId, userId)
+	return
+}
+
+func (adapter *UserPostgreAdapter) DeleteSuperAdmin(userId uint) (user User, err error) {
+	oldMember := SuperAdminEntity{
+		ID: userId,
+	}
+	err = adapter.superAdminRepo.DeleteSuperAdmin(&oldMember)
 	if err != nil {
 		return User{}, err
 	}
-	err = adapter.repo.DeleteSuperAdmin(oldMember)
-	if err != nil {
-		return User{}, err
-	}
-	user := oldMember.toUser()
-	return user, err
+	user, _ = SuperAdminEntityToUser(&oldMember)
+	return
 }
 
 // Get ================================================================================================
 // TODO: fix what happens if i pass zero tenant id in GetTenantUser/-Admin (normal and by email)
 type GetUserPort interface {
 	GetUser(tenantId *uuid.UUID, userId uint) (User, error)
-	GetTenantUser(tenantId uuid.UUID, userId uint) (User, error)
-	GetTenantAdmin(tenantId uuid.UUID, userId uint) (User, error)
-	GetSuperAdmin(userId uint) (User, error)
 
 	GetUserByEmail(tenantId *uuid.UUID, email string) (User, error)
-	GetTenantUserByEmail(tenantId uuid.UUID, email string) (User, error)
-	GetTenantAdminByEmail(tenantId uuid.UUID, email string) (User, error)
-	GetSuperAdminByEmail(email string) (User, error)
 
 	GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int) (
 		tenantUsers []User, total uint, err error,
@@ -150,157 +144,59 @@ type GetUserPort interface {
 	CountSuperAdmins() (total uint, err error)
 }
 
-func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (User, error) {
-	var user User
-	getUserBy := userRepositoryGetUserBy{UserId: &userId}
+func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (
+	user User, err error,
+) {
+	getUserBy := UserRepositoryGetUserBy{UserId: &userId}
 	// Tenant User / Tenant Admin
 	if tenantId != nil {
-		tenantMember, err := adapter.repo.GetTenantMember(
+		tenantMember, err := adapter.tenantMemberRepo.GetTenantMember(
 			tenantId.String(), getUserBy,
 		)
 		if err != nil {
 			return User{}, err
 		}
 
-		if *tenantMember != (TenantMemberEntity{}) {
-			user, err = tenantMember.ToUser()
-		} else {
-			user = User{}
-		}
+		user, err = TenantMemberEntityToUser(tenantMember)
 
 		return user, err
 	}
 
 	// Super Admin
-	superAdmin, err := adapter.repo.GetSuperAdmin(getUserBy)
+	superAdmin, err := adapter.superAdminRepo.GetSuperAdmin(getUserBy)
 	if err != nil {
 		return User{}, err
 	}
 
-	if *superAdmin != (SuperAdminEntity{}) {
-		user = superAdmin.toUser()
-	} else {
-		user = User{}
-	}
+	user, err = SuperAdminEntityToUser(superAdmin)
 
 	return user, err
 }
 
-func (adapter *UserPostgreAdapter) GetTenantUser(tenantId uuid.UUID, userId uint) (User, error) {
-	tenantUser, err := adapter.repo.GetTenantUser(
-		tenantId.String(),
-		userRepositoryGetUserBy{UserId: &userId},
-	)
-	tenantUser.TenantId = tenantId.String()
-	if err != nil {
-		return User{}, err
-	}
-	user, err := tenantUser.ToUser()
-	return user, err
-}
-
-func (adapter *UserPostgreAdapter) GetTenantAdmin(tenantId uuid.UUID, userId uint) (User, error) {
-	tenantAdmin, err := adapter.repo.GetTenantAdmin(
-		tenantId.String(),
-		userRepositoryGetUserBy{UserId: &userId},
-	)
-	tenantAdmin.TenantId = tenantId.String()
-	if err != nil {
-		return User{}, err
-	}
-	user, err := tenantAdmin.ToUser()
-	return user, err
-}
-
-func (adapter *UserPostgreAdapter) GetSuperAdmin(userId uint) (User, error) {
-	superAdmin, err := adapter.repo.GetSuperAdmin(
-		userRepositoryGetUserBy{UserId: &userId},
-	)
-	if err != nil {
-		return User{}, err
-	}
-	user := superAdmin.toUser()
-	return user, err
-}
-
-func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email string) (User, error) {
-	var user User
+func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email string) (user User, err error) {
 	// Tenant User / Tenant Admin
 	if tenantId != nil {
-		tenantMember, err := adapter.repo.GetTenantMember(
+		tenantMember, err := adapter.tenantMemberRepo.GetTenantMember(
 			tenantId.String(),
-			userRepositoryGetUserBy{Email: &email},
+			UserRepositoryGetUserBy{Email: &email},
 		)
 		if err != nil {
 			return User{}, err
 		}
 
-		if *tenantMember != (TenantMemberEntity{}) {
-			user, err = tenantMember.ToUser()
-		} else {
-			user = User{}
-		}
-
+		user, err = TenantMemberEntityToUser(tenantMember)
 		return user, err
 	}
 
 	// Super Admin
-	superAdmin, err := adapter.repo.GetSuperAdmin(userRepositoryGetUserBy{Email: &email})
+	superAdmin, err := adapter.superAdminRepo.GetSuperAdmin(UserRepositoryGetUserBy{Email: &email})
 	if err != nil {
 		return User{}, err
 	}
 
-	if *superAdmin != (SuperAdminEntity{}) {
-		user = superAdmin.toUser()
-	} else {
-		user = User{}
-	}
+	user, err = SuperAdminEntityToUser(superAdmin)
 
-	return user, err
-}
-
-func (adapter *UserPostgreAdapter) GetTenantUserByEmail(tenantId uuid.UUID, email string) (User, error) {
-	tenantUser, err := adapter.repo.GetTenantUser(
-		tenantId.String(),
-		userRepositoryGetUserBy{Email: &email},
-	)
-	if err != nil {
-		return User{}, err
-	}
-	tenantUser.TenantId = tenantId.String()
-
-	var user User
-	if *tenantUser != (TenantMemberEntity{}) {
-		user, err = tenantUser.ToUser()
-	} else {
-		user, err = User{}, nil
-	}
-	return user, err
-}
-
-func (adapter *UserPostgreAdapter) GetTenantAdminByEmail(tenantId uuid.UUID, email string) (User, error) {
-	tenantAdmin, err := adapter.repo.GetTenantAdmin(
-		tenantId.String(),
-		userRepositoryGetUserBy{Email: &email},
-	)
-	if err != nil {
-		return User{}, err
-	}
-
-	tenantAdmin.TenantId = tenantId.String()
-	user, err := tenantAdmin.ToUser()
-	return user, err
-}
-
-func (adapter *UserPostgreAdapter) GetSuperAdminByEmail(email string) (User, error) {
-	superAdmin, err := adapter.repo.GetSuperAdmin(
-		userRepositoryGetUserBy{Email: &email},
-	)
-	if err != nil {
-		return User{}, err
-	}
-	user := superAdmin.toUser()
-	return user, err
+	return
 }
 
 func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(tenantId uuid.UUID, page, limit int) (
@@ -312,21 +208,14 @@ func (adapter *UserPostgreAdapter) GetTenantUsersByTenant(tenantId uuid.UUID, pa
 		return
 	}
 
-	entities, tot, err := adapter.repo.GetTenantUsers(tenantId.String(), offset, limit)
+	entities, tot, err := adapter.tenantMemberRepo.GetTenantUsers(tenantId.String(), offset, limit)
 	total = uint(tot)
 	if err != nil {
 		return
 	}
 
-	for _, entity := range entities {
-		tenantUser, err := entity.ToUser()
-		if err != nil {
-			return make([]User, 0), 0, err
-		}
-		tenantUsers = append(tenantUsers, tenantUser)
-	}
-
-	return tenantUsers, total, nil
+	tenantUsers, err = database.MapEntityListToDomain(entities, TenantMemberEntityToUser)
+	return
 }
 
 func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(tenantId uuid.UUID, page, limit int) (
@@ -338,20 +227,13 @@ func (adapter *UserPostgreAdapter) GetTenantAdminsByTenant(tenantId uuid.UUID, p
 		return
 	}
 
-	entities, tot, err := adapter.repo.GetTenantAdmins(tenantId.String(), offset, limit)
+	entities, tot, err := adapter.tenantMemberRepo.GetTenantAdmins(tenantId.String(), offset, limit)
 	total = uint(tot)
 	if err != nil {
 		return
 	}
 
-	for _, entity := range entities {
-		tenantUser, err := entity.ToUser()
-		if err != nil {
-			return make([]User, 0), 0, err
-		}
-		tenantAdmins = append(tenantAdmins, tenantUser)
-	}
-
+	tenantAdmins, err = database.MapEntityListToDomain(entities, TenantMemberEntityToUser)
 	return
 }
 
@@ -364,30 +246,27 @@ func (adapter *UserPostgreAdapter) GetSuperAdminList(page, limit int) (
 		return
 	}
 
-	entities, tot, err := adapter.repo.GetSuperAdmins(offset, limit)
+	entities, tot, err := adapter.superAdminRepo.GetSuperAdmins(offset, limit)
 	total = uint(tot)
 	if err != nil {
 		return
 	}
 
-	for _, entity := range entities {
-		tenantUser := entity.toUser()
-		superAdmins = append(superAdmins, tenantUser)
-	}
+	superAdmins, err = database.MapEntityListToDomain(entities, SuperAdminEntityToUser)
 	return
 }
 
 func (adapter *UserPostgreAdapter) CountTenantAdminsByTenant(tenantId uuid.UUID) (total uint, err error) {
-	tot, err := adapter.repo.CountTenantAdminsByTenant(tenantId.String())
+	tot, err := adapter.tenantMemberRepo.CountTenantAdminsByTenant(tenantId.String())
 	total = uint(tot)
 	if err != nil {
 		return 0, err
 	}
-	return total, err
+	return
 }
 
 func (adapter *UserPostgreAdapter) CountSuperAdmins() (total uint, err error) {
-	tot, err := adapter.repo.CountSuperAdmins()
+	tot, err := adapter.superAdminRepo.CountSuperAdmins()
 	total = uint(tot)
 	if err != nil {
 		return 0, err
