@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"backend/internal/shared/crypto"
-	"backend/internal/shared/identity"
+	// "backend/internal/shared/identity"
+
+	transportHttp "backend/internal/infra/transport/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +31,7 @@ func (authz *AuthzMiddleware) RequireAuthToken(ctx *gin.Context) {
 	authzHeader := ctx.GetHeader("Authorization")
 	if authzHeader == "" {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error": identity.ErrUnauthorizedAccess,
+			"error": transportHttp.ErrMissingIdentity.Error(),
 		})
 	}
 
@@ -38,7 +40,7 @@ func (authz *AuthzMiddleware) RequireAuthToken(ctx *gin.Context) {
 	if len(authzHeader) > 7 && authzHeader[:7] == "Bearer " {
 		tokenString = authzHeader[7:]
 	} else {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": transportHttp.ErrMissingIdentity.Error()})
 		return
 	}
 
