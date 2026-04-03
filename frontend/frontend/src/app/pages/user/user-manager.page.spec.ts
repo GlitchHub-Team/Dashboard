@@ -14,7 +14,7 @@ import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 
 interface UserManagerPageTestApi {
   onCreateUser: () => void;

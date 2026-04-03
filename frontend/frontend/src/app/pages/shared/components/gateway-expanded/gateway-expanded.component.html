@@ -1,7 +1,7 @@
 <div class="expanded-content">
   <h2>Sensori del gateway {{ gateway().id }}</h2>
 
-  <app-dashboard-sensor-table
+  <app-sensor-table
     [sensors]="sensors()"
     [loading]="loading()"
     [actionMode]="actionMode()"
@@ -13,5 +13,5 @@
     (deleteRequested)="sensorDeleteRequested.emit($event)"
     (pageChange)="sensorPageChange.emit($event)"
   >
-  </app-dashboard-sensor-table>
+  </app-sensor-table>
 </div>

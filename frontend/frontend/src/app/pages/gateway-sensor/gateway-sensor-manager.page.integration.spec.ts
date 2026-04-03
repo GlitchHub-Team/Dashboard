@@ -7,11 +7,11 @@ import { of, Subject } from 'rxjs';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 
 import { GatewaySensorManagerPage } from './gateway-sensor-manager.page';
-import { DashboardGatewayTableComponent } from '../dashboard/components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardGatewayExpandedComponent } from '../dashboard/components/dashboard-gateway-expanded/dashboard-gateway-expanded.component';
-import { DashboardSensorTableComponent } from '../dashboard/components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { GatewayExpandedComponent } from '../shared/components/gateway-expanded/gateway-expanded.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { GatewaySensorManagerService } from '../../services/gateway-sensor-manager/gateway-sensor-manager.service';
-import { ConfirmDeleteDialog } from './dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { CreateGatewayDialog } from './dialogs/create-gateway/create-gateway.dialog';
 import { CreateSensorDialog } from './dialogs/create-sensor/create-sensor.dialog';
 import { Gateway } from '../../models/gateway/gateway.model';
@@ -110,9 +110,9 @@ function setupTestBed() {
   TestBed.configureTestingModule({
     imports: [
       GatewaySensorManagerPage,
-      DashboardGatewayTableComponent,
-      DashboardGatewayExpandedComponent,
-      DashboardSensorTableComponent,
+      GatewayTableComponent,
+      GatewayExpandedComponent,
+      SensorTableComponent,
     ],
     providers: [{ provide: GatewaySensorManagerService, useValue: managerServiceMock }],
   })
@@ -134,11 +134,11 @@ function setupWithExpanded(
 }
 
 const getGatewayTable = (f: ComponentFixture<GatewaySensorManagerPage>) =>
-  f.debugElement.query(By.directive(DashboardGatewayTableComponent));
+  f.debugElement.query(By.directive(GatewayTableComponent));
 const getExpandedComponent = (f: ComponentFixture<GatewaySensorManagerPage>) =>
-  f.debugElement.query(By.directive(DashboardGatewayExpandedComponent));
+  f.debugElement.query(By.directive(GatewayExpandedComponent));
 const getSensorTable = (f: ComponentFixture<GatewaySensorManagerPage>) =>
-  f.debugElement.query(By.directive(DashboardSensorTableComponent));
+  f.debugElement.query(By.directive(SensorTableComponent));
 const getGatewayRows = (f: ComponentFixture<GatewaySensorManagerPage>): HTMLElement[] =>
   Array.from((f.nativeElement as HTMLElement).querySelectorAll('mat-row:not(.detail-row)'));
 const getGatewayDeleteButtons = (

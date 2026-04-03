@@ -8,8 +8,8 @@ import { of, BehaviorSubject } from 'rxjs';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 
 import { DashboardPage } from './dashboard.page';
-import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
@@ -120,8 +120,8 @@ function setupTestBed(options: { session: UserSession; queryParams?: Record<stri
   TestBed.configureTestingModule({
     imports: [
       DashboardPage,
-      DashboardGatewayTableComponent,
-      DashboardSensorTableComponent,
+      GatewayTableComponent,
+      SensorTableComponent,
       ChartContainerComponent,
     ],
     providers: [
@@ -148,11 +148,11 @@ function setupTestBed(options: { session: UserSession; queryParams?: Record<stri
 }
 
 function getGatewayTable(fixture: ComponentFixture<DashboardPage>) {
-  return fixture.debugElement.query(By.directive(DashboardGatewayTableComponent));
+  return fixture.debugElement.query(By.directive(GatewayTableComponent));
 }
 
 function getSensorTable(fixture: ComponentFixture<DashboardPage>) {
-  return fixture.debugElement.query(By.directive(DashboardSensorTableComponent));
+  return fixture.debugElement.query(By.directive(SensorTableComponent));
 }
 
 function getChartContainer(fixture: ComponentFixture<DashboardPage>) {

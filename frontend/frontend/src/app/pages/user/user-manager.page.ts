@@ -12,7 +12,7 @@ import { UserService } from '../../services/user/user.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { UserTableComponent } from './components/user-table/user-table.component';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';

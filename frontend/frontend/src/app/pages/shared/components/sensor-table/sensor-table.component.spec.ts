@@ -4,8 +4,8 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 
-import { DashboardSensorTableComponent } from './dashboard-sensor-table.component';
-import { HistoricChartFiltersDialog } from '../../dialogs/historic-chart-filters/historic-chart-filters.dialog';
+import { SensorTableComponent } from './sensor-table.component';
+import { HistoricChartFiltersDialog } from '../../../dashboard/dialogs/historic-chart-filters/historic-chart-filters.dialog';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
@@ -13,9 +13,9 @@ import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 
-describe('DashboardSensorTableComponent (Unit)', () => {
-  let component: DashboardSensorTableComponent;
-  let fixture: ComponentFixture<DashboardSensorTableComponent>;
+describe('SensorTableComponent (Unit)', () => {
+  let component: SensorTableComponent;
+  let fixture: ComponentFixture<SensorTableComponent>;
 
   const mockSensors: Sensor[] = [
     {
@@ -51,11 +51,11 @@ describe('DashboardSensorTableComponent (Unit)', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [DashboardSensorTableComponent],
+      imports: [SensorTableComponent],
       providers: [{ provide: MatDialog, useValue: dialogMock }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DashboardSensorTableComponent);
+    fixture = TestBed.createComponent(SensorTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('sensors', mockSensors);
     fixture.componentRef.setInput('total', mockSensors.length);
@@ -76,7 +76,7 @@ describe('DashboardSensorTableComponent (Unit)', () => {
     });
 
     it('should default pagination inputs', () => {
-      const fresh = TestBed.createComponent(DashboardSensorTableComponent);
+      const fresh = TestBed.createComponent(SensorTableComponent);
       fresh.componentRef.setInput('sensors', []);
       fresh.detectChanges();
       expect(fresh.componentInstance.total()).toBe(0);

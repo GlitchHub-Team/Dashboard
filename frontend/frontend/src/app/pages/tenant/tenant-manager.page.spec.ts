@@ -10,7 +10,7 @@ import { TenantManagerPage } from './tenant-manager.page';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 
 interface TenantManagerPageTestApi {
   onCreateTenant: () => void;

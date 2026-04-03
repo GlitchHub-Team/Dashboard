@@ -8,8 +8,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserRole } from '../../models/user/user-role.enum';
-import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
@@ -17,8 +17,8 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 @Component({
   selector: 'app-dashboard',
   imports: [
-    DashboardGatewayTableComponent,
-    DashboardSensorTableComponent,
+    GatewayTableComponent,
+    SensorTableComponent,
     ChartContainerComponent,
     MatIcon,
     MatButtonModule,

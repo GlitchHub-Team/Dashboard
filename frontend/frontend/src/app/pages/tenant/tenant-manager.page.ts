@@ -11,7 +11,7 @@ import { filter, switchMap } from 'rxjs';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 

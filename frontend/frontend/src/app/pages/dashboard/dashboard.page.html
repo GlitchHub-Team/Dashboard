@@ -36,7 +36,7 @@
       
       <div class="table-container">
         @if (canSendCommands()) {
-          <app-dashboard-gateway-table
+          <app-gateway-table
             actionMode="dashboard"
             [gateways]="gatewayList()"
             [sensors]="sensorList()"
@@ -56,7 +56,7 @@
             (sensorPageChange)="onSensorPageChange($event)"
           />
         } @else {
-          <app-dashboard-sensor-table
+          <app-sensor-table
             [sensors]="sensorList()"
             [loading]="sensorLoading()"
             [total]="sensorTotal()"

@@ -7,16 +7,16 @@ import { PageEvent } from '@angular/material/paginator';
 import { filter, switchMap } from 'rxjs';
 
 import { GatewaySensorManagerService } from '../../services/gateway-sensor-manager/gateway-sensor-manager.service';
-import { DashboardGatewayTableComponent } from '../dashboard/components/dashboard-gateway-table/dashboard-gateway-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { ConfirmDeleteDialog } from './dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { CreateGatewayDialog } from './dialogs/create-gateway/create-gateway.dialog';
 import { CreateSensorDialog } from './dialogs/create-sensor/create-sensor.dialog';
 
 @Component({
   selector: 'app-gateway-sensor-manager',
-  imports: [DashboardGatewayTableComponent, MatIcon],
+  imports: [GatewayTableComponent, MatIcon],
   templateUrl: './gateway-sensor-manager.page.html',
   styleUrl: './gateway-sensor-manager.page.css',
 })

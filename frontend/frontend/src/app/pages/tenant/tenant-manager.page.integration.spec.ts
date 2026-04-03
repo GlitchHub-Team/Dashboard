@@ -11,7 +11,7 @@ import { TenantManagerPage } from './tenant-manager.page';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
 
 const mockTenants: Tenant[] = [

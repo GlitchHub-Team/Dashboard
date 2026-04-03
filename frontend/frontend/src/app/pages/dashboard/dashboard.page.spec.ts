@@ -11,8 +11,8 @@ import { Observable } from 'rxjs';
 
 import { DashboardPage } from './dashboard.page';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
-import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -24,7 +24,7 @@ import { UserSessionService } from '../../services/user-session/user-session.ser
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
 
-@Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
+@Component({ selector: 'app-gateway-table', template: '', standalone: true })
 class StubGatewayTable {
   actionMode = input<string>();
   gateways = input<Gateway[]>();
@@ -45,7 +45,7 @@ class StubGatewayTable {
   sensorPageChange = output<PageEvent>();
 }
 
-@Component({ selector: 'app-dashboard-sensor-table', template: '', standalone: true })
+@Component({ selector: 'app-sensor-table', template: '', standalone: true })
 class StubSensorTable {
   sensors = input<Sensor[]>();
   loading = input<boolean>();
@@ -186,8 +186,8 @@ describe('DashboardPage (Unit)', () => {
       .overrideComponent(DashboardPage, {
         remove: {
           imports: [
-            DashboardGatewayTableComponent,
-            DashboardSensorTableComponent,
+            GatewayTableComponent,
+            SensorTableComponent,
             ChartContainerComponent,
           ],
         },
@@ -456,8 +456,8 @@ describe('DashboardPage (Unit)', () => {
         .overrideComponent(DashboardPage, {
           remove: {
             imports: [
-              DashboardGatewayTableComponent,
-              DashboardSensorTableComponent,
+              GatewayTableComponent,
+              SensorTableComponent,
               ChartContainerComponent,
             ],
           },
