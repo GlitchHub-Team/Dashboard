@@ -97,7 +97,13 @@ func (controller *Controller) GetSensorHistoricalData(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(http.StatusOK, NewHistoricalDataResponseDTO(samples))
+	responseDto, err := NewHistoricalDataResponseDTO(samples)
+	if err != nil {
+		transportHttp.RequestServerError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func parseOptionalRFC3339(value *string) (*time.Time, error) {

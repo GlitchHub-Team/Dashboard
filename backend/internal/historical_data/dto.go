@@ -22,9 +22,14 @@ type HistoricalDataResponseDTO struct {
 	Samples []HistoricalSampleResponseDTO `json:"samples" binding:"required,min=0"`
 }
 
-func NewHistoricalDataResponseDTO(samples []HistoricalSample) HistoricalDataResponseDTO {
+func NewHistoricalDataResponseDTO(samples []HistoricalSample) (HistoricalDataResponseDTO, error) {
 	responseSamples := make([]HistoricalSampleResponseDTO, 0, len(samples))
 	for _, sample := range samples {
+		decodedData, err := transportDto.DecodeSensorProfileData(sample.Profile, sample.Data)
+		if err != nil {
+			return HistoricalDataResponseDTO{}, err
+		}
+
 		responseSamples = append(responseSamples, HistoricalSampleResponseDTO{
 			SensorIdField: transportDto.SensorIdField{
 				SensorId: sample.SensorId.String(),
@@ -39,12 +44,12 @@ func NewHistoricalDataResponseDTO(samples []HistoricalSample) HistoricalDataResp
 				Timestamp: sample.Timestamp,
 			},
 			Profile: sample.Profile,
-			Data:    sample.Data,
+			Data:    decodedData,
 		})
 	}
 
 	return HistoricalDataResponseDTO{
 		Count:   uint(len(responseSamples)),
 		Samples: responseSamples,
-	}
+	}, nil
 }

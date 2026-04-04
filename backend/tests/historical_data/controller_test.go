@@ -8,8 +8,10 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	historical_data "backend/internal/historical_data"
+	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/historical_data/mocks"
@@ -145,10 +147,15 @@ func TestController_GetSensorHistoricalData(t *testing.T) {
 			SensorId:  targetSensorId,
 			GatewayId: uuid.New(),
 			TenantId:  targetTenantId,
-			Profile:   "HeartRate",
+			Profile:   string(sensor.HEART_RATE),
+			Timestamp: time.Date(2026, 3, 29, 12, 0, 0, 0, time.UTC),
+			Data:      json.RawMessage(`{"BpmValue":72}`),
 		},
 	}
-	expectedResponse := historical_data.NewHistoricalDataResponseDTO(expectedSamples)
+	expectedResponse, err := historical_data.NewHistoricalDataResponseDTO(expectedSamples)
+	if err != nil {
+		t.Fatalf("failed to build expected response: %v", err)
+	}
 
 	useCaseOK := func(mockUC *mocks.MockGetSensorHistoricalDataUseCase) *gomock.Call {
 		return mockUC.EXPECT().
