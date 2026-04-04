@@ -297,8 +297,7 @@ func checkInterruptSuccessAndCommand(
 	expectedSensorID string,
 	expectedGatewayID string,
 ) helper.IntegrationTestCheck {
-	return func(r *httptest.ResponseRecorder, deps helper.IntegrationTestDeps,) bool {
-
+	return func(r *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		if cmd.SensorId != expectedSensorID || cmd.GatewayId != expectedGatewayID {
 			return false
 		}

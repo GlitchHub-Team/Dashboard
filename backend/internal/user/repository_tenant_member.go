@@ -136,7 +136,7 @@ func (by *UserRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
 func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRepositoryGetUserBy) (
 	*TenantMemberEntity, error,
 ) {
-	tenantMember := &TenantMemberEntity{}
+	tenantMember := &TenantMemberEntity{} //nolint:staticcheck
 	var err error
 
 	where, params, err := by.getWhere()
@@ -152,12 +152,10 @@ func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRe
 		Error
 	repo.log.Sugar().Infof("INSIDE REPO %v", err)
 
-	if tenantMember != nil {
-		tenantMember.TenantId = tenantId
-	}
+	tenantMember.TenantId = tenantId
+
 	return tenantMember, err
 }
-
 
 // Get multiplo ---------------------------------------------------------------------------------------------------------
 

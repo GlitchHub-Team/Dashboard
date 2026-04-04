@@ -90,7 +90,7 @@ func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand
 	if user.IsZero() {
 		return User{}, ErrUserNotFound
 	}
-	
+
 	// 3. Controlla che non sia l'ultimo tenant admin
 	total, err := service.getUserPort.CountTenantAdminsByTenant(cmd.TenantId)
 	if err != nil {
@@ -119,7 +119,7 @@ func (service *DeleteUserService) DeleteSuperAdmin(cmd DeleteSuperAdminCommand) 
 	if user.IsZero() {
 		return User{}, ErrUserNotFound
 	}
-	
+
 	// 2. Controlla che non sia l'ultimo tenant admin
 	total, err := service.getUserPort.CountSuperAdmins()
 	if err != nil {

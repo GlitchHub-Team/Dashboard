@@ -14,4 +14,3 @@ type ListInfo struct {
 	Count uint `uri:"count" form:"count" json:"count" binding:"required"`
 	Total uint `uri:"total" form:"total" json:"total" binding:"required"`
 }
-

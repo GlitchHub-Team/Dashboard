@@ -1,10 +1,11 @@
 package sensordb
 
 import (
-	"backend/internal/shared/config"
 	"context"
 	"fmt"
 	"time"
+
+	"backend/internal/shared/config"
 
 	dbPackage "backend/internal/infra/database"
 
@@ -21,7 +22,6 @@ func NewTimescaleDBConnection(
 	log *zap.Logger,
 	cfg *config.Config,
 ) (SensorDBConnection, error) {
-
 	if cfg.CloudDBTest {
 		err := dbPackage.SetupTestDatabase(log, cfg, dbPackage.SETUP_TEST_SENSOR_DB)
 		if err != nil {
@@ -63,7 +63,7 @@ func SetSensorDbLifecycle(
 		},
 		OnStop: func(context.Context) error {
 			log.Info("Stop Sensor DB", zap.Bool("isTest", cfg.SensorDBTest))
-			
+
 			// Se modalità di test, allora elimina database perché non serve più.
 			if cfg.SensorDBTest {
 				db, err := dbPackage.NewPostgresEngineConnection(
@@ -77,24 +77,24 @@ func SetSensorDbLifecycle(
 				}
 
 				if cfg.SensorDBName[:5] != "test_" {
-					return fmt.Errorf(  //nolint:staticcheck
+					return fmt.Errorf( //nolint:staticcheck
 						"/!\\ ATTENZIONE: è stata attivata la modalità di test su Cloud DB (cfg.CloudDbTest == true),"+
-						" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
-						" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
-						" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
+							" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
+							" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
+							" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
 						cfg.SensorDBName,
 						cfg.SensorDBName,
 					)
 				}
 
 				// NOTA: devo usare goroutine perché l'hook impone dei limiti temporali stretti
-				go (func() {			
+				go (func() {
 					err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.SensorDBName)).Error
 					if err != nil {
 						log.Sugar().Errorf("Impossibile eliminare Sensor DB di test %v: %v", cfg.SensorDBName, err)
-						return 
+						return
 					}
-					
+
 					log.Info("Eliminato Sensor DB di test", zap.String("name", cfg.SensorDBName))
 				})()
 			}

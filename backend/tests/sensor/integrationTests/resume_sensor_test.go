@@ -298,10 +298,9 @@ func checkResumeSuccessAndCommand(
 	expectedGatewayID string,
 ) helper.IntegrationTestCheck {
 	return func(
-  r *httptest.ResponseRecorder,
-  deps helper.IntegrationTestDeps,
-) bool {
-
+		r *httptest.ResponseRecorder,
+		deps helper.IntegrationTestDeps,
+	) bool {
 		if cmd.SensorId != expectedSensorID || cmd.GatewayId != expectedGatewayID {
 			return false
 		}

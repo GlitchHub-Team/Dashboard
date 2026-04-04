@@ -87,25 +87,20 @@ func TestDeleteSuperAdminIntegration(t *testing.T) {
 	tests = append(tests, &tcNoJwt)
 
 	// URI invalid (non-numeric)
-	var tcInvalidUri helper.IntegrationTestCase
-	tcInvalidUri = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{
-			// preSetupAdd(t, deps, &tcInvalidUri, existingSuperAdminEntity),
-		},
-		Name:   "Fail: URI binding invalid",
-		Method: http.MethodDelete,
-		Path:   "/api/v1/super_admin/invalid-id",
-		Header: authHeader(superAdminJWT),
-		Body:   nil,
+	tcInvalidUri := helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "Fail: URI binding invalid",
+		Method:    http.MethodDelete,
+		Path:      "/api/v1/super_admin/invalid-id",
+		Header:    authHeader(superAdminJWT),
+		Body:      nil,
 
 		WantStatusCode:   http.StatusBadRequest,
 		WantResponseBody: "error",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			checkNoSuperAdmin(existingEmail1),
 		},
-		PostSetups: []helper.IntegrationTestPostSetup{
-			// postSetupDeleteSuperAdmin(existingEmail),
-		},
+		PostSetups: []helper.IntegrationTestPostSetup{},
 	}
 	tests = append(tests, &tcInvalidUri)
 
@@ -150,8 +145,7 @@ func TestDeleteSuperAdminIntegration(t *testing.T) {
 	tests = append(tests, &tcUnauthTenantAdmin)
 
 	// User not found
-	var tcUserNotFound helper.IntegrationTestCase
-	tcUserNotFound = helper.IntegrationTestCase{
+	tcUserNotFound := helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
 			PreSetupAddSuperAdmin(t, &tcNoJwt, existingSuperAdmin1Entity, true),
 			PreSetupAddSuperAdmin(t, &tcNoJwt, existingSuperAdmin2Entity, true),

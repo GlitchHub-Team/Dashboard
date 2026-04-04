@@ -6,14 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	clouddb "backend/internal/infra/database/cloud_db/connection"
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
-	"backend/internal/tenant"
 	"backend/tests/helper"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type getSensorResponse struct {
@@ -204,29 +201,29 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 	helper.RunIntegrationTests(t, tests, deps)
 }
 
-func mustLoadAtLeastTwoTenantIDs(t *testing.T, CloudDB clouddb.CloudDBConnection) []uuid.UUID {
-	t.Helper()
+// func mustLoadAtLeastTwoTenantIDs(t *testing.T, CloudDB clouddb.CloudDBConnection) []uuid.UUID {
+// 	t.Helper()
 
-	db := (*gorm.DB)(CloudDB)
-	var tenantEntities []tenant.TenantEntity
-	if err := db.Model(&tenant.TenantEntity{}).Order("id ASC").Limit(2).Find(&tenantEntities).Error; err != nil {
-		t.Fatalf("failed to load tenants for integration setup: %v", err)
-	}
-	if len(tenantEntities) < 2 {
-		t.Fatalf("expected at least 2 tenants in DB, got %d", len(tenantEntities))
-	}
+// 	db := (*gorm.DB)(CloudDB)
+// 	var tenantEntities []tenant.TenantEntity
+// 	if err := db.Model(&tenant.TenantEntity{}).Order("id ASC").Limit(2).Find(&tenantEntities).Error; err != nil {
+// 		t.Fatalf("failed to load tenants for integration setup: %v", err)
+// 	}
+// 	if len(tenantEntities) < 2 {
+// 		t.Fatalf("expected at least 2 tenants in DB, got %d", len(tenantEntities))
+// 	}
 
-	tenantIDs := make([]uuid.UUID, 0, len(tenantEntities))
-	for _, entity := range tenantEntities {
-		tenantID, err := uuid.Parse(entity.ID)
-		if err != nil {
-			t.Fatalf("invalid tenant id in DB: %v", err)
-		}
-		tenantIDs = append(tenantIDs, tenantID)
-	}
+// 	tenantIDs := make([]uuid.UUID, 0, len(tenantEntities))
+// 	for _, entity := range tenantEntities {
+// 		tenantID, err := uuid.Parse(entity.ID)
+// 		if err != nil {
+// 			t.Fatalf("invalid tenant id in DB: %v", err)
+// 		}
+// 		tenantIDs = append(tenantIDs, tenantID)
+// 	}
 
-	return tenantIDs
-}
+// 	return tenantIDs
+// }
 
 func checkGetSensorResponseMatchesExpected(
 	expectedSensorID string,

@@ -834,7 +834,6 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 			Times(0)
 	}
 
-
 	// Step 3: create token
 	step3CreateTokenOk := func(
 		createUserPort *mocks.MockSaveUserPort, deleteUserPort *mocks.MockDeleteUserPort, getUserPort *mocks.MockGetUserPort, getTenantPort *tenantMocks.MockGetTenantPort, confirmAccountTokenPort *mocks.MockGenerateTokenPort, sendEmailPort *mocks.MockSendConfirmAccountEmailPort,

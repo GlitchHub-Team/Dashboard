@@ -81,9 +81,9 @@ func preSetupCreateGatewayWithTenant(
 }
 
 /*
-	Popola il DB con 2 tenant.
+Popola il DB con 2 tenant.
 
-	NOTA: è una "monkey patch", però funziona
+NOTA: è una "monkey patch", però funziona
 */
 func populateTenantDefaultData(db *gorm.DB) error {
 	tenants := []tenant.TenantEntity{

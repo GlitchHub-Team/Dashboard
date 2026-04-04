@@ -20,7 +20,6 @@ const (
 	SETUP_TEST_SENSOR_DB SetupTestDbEnum = "sensor" // Imposta Sensor DB di test
 )
 
-
 func getTestDbName(oldName string) string {
 	dateTime := strings.ReplaceAll(time.Now().Format("20060102_150405_.999999999"), ".", "")
 	return fmt.Sprintf("test_%v__%v", dateTime, oldName)

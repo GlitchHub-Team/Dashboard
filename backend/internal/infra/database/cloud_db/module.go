@@ -15,7 +15,7 @@ var Module = fx.Module(
 		connection.NewCloudDbConnection,
 		NewPostgreMigrator,
 	),
-	
+
 	fx.Invoke(connection.SetCloudDbLifecycle),
 	fx.Invoke(
 		func(migrator Migrator) {

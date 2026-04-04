@@ -24,7 +24,7 @@ func NewCloudDbConnection(
 
 	// 1. Se uso modalità test, modifica la configurazione e crea il DB temporaneo ====================
 	if cfg.CloudDBTest {
-		err := dbPackage.SetupTestDatabase(log ,cfg, dbPackage.SETUP_TEST_CLOUD_DB)
+		err := dbPackage.SetupTestDatabase(log, cfg, dbPackage.SETUP_TEST_CLOUD_DB)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +69,7 @@ func SetCloudDbLifecycle(
 		},
 		OnStop: func(context.Context) error {
 			log.Info("Stop Cloud DB", zap.Bool("isTest", cfg.CloudDBTest))
-			
+
 			// Se modalità di test, allora elimina database perché non serve più.
 			if cfg.CloudDBTest {
 				db, err := dbPackage.NewPostgresEngineConnection(
@@ -83,24 +83,24 @@ func SetCloudDbLifecycle(
 				}
 
 				if cfg.CloudDBName[:5] != "test_" {
-					return fmt.Errorf(  //nolint:staticcheck
+					return fmt.Errorf( //nolint:staticcheck
 						"/!\\ ATTENZIONE: è stata attivata la modalità di test su Cloud DB (cfg.CloudDbTest == true),"+
-						" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
-						" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
-						" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
+							" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
+							" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
+							" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
 						cfg.CloudDBName,
 						cfg.CloudDBName,
 					)
 				}
 
 				// NOTA: devo usare goroutine perché l'hook impone dei limiti temporali stretti
-				go (func() {			
+				go (func() {
 					err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.CloudDBName)).Error
 					if err != nil {
 						log.Sugar().Errorf("impossibile eliminare Cloud DB di test %v: %v", cfg.CloudDBName, err)
-						return 
+						return
 					}
-					
+
 					log.Info("Eliminato cloud db di test", zap.String("name", cfg.CloudDBName))
 				})()
 			}

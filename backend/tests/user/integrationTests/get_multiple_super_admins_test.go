@@ -114,11 +114,11 @@ func TestGetSuperAdminsIntegration(t *testing.T) {
 		PreSetups: []helper.IntegrationTestPreSetup{
 			PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
 		},
-		Name:      "Fail: tenant user cannot list superadmins",
-		Method:    http.MethodGet,
-		Path:      "/api/v1/super_admins",
-		Header:    authHeader(tenantUserJWT),
-		Body:      nil,
+		Name:   "Fail: tenant user cannot list superadmins",
+		Method: http.MethodGet,
+		Path:   "/api/v1/super_admins",
+		Header: authHeader(tenantUserJWT),
+		Body:   nil,
 
 		WantStatusCode:   http.StatusUnauthorized,
 		WantResponseBody: helper.ErrJsonString(identity.ErrUnauthorizedAccess),

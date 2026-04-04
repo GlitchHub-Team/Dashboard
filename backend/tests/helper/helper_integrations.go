@@ -22,6 +22,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/fx"
 )
+
 /*
 Oggetto che contiene tutte le possibili dipendenze di un test d'integrazione, compreso
 il context della richiesta e il router.

@@ -40,21 +40,21 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 	existingEmail2 := "tenantadmin2@domain.test"
 
 	existingTenantAdmin1Entity := user.TenantMemberEntity{
-		TenantId: tenant1Id.String(),
-		Email: existingEmail1,
-		Name:  "Existing Super Admin",
+		TenantId:  tenant1Id.String(),
+		Email:     existingEmail1,
+		Name:      "Existing Super Admin",
 		Confirmed: true,
-		Role:  "tenant_admin",
+		Role:      "tenant_admin",
 	}
 
 	existingTenantAdmin2Entity := user.TenantMemberEntity{
-		TenantId: tenant1Id.String(),
-		Email: existingEmail2,
-		Name:  "Existing Super Admin",
+		TenantId:  tenant1Id.String(),
+		Email:     existingEmail2,
+		Name:      "Existing Super Admin",
 		Confirmed: true,
-		Role:  "tenant_admin",
+		Role:      "tenant_admin",
 	}
-	
+
 	tests := make([]*helper.IntegrationTestCase, 0)
 
 	// Success
@@ -113,11 +113,11 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 			preSetupCreateTenant(tenant1Id, true),
 			PreSetupAddTenantAdmin(t, nil, existingTenantAdmin1Entity, false),
 		},
-		Name:      "Fail: URI binding invalid",
-		Method:    http.MethodDelete,
-		Path:      "/api/v1/tenant/invalid-uuid/tenant_admin/123",
-		Header:    authHeader(superAdminJWT),
-		Body:      nil,
+		Name:   "Fail: URI binding invalid",
+		Method: http.MethodDelete,
+		Path:   "/api/v1/tenant/invalid-uuid/tenant_admin/123",
+		Header: authHeader(superAdminJWT),
+		Body:   nil,
 
 		WantStatusCode:   http.StatusBadRequest,
 		WantResponseBody: "error",
@@ -141,7 +141,7 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 		Name:   "Fail: tenant not found",
 		Method: http.MethodDelete,
 		Header: authHeader(tenantAdminJWT),
-		Path: "/api/v1/tenant/" + inexistentTenantId.String() + "/tenant_admin/123",
+		Path:   "/api/v1/tenant/" + inexistentTenantId.String() + "/tenant_admin/123",
 		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
@@ -205,7 +205,6 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 	}
 	tests = append(tests, &tcWrongTenantId)
 
-
 	// Super admin denied when CanImpersonate=false
 	var tcSuperAdmin_NoImpersonate helper.IntegrationTestCase
 	tcSuperAdmin_NoImpersonate = helper.IntegrationTestCase{
@@ -237,11 +236,11 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 		PreSetups: []helper.IntegrationTestPreSetup{
 			preSetupCreateTenant(tenant1Id, true),
 		},
-		Name:      "Fail: user not found",
-		Method:    http.MethodDelete,
-		Path:      "/api/v1/tenant/" + tenant1Id.String() + "/tenant_admin/999999",
-		Header:    authHeader(tenantAdminJWT),
-		Body:      nil,
+		Name:   "Fail: user not found",
+		Method: http.MethodDelete,
+		Path:   "/api/v1/tenant/" + tenant1Id.String() + "/tenant_admin/999999",
+		Header: authHeader(tenantAdminJWT),
+		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),

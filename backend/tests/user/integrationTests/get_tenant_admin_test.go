@@ -221,11 +221,11 @@ func TestGetTenantAdminIntegration(t *testing.T) {
 		PreSetups: []helper.IntegrationTestPreSetup{
 			preSetupCreateTenant(tenant1Id, true),
 		},
-		Name:      "Fail: user not found (tenant exists but user id does not)",
-		Method:    http.MethodGet,
-		Path:      "/api/v1/tenant/" + tenant1Id.String() + "/tenant_admin/999999",
-		Header:    authHeader(tenantAdminJWT),
-		Body:      nil,
+		Name:   "Fail: user not found (tenant exists but user id does not)",
+		Method: http.MethodGet,
+		Path:   "/api/v1/tenant/" + tenant1Id.String() + "/tenant_admin/999999",
+		Header: authHeader(tenantAdminJWT),
+		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),

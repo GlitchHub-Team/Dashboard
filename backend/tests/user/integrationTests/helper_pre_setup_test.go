@@ -23,8 +23,8 @@ func preSetupCreateTenant(tenantId uuid.UUID, canImpersonate bool) helper.Integr
 		db := (*gorm.DB)(deps.CloudDB)
 
 		tenantEntity := tenant.TenantEntity{
-			ID: tenantId.String(), 
-			Name: "test tenant", 
+			ID:             tenantId.String(),
+			Name:           "test tenant",
 			CanImpersonate: canImpersonate,
 		}
 		if err := db.Clauses().Create(&tenantEntity).Error; err != nil {
