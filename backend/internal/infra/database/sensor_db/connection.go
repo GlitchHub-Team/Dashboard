@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	dbPackage "backend/internal/infra/database"
+
+	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,8 +18,17 @@ type SensorDBConnection *gorm.DB
 
 func NewTimescaleDBConnection(
 	// addr SensorDBAddress, port SensorDBPort, user SensorDBUsername, pass SensorDBPassword, dbname SensorDBName,
+	log *zap.Logger,
 	cfg *config.Config,
 ) (SensorDBConnection, error) {
+
+	if cfg.CloudDBTest {
+		err := dbPackage.SetupTestDatabase(log, cfg, dbPackage.SETUP_TEST_SENSOR_DB)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.SensorDBHost, int(cfg.SensorDBPort), cfg.SensorDBUser, cfg.SensorDBPassword, cfg.SensorDBName,
@@ -36,4 +49,57 @@ func NewTimescaleDBConnection(
 		return nil, fmt.Errorf("impossibile raggiungere TimescaleDB: %w", err)
 	}
 	return db, nil
+}
+
+func SetSensorDbLifecycle(
+	lc fx.Lifecycle,
+	log *zap.Logger,
+	cfg *config.Config,
+) {
+	lc.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			log.Info("Start Sensor DB")
+			return nil
+		},
+		OnStop: func(context.Context) error {
+			log.Info("Stop Sensor DB", zap.Bool("isTest", cfg.SensorDBTest))
+			
+			// Se modalità di test, allora elimina database perché non serve più.
+			if cfg.SensorDBTest {
+				db, err := dbPackage.NewPostgresEngineConnection(
+					cfg.SensorDBHost,
+					int(cfg.SensorDBPort),
+					cfg.SensorDBUser,
+					cfg.SensorDBPassword,
+				)
+				if err != nil {
+					return fmt.Errorf("impossibile eliminare CSensoroud DB di test: %v", err)
+				}
+
+				if cfg.SensorDBName[:5] != "test_" {
+					return fmt.Errorf(  //nolint:staticcheck
+						"/!\\ ATTENZIONE: è stata attivata la modalità di test su Cloud DB (cfg.CloudDbTest == true),"+
+						" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
+						" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
+						" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
+						cfg.SensorDBName,
+						cfg.SensorDBName,
+					)
+				}
+
+				// NOTA: devo usare goroutine perché l'hook impone dei limiti temporali stretti
+				go (func() {			
+					err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.SensorDBName)).Error
+					if err != nil {
+						log.Sugar().Errorf("Impossibile eliminare Sensor DB di test %v: %v", cfg.SensorDBName, err)
+						return 
+					}
+					
+					log.Info("Eliminato Sensor DB di test", zap.String("name", cfg.SensorDBName))
+				})()
+			}
+
+			return nil
+		},
+	})
 }

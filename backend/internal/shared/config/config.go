@@ -9,7 +9,6 @@ import (
 )
 
 type Config struct {
-
 	/*
 		URL su cui si trova il front-end dell'applicativo. Viene usato dal package email
 		per l'invio dei token di conferma/cambio password
@@ -50,7 +49,8 @@ type Config struct {
 	CloudDBPort     stringInt `json:"CLOUD_POSTGRES_PORT"`     // Porta del Cloud DB
 	CloudDBUser     string    `json:"CLOUD_POSTGRES_USER"`     // Nome utente per accedere a Cloud DB
 	CloudDBPassword string    `json:"CLOUD_POSTGRES_PASSWORD"` // Password per accedere a Cloud DB
-	CloudDBName     string    `json:"CLOUD_POSTGRES_DB"`     // Nome del Cloud DB
+	CloudDBName     string    `json:"CLOUD_POSTGRES_DB"`       // Nome del Cloud DB
+	CloudDBTest     bool      // True se si usa il CloudDB di test temporaneo. NOTA: Questa variabile non si può impostare tramite ENV.
 
 	// Sensor DB =========================================================================
 
@@ -58,15 +58,16 @@ type Config struct {
 	SensorDBPort     stringInt `json:"POSTGRES_PORT"`     // Porta del Sensor DB
 	SensorDBUser     string    `json:"POSTGRES_USER"`     // Nome utente per accedere a Sensor DB
 	SensorDBPassword string    `json:"POSTGRES_PASSWORD"` // Password per accedere a Sensor DB
-	SensorDBName     string    `json:"POSTGRES_DB"`     // Nome del Sensor DB
+	SensorDBName     string    `json:"POSTGRES_DB"`       // Nome del Sensor DB
+	SensorDBTest     bool      // True se si usa il CloudDB di test temporaneo. NOTA: Questa variabile non si può impostare tramite ENV.
 
 	// SMTP =========================================================================
 
-	SMTPHost string    `json:"SMTP_HOST"` // Hostname dell'URL SMTP 
-	SMTPPort stringInt `json:"SMTP_PORT"` // Numero porta URL SMTP 
-	SMTPUser string    `json:"SMTP_USER"` // Nome utente SMTP 
-	SMTPPass string    `json:"SMTP_PASS"` // Password SMTP 
-	SMTPFrom string    `json:"SMTP_FROM"` // Indirizzo email da cui inviare email tramite SMTP 
+	SMTPHost string    `json:"SMTP_HOST"` // Hostname dell'URL SMTP
+	SMTPPort stringInt `json:"SMTP_PORT"` // Numero porta URL SMTP
+	SMTPUser string    `json:"SMTP_USER"` // Nome utente SMTP
+	SMTPPass string    `json:"SMTP_PASS"` // Password SMTP
+	SMTPFrom string    `json:"SMTP_FROM"` // Indirizzo email da cui inviare email tramite SMTP
 }
 
 type stringInt int
@@ -93,14 +94,16 @@ func (st *stringInt) UnmarshalJSON(b []byte) error {
 }
 
 func ReadConfigFromEnv() (*Config, error) {
-	 envDict := map[string]string{}
-	
+	envDict := map[string]string{}
+
 	configType := reflect.TypeFor[Config]()
-	
+
 	// Itera su tutti i campi dello struct Config usando reflection
 	for field := range configType.Fields() {
 		envKey := field.Tag.Get("json")
-		if envKey == "" { continue }
+		if envKey == "" {
+			continue
+		}
 
 		value, ok := os.LookupEnv(envKey)
 		if !ok {

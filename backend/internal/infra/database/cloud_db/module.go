@@ -12,9 +12,11 @@ var Module = fx.Module(
 	"cloud_db",
 
 	fx.Provide(
-		connection.NewDatabaseConnection,
+		connection.NewCloudDbConnection,
 		NewPostgreMigrator,
 	),
+	
+	fx.Invoke(connection.SetCloudDbLifecycle),
 	fx.Invoke(
 		func(migrator Migrator) {
 			err := migrator.Migrate()
