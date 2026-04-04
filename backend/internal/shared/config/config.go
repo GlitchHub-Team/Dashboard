@@ -50,7 +50,7 @@ type Config struct {
 	CloudDBUser     string    `json:"CLOUD_POSTGRES_USER"`     // Nome utente per accedere a Cloud DB
 	CloudDBPassword string    `json:"CLOUD_POSTGRES_PASSWORD"` // Password per accedere a Cloud DB
 	CloudDBName     string    `json:"CLOUD_POSTGRES_DB"`       // Nome del Cloud DB
-	CloudDBTest     bool      // True se si usa il CloudDB di test temporaneo. NOTA: Questa variabile non si può impostare tramite ENV.
+	CloudDBTest     bool      // True se si usa il Cloud DB di test temporaneo. NOTA: Questa variabile non si può impostare tramite ENV.
 
 	// Sensor DB =========================================================================
 
@@ -59,7 +59,7 @@ type Config struct {
 	SensorDBUser     string    `json:"POSTGRES_USER"`     // Nome utente per accedere a Sensor DB
 	SensorDBPassword string    `json:"POSTGRES_PASSWORD"` // Password per accedere a Sensor DB
 	SensorDBName     string    `json:"POSTGRES_DB"`       // Nome del Sensor DB
-	SensorDBTest     bool      // True se si usa il CloudDB di test temporaneo. NOTA: Questa variabile non si può impostare tramite ENV.
+	SensorDBTest     bool      // True se si usa il Sensor DB di test temporaneo. NOTA: Questa variabile non si può impostare tramite ENV.
 
 	// SMTP =========================================================================
 
