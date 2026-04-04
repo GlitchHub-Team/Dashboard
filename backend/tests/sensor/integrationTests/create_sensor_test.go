@@ -10,6 +10,7 @@ import (
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -71,8 +72,8 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Name:      "Invio da parte di utente con jwt non valido",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/sensor",
-			Header:    authHeader("invalid.jwt.token"),
-			Body: mustJSONBody(t, createSensorRequest{
+			Header:    integration.AuthHeader("invalid.jwt.token"),
+			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1200,
 				GatewayID:    uuid.NewString(),
 				Profile:      string(sensor.HEART_RATE),
@@ -92,8 +93,8 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Name:   "Creazione di un sensore da un utente non super admin",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor",
-			Header: authHeader(tenantAdminJWT),
-			Body: mustJSONBody(t, createSensorRequest{
+			Header: integration.AuthHeader(tenantAdminJWT),
+			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1400,
 				GatewayID:    gatewayForUnauthorized,
 				Profile:      string(sensor.ECG_CUSTOM),
@@ -115,8 +116,8 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Name:      "Creazione di un sensore con gateway non esistente",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/sensor",
-			Header:    authHeader(superAdminJWT),
-			Body: mustJSONBody(t, createSensorRequest{
+			Header:    integration.AuthHeader(superAdminJWT),
+			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1500,
 				GatewayID:    gatewayForNotFound,
 				Profile:      string(sensor.HEART_RATE),
@@ -139,8 +140,8 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Name:   "Creazione sensore con timeout NATS e nessun inserimento DB",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor",
-			Header: authHeader(superAdminJWT),
-			Body: mustJSONBody(t, createSensorRequest{
+			Header: integration.AuthHeader(superAdminJWT),
+			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1550,
 				GatewayID:    gatewayForTimeout,
 				Profile:      string(sensor.PULSE_OXIMETER),
@@ -166,8 +167,8 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Name:   "Creazione sensore con NATS success false e nessun inserimento DB",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor",
-			Header: authHeader(superAdminJWT),
-			Body: mustJSONBody(t, createSensorRequest{
+			Header: integration.AuthHeader(superAdminJWT),
+			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1580,
 				GatewayID:    gatewayForFailedReply,
 				Profile:      string(sensor.HEALTH_THERMOMETER),
@@ -201,8 +202,8 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Name:   "Creazione sensore con reply NATS valida e confronto response/DB",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor",
-			Header: authHeader(superAdminJWT),
-			Body: mustJSONBody(t, createSensorRequest{
+			Header: integration.AuthHeader(superAdminJWT),
+			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1600,
 				GatewayID:    gatewayForSuccess,
 				Profile:      string(sensor.ENVIRONMENTAL_SENSING),

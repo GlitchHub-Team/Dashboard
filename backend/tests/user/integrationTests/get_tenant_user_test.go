@@ -8,6 +8,7 @@ import (
 	"backend/internal/tenant"
 	"backend/internal/user"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 )
@@ -60,22 +61,22 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcSuccessTenantAdmin helper.IntegrationTestCase
 	tcSuccessTenantAdmin = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, &tcSuccessTenantAdmin, existingTenantUser1Entity, true),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, &tcSuccessTenantAdmin, existingTenantUser1Entity, true),
 		},
 		Name:   "Success: get existing tenant user (tenant admin)",
 		Method: http.MethodGet,
-		Header: authHeader(tenantAdminJWT),
+		Header: integration.AuthHeader(tenantAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: existingEmail1,
 		ResponseChecks: []helper.IntegrationTestCheck{
-			checkTenantMemberInserted(existingEmail1, tenant1Id.String()),
+			integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String()),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
-			PostSetupDeleteTenantMember(tenant1Id, existingEmail1),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenantMember(tenant1Id, existingEmail1),
 		},
 	}
 	tests = append(tests, &tcSuccessTenantAdmin)
@@ -84,22 +85,22 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcSuccessTenantUser helper.IntegrationTestCase
 	tcSuccessTenantUser = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, &tcSuccessTenantUser, existingTenantUser1Entity, true),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, &tcSuccessTenantUser, existingTenantUser1Entity, true),
 		},
 		Name:   "Success: get existing tenant user",
 		Method: http.MethodGet,
-		Header: authHeader(tenantUserJWT),
+		Header: integration.AuthHeader(tenantUserJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: existingEmail1,
 		ResponseChecks: []helper.IntegrationTestCheck{
-			checkTenantMemberInserted(existingEmail1, tenant1Id.String()),
+			integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String()),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
-			PostSetupDeleteTenantMember(tenant1Id, existingEmail1),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenantMember(tenant1Id, existingEmail1),
 		},
 	}
 	tests = append(tests, &tcSuccessTenantUser)
@@ -108,8 +109,8 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcNoJwt helper.IntegrationTestCase
 	tcNoJwt = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, &tcNoJwt, existingTenantUser1Entity, true),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, &tcNoJwt, existingTenantUser1Entity, true),
 		},
 		Name:   "Fail: Unauthorized access, no JWT",
 		Method: http.MethodGet,
@@ -119,10 +120,10 @@ func TestGetTenantUserIntegration(t *testing.T) {
 		WantStatusCode:   http.StatusUnauthorized,
 		WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
 		ResponseChecks: []helper.IntegrationTestCheck{
-			checkTenantMemberInserted(existingEmail1, tenant1Id.String()),
+			integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String()),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 			nil,
 		},
 	}
@@ -131,22 +132,22 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	// URI invalid
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, nil, existingTenantUser1Entity, false),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, nil, existingTenantUser1Entity, false),
 		},
 		Name:   "Fail: URI binding invalid",
 		Method: http.MethodGet,
 		Path:   "/api/v1/tenant/invalid-uuid/tenant_user/123",
-		Header: authHeader(superAdminJWT),
+		Header: integration.AuthHeader(superAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusBadRequest,
 		WantResponseBody: "error",
 		ResponseChecks: []helper.IntegrationTestCheck{
-			checkTenantMemberInserted(existingEmail1, tenant1Id.String()),
+			integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String()),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 			nil,
 		},
 	})
@@ -155,20 +156,20 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcTenantNotFound helper.IntegrationTestCase
 	tcTenantNotFound = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, &tcTenantNotFound, existingTenantUser1Entity, false),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, &tcTenantNotFound, existingTenantUser1Entity, false),
 		},
 		Name:   "Fail: tenant not found",
 		Method: http.MethodGet,
-		Header: authHeader(superAdminJWT),
+		Header: integration.AuthHeader(superAdminJWT),
 		Body:   nil,
 		Path:   "/api/v1/tenant/" + uuid.New().String() + "/tenant_user/1",
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkTenantMemberInserted(existingEmail1, tenant1Id.String())},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String())},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 			nil,
 		},
 	}
@@ -178,20 +179,20 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcUnauthorizedUser helper.IntegrationTestCase
 	tcUnauthorizedUser = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, &tcUnauthorizedUser, existingTenantUser1Entity, true),
-			PreSetupAddTenantUser(t, &tcUnauthorizedUser, existingTenantUser2Entity, true),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, &tcUnauthorizedUser, existingTenantUser1Entity, true),
+			integration.PreSetupAddTenantUser(t, &tcUnauthorizedUser, existingTenantUser2Entity, true),
 		},
 		Name:   "Fail: tenant user cannot get other user",
 		Method: http.MethodGet,
-		Header: authHeader(tenantUserJWT),
+		Header: integration.AuthHeader(tenantUserJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkTenantMemberInserted(existingEmail2, tenant1Id.String())},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckTenantMemberInserted(existingEmail2, tenant1Id.String())},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 			nil,
 			nil,
 		},
@@ -202,19 +203,19 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcWrongTenantAdmin helper.IntegrationTestCase
 	tcWrongTenantAdmin = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
-			PreSetupAddTenantUser(t, &tcWrongTenantAdmin, existingTenantUser1Entity, true),
+			integration.PreSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupAddTenantUser(t, &tcWrongTenantAdmin, existingTenantUser1Entity, true),
 		},
 		Name:   "Fail: tenant admin from other tenant cannot get",
 		Method: http.MethodGet,
-		Header: authHeader(wrongTenantAdminJWT),
+		Header: integration.AuthHeader(wrongTenantAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkTenantMemberInserted(existingEmail1, tenant1Id.String())},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String())},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 			nil,
 		},
 	}
@@ -224,19 +225,19 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	var tcSuperDenied helper.IntegrationTestCase
 	tcSuperDenied = helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, false),
-			PreSetupAddTenantUser(t, &tcSuperDenied, existingTenantUser1Entity, true),
+			integration.PreSetupCreateTenant(tenant1Id, false),
+			integration.PreSetupAddTenantUser(t, &tcSuperDenied, existingTenantUser1Entity, true),
 		},
 		Name:   "Fail: super admin denied when CanImpersonate=false",
 		Method: http.MethodGet,
-		Header: authHeader(superAdminJWT),
+		Header: integration.AuthHeader(superAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkTenantMemberInserted(existingEmail1, tenant1Id.String())},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String())},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 			nil,
 		},
 	}
@@ -245,19 +246,19 @@ func TestGetTenantUserIntegration(t *testing.T) {
 	// User not found
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			preSetupCreateTenant(tenant1Id, true),
+			integration.PreSetupCreateTenant(tenant1Id, true),
 		},
 		Name:   "Fail: user not found",
 		Method: http.MethodGet,
 		Path:   "/api/v1/tenant/" + tenant1Id.String() + "/tenant_user/999999",
-		Header: authHeader(tenantAdminJWT),
+		Header: integration.AuthHeader(tenantAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkNoTenantMember("doesnotexist@t.test", tenant1Id.String())},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckNoTenantMember("doesnotexist@t.test", tenant1Id.String())},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			postSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenant(t, tenant1Id),
 		},
 	})
 

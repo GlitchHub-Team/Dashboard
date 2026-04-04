@@ -10,6 +10,7 @@ import (
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 )
@@ -97,7 +98,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:      "Invio della richiesta con jwt invalido",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/gateway/" + uuid.NewString() + "/sensors?page=1&limit=10",
-			Header:    authHeader("invalid.jwt.token"),
+			Header:    integration.AuthHeader("invalid.jwt.token"),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusUnauthorized,
@@ -111,7 +112,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:      "Invio della richiesta con gateway_id invalido",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/gateway/not-a-uuid/sensors?page=1&limit=10",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusBadRequest,
@@ -125,7 +126,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:      "Invio della richiesta con i query params invalidi",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/gateway/" + uuid.NewString() + "/sensors?page=0&limit=5",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusBadRequest,
@@ -139,7 +140,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:      "Invio della richiesta con gateway non esistente",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/gateway/" + uuid.NewString() + "/sensors?page=1&limit=10",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -155,7 +156,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:   "Richiesta dei sensori di un gateway con tenantId nil da parte di un utente non super admin",
 			Method: http.MethodGet,
 			Path:   "/api/v1/gateway/" + gatewayNilTenantUnauthorized + "/sensors?page=1&limit=10",
-			Header: authHeader(tenantAdminTenantOneJWT),
+			Header: integration.AuthHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -176,7 +177,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:   "Richiesta di un sensore con gateway e tenant id nil da parte di un utente super admin",
 			Method: http.MethodGet,
 			Path:   "/api/v1/gateway/" + gatewayNilTenantSuperAdmin + "/sensors?page=1&limit=10",
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,
@@ -200,7 +201,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:   "Richiesta di sensori di un gateway non nil da parte di un utente non super admin con tenant diverso",
 			Method: http.MethodGet,
 			Path:   "/api/v1/gateway/" + gatewayTenantMismatch + "/sensors?page=1&limit=10",
-			Header: authHeader(tenantAdminTenantTwoJWT),
+			Header: integration.AuthHeader(tenantAdminTenantTwoJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -223,7 +224,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 			Name:   "Richiesta di sensori da parte di un utente non super admin con tenant uguale",
 			Method: http.MethodGet,
 			Path:   "/api/v1/gateway/" + gatewayTenantMatch + "/sensors?page=1&limit=10",
-			Header: authHeader(tenantAdminTenantOneJWT),
+			Header: integration.AuthHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,

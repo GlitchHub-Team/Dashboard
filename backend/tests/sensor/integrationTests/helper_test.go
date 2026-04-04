@@ -1,10 +1,8 @@
 package sensor_integration_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -37,23 +35,6 @@ func mustGenerateJWTForRequester(t *testing.T, jwtManager sharedCrypto.AuthToken
 	}
 
 	return jwt
-}
-
-func mustJSONBody(t *testing.T, payload any) *bytes.Reader {
-	t.Helper()
-
-	jsonBody, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatalf("failed to marshal json payload: %v", err)
-	}
-
-	return bytes.NewReader(jsonBody)
-}
-
-func authHeader(jwt string) http.Header {
-	header := http.Header{}
-	header.Set("Authorization", "Bearer "+jwt)
-	return header
 }
 
 func preSetupCreateGateway(

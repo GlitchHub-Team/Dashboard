@@ -15,6 +15,7 @@ import (
 	"backend/internal/tenant"
 	"backend/internal/user"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 )
@@ -26,7 +27,9 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 	tenantID := uuid.New()
 	missingTenantId := uuid.New()
 
-	postSetupDeleteTenant := func(tenantId uuid.UUID) helper.IntegrationTestPostSetup { return postSetupDeleteTenant(t, tenantId) }
+	PostSetupDeleteTenant := func(tenantId uuid.UUID) helper.IntegrationTestPostSetup {
+		return integration.PostSetupDeleteTenant(t, tenantId)
+	}
 
 	superAdminJWT, err := helper.NewSuperAdminJWT(deps, uint(1))
 	if err != nil {
@@ -51,14 +54,14 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
+				integration.PreSetupCreateTenant(tenantID, true),
 			},
 
 			Name:   "Success: insert new user in tenant schema",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
-			Header: authHeader(tenantAdminJWT),
-			Body: mustJSONBody(t, user.CreateUserBodyDTO{
+			Header: integration.AuthHeader(tenantAdminJWT),
+			Body: helper.MustJSONBody(t, user.CreateUserBodyDTO{
 				EmailField:    dto.EmailField{Email: validEmail},
 				UsernameField: dto.UsernameField{Username: validUsername},
 			}),
@@ -66,115 +69,115 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: validEmail, // Cerco email utente nel body
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkTenantMemberInserted(validEmail, tenantID.String()),
+				integration.CheckTenantMemberInserted(validEmail, tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 		// Super admin should be denied when tenant CanImpersonate == false
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, false),
+				integration.PreSetupCreateTenant(tenantID, false),
 			},
 			Name:   "Fail: super admin cannot access tenant when CanImpersonate=false",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
-			Header: authHeader(superAdminJWT),
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "impersonation@t.test"}, UsernameField: dto.UsernameField{Username: "Imp"}}),
+			Header: integration.AuthHeader(superAdminJWT),
+			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "impersonation@t.test"}, UsernameField: dto.UsernameField{Username: "Imp"}}),
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenantMember("impersonation@t.test", tenantID.String()),
+				integration.CheckNoTenantMember("impersonation@t.test", tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
+				integration.PreSetupCreateTenant(tenantID, true),
 			},
 			Name:   "Fail: role not allowed (tenant user) cannot create tenant user",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
-			Header: authHeader(tenantUserJWT),
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "unauthorized@t.test"}, UsernameField: dto.UsernameField{Username: "Nope"}}),
+			Header: integration.AuthHeader(tenantUserJWT),
+			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "unauthorized@t.test"}, UsernameField: dto.UsernameField{Username: "Nope"}}),
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenantMember("unauthorized@t.test", tenantID.String()),
+				integration.CheckNoTenantMember("unauthorized@t.test", tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
+				integration.PreSetupCreateTenant(tenantID, true),
 			},
 			Name:   "Fail: Unauthorized access, no JWT",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
 			Header: http.Header{},
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "baduser@t.test"}, UsernameField: dto.UsernameField{Username: "Bad User"}}),
+			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "baduser@t.test"}, UsernameField: dto.UsernameField{Username: "Bad User"}}),
 
 			WantStatusCode:   http.StatusUnauthorized,
 			WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenantMember("baduser@t.test", tenantID.String()),
+				integration.CheckNoTenantMember("baduser@t.test", tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
+				integration.PreSetupCreateTenant(tenantID, true),
 			},
 			Name:   "Fail: URI binding fail",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/invalid-uuid/tenant_user",
-			Header: authHeader(superAdminJWT),
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "x@t.test"}, UsernameField: dto.UsernameField{Username: "X"}}),
+			Header: integration.AuthHeader(superAdminJWT),
+			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "x@t.test"}, UsernameField: dto.UsernameField{Username: "X"}}),
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: "error",
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenant("invalid-uuid"),
+				integration.CheckNoTenant("invalid-uuid"),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
+				integration.PreSetupCreateTenant(tenantID, true),
 			},
 			Name:   "Fail: JSON binding fail",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   bytes.NewReader([]byte("{}")),
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: "error",
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenantMember("", tenantID.String()),
+				integration.CheckNoTenantMember("", tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 
@@ -184,13 +187,13 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 			Method:    http.MethodPost,
 			// use a valid uuid4 that does NOT exist in tenants table
 			Path:   "/api/v1/tenant/" + uuid.New().String() + "/tenant_user",
-			Header: authHeader(superAdminJWT),
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "nt@t.test"}, UsernameField: dto.UsernameField{Username: "NT"}}),
+			Header: integration.AuthHeader(superAdminJWT),
+			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "nt@t.test"}, UsernameField: dto.UsernameField{Username: "NT"}}),
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenantMember("nt@t.test", missingTenantId.String()),
+				integration.CheckNoTenantMember("nt@t.test", missingTenantId.String()),
 			},
 
 			PostSetups: nil,
@@ -198,7 +201,7 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
+				integration.PreSetupCreateTenant(tenantID, true),
 			},
 			Name:   "Fail: tenant mismatch (obfuscated)",
 			Method: http.MethodPost,
@@ -206,25 +209,25 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 			Header: func() http.Header {
 				tenant2ID := uuid.New()
 				jwt, _ := deps.AuthTokenManager.GenerateForRequester(identity.Requester{RequesterUserId: 1, RequesterTenantId: &tenant2ID, RequesterRole: identity.ROLE_TENANT_ADMIN})
-				return authHeader(jwt)
+				return integration.AuthHeader(jwt)
 			}(),
-			Body: mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "mismatch@t.test"}, UsernameField: dto.UsernameField{Username: "MM"}}),
+			Body: helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "mismatch@t.test"}, UsernameField: dto.UsernameField{Username: "MM"}}),
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkNoTenantMember("mismatch@t.test", tenantID.String()),
+				integration.CheckNoTenantMember("mismatch@t.test", tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 			},
 		},
 
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateTenant(tenantID, true),
-				PreSetupAddTenantUser(t, nil, user.TenantMemberEntity{
+				integration.PreSetupCreateTenant(tenantID, true),
+				integration.PreSetupAddTenantUser(t, nil, user.TenantMemberEntity{
 					TenantId: tenantID.String(),
 					Email:    existingEmail,
 					Name:     "Pre-existing",
@@ -234,17 +237,17 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 			Name:   "Fail: User already exists",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
-			Header: authHeader(tenantAdminJWT),
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: existingEmail}, UsernameField: dto.UsernameField{Username: "Duplicate"}}),
+			Header: integration.AuthHeader(tenantAdminJWT),
+			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: existingEmail}, UsernameField: dto.UsernameField{Username: "Duplicate"}}),
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: helper.ErrJsonString(user.ErrUserAlreadyExists),
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkTenantMemberInserted(existingEmail, tenantID.String()),
+				integration.CheckTenantMemberInserted(existingEmail, tenantID.String()),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteTenant(tenantID),
+				PostSetupDeleteTenant(tenantID),
 				nil,
 			},
 		},

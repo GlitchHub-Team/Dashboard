@@ -9,6 +9,7 @@ import (
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -78,7 +79,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:      "Invio da parte di utente con jwt non valido",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/sensor/" + uuid.NewString() + "/interrupt",
-			Header:    authHeader("invalid.jwt.token"),
+			Header:    integration.AuthHeader("invalid.jwt.token"),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusUnauthorized,
@@ -92,7 +93,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:      "Invio richiesta con sensor_id non valido",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/sensor/not-a-uuid/interrupt",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusBadRequest,
@@ -106,7 +107,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:      "Invio richiesta per sensore non esistente",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/sensor/" + sensorNotFound + "/interrupt",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -125,7 +126,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione di un sensore da un utente non super admin associato ad un gateway con tenantId nil",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorUnauthorizedNil + "/interrupt",
-			Header: authHeader(tenantAdminTenantOneJWT),
+			Header: integration.AuthHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -147,7 +148,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione di un sensore da un utente non super admin con tenantId diverso da quello del gateway",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorUnauthorizedMismatch + "/interrupt",
-			Header: authHeader(tenantAdminTenantTwoJWT),
+			Header: integration.AuthHeader(tenantAdminTenantTwoJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -169,7 +170,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione sensore già interrotto",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorAlreadyInterrupted + "/interrupt",
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusInternalServerError,
@@ -192,7 +193,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione sensore valida ma request NATS in timeout",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorTimeout + "/interrupt",
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusInternalServerError,
@@ -216,7 +217,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione sensore valida ma reply NATS con success false",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorFailedReply + "/interrupt",
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusInternalServerError,
@@ -240,7 +241,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione sensore super admin di sensore con gateway con tenantId nil",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorSuperAdminNil + "/interrupt",
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,
@@ -272,7 +273,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			Name:   "Interruzione sensore valida con request/reply NATS corretta",
 			Method: http.MethodPost,
 			Path:   "/api/v1/sensor/" + sensorSuccess + "/interrupt",
-			Header: authHeader(tenantAdminTenantOneJWT),
+			Header: integration.AuthHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,

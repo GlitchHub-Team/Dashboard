@@ -9,6 +9,7 @@ import (
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -65,7 +66,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:      "Invio da parte di utente con jwt non valido",
 			Method:    http.MethodDelete,
 			Path:      "/api/v1/sensor/" + uuid.NewString(),
-			Header:    authHeader("invalid.jwt.token"),
+			Header:    integration.AuthHeader("invalid.jwt.token"),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusUnauthorized,
@@ -79,7 +80,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:      "Invio richiesta con sensor_id non valido",
 			Method:    http.MethodDelete,
 			Path:      "/api/v1/sensor/not-a-uuid",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusBadRequest,
@@ -96,7 +97,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:   "Eliminazione di un sensore da un utente non super admin",
 			Method: http.MethodDelete,
 			Path:   "/api/v1/sensor/" + sensorUnauthorized,
-			Header: authHeader(tenantAdminJWT),
+			Header: integration.AuthHeader(tenantAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -115,7 +116,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:      "Eliminazione di un sensore non esistente",
 			Method:    http.MethodDelete,
 			Path:      "/api/v1/sensor/" + sensorNotFound,
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -135,7 +136,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:   "Eliminazione sensore con timeout NATS e nessuna eliminazione DB",
 			Method: http.MethodDelete,
 			Path:   "/api/v1/sensor/" + sensorTimeout,
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusInternalServerError,
@@ -159,7 +160,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:   "Eliminazione sensore con NATS success false e nessuna eliminazione DB",
 			Method: http.MethodDelete,
 			Path:   "/api/v1/sensor/" + sensorFailedReply,
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusInternalServerError,
@@ -191,7 +192,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			Name:   "Eliminazione sensore con reply NATS valida e sensore rimosso da DB",
 			Method: http.MethodDelete,
 			Path:   "/api/v1/sensor/" + sensorSuccess,
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,

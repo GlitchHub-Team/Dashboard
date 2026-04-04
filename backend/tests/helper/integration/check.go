@@ -1,12 +1,8 @@
-package user_integration_test
+package integration
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/http/httptest"
-	"testing"
 
 	"backend/internal/user"
 	"backend/tests/helper"
@@ -16,23 +12,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func mustJSONBody(t *testing.T, payload any) *bytes.Reader {
-	t.Helper()
 
-	jsonBody, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatalf("failed to marshal json payload: %v", err)
-	}
-	return bytes.NewReader(jsonBody)
-}
 
-func authHeader(jwt string) http.Header {
-	header := http.Header{}
-	header.Set("Authorization", "Bearer "+jwt)
-	return header
-}
-
-func checkNoTenant(tenantId string) helper.IntegrationTestCheck {
+func CheckNoTenant(tenantId string) helper.IntegrationTestCheck {
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)
 
@@ -48,9 +30,9 @@ func checkNoTenant(tenantId string) helper.IntegrationTestCheck {
 	}
 }
 
-func checkNoTenantMember(email string, tenantId string) helper.IntegrationTestCheck {
+func CheckNoTenantMember(email string, tenantId string) helper.IntegrationTestCheck {
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
-		if checkNoTenant(tenantId)(respRecorder, deps) {
+		if CheckNoTenant(tenantId)(respRecorder, deps) {
 			return true
 		}
 
@@ -64,7 +46,7 @@ func checkNoTenantMember(email string, tenantId string) helper.IntegrationTestCh
 	}
 }
 
-func checkNoSuperAdmin(email string) helper.IntegrationTestCheck {
+func CheckNoSuperAdmin(email string) helper.IntegrationTestCheck {
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
@@ -76,7 +58,7 @@ func checkNoSuperAdmin(email string) helper.IntegrationTestCheck {
 	}
 }
 
-func checkTenantMemberInserted(email string, tenantId string) helper.IntegrationTestCheck {
+func CheckTenantMemberInserted(email string, tenantId string) helper.IntegrationTestCheck {
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
@@ -88,7 +70,7 @@ func checkTenantMemberInserted(email string, tenantId string) helper.Integration
 	}
 }
 
-func checkSuperAdminInserted(email string) helper.IntegrationTestCheck {
+func CheckSuperAdminInserted(email string) helper.IntegrationTestCheck {
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
