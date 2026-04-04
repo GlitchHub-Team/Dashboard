@@ -134,11 +134,14 @@ func (by *UserRepositoryGetUserBy) getWhere() (string, []interface{}, error) {
 }
 
 func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRepositoryGetUserBy) (
-	tenantMember *TenantMemberEntity, err error,
+	*TenantMemberEntity, error,
 ) {
+	tenantMember := &TenantMemberEntity{}
+	var err error
+
 	where, params, err := by.getWhere()
 	if err != nil {
-		return
+		return tenantMember, err
 	}
 
 	db := (*gorm.DB)(repo.db)
@@ -147,57 +150,14 @@ func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRe
 		Where(where, params...).
 		Find(tenantMember).
 		Error
+	repo.log.Sugar().Infof("INSIDE REPO %v", err)
 
 	if tenantMember != nil {
 		tenantMember.TenantId = tenantId
 	}
-	return
+	return tenantMember, err
 }
 
-func (repo *tenantMemberPgRepository) GetTenantUser(tenantId string, by UserRepositoryGetUserBy) (
-	tenantMember *TenantMemberEntity, err error,
-) {
-	where, params, err := by.getWhere()
-	if err != nil {
-		return &TenantMemberEntity{}, err
-	}
-
-	db := (*gorm.DB)(repo.db)
-	err = db.
-		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
-		Where("role = ?", "tenant_user").
-		Where(where, params...).
-		Find(tenantMember).
-		Error
-
-	if tenantMember != nil {
-		tenantMember.TenantId = tenantId
-	}
-	return
-}
-
-func (repo *tenantMemberPgRepository) GetTenantAdmin(tenantId string, by UserRepositoryGetUserBy) (
-	tenantMember *TenantMemberEntity, err error,
-) {
-	where, params, err := by.getWhere()
-	if err != nil {
-		return
-	}
-
-	db := (*gorm.DB)(repo.db)
-	err = db.
-		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
-		Where("role = ?", "tenant_admin").
-		Where(where, params...).
-		Find(tenantMember).
-		Error
-
-	if tenantMember != nil {
-		tenantMember.TenantId = tenantId
-	}
-
-	return
-}
 
 // Get multiplo ---------------------------------------------------------------------------------------------------------
 

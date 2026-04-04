@@ -7,12 +7,13 @@ import (
 
 	transportHttp "backend/internal/infra/transport/http"
 	"backend/internal/infra/transport/http/dto"
-	"backend/internal/shared/identity"
+	"backend/internal/tenant"
 
 	// "backend/internal/tenant"
 	"backend/internal/user"
 	"backend/tests/helper"
 
+	"github.com/google/uuid"
 	// "github.com/google/uuid"
 )
 
@@ -20,25 +21,30 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 	deps := helper.SetupIntegrationTest(t)
 
 	// create a fresh tenant UUID v4 for tests to satisfy binding uuid4
-	// tenantID := uuid.New()
+	tenantID := uuid.New()
 	// missingTenantId := uuid.New()
 
-	superAdminJWT, err := deps.AuthTokenManager.GenerateForRequester(identity.Requester{RequesterUserId: 1, RequesterRole: identity.ROLE_SUPER_ADMIN})
+	superAdminJWT, err := helper.NewSuperAdminJWT(deps, uint(1))
 	if err != nil {
 		t.Fatalf("failed to generate super admin JWT: %v", err)
 	}
 
-	// tenantAdminJWT, err := deps.AuthTokenManager.GenerateForRequester(identity.Requester{RequesterUserId: 1, RequesterTenantId: &tenantID, RequesterRole: identity.ROLE_TENANT_ADMIN})
-	// if err != nil {
-	// 	t.Fatalf("failed to generate tenant admin JWT: %v", err)
-	// }
+	tenantAdminJWT, err := helper.NewTenantAdminJWT(deps, tenantID, uint(1))
+	if err != nil {
+		t.Fatalf("failed to generate tenant admin JWT: %v", err)
+	}
+
+	tenantUserJWT, err := helper.NewTenantUserJWT(deps, tenantID, uint(5))
+	if err != nil {
+		t.Fatalf("failed to generate tenant user JWT: %v", err)
+	}
 
 	existingEmail := "existing.superadmin@m31.com"
 
 	validEmail := "superadmin@m31.com"
 	validUsername := "Super Admin"
 
-	tests := []helper.IntegrationTestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				nil,
@@ -60,7 +66,81 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteSuperAdmin(validEmail),
+				PostSetupDeleteSuperAdmin(validEmail),
+			},
+		},
+
+		{
+			PreSetups: []helper.IntegrationTestPreSetup{
+				preSetupCreateTenant(tenantID, false),
+			},
+
+			Name:   "Fail: super admin denied when tenant CanImpersonate=false",
+			Method: http.MethodPost,
+			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_user",
+			Header: authHeader(superAdminJWT),
+			Body: mustJSONBody(t, user.CreateUserBodyDTO{
+				EmailField:    dto.EmailField{Email: "impersonation@t.test"},
+				UsernameField: dto.UsernameField{Username: "Imp"},
+			}),
+
+			WantStatusCode:   http.StatusNotFound,
+			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkNoTenantMember("impersonation@t.test", tenantID.String()),
+			},
+
+			PostSetups: []helper.IntegrationTestPostSetup{
+				postSetupDeleteTenant(t, tenantID),
+			},
+		},
+
+		{
+			PreSetups: []helper.IntegrationTestPreSetup{
+				nil,
+			},
+
+			Name:   "Fail: role not allowed (tenant admin) cannot create super admin",
+			Method: http.MethodPost,
+			Path:   "/api/v1/super_admin",
+			Header: authHeader(tenantAdminJWT),
+			Body: mustJSONBody(t, user.CreateUserBodyDTO{
+				EmailField:    dto.EmailField{Email: "unauthorized@t.test"},
+				UsernameField: dto.UsernameField{Username: "Nope"},
+			}),
+
+			WantStatusCode:   http.StatusNotFound,
+			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkNoSuperAdmin("unauthorized@t.test"),
+			},
+
+			PostSetups: []helper.IntegrationTestPostSetup{
+				nil,
+			},
+		},
+		{
+			PreSetups: []helper.IntegrationTestPreSetup{
+				nil,
+			},
+
+			Name:   "Fail: role not allowed (tenant user) cannot create super admin",
+			Method: http.MethodPost,
+			Path:   "/api/v1/super_admin",
+			Header: authHeader(tenantUserJWT),
+			Body: mustJSONBody(t, user.CreateUserBodyDTO{
+				EmailField:    dto.EmailField{Email: "unauthorized@t.test"},
+				UsernameField: dto.UsernameField{Username: "Nope"},
+			}),
+
+			WantStatusCode:   http.StatusNotFound,
+			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkNoSuperAdmin("unauthorized@t.test"),
+			},
+
+			PostSetups: []helper.IntegrationTestPostSetup{
+				nil,
 			},
 		},
 
@@ -72,8 +152,8 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			Method: http.MethodPost,
 			Path:   "/api/v1/super_admin",
 			Header: http.Header{},
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{
-				EmailField: dto.EmailField{Email: "baduser@t.test"}, 
+			Body: mustJSONBody(t, user.CreateUserBodyDTO{
+				EmailField:    dto.EmailField{Email: "baduser@t.test"},
 				UsernameField: dto.UsernameField{Username: "Bad User"},
 			}),
 
@@ -84,18 +164,17 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteSuperAdmin(validEmail),
+				PostSetupDeleteSuperAdmin(validEmail),
 			},
 		},
 
 		{
-			PreSetups: []helper.IntegrationTestPreSetup{
-			},
-			Name:   "Binding JSON fallito ritorna errore di validazione",
-			Method: http.MethodPost,
-			Path:   "/api/v1/super_admin",
-			Header: authHeader(superAdminJWT),
-			Body:   bytes.NewReader([]byte("{}")),
+			PreSetups: []helper.IntegrationTestPreSetup{},
+			Name:      "Binding JSON fallito ritorna errore di validazione",
+			Method:    http.MethodPost,
+			Path:      "/api/v1/super_admin",
+			Header:    authHeader(superAdminJWT),
+			Body:      bytes.NewReader([]byte("{}")),
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: "error",
@@ -103,23 +182,22 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 				checkNoSuperAdmin(""),
 			},
 
-			PostSetups: []helper.IntegrationTestPostSetup{
-			},
+			PostSetups: []helper.IntegrationTestPostSetup{},
 		},
 
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupAddSuperAdmin(&user.SuperAdminEntity{
+				PreSetupAddSuperAdmin(t, nil, user.SuperAdminEntity{
 					Email: existingEmail,
 					Name:  "Pre-existing",
-				}),
+				}, false),
 			},
-			Name:   "Utente esistente ritorna 400 e non duplica",
+			Name:   "Fail: User already exists",
 			Method: http.MethodPost,
 			Path:   "/api/v1/super_admin",
 			Header: authHeader(superAdminJWT),
-			Body:   mustJSONBody(t, user.CreateUserBodyDTO{
-				EmailField: dto.EmailField{Email: existingEmail}, 
+			Body: mustJSONBody(t, user.CreateUserBodyDTO{
+				EmailField:    dto.EmailField{Email: existingEmail},
 				UsernameField: dto.UsernameField{Username: "Duplicate"},
 			}),
 
@@ -130,7 +208,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteSuperAdmin(existingEmail),
+				PostSetupDeleteSuperAdmin(existingEmail),
 			},
 		},
 	}
