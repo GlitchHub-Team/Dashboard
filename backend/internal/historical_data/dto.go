@@ -1,6 +1,6 @@
 package historical_data
 
-import "time"
+import transportDto "backend/internal/infra/transport/http/dto"
 
 type GetHistoricalDataQueryDTO struct {
 	From  *string `form:"from" binding:"omitempty"`
@@ -9,12 +9,12 @@ type GetHistoricalDataQueryDTO struct {
 }
 
 type HistoricalSampleResponseDTO struct {
-	SensorId  string    `json:"sensor_id" binding:"required,uuid4"`
-	GatewayId string    `json:"gateway_id" binding:"required,uuid4"`
-	TenantId  string    `json:"tenant_id" binding:"required,uuid4"`
-	Profile   string    `json:"profile" binding:"required"`
-	Timestamp time.Time `json:"timestamp" binding:"required"`
-	Data      any       `json:"data" binding:"required"`
+	transportDto.SensorIdField
+	transportDto.GatewayIdField
+	transportDto.TenantIdField
+	transportDto.TimestampField
+	Profile string `json:"profile" binding:"required"`
+	Data    any    `json:"data" binding:"required"`
 }
 
 type HistoricalDataResponseDTO struct {
@@ -26,12 +26,20 @@ func NewHistoricalDataResponseDTO(samples []HistoricalSample) HistoricalDataResp
 	responseSamples := make([]HistoricalSampleResponseDTO, 0, len(samples))
 	for _, sample := range samples {
 		responseSamples = append(responseSamples, HistoricalSampleResponseDTO{
-			SensorId:  sample.SensorId.String(),
-			GatewayId: sample.GatewayId.String(),
-			TenantId:  sample.TenantId.String(),
-			Profile:   sample.Profile,
-			Timestamp: sample.Timestamp,
-			Data:      sample.Data,
+			SensorIdField: transportDto.SensorIdField{
+				SensorId: sample.SensorId.String(),
+			},
+			GatewayIdField: transportDto.GatewayIdField{
+				GatewayId: sample.GatewayId.String(),
+			},
+			TenantIdField: transportDto.TenantIdField{
+				TenantId: sample.TenantId.String(),
+			},
+			TimestampField: transportDto.TimestampField{
+				Timestamp: sample.Timestamp,
+			},
+			Profile: sample.Profile,
+			Data:    sample.Data,
 		})
 	}
 
