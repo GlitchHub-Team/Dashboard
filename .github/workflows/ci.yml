@@ -13,7 +13,7 @@ jobs:
   validate:
     runs-on: self-hosted
     env:
-      NATS_HOST: ${{ vars.NATS_HOST }}
+      NATS_HOST: 127.0.0.1
       NATS_PORT: ${{ vars.NATS_PORT }}
       NATS_HTTP_PORT: ${{ vars.NATS_HTTP_PORT }}
       NATS_ENCRYPTION_KEY: ${{ secrets.NATS_ENCRYPTION_KEY }}
