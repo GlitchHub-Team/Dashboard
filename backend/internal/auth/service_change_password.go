@@ -90,7 +90,6 @@ func (service *ChangePasswordService) getValidTenantToken(tenantId uuid.UUID, to
 	if tokenObj.IsExpired() {
 		return ForgotPasswordToken{}, ErrTokenExpired
 	}
-
 	return tokenObj, err
 }
 
@@ -175,11 +174,11 @@ func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPas
 	// - Tenant Member
 	{
 		tokenObj, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
+		
 	}
 	if err != nil {
 		return
 	}
-
 	var userFound user.User
 	// 2. Get user
 	if cmd.TenantId == nil {
