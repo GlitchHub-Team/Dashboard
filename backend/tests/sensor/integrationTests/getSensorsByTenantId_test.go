@@ -32,9 +32,13 @@ func TestGetSensorsByTenantIdIntegration(t *testing.T) {
 		RequesterRole:   identity.ROLE_SUPER_ADMIN,
 	})
 
-	tenantIDs := mustLoadAtLeastTwoTenantIDs(t, deps.CloudDB)
-	tenantIDOne := tenantIDs[0]
-	tenantIDTwo := tenantIDs[1]
+	tenantIDOne := uuid.MustParse(tenant1IdStr)
+	tenantIDTwo := uuid.MustParse(tenant2IdStr)
+
+	err := populateTenantDefaultData(deps.CloudDB)
+	if err != nil {
+		t.Fatalf("Impossibile popolare DB con dati di default: %v", err)
+	}
 
 	tenantAdminTenantOneJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId:   999,
@@ -68,7 +72,7 @@ func TestGetSensorsByTenantIdIntegration(t *testing.T) {
 		{SensorID: sensorTenantOneC, GatewayID: gatewayTenantOneB, Name: "Gamma Tenant One", Interval: 1200, Profile: sensor.PULSE_OXIMETER, Status: sensor.Inactive},
 	}
 
-	tests := []helper.IntegrationTestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio della richiesta con jwt invalido",

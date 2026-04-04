@@ -59,7 +59,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 	var successSub *nats.Subscription
 	var successCmd sensor.DeleteSensorCmdEntity
 
-	tests := []helper.IntegrationTestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio da parte di utente con jwt non valido",

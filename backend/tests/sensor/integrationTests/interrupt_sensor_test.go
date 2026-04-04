@@ -23,10 +23,13 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		RequesterRole:   identity.ROLE_SUPER_ADMIN,
 	})
 
-	tenantIDs := mustLoadAtLeastTwoTenantIDs(t, deps.CloudDB)
-	tenantIDOne := tenantIDs[0]
-	tenantIDTwo := tenantIDs[1]
-	tenantIDOneString := tenantIDOne.String()
+	tenantIDOne := uuid.MustParse(tenant1IdStr)
+	tenantIDTwo := uuid.MustParse(tenant2IdStr)
+
+	err := populateTenantDefaultData(deps.CloudDB)
+	if err != nil {
+		t.Fatalf("Impossibile popolare DB con dati di default: %v", err)
+	}
 
 	tenantAdminTenantOneJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId:   999,
@@ -69,7 +72,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 	var successSub *nats.Subscription
 	var successCmd sensor.InterruptSensorCmdEntity
 
-	tests := []helper.IntegrationTestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio da parte di utente con jwt non valido",
@@ -138,7 +141,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateGatewayWithTenant(gatewayUnauthorizedMismatch, "Gateway Unauthorized Mismatch", &tenantIDOneString),
+				preSetupCreateGatewayWithTenant(gatewayUnauthorizedMismatch, "Gateway Unauthorized Mismatch", &tenant1IdStr),
 				preSetupCreateSensor(sensorUnauthorizedMismatch, gatewayUnauthorizedMismatch, "Sensor Unauthorized Mismatch", 1100, sensor.ECG_CUSTOM, sensor.Active),
 			},
 			Name:   "Interruzione di un sensore da un utente non super admin con tenantId diverso da quello del gateway",
@@ -254,7 +257,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateGatewayWithTenant(gatewaySuccess, "Gateway Success Interrupt", &tenantIDOneString),
+				preSetupCreateGatewayWithTenant(gatewaySuccess, "Gateway Success Interrupt", &tenant1IdStr),
 				preSetupCreateSensor(sensorSuccess, gatewaySuccess, "Sensor Success Interrupt", 1600, sensor.ECG_CUSTOM, sensor.Active),
 				preSetupCommandResponseListener(
 					&successSub,

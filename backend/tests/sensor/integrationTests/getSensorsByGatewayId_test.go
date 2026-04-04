@@ -46,10 +46,13 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		RequesterRole:   identity.ROLE_SUPER_ADMIN,
 	})
 
-	tenantIDs := mustLoadAtLeastTwoTenantIDs(t, deps.CloudDB)
-	tenantIDOne := tenantIDs[0]
-	tenantIDTwo := tenantIDs[1]
-	tenantIDOneString := tenantIDOne.String()
+	tenantIDOne := uuid.MustParse(tenant1IdStr)
+	tenantIDTwo := uuid.MustParse(tenant2IdStr)
+
+	err := populateTenantDefaultData(deps.CloudDB)
+	if err != nil {
+		t.Fatalf("Impossibile popolare DB con dati di default: %v", err)
+	}
 
 	tenantAdminTenantOneJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId:   999,
@@ -88,7 +91,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		{SensorID: sensorTenantMatchB, Name: "Beta Tenant Match", Interval: 1400, Profile: sensor.ENVIRONMENTAL_SENSING, Status: sensor.Active},
 	}
 
-	tests := []helper.IntegrationTestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio della richiesta con jwt invalido",
@@ -191,7 +194,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateGatewayWithTenant(gatewayTenantMismatch, "Gateway Tenant Mismatch", &tenantIDOneString),
+				preSetupCreateGatewayWithTenant(gatewayTenantMismatch, "Gateway Tenant Mismatch", &tenant1IdStr),
 				preSetupCreateSensor(sensorTenantMismatch, gatewayTenantMismatch, "Mismatch Sensor", 1250, sensor.HEART_RATE, sensor.Active),
 			},
 			Name:   "Richiesta di sensori di un gateway non nil da parte di un utente non super admin con tenant diverso",
@@ -213,7 +216,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupCreateGatewayWithTenant(gatewayTenantMatch, "Gateway Tenant Match", &tenantIDOneString),
+				preSetupCreateGatewayWithTenant(gatewayTenantMatch, "Gateway Tenant Match", &tenant1IdStr),
 				preSetupCreateSensor(sensorTenantMatchA, gatewayTenantMatch, "Alpha Tenant Match", 1300, sensor.HEALTH_THERMOMETER, sensor.Active),
 				preSetupCreateSensor(sensorTenantMatchB, gatewayTenantMatch, "Beta Tenant Match", 1400, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
 			},

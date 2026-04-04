@@ -3,6 +3,7 @@ package sensor_integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,10 +12,17 @@ import (
 	"backend/internal/sensor"
 	sharedCrypto "backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
+	"backend/internal/tenant"
 	"backend/tests/helper"
 
 	"github.com/nats-io/nats.go"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
+
+var (
+	tenant1IdStr = "11111111-1111-1111-1111-111111111111"
+	tenant2IdStr = "22222222-2222-2222-2222-222222222222"
 )
 
 func mustGenerateJWTForRequester(t *testing.T, jwtManager sharedCrypto.AuthTokenManager, requester identity.Requester) string {
@@ -70,6 +78,26 @@ func preSetupCreateGatewayWithTenant(
 		}
 		return db.Create(&entity).Error == nil
 	}
+}
+
+/*
+	Popola il DB con 2 tenant.
+
+	NOTA: è una "monkey patch", però funziona
+*/
+func populateTenantDefaultData(db *gorm.DB) error {
+	tenants := []tenant.TenantEntity{
+		{ID: tenant1IdStr, Name: "Tenant 1", CanImpersonate: true},
+		{ID: tenant2IdStr, Name: "Tenant 2", CanImpersonate: false},
+	}
+
+	// Tenant 1 e 2
+	for _, tenant := range tenants {
+		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&tenant).Error; err != nil {
+			return fmt.Errorf("failed to create tenant %v: %v", tenant.ID, err)
+		}
+	}
+	return nil
 }
 
 func preSetupCreateSensor(

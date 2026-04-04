@@ -65,7 +65,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 	var successSub *nats.Subscription
 	var successCmd sensor.CreateSensorCmdEntity
 
-	tests := []helper.IntegrationTestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio da parte di utente con jwt non valido",
