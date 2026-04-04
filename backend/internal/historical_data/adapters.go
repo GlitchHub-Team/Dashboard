@@ -21,7 +21,7 @@ type HistoricalDataTimescaleAdapter struct {
 func NewHistoricalDataTimescaleAdapter(
 	log *zap.Logger,
 	repository *historicalDataTimescaleRepository,
-) GetHistoricalDataPort {
+) *HistoricalDataTimescaleAdapter {
 	return &HistoricalDataTimescaleAdapter{
 		log:  log,
 		repo: repository,
