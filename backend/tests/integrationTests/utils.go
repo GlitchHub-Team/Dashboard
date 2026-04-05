@@ -16,12 +16,6 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-)
-
-const (
-	tenant1IdStr = "11111111-1111-1111-1111-111111111111"
-	tenant2IdStr = "22222222-2222-2222-2222-222222222222"
 )
 
 type historicalDataResponse struct {
@@ -56,21 +50,6 @@ func authHeader(jwt string) http.Header {
 
 func historicalDataPath(tenantID uuid.UUID, sensorID uuid.UUID) string {
 	return "/api/v1/tenant/" + tenantID.String() + "/sensor/" + sensorID.String() + "/historical_data"
-}
-
-func populateHistoricalDataTenantDefaults(db *gorm.DB) error {
-	tenants := []tenant.TenantEntity{
-		{ID: tenant1IdStr, Name: "Tenant 1", CanImpersonate: true},
-		{ID: tenant2IdStr, Name: "Tenant 2", CanImpersonate: false},
-	}
-
-	for _, tenantEntity := range tenants {
-		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&tenantEntity).Error; err != nil {
-			return fmt.Errorf("failed to create tenant %v: %v", tenantEntity.ID, err)
-		}
-	}
-
-	return nil
 }
 
 func preSetupInsertSensorDataRow(
@@ -182,4 +161,50 @@ func checkHistoricalDataResponse(
 func sensorSQLDB(deps helper.IntegrationTestDeps) (*sql.DB, error) {
 	db := (*gorm.DB)(deps.SensorDB)
 	return db.DB()
+}
+
+func setupHistoricalDataTenantTestContext(
+	cloudDB *gorm.DB,
+	sensorDB *gorm.DB,
+	tenantID uuid.UUID,
+	canImpersonate bool,
+) error {
+	tenantEntity := tenant.TenantEntity{
+		ID:             tenantID.String(),
+		Name:           "Historical Data Test Tenant",
+		CanImpersonate: canImpersonate,
+	}
+
+	if err := cloudDB.Create(&tenantEntity).Error; err != nil {
+		return fmt.Errorf("failed to create tenant %v: %v", tenantID, err)
+	}
+
+	if err := sensorDB.Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS "%s"`, tenantID.String())).Error; err != nil {
+		return fmt.Errorf("failed to create tenant schema %v: %v", tenantID, err)
+	}
+
+	if err := sensorDB.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS "%s".sensor_data (
+			sensor_id UUID NOT NULL,
+			gateway_id UUID NOT NULL,
+			timestamp TIMESTAMPTZ NOT NULL,
+			tenant_id UUID NOT NULL,
+			profile VARCHAR(255) NOT NULL,
+			data JSONB NOT NULL,
+			PRIMARY KEY (sensor_id, gateway_id, timestamp)
+		)
+	`, tenantID.String())).Error; err != nil {
+		return fmt.Errorf("failed to create sensor_data for tenant %v: %v", tenantID, err)
+	}
+
+	return nil
+}
+
+func cleanupHistoricalDataTenantTestContext(
+	cloudDB *gorm.DB,
+	sensorDB *gorm.DB,
+	tenantID uuid.UUID,
+) {
+	_ = sensorDB.Exec(fmt.Sprintf(`DROP SCHEMA IF EXISTS "%s" CASCADE`, tenantID.String())).Error
+	_ = cloudDB.Where("id = ?", tenantID.String()).Delete(&tenant.TenantEntity{}).Error
 }

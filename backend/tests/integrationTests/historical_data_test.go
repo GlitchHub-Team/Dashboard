@@ -23,13 +23,22 @@ func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 	t.Setenv("CA_PEM_PATH", "backend/ca.pem")
 
 	deps := helper.SetupIntegrationTest(t)
+	tenantIDOne := uuid.New()
+	tenantIDTwo := uuid.New()
 
-	if err := populateHistoricalDataTenantDefaults((*gorm.DB)(deps.CloudDB)); err != nil {
-		t.Fatalf("failed to populate default tenants: %v", err)
+	if err := setupHistoricalDataTenantTestContext((*gorm.DB)(deps.CloudDB), (*gorm.DB)(deps.SensorDB), tenantIDOne, true); err != nil {
+		t.Fatalf("failed to setup tenant one context: %v", err)
 	}
+	t.Cleanup(func() {
+		cleanupHistoricalDataTenantTestContext((*gorm.DB)(deps.CloudDB), (*gorm.DB)(deps.SensorDB), tenantIDOne)
+	})
 
-	tenantIDOne := uuid.MustParse(tenant1IdStr)
-	tenantIDTwo := uuid.MustParse(tenant2IdStr)
+	if err := setupHistoricalDataTenantTestContext((*gorm.DB)(deps.CloudDB), (*gorm.DB)(deps.SensorDB), tenantIDTwo, false); err != nil {
+		t.Fatalf("failed to setup tenant two context: %v", err)
+	}
+	t.Cleanup(func() {
+		cleanupHistoricalDataTenantTestContext((*gorm.DB)(deps.CloudDB), (*gorm.DB)(deps.SensorDB), tenantIDTwo)
+	})
 
 	tenantAdminTenantOneJWT, err := helper.NewTenantAdminJWT(deps, tenantIDOne, 999)
 	if err != nil {
