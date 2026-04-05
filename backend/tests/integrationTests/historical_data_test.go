@@ -1,177 +1,185 @@
 package integrationtests
 
 import (
-	"encoding/json"
-	"errors"
+	"net/http"
 	"testing"
 	"time"
 
 	"backend/internal/historical_data"
-	"backend/internal/shared/identity"
+	"backend/internal/sensor"
 	"backend/internal/tenant"
+	"backend/tests/helper"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
-func TestGetSensorHistoricalData_ValidData_ReturnsStoredSamples(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test skipped in short mode")
+func TestGetSensorHistoricalDataIntegration(t *testing.T) {
+	deps := helper.SetupIntegrationTest(t)
+
+	if err := populateHistoricalDataTenantDefaults((*gorm.DB)(deps.CloudDB)); err != nil {
+		t.Fatalf("failed to populate default tenants: %v", err)
 	}
 
-	db := setupTimescaleDB(t)
-	tenantID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
-	sensorID := uuid.New()
-	gatewayID := uuid.New()
-	ts := time.Now().UTC().Truncate(time.Microsecond)
-	payload := json.RawMessage(`{"value":72}`)
+	tenantIDOne := uuid.MustParse(tenant1IdStr)
+	tenantIDTwo := uuid.MustParse(tenant2IdStr)
 
-	insertSensorDataRow(t, db, tenantID, sensorID, gatewayID, ts, "HeartRate", payload)
-	t.Cleanup(func() {
-		cleanupSensorDataRow(t, db, tenantID, sensorID, gatewayID, ts)
-	})
-
-	useCase := setupHistoricalDataUseCase(t, db, &staticTenantPort{
-		tenant: tenant.Tenant{
-			Id:             tenantID,
-			CanImpersonate: false,
-		},
-	})
-
-	samples, err := useCase.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &tenantID,
-			RequesterRole:     identity.ROLE_TENANT_ADMIN,
-		},
-		TenantId: tenantID,
-		SensorId: sensorID,
-	})
+	tenantAdminTenantOneJWT, err := helper.NewTenantAdminJWT(deps, tenantIDOne, 999)
 	if err != nil {
-		t.Fatalf("GetSensorHistoricalData() unexpected error: %v", err)
+		t.Fatalf("failed to generate tenant admin jwt: %v", err)
 	}
 
-	if len(samples) != 1 {
-		t.Fatalf("expected 1 sample, got %d", len(samples))
-	}
-	if samples[0].SensorId != sensorID {
-		t.Fatalf("unexpected sensor id: got %v want %v", samples[0].SensorId, sensorID)
-	}
-	if samples[0].GatewayId != gatewayID {
-		t.Fatalf("unexpected gateway id: got %v want %v", samples[0].GatewayId, gatewayID)
-	}
-	if samples[0].TenantId != tenantID {
-		t.Fatalf("unexpected tenant id: got %v want %v", samples[0].TenantId, tenantID)
-	}
-}
-
-func TestGetSensorHistoricalData_FilterByTimeRange_ReturnsSubset(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test skipped in short mode")
-	}
-
-	db := setupTimescaleDB(t)
-	tenantID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
-	sensorID := uuid.New()
-	gatewayID := uuid.New()
-
-	ts1 := time.Now().UTC().Truncate(time.Microsecond)
-	ts2 := ts1.Add(2 * time.Minute)
-
-	insertSensorDataRow(t, db, tenantID, sensorID, gatewayID, ts1, "HeartRate", []byte(`{"value":70}`))
-	insertSensorDataRow(t, db, tenantID, sensorID, gatewayID, ts2, "HeartRate", []byte(`{"value":75}`))
-	t.Cleanup(func() {
-		cleanupSensorDataRow(t, db, tenantID, sensorID, gatewayID, ts1)
-		cleanupSensorDataRow(t, db, tenantID, sensorID, gatewayID, ts2)
-	})
-
-	useCase := setupHistoricalDataUseCase(t, db, &staticTenantPort{
-		tenant: tenant.Tenant{
-			Id:             tenantID,
-			CanImpersonate: false,
-		},
-	})
-
-	from := ts2.Add(-time.Second)
-	to := ts2.Add(time.Second)
-
-	samples, err := useCase.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &tenantID,
-			RequesterRole:     identity.ROLE_TENANT_ADMIN,
-		},
-		TenantId: tenantID,
-		SensorId: sensorID,
-		From:     &from,
-		To:       &to,
-	})
+	tenantAdminTenantTwoJWT, err := helper.NewTenantAdminJWT(deps, tenantIDTwo, 1000)
 	if err != nil {
-		t.Fatalf("GetSensorHistoricalData() unexpected error: %v", err)
+		t.Fatalf("failed to generate tenant admin jwt: %v", err)
 	}
 
-	if len(samples) != 1 {
-		t.Fatalf("expected 1 filtered sample, got %d", len(samples))
-	}
-	if !samples[0].Timestamp.Equal(ts2) {
-		t.Fatalf("unexpected timestamp: got %v want %v", samples[0].Timestamp, ts2)
-	}
-}
+	sensorIDValid := uuid.New()
+	gatewayIDValid := uuid.New()
+	tsValid := time.Now().UTC().Truncate(time.Microsecond)
 
-func TestGetSensorHistoricalData_NoData_ReturnsEmptySlice(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test skipped in short mode")
-	}
+	sensorIDRange := uuid.New()
+	gatewayIDRange := uuid.New()
+	tsRangeOne := tsValid.Add(1 * time.Minute)
+	tsRangeTwo := tsValid.Add(3 * time.Minute)
 
-	db := setupTimescaleDB(t)
-	tenantID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
-	sensorID := uuid.New()
+	sensorIDNoData := uuid.New()
+	sensorIDUnauthorized := uuid.New()
 
-	useCase := setupHistoricalDataUseCase(t, db, &staticTenantPort{
-		tenant: tenant.Tenant{
-			Id:             tenantID,
-			CanImpersonate: false,
+	from := tsRangeTwo.Add(-time.Second).Format(time.RFC3339)
+	to := tsRangeTwo.Add(time.Second).Format(time.RFC3339)
+
+	tests := []*helper.IntegrationTestCase{
+		{
+			PreSetups: []helper.IntegrationTestPreSetup{
+				preSetupInsertSensorDataRow(
+					tenantIDOne,
+					sensorIDValid,
+					gatewayIDValid,
+					tsValid,
+					string(sensor.HEART_RATE),
+					[]byte(`{"BpmValue":72}`),
+				),
+			},
+			Name:   "Richiesta dati storici valida",
+			Method: http.MethodGet,
+			Path:   historicalDataPath(tenantIDOne, sensorIDValid),
+			Header: authHeader(tenantAdminTenantOneJWT),
+			Body:   nil,
+
+			WantStatusCode:   http.StatusOK,
+			WantResponseBody: `"samples"`,
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkHistoricalDataResponse(
+					1,
+					historicalDataExpectedSample{
+						SensorID:   sensorIDValid,
+						GatewayID:  gatewayIDValid,
+						TenantID:   tenantIDOne,
+						Profile:    string(sensor.HEART_RATE),
+						Timestamp:  tsValid,
+						HeartRate:  72,
+						ExpectData: true,
+					},
+				),
+			},
+
+			PostSetups: []helper.IntegrationTestPostSetup{
+				postSetupDeleteSensorDataRow(tenantIDOne, sensorIDValid, gatewayIDValid, tsValid),
+			},
 		},
-	})
+		{
+			PreSetups: []helper.IntegrationTestPreSetup{
+				preSetupInsertSensorDataRow(
+					tenantIDOne,
+					sensorIDRange,
+					gatewayIDRange,
+					tsRangeOne,
+					string(sensor.HEART_RATE),
+					[]byte(`{"BpmValue":70}`),
+				),
+				preSetupInsertSensorDataRow(
+					tenantIDOne,
+					sensorIDRange,
+					gatewayIDRange,
+					tsRangeTwo,
+					string(sensor.HEART_RATE),
+					[]byte(`{"BpmValue":75}`),
+				),
+			},
+			Name:   "Filtro per intervallo temporale",
+			Method: http.MethodGet,
+			Path:   historicalDataPath(tenantIDOne, sensorIDRange) + "?from=" + from + "&to=" + to,
+			Header: authHeader(tenantAdminTenantOneJWT),
+			Body:   nil,
 
-	samples, err := useCase.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &tenantID,
-			RequesterRole:     identity.ROLE_TENANT_ADMIN,
+			WantStatusCode:   http.StatusOK,
+			WantResponseBody: `"count":1`,
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkHistoricalDataResponse(
+					1,
+					historicalDataExpectedSample{
+						SensorID:   sensorIDRange,
+						GatewayID:  gatewayIDRange,
+						TenantID:   tenantIDOne,
+						Profile:    string(sensor.HEART_RATE),
+						Timestamp:  tsRangeTwo,
+						HeartRate:  75,
+						ExpectData: true,
+					},
+				),
+			},
+
+			PostSetups: []helper.IntegrationTestPostSetup{
+				postSetupDeleteSensorDataRow(tenantIDOne, sensorIDRange, gatewayIDRange, tsRangeTwo),
+				postSetupDeleteSensorDataRow(tenantIDOne, sensorIDRange, gatewayIDRange, tsRangeOne),
+			},
 		},
-		TenantId: tenantID,
-		SensorId: sensorID,
-	})
-	if err != nil {
-		t.Fatalf("GetSensorHistoricalData() unexpected error: %v", err)
-	}
-	if len(samples) != 0 {
-		t.Fatalf("expected empty result, got %d samples", len(samples))
-	}
-}
+		{
+			PreSetups: nil,
+			Name:      "Nessun dato disponibile",
+			Method:    http.MethodGet,
+			Path:      historicalDataPath(tenantIDOne, sensorIDNoData),
+			Header:    authHeader(tenantAdminTenantOneJWT),
+			Body:      nil,
 
-func TestGetSensorHistoricalData_UnauthorizedTenant_ReturnsError(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test skipped in short mode")
-	}
+			WantStatusCode:   http.StatusOK,
+			WantResponseBody: `"count":0`,
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkHistoricalDataEmptyResponse(),
+			},
 
-	db := setupTimescaleDB(t)
-	tenantID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
-	otherTenantID := uuid.MustParse("22222222-2222-2222-2222-222222222222")
-
-	useCase := setupHistoricalDataUseCase(t, db, &staticTenantPort{
-		tenant: tenant.Tenant{
-			Id:             tenantID,
-			CanImpersonate: false,
+			PostSetups: nil,
 		},
-	})
+		{
+			PreSetups: nil,
+			Name:      "Tenant non autorizzato",
+			Method:    http.MethodGet,
+			Path:      historicalDataPath(tenantIDOne, sensorIDUnauthorized),
+			Header:    authHeader(tenantAdminTenantTwoJWT),
+			Body:      nil,
 
-	_, err := useCase.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &otherTenantID,
-			RequesterRole:     identity.ROLE_TENANT_ADMIN,
+			WantStatusCode:   http.StatusNotFound,
+			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+			ResponseChecks:   nil,
+
+			PostSetups: nil,
 		},
-		TenantId: tenantID,
-		SensorId: uuid.New(),
-	})
-	if !errors.Is(err, identity.ErrUnauthorizedAccess) {
-		t.Fatalf("expected unauthorized error, got %v", err)
+		{
+			PreSetups: nil,
+			Name:      "Timestamp query invalido",
+			Method:    http.MethodGet,
+			Path:      historicalDataPath(tenantIDOne, sensorIDNoData) + "?from=not-a-timestamp",
+			Header:    authHeader(tenantAdminTenantOneJWT),
+			Body:      nil,
+
+			WantStatusCode:   http.StatusBadRequest,
+			WantResponseBody: helper.ErrJsonString(historical_data.ErrInvalidTimestamp),
+			ResponseChecks:   nil,
+
+			PostSetups: nil,
+		},
 	}
+
+	helper.RunIntegrationTests(t, tests, deps)
 }
