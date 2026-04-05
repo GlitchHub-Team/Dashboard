@@ -1,0 +1,49 @@
+import { describe, it, expect } from 'vitest';
+import { EcgLiveAdapter } from './ecg-live.adapter';
+import { ECG_FIELDS } from '../../models/sensor-data/sensor-fields.model';
+import { RealTimeReading } from '../../models/sensor-data/real-time-reading.model';
+
+describe('EcgLiveAdapter', () => {
+  const adapter = new EcgLiveAdapter();
+  const SAMPLE_RATE = 250;
+  const SAMPLE_INTERVAL_MS = 1000 / SAMPLE_RATE;
+
+  const baseTimestamp = '2024-01-01T00:00:00.000Z';
+  const waveform = [0.1, 0.5, 1.2, 0.8, -0.3];
+
+  const dto: RealTimeReading = {
+    sensor_id: 's1',
+    gateway_id: 'gw1',
+    tenant_id: 't1',
+    timestamp: baseTimestamp,
+    profile: 'ecg_custom',
+    data: { Waveform: waveform },
+  };
+
+  it('should expose ECG_FIELDS', () => {
+    expect(adapter.fields).toBe(ECG_FIELDS);
+  });
+
+  describe('fromDTO', () => {
+    it('should return one reading per waveform sample', () => {
+      expect(adapter.fromDTO(dto)).toHaveLength(waveform.length);
+    });
+
+    it('should assign correct ecg value for each sample', () => {
+      adapter.fromDTO(dto).forEach((reading, i) => {
+        expect(reading.value).toEqual({ ecg: waveform[i] });
+      });
+    });
+
+    it('should offset timestamps by SAMPLE_INTERVAL_MS per sample', () => {
+      const baseTime = new Date(baseTimestamp).getTime();
+      adapter.fromDTO(dto).forEach((reading, i) => {
+        expect(reading.timestamp).toBe(new Date(baseTime + i * SAMPLE_INTERVAL_MS).toISOString());
+      });
+    });
+
+    it('should return empty array for empty waveform', () => {
+      expect(adapter.fromDTO({ ...dto, data: { Waveform: [] } })).toEqual([]);
+    });
+  });
+});
