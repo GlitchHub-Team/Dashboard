@@ -1,6 +1,6 @@
 package historical_data
 
-import "time"
+import transportDto "backend/internal/infra/transport/http/dto"
 
 type GetHistoricalDataQueryDTO struct {
 	From  *string `form:"from" binding:"omitempty"`
@@ -9,12 +9,12 @@ type GetHistoricalDataQueryDTO struct {
 }
 
 type HistoricalSampleResponseDTO struct {
-	SensorId  string    `json:"sensor_id" binding:"required,uuid4"`
-	GatewayId string    `json:"gateway_id" binding:"required,uuid4"`
-	TenantId  string    `json:"tenant_id" binding:"required,uuid4"`
-	Profile   string    `json:"profile" binding:"required"`
-	Timestamp time.Time `json:"timestamp" binding:"required"`
-	Data      any       `json:"data" binding:"required"`
+	transportDto.SensorIdField
+	transportDto.GatewayIdField
+	transportDto.TenantIdField
+	transportDto.TimestampField
+	Profile string `json:"profile" binding:"required"`
+	Data    any    `json:"data" binding:"required"`
 }
 
 type HistoricalDataResponseDTO struct {
@@ -22,21 +22,34 @@ type HistoricalDataResponseDTO struct {
 	Samples []HistoricalSampleResponseDTO `json:"samples" binding:"required,min=0"`
 }
 
-func NewHistoricalDataResponseDTO(samples []HistoricalSample) HistoricalDataResponseDTO {
+func NewHistoricalDataResponseDTO(samples []HistoricalSample) (HistoricalDataResponseDTO, error) {
 	responseSamples := make([]HistoricalSampleResponseDTO, 0, len(samples))
 	for _, sample := range samples {
+		decodedData, err := transportDto.DecodeSensorProfileData(sample.Profile, sample.Data)
+		if err != nil {
+			return HistoricalDataResponseDTO{}, err
+		}
+
 		responseSamples = append(responseSamples, HistoricalSampleResponseDTO{
-			SensorId:  sample.SensorId.String(),
-			GatewayId: sample.GatewayId.String(),
-			TenantId:  sample.TenantId.String(),
-			Profile:   sample.Profile,
-			Timestamp: sample.Timestamp,
-			Data:      sample.Data,
+			SensorIdField: transportDto.SensorIdField{
+				SensorId: sample.SensorId.String(),
+			},
+			GatewayIdField: transportDto.GatewayIdField{
+				GatewayId: sample.GatewayId.String(),
+			},
+			TenantIdField: transportDto.TenantIdField{
+				TenantId: sample.TenantId.String(),
+			},
+			TimestampField: transportDto.TimestampField{
+				Timestamp: sample.Timestamp,
+			},
+			Profile: sample.Profile,
+			Data:    decodedData,
 		})
 	}
 
 	return HistoricalDataResponseDTO{
 		Count:   uint(len(responseSamples)),
 		Samples: responseSamples,
-	}
+	}, nil
 }

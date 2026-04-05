@@ -13,7 +13,7 @@ type GetHistoricalDataService struct {
 func NewGetHistoricalDataService(
 	getHistoricalDataPort GetHistoricalDataPort,
 	getTenantPort tenant.GetTenantPort,
-) GetSensorHistoricalDataUseCase {
+) *GetHistoricalDataService {
 	return &GetHistoricalDataService{
 		getHistoricalDataPort: getHistoricalDataPort,
 		getTenantPort:         getTenantPort,

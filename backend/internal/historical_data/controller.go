@@ -97,7 +97,13 @@ func (controller *Controller) GetSensorHistoricalData(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(http.StatusOK, NewHistoricalDataResponseDTO(samples))
+	responseDto, err := NewHistoricalDataResponseDTO(samples)
+	if err != nil {
+		transportHttp.RequestServerError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, responseDto)
 }
 
 func parseOptionalRFC3339(value *string) (*time.Time, error) {
@@ -113,11 +119,7 @@ func parseOptionalRFC3339(value *string) (*time.Time, error) {
 	return &parsed, nil
 }
 
-type SensorIdField struct {
-	SensorId string `uri:"sensor_id" form:"sensor_id" json:"sensor_id" binding:"required,uuid4"`
-}
-
 type GetHistoricalDataUriDTO struct {
 	transportDto.TenantIdField
-	SensorIdField
+	transportDto.SensorIdField
 }
