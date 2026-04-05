@@ -1,0 +1,62 @@
+.manager-container {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manager-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.manager-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.info-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.tenant-banner {
+  background-color: #e3f2fd;
+}
+
+.warning-banner {
+  background-color: #fff3e0;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+::ng-deep .table-container .mat-header-row,
+::ng-deep .table-container .mat-mdc-header-row,
+::ng-deep .table-container .mat-header-cell,
+::ng-deep .table-container .mat-mdc-header-cell {
+  background-color: #dedcdc !important;
+}
+
+::ng-deep .table-container .mat-header-cell,
+::ng-deep .table-container .mat-mdc-header-cell {
+  border-bottom: 2px solid #000000 !important;
+  font-weight: bold !important;
+  color: #000000 !important;
+}

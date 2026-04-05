@@ -10,7 +10,6 @@ import (
 
 var ErrMissingIdentity = errors.New("identity missing from request context")
 
-// TODO: inserisci questo in tutti i controller!
 /*
 Estrare il requester dal contesto di Gin.
 L'unico errore che ritorna è ErrMissingIdentity

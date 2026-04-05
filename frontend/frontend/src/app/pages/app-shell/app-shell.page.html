@@ -1,0 +1,17 @@
+<div class="shell-layout">
+  <app-side-bar [navItems]="navItems()" />
+
+  <div class="main-content">
+    <app-header
+      [username]="currentUser()?.username ?? null"
+      [currentTenant]="currentTenant()?.name ?? null"
+      [currentUserRole]="currentUser()?.role ?? null"
+      (logoutRequested)="onLogout()"
+      (changePasswordRequested)="onChangePassword()"
+    />
+
+    <main>
+      <router-outlet />
+    </main>
+  </div>
+</div>

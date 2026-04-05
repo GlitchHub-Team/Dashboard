@@ -586,9 +586,6 @@ func (controller *Controller) GetTenantUsers(ctx *gin.Context) {
 	}
 
 	users, total, err := controller.getTenantUsersByTenantUseCase.GetTenantUsersByTenant(cmd)
-	if users == nil {
-		users = make([]User, 0)
-	}
 	if err != nil {
 		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
 			transportHttp.RequestNotFound(ctx, tenant.ErrTenantNotFound)

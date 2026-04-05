@@ -1,0 +1,83 @@
+<div class="dashboard-layout">
+  <div class="dashboard-left">
+    <h1>Dashboard</h1>
+    @if (activeTenantId()) {
+      <div class="info-banner tenant-banner">
+        <span
+          >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
+        >
+        <div class="banner-actions">
+          <button mat-button color="accent" (click)="onGoToTenantUsers()">
+            <mat-icon>people</mat-icon>
+            Gestione Utenti
+          </button>
+          <button mat-button color="primary" (click)="onBackToTenants()">
+            <mat-icon>arrow_back</mat-icon>
+            Torna ai Tenant
+          </button>
+        </div>
+      </div>
+    }
+    @if (currentRole === UserRole.SUPER_ADMIN && !activeTenantId()) {
+      <div class="info-banner warning-banner">
+        <span>Per visualizzare i dati, devi selezionare un tenant.</span>
+        <button mat-button color="primary" (click)="onBackToTenants()">
+          <mat-icon>domain</mat-icon>
+          Vai a Gestione Tenant
+        </button>
+      </div>
+    } @else {
+      @if (error()) {
+        <div class="error-banner">
+          <mat-icon>error</mat-icon>
+          <span>{{ error() }}</span>
+        </div>
+      }
+      
+      <div class="table-container">
+        @if (canSendCommands()) {
+          <app-dashboard-gateway-table
+            actionMode="dashboard"
+            [gateways]="gatewayList()"
+            [sensors]="sensorList()"
+            [expandedGateway]="expandedGateway()"
+            [gatewayLoading]="gatewayLoading()"
+            [sensorLoading]="sensorLoading()"
+            [gatewayTotal]="gatewayTotal()"
+            [gatewayPageIndex]="gatewayPageIndex()"
+            [gatewayLimit]="gatewayLimit()"
+            [sensorTotal]="sensorTotal()"
+            [sensorPageIndex]="sensorPageIndex()"
+            [sensorLimit]="sensorLimit()"
+            (commandRequested)="onCommandRequested($event)"
+            (chartRequested)="onChartOpen($event)"
+            (expandedGatewayChange)="onExpandedGatewayChange($event)"
+            (gatewayPageChange)="onGatewayPageChange($event)"
+            (sensorPageChange)="onSensorPageChange($event)"
+          />
+        } @else {
+          <app-dashboard-sensor-table
+            [sensors]="sensorList()"
+            [loading]="sensorLoading()"
+            [total]="sensorTotal()"
+            [pageIndex]="sensorPageIndex()"
+            [limit]="sensorLimit()"
+            (chartRequested)="onChartOpen($event)"
+            (pageChange)="onSensorPageChange($event)"
+          />
+        }
+      </div>
+    }
+  </div>
+
+  <div class="dashboard-top-right">
+    @if (selectedChart()) {
+      <app-chart-container [chartRequest]="selectedChart()!" (chartClosed)="onChartClosed()">
+      </app-chart-container>
+    }
+  </div>
+
+  <div class="dashboard-bottom-right">
+    <!-- Alert component -->
+  </div>
+</div>

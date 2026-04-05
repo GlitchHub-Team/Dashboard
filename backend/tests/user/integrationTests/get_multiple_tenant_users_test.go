@@ -1,0 +1,244 @@
+package user_integration_test
+
+import (
+	"fmt"
+	"net/http"
+	"testing"
+
+	transportHttp "backend/internal/infra/transport/http"
+	"backend/internal/shared/identity"
+	"backend/internal/tenant"
+	"backend/internal/user"
+	"backend/tests/helper"
+
+	"github.com/google/uuid"
+)
+
+func TestGetTenantUsersIntegration(t *testing.T) {
+	deps := helper.SetupIntegrationTest(t)
+
+	tests := make([]*helper.IntegrationTestCase, 0)
+
+	tenantId := uuid.New()
+	otherTenantId := uuid.New()
+	nonexistentTenantId := uuid.New()
+
+	existingEmail1 := "tenantuser1@t.test"
+	existingEmail2 := "tenantuser2@t.test"
+
+	tenantAdmin1Entity := user.TenantMemberEntity{
+		TenantId: tenantId.String(),
+		Email:    existingEmail1,
+		Name:     "A1",
+		Role:     string(identity.ROLE_TENANT_USER),
+	}
+	tenantAdmin2Entity := user.TenantMemberEntity{
+		TenantId: tenantId.String(),
+		Email:    existingEmail2,
+		Name:     "A2",
+		Role:     string(identity.ROLE_TENANT_USER),
+	}
+
+	superAdminJWT, err := helper.NewSuperAdminJWT(deps, uint(1))
+	if err != nil {
+		t.Fatalf("Cannot create super admin JWT: %v", err)
+		return
+	}
+
+	tenantAdminJWT, err := helper.NewTenantAdminJWT(deps, tenantId, uint(1))
+	if err != nil {
+		t.Fatalf("Cannot create tenant admin JWT: %v", err)
+		return
+	}
+
+	otherAdminJWT, err := helper.NewTenantAdminJWT(deps, otherTenantId, uint(1))
+	if err != nil {
+		t.Fatalf("Cannot create tenant admin JWT: %v", err)
+		return
+	}
+
+	tenantPath := fmt.Sprintf("/api/v1/tenant/%v/tenant_users", tenantId.String())
+	inexistentTenantPath := fmt.Sprintf("/api/v1/tenant/%v/tenant_users", nonexistentTenantId.String())
+
+	// Success default pagination
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, true),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "Success: default pagination",
+		Method: http.MethodGet,
+		Path:   tenantPath,
+		Header: authHeader(tenantAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: "\"count\":2",
+		ResponseChecks: []helper.IntegrationTestCheck{
+			checkTenantMemberInserted(existingEmail1, tenantId.String()),
+			checkTenantMemberInserted(existingEmail2, tenantId.String()),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{postSetupDeleteTenant(t, tenantId), nil, nil},
+	})
+
+	// Success custom pagination page=2&limit=1
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, true),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "Success: custom pagination",
+		Method: http.MethodGet,
+		Path:   tenantPath + "?page=2&limit=1",
+		Header: authHeader(tenantAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: "\"count\":1",
+		ResponseChecks: []helper.IntegrationTestCheck{
+			checkTenantMemberInserted(existingEmail1, tenantId.String()),
+			checkTenantMemberInserted(existingEmail2, tenantId.String()),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{postSetupDeleteTenant(t, tenantId), nil, nil},
+	})
+
+	// Unauthorized no JWT
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, true),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "Fail: Unauthorized, no JWT",
+		Method: http.MethodGet,
+		Path:   tenantPath,
+		Header: http.Header{},
+		Body:   nil,
+
+		WantStatusCode:   http.StatusUnauthorized,
+		WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
+		ResponseChecks:   []helper.IntegrationTestCheck{},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			postSetupDeleteTenant(t, tenantId),
+			nil,
+			nil,
+		},
+	})
+
+	// URI invalid
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, true),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "Fail: URI binding invalid",
+		Method: http.MethodGet,
+		Path:   "/api/v1/tenant/invalid-uuid/tenant_users",
+		Header: authHeader(tenantAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusBadRequest,
+		WantResponseBody: "error",
+		ResponseChecks: []helper.IntegrationTestCheck{
+			checkNoTenant(tenantId.String()),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			postSetupDeleteTenant(t, tenantId),
+			nil,
+			nil,
+		},
+	})
+
+	// Query invalid page=-1
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, true),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "Fail: Query binding invalid",
+		Method: http.MethodGet,
+		Path:   tenantPath + "?page=-1",
+		Header: authHeader(tenantAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusBadRequest,
+		WantResponseBody: "error",
+		ResponseChecks:   []helper.IntegrationTestCheck{checkNoTenant(tenantId.String())},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			postSetupDeleteTenant(t, tenantId),
+			nil,
+			nil,
+		},
+	})
+
+	// Tenant not found
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: nil,
+		Name:      "Fail: tenant not found",
+		Method:    http.MethodGet,
+		Path:      inexistentTenantPath,
+		Header:    authHeader(tenantAdminJWT),
+		Body:      nil,
+
+		WantStatusCode:   http.StatusNotFound,
+		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+		ResponseChecks: []helper.IntegrationTestCheck{
+			checkNoTenant(nonexistentTenantId.String()),
+		},
+		PostSetups: nil,
+	})
+
+	// Unauthorized access: super admin (CanImpersonate=false)
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "Fail (super admin): unauth access (canImpersonate=false)",
+		Method: http.MethodGet,
+		Path:   tenantPath,
+		Header: authHeader(superAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusNotFound,
+		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+		ResponseChecks:   []helper.IntegrationTestCheck{},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			postSetupDeleteTenant(t, tenantId),
+			nil,
+			nil,
+		},
+	})
+
+	// Unauthorized access: other tenant admin
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			preSetupCreateTenant(tenantId, true),
+			PreSetupAddTenantUser(t, nil, tenantAdmin1Entity, false),
+			PreSetupAddTenantUser(t, nil, tenantAdmin2Entity, false),
+			preSetupCreateTenant(otherTenantId, true),
+		},
+		Name:   "Fail (tenant admin): unauth access",
+		Method: http.MethodGet,
+		Path:   tenantPath,
+		Header: authHeader(otherAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusNotFound,
+		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+		ResponseChecks:   []helper.IntegrationTestCheck{},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			postSetupDeleteTenant(t, tenantId),
+			nil,
+			nil,
+			postSetupDeleteTenant(t, otherTenantId),
+		},
+	})
+
+	helper.RunIntegrationTests(t, tests, deps)
+}
