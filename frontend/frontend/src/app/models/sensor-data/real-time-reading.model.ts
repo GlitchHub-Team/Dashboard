@@ -1,4 +1,8 @@
 export interface RealTimeReading {
-  datum: number;
-  timestamp: number;
+  sensor_id: string;
+  gateway_id: string;
+  tenant_id: string;
+  timestamp: string;
+  profile: string;
+  data: Record<string, any>;
 }

@@ -9,11 +9,7 @@ import { httpErrorInterceptor } from './interceptors/error/http-error.intercepto
 import { GatewayAdapter } from './adapters/gateway/gateway.adapter';
 import { GatewayApiAdapter } from './adapters/gateway/gateway-api.adapter';
 import { SensorAdapter } from './adapters/sensor/sensor.adapter';
-import { SensorHistoricAdapter } from './adapters/sensor-historic/sensor-historic.adapter';
 import { SensorApiAdapter } from './adapters/sensor/sensor-api.adapter';
-import { SensorLiveReadingAdapter } from './adapters/sensor-live/sensor-live-reading.adapter';
-import { SensorHistoricApiAdapter } from './adapters/sensor-historic/sensor-historic-api.adapter';
-import { SensorLiveReadingApiAdapter } from './adapters/sensor-live/sensor-live-reading-api.adapter';
 // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
 import { AuthApiClientService } from './services/auth-api-client/auth-api-client.service';
 import { AuthServiceMock } from './mocks/auth.service.mock';
@@ -42,8 +38,6 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(MatDialogModule),
     { provide: GatewayAdapter, useClass: GatewayApiAdapter },
     { provide: SensorAdapter, useClass: SensorApiAdapter },
-    { provide: SensorHistoricAdapter, useClass: SensorHistoricApiAdapter },
-    { provide: SensorLiveReadingAdapter, useClass: SensorLiveReadingApiAdapter },
     { provide: UserAdapter, useClass: UserApiAdapter },
     // TODO: solo per testing per ora, da rimuovere quando avremo un backend funzionante
     { provide: AuthApiClientService, useClass: AuthServiceMock },

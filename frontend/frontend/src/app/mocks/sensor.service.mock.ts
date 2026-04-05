@@ -170,7 +170,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-02',
           sensor_name: 'ICU ECG',
           sensor_interval: 60,
-          profile: 'custom_ecg',
+          profile: 'ecg_custom',
           status: 'active',
         },
         {

@@ -27,11 +27,11 @@
         }
 
         @if (isHistoricChart() && historicReadings().length > 0) {
-          <app-historic-chart [readings]="historicReadings()" [sensor]="chartRequest()!.sensor" />
+          <app-historic-chart [readings]="historicReadings()" [sensor]="chartRequest()!.sensor" [fields]="fields()" />
         }
 
         @if (isLiveChart() && liveReadings().length > 0) {
-          <app-real-time-chart [readings]="liveReadings()" [sensor]="chartRequest()!.sensor" />
+          <app-real-time-chart [readings]="liveReadings()" [sensor]="chartRequest()!.sensor" [fields]="fields()" />
         }
       }
     </mat-card-content>
