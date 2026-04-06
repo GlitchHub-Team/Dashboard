@@ -1,10 +1,10 @@
 <h2 mat-dialog-title>Nuovo Sensore</h2>
 
 <mat-dialog-content>
-  @if (generalError) {
+  @if (generalError()) {
     <div class="error-banner">
       <mat-icon>error</mat-icon>
-      <span>{{ generalError }}</span>
+      <span>{{ generalError() }}</span>
     </div>
   }
 
@@ -50,14 +50,14 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Annulla</button>
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting()">Annulla</button>
   <button
     mat-raised-button
     color="primary"
-    [disabled]="sensorForm.invalid || isSubmitting"
+    [disabled]="sensorForm.invalid || isSubmitting()"
     (click)="onSubmit()"
   >
-    @if (isSubmitting) {
+    @if (isSubmitting()) {
       <mat-spinner diameter="20" />
     } @else {
       Crea

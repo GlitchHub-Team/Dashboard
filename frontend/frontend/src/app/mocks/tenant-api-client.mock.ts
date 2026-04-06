@@ -1,13 +1,18 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, throwError, delay } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError, delay, switchMap, timer } from 'rxjs';
 
 import { PaginatedTenantResponse } from '../models/tenant/paginated-tenant-response.model';
 import { TenantBackend } from '../models/tenant/tenant-backend.model';
 import { TenantConfig } from '../models/tenant/tenant-config.model';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable({ providedIn: 'root' })
 export class TenantApiClientMockService {
+  private readonly shouldFailGetTenant = false;
+  private readonly shouldFailGetTenants = false;
+  private readonly shouldFailCreateTenant = false;
+  private readonly shouldFailDeleteTenant = false;
+
   private mockTenants: TenantBackend[] = [
     { tenant_id: 'tenant-1', tenant_name: 'Tenant 1', can_impersonate: true },
     { tenant_id: 'tenant-2', tenant_name: 'Tenant 2', can_impersonate: false },
@@ -18,34 +23,17 @@ export class TenantApiClientMockService {
   ];
 
   public getTenant(id: string): Observable<TenantBackend> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetTenant) {
+      return this.delayedError(400, 'Failed to fetch tenant');
     }
+
     const tenant = this.mockTenants.find((t) => t.tenant_id === id);
     return of(tenant!).pipe(delay(500));
   }
 
   public getTenants(page = 1, limit = 10): Observable<PaginatedTenantResponse<TenantBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetTenants) {
+      return this.delayedError(400, 'Failed to fetch tenants');
     }
 
     const total = this.mockTenants.length;
@@ -55,17 +43,8 @@ export class TenantApiClientMockService {
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailCreateTenant) {
+      return this.delayedError(400, 'Failed to create tenant');
     }
 
     const newTenant: TenantBackend = {
@@ -78,20 +57,17 @@ export class TenantApiClientMockService {
   }
 
   public deleteTenant(id: string): Observable<void> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'LOL' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailDeleteTenant) {
+      return this.delayedError(400, 'Failed to delete tenant');
     }
 
     this.mockTenants = this.mockTenants.filter((tenant) => tenant.tenant_id !== id);
     return of(void 0).pipe(delay(500));
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(
+      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
+    );
   }
 }

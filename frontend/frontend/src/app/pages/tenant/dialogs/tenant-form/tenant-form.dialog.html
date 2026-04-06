@@ -1,5 +1,11 @@
 <h2 mat-dialog-title>Aggiungi Nuovo Tenant</h2>
 <mat-dialog-content>
+  @if (generalError()) {
+    <div class="error-banner">
+      <mat-icon>error</mat-icon>
+      <span>{{ generalError() }}</span>
+    </div>
+  }
   <form [formGroup]="tenantForm">
     <mat-form-field appearance="outline" class="w-100">
       <mat-label>Nome</mat-label>
@@ -9,11 +15,6 @@
       }
     </mat-form-field>
     <mat-checkbox formControlName="canImpersonate">Permetti Impersonificazione</mat-checkbox>
-    @if (generalError) {
-      <div class="error-text">
-        {{ generalError }}
-      </div>
-    }
   </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
@@ -22,8 +23,12 @@
     mat-raised-button
     color="primary"
     (click)="onSave()"
-    [disabled]="tenantForm.invalid || isSubmitting"
+    [disabled]="tenantForm.invalid || isSubmitting()"
   >
+  @if (isSubmitting()) {
+    <mat-spinner diameter="20" />
+  } @else {
     Salva
+  }
   </button>
 </mat-dialog-actions>

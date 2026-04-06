@@ -42,7 +42,18 @@ const MOCK_USERS: Record<string, MockUser> = {
 
 @Injectable({ providedIn: 'root' })
 export class AuthServiceMock {
+  private readonly shouldFailLogin = false;
+  private readonly shouldFailLogout = false;
+  private readonly shouldFailForgotPasswordRequest = false;
+  private readonly shouldFailConfirmPasswordChange = false;
+  private readonly shouldFailConfirmPasswordReset = false;
+  private readonly shouldFailConfirmAccountCreation = false;
+
   login(req: LoginRequest): Observable<AuthResponse> {
+    if (this.shouldFailLogin) {
+      return this.delayedError({ status: 500, message: 'Server error during login' });
+    }
+
     const entry = MOCK_USERS[req.email];
 
     if (
@@ -58,10 +69,17 @@ export class AuthServiceMock {
   }
 
   logout(): Observable<void> {
+    if (this.shouldFailLogout) {
+      return this.delayedError({ status: 500, message: 'Server error during logout' });
+    }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
   forgotPasswordRequest(req: ForgotPasswordRequest): Observable<void> {
+    if (this.shouldFailForgotPasswordRequest) {
+      return this.delayedError({ status: 500, message: 'Server error during forgot password request' });
+    }
+
     if (!MOCK_USERS[req.email]) {
       return this.delayedError({ status: 404, message: 'Email not found' });
     } else if (req.tenantId && MOCK_USERS[req.email].tenantId !== req.tenantId) {
@@ -71,6 +89,10 @@ export class AuthServiceMock {
   }
 
   confirmPasswordChange(data: PasswordChange): Observable<void> {
+    if (this.shouldFailConfirmPasswordChange) {
+      return this.delayedError({ status: 500, message: 'Server error during password change' });
+    }
+
     if (!data.oldPassword) {
       return this.delayedError({ status: 400, message: 'Old password is required' });
     }
@@ -78,17 +100,28 @@ export class AuthServiceMock {
   }
 
   confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
+    if (this.shouldFailConfirmPasswordReset) {
+      return this.delayedError({ status: 500, message: 'Server error during password reset' });
+    }
+
     if (!req.token || req.token === 'expired-token') {
       return this.delayedError({ status: 400, message: 'Invalid or expired token' });
     }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }
 
-  confirmAccountCreation(req: ConfirmAccountResponse): Observable<void> {
+  confirmAccountCreation(req: ConfirmAccountResponse): Observable<AuthResponse> {
+    if (this.shouldFailConfirmAccountCreation) {
+      return this.delayedError({ status: 500, message: 'Server error during account confirmation' });
+    }
+
     if (!req.token || req.token === 'expired-token') {
       return this.delayedError({ status: 400, message: 'Invalid or expired token' });
     }
-    return of(undefined).pipe(delay(MOCK_DELAY));
+
+    const entry = Object.values(MOCK_USERS)[0];
+    const jwt = this.buildJwt(entry.userId, entry.role, entry.tenantId);
+    return of({ jwt }).pipe(delay(MOCK_DELAY));
   }
 
   private buildJwt(userId: string, role: string, tenantId?: string): string {
@@ -96,7 +129,7 @@ export class AuthServiceMock {
     const payload = btoa(
       JSON.stringify({
         uid: userId,
-        rol: userRoleMapperJWT.toBackend(userRoleMapper.fromBackend(role)), // Oscenità assurda ma dovrebbe funzionare
+        rol: userRoleMapperJWT.toBackend(userRoleMapper.fromBackend(role)),
         tid: tenantId,
         exp: Math.floor(Date.now() / 1000) + 3600,
       }),

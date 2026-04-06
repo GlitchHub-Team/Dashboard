@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -48,8 +48,8 @@ export class CreateSensorDialog {
     interval: [1000, [Validators.required, Validators.min(100)]],
   });
 
-  protected generalError = '';
-  protected isSubmitting = false;
+  protected readonly generalError = signal('');
+  protected readonly isSubmitting = signal(false);
 
   protected onSubmit(): void {
     if (!this.sensorForm.valid) {
@@ -57,8 +57,8 @@ export class CreateSensorDialog {
       return;
     }
 
-    this.isSubmitting = true;
-    this.generalError = '';
+    this.isSubmitting.set(true);
+    this.generalError.set('');
 
     const sensorConfig: SensorConfig = {
       gatewayId: this.data.id,
@@ -69,12 +69,12 @@ export class CreateSensorDialog {
 
     this.sensorService.addNewSensor(sensorConfig).subscribe({
       next: () => {
-        this.isSubmitting = false;
+        this.isSubmitting.set(false);
         this.dialogRef.close(true);
       },
       error: (err: ApiError) => {
-        this.isSubmitting = false;
-        this.generalError = err.message ?? 'Failed to create sensor. Please try again.';
+        this.isSubmitting.set(false);
+        this.generalError.set(err.message ?? 'Failed to create sensor. Please try again.');
       },
     });
   }

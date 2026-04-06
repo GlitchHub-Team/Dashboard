@@ -1,12 +1,12 @@
 // mocks/sensor-service.mock.ts
 import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { delay, switchMap } from 'rxjs/operators';
 
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../models/sensor/sensor-config.model';
 import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-response.model';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable({
   providedIn: 'root',
@@ -208,23 +208,20 @@ export class SensorApiClientServiceMock {
     'tenant-5': [],
   };
 
-  public getSensorListByGateway(
+  private readonly shouldFailGetSensorListByGateway = false;
+  private readonly shouldFailGetSensorListByTenant = false;
+  private readonly shouldFailAddNewSensor = false;
+  private readonly shouldFailDeleteSensor = true;
+
+public getSensorListByGateway(
     gatewayId: string,
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetSensorListByGateway) {
+      return this.delayedError(400, 'Failed to fetch sensors by gateway');
     }
+
     const all = this.mockSensors.get(gatewayId) ?? [];
     return of(this.paginate(all, page, limit)).pipe(delay(600));
   }
@@ -234,19 +231,24 @@ export class SensorApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
+    if (this.shouldFailGetSensorListByTenant) {
+      return this.delayedError(400, 'Failed to fetch sensors by tenant');
+    }
+
     const gatewayIds = this.tenantGatewayMap[tenantId] ?? [];
     const all = gatewayIds.flatMap((id) => this.mockSensors.get(id) ?? []);
     return of(this.paginate(all, page, limit)).pipe(delay(800));
   }
 
   public addNewSensor(config: SensorConfig): Observable<SensorBackend> {
+    if (this.shouldFailAddNewSensor) {
+      return this.delayedError(400, 'Failed to create sensor');
+    }
+
     const gatewaySensors = this.mockSensors.get(config.gatewayId);
 
     if (!gatewaySensors) {
-      return throwError(() => ({
-        status: 404,
-        message: `Gateway ${config.gatewayId} not found`,
-      })).pipe(delay(400));
+      return this.delayedError(404, `Gateway ${config.gatewayId} not found`);
     }
 
     const newSensor: SensorBackend = {
@@ -255,7 +257,7 @@ export class SensorApiClientServiceMock {
       sensor_name: config.name,
       data_interval: config.dataInterval,
       profile: config.profile,
-      status: 'attivo',
+      status: 'active',
     };
 
     gatewaySensors.push(newSensor);
@@ -264,6 +266,10 @@ export class SensorApiClientServiceMock {
   }
 
   public deleteSensor(sensorId: string): Observable<void> {
+    if (this.shouldFailDeleteSensor) {
+      return this.delayedError(400, 'Failed to delete sensor');
+    }
+
     let found = false;
 
     for (const [gatewayId, sensors] of this.mockSensors) {
@@ -276,10 +282,7 @@ export class SensorApiClientServiceMock {
     }
 
     if (!found) {
-      return throwError(() => ({
-        status: 404,
-        message: `Sensor ${sensorId} not found`,
-      })).pipe(delay(400));
+      return this.delayedError(404, `Sensor ${sensorId} not found`);
     }
 
     return of(undefined).pipe(delay(400));
@@ -294,5 +297,11 @@ export class SensorApiClientServiceMock {
       total: items.length,
       sensors,
     };
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(
+      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
+    );
   }
 }

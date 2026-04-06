@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { delay, Observable, of, throwError } from 'rxjs';
+import { delay, Observable, of, switchMap, throwError, timer } from 'rxjs';
 
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../models/gateway/gateway-config.model';
 import { PaginatedGatewayResponse } from '../models/gateway/paginated-gateway-response.model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable({
   providedIn: 'root',
@@ -235,24 +236,20 @@ export class GatewayApiClientServiceMock {
       status: 'active',
       interval: 60,
     },
-  ];
+  ]
+  
+  private readonly shouldFailGetGatewayListByTenant = false;
+  private readonly shouldFailGetGatewayList = false;
+  private readonly shouldFailAddNewGateway = false;
+  private readonly shouldFailDeleteGateway = true;
 
   public getGatewayListByTenant(
     tenantId: string,
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetGatewayListByTenant) {
+      return this.delayedError(400, 'Failed to fetch gateways by tenant');
     }
 
     const filtered = this.mockGateways.filter((g) => g.tenant_id === tenantId);
@@ -263,33 +260,16 @@ export class GatewayApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetGatewayList) {
+      return this.delayedError(400, 'Failed to fetch gateways');
     }
+
     return of(this.paginate(this.mockGateways, page, limit)).pipe(delay(800));
   }
 
   public addNewGateway(config: GatewayConfig): Observable<GatewayBackend> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailAddNewGateway) {
+      return this.delayedError(400, 'Failed to create gateway');
     }
 
     const newGateway: GatewayBackend = {
@@ -305,26 +285,14 @@ export class GatewayApiClientServiceMock {
   }
 
   public deleteGateway(gatewayId: string): Observable<void> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailDeleteGateway) {
+      return this.delayedError(400, 'Failed to delete gateway');
     }
 
     const index = this.mockGateways.findIndex((g) => g.gateway_id === gatewayId);
 
     if (index === -1) {
-      return throwError(() => ({
-        status: 404,
-        message: `Gateway ${gatewayId} not found`,
-      })).pipe(delay(400));
+      return this.delayedError(404, `Gateway ${gatewayId} not found`);
     }
 
     this.mockGateways.splice(index, 1);
@@ -340,5 +308,11 @@ export class GatewayApiClientServiceMock {
       total: items.length,
       gateways,
     };
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(
+      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
+    );
   }
 }
