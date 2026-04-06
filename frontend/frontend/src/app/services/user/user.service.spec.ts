@@ -135,7 +135,7 @@ describe('UserService', () => {
 
       service.retrieveUsers(role, tenantId);
 
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(role, 0, 10, tenantId);
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(role, 1, 10, tenantId);
       expect(userAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(rawPaginatedResponse);
       expect(service.loading()).toBe(false);
       expect(service.userList()).toEqual(mockUsers);
@@ -166,7 +166,7 @@ describe('UserService', () => {
 
       expect(service.pageIndex()).toBe(2);
       expect(service.limit()).toBe(25);
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 2, 25, 'tenant-1');
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 3, 25, 'tenant-1');
     });
   });
 
@@ -214,7 +214,7 @@ describe('UserService', () => {
       });
 
       expect(userApiMock.deleteUser).toHaveBeenCalledWith('1', UserRole.TENANT_USER, 't1');
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 0, 10, 't1');
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 1, 10, 't1');
       expect(service.userList()).toEqual(mockUsers);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();

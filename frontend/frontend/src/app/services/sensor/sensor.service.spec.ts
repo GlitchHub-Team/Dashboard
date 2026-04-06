@@ -155,7 +155,7 @@ describe('SensorService', () => {
       mockListSuccess(apiKey);
       invoke(service, 0, 10);
 
-      expect(sensorApiMock[apiKey]).toHaveBeenCalledWith(id, 0, 10);
+      expect(sensorApiMock[apiKey]).toHaveBeenCalledWith(id, 1, 10);
       expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
       expect(service.sensorList()).toEqual(mockSensors);
       expect(service.total()).toBe(10);
@@ -286,7 +286,7 @@ describe('SensorService', () => {
       service.deleteSensor('s-1').subscribe();
 
       expect(sensorApiMock.deleteSensor).toHaveBeenCalledWith('s-1');
-      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 0, 10);
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 1, 10);
       expect(service.loading()).toBe(false);
     });
 
@@ -336,7 +336,7 @@ describe('SensorService', () => {
 
       service.changePage(2, 20);
 
-      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 2, 20);
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 3, 20);
     });
 
     it('should refetch by tenant when tenant context is active', () => {
@@ -347,7 +347,7 @@ describe('SensorService', () => {
 
       service.changePage(3, 15);
 
-      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 3, 15);
+      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 4, 15);
     });
 
     it('should do nothing if no context is set', () => {

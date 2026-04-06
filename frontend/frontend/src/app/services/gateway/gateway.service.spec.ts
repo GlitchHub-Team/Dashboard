@@ -121,7 +121,7 @@ describe('GatewayService', () => {
     it('should call api and map through adapter with tenantId', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
-      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 0, 10);
+      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 1, 10);
       expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
     });
 
@@ -161,7 +161,7 @@ describe('GatewayService', () => {
     it('should call api and map through adapter without tenantId', () => {
       mockListSuccess();
       service.getGateways(0, 10);
-      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(0, 10);
+      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(1, 10);
       expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
     });
 
@@ -291,7 +291,7 @@ describe('GatewayService', () => {
       service.deleteGateway('gw-1').subscribe();
 
       expect(gatewayApiMock.deleteGateway).toHaveBeenCalledWith('gw-1');
-      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 0, 10);
+      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 1, 10);
       expect(service.loading()).toBe(false);
     });
 
@@ -347,7 +347,7 @@ describe('GatewayService', () => {
 
       service.changePage(2, 20);
 
-      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 2, 20);
+      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 3, 20);
     });
 
     it('should refetch all gateways when no tenant context is set', () => {
@@ -358,7 +358,7 @@ describe('GatewayService', () => {
 
       service.changePage(3, 15);
 
-      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(3, 15);
+      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(4, 15);
     });
 
     it('should call getGateways by default when never fetched before', () => {
@@ -366,7 +366,7 @@ describe('GatewayService', () => {
 
       service.changePage(1, 10);
 
-      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(1, 10);
+      expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(2, 10);
       expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
     });
   });
