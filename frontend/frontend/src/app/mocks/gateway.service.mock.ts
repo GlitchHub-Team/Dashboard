@@ -332,7 +332,7 @@ export class GatewayApiClientServiceMock {
   }
 
   private paginate<T>(items: T[], page: number, limit: number): PaginatedGatewayResponse<T> {
-    const start = page * limit;
+    const start = (page - 1) * limit;
     const gateways = items.slice(start, start + limit);
 
     return {

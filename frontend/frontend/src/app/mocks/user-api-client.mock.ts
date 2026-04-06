@@ -150,7 +150,7 @@ export class UserApiClientMockService {
 
   public getUsers(
     role: UserRole,
-    page = 0,
+    page = 1,
     size = 10,
     tenantId?: string,
   ): Observable<PaginatedUserResponse<UserBackend>> {
@@ -163,7 +163,8 @@ export class UserApiClientMockService {
       filteredUsers = filteredUsers.filter((user) => user.tenant_id === tenantId);
     }
     const total = filteredUsers.length;
-    const users = filteredUsers.slice(page * size, (page + 1) * size);
+    const start = (page - 1) * size;
+    const users = filteredUsers.slice(start, start + size);
     return of({ count: users.length, total, users }).pipe(delay(500));
   }
 

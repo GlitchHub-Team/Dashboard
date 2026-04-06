@@ -39,7 +39,7 @@ export class SensorService {
     this.setGettingSensorsState();
 
     this.sensorApi
-      .getSensorListByGateway(gatewayId, page, limit)
+      .getSensorListByGateway(gatewayId, page + 1, limit)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -64,7 +64,7 @@ export class SensorService {
     this.setGettingSensorsState();
 
     this.sensorApi
-      .getSensorListByTenant(tenantId, page, limit)
+      .getSensorListByTenant(tenantId, page + 1, limit)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
         map((response) => this.adapter.fromPaginatedDTO(response)),

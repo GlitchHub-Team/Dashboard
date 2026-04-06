@@ -286,7 +286,7 @@ export class SensorApiClientServiceMock {
   }
 
   private paginate<T>(items: T[], page: number, limit: number): PaginatedSensorResponse<T> {
-    const start = page * limit;
+    const start = (page - 1) * limit;
     const sensors = items.slice(start, start + limit);
 
     return {
