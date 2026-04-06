@@ -15,8 +15,8 @@ describe('TenantService', () => {
   let service: TenantService;
 
   const tenantBackendList: TenantBackend[] = [
-    { tenant_id: 'tenant-01', name: 'Tenant 1', can_impersonate: false },
-    { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
+    { tenant_id: 'tenant-01', tenant_name: 'Tenant 1', can_impersonate: false },
+    { tenant_id: 'tenant-02', tenant_name: 'Tenant 2', can_impersonate: true },
   ];
 
   const paginatedBackendResponse: PaginatedTenantResponse<TenantBackend> = {
@@ -39,7 +39,7 @@ describe('TenantService', () => {
   const mockConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
   const createdTenantBackend: TenantBackend = {
     tenant_id: 'tenant-03',
-    name: 'Tenant 3',
+    tenant_name: 'Tenant 3',
     can_impersonate: false,
   };
   const createdTenant: Tenant = {

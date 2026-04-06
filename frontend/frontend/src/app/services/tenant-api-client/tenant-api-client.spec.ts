@@ -18,15 +18,15 @@ describe('TenantApiClientService', () => {
     count: 2,
     total: 2,
     tenants: [
-      { tenant_id: 'tenant-01', name: 'Tenant 1', can_impersonate: false },
-      { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
+      { tenant_id: 'tenant-01', tenant_name: 'Tenant 1', can_impersonate: false },
+      { tenant_id: 'tenant-02', tenant_name: 'Tenant 2', can_impersonate: true },
     ],
   };
 
   const tenantConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
   const createdTenant: TenantBackend = {
     tenant_id: 'tenant-03',
-    name: 'Tenant 3',
+    tenant_name: 'Tenant 3',
     can_impersonate: false,
   };
 
@@ -85,7 +85,7 @@ describe('TenantApiClientService', () => {
       const req = httpMock.expectOne(`${apiUrl}/tenant`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
-        name: tenantConfig.name,
+        tenant_name: tenantConfig.name,
         can_impersonate: tenantConfig.canImpersonate,
       });
       req.flush(createdTenant);
