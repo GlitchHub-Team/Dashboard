@@ -48,7 +48,6 @@ export class UserApiClientMockService {
       username: 'viewer',
       email: 'viewer@example.com',
       user_role: 'super_admin',
-      tenant_id: 'tenant-2',
     },
     {
       user_id: 7,
@@ -151,7 +150,7 @@ export class UserApiClientMockService {
   public getUsers(
     role: UserRole,
     page = 1,
-    size = 10,
+    limit = 10,
     tenantId?: string,
   ): Observable<PaginatedUserResponse<UserBackend>> {
     const roleString = userRoleMapper.toBackend(role);
@@ -163,8 +162,8 @@ export class UserApiClientMockService {
       filteredUsers = filteredUsers.filter((user) => user.tenant_id === tenantId);
     }
     const total = filteredUsers.length;
-    const start = (page - 1) * size;
-    const users = filteredUsers.slice(start, start + size);
+    const start = (page - 1) * limit;
+    const users = filteredUsers.slice(start, start + limit);
     return of({ count: users.length, total, users }).pipe(delay(500));
   }
 
