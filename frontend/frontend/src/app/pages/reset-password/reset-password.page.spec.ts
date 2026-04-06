@@ -102,21 +102,10 @@ describe('ResetPasswordPage', () => {
   });
 
   describe('initial state', () => {
-    it('should create', () => {
+    it('should create, render container, heading, and reset password form', () => {
       expect(component).toBeTruthy();
-    });
-
-    it('should render the reset container', () => {
-      const container = fixture.debugElement.query(By.css('.reset-container'));
-      expect(container).toBeTruthy();
-    });
-
-    it('should render the heading', () => {
-      const heading = fixture.debugElement.query(By.css('h1'));
-      expect(heading.nativeElement.textContent).toContain('Reimposta Password');
-    });
-
-    it('should render the reset password form', () => {
+      expect(fixture.debugElement.query(By.css('.reset-container'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('h1')).nativeElement.textContent).toContain('Reimposta Password');
       expect(resetFormDebug).toBeTruthy();
     });
   });

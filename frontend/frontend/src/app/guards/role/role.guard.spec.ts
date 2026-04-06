@@ -44,20 +44,18 @@ describe('roleGuard', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should return true and NOT navigate when the user HAS a required permission', () => {
-    permissionService.canAny.mockReturnValue(true);
+  it.each([
+    [true,  false],
+    [false, true],
+  ])('canAny=%s => guard returns %s and navigate called=%s', (hasPermission, expectNavigate) => {
+    permissionService.canAny.mockReturnValue(hasPermission);
 
-    expect(executeGuard({ permissions: requiredPermissions })).toBe(true);
+    expect(executeGuard({ permissions: requiredPermissions })).toBe(hasPermission);
     expect(permissionService.canAny).toHaveBeenCalledWith(requiredPermissions);
-    expect(router.navigate).not.toHaveBeenCalled();
-  });
-
-  it('should return false and navigate to /dashboard when the user does NOT have any required permission', () => {
-    permissionService.canAny.mockReturnValue(false);
-
-    expect(executeGuard({ permissions: requiredPermissions })).toBe(false);
-    expect(permissionService.canAny).toHaveBeenCalledWith(requiredPermissions);
-    expect(router.navigate).toHaveBeenCalledOnce();
-    expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
+    if (expectNavigate) {
+      expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
+    } else {
+      expect(router.navigate).not.toHaveBeenCalled();
+    }
   });
 });

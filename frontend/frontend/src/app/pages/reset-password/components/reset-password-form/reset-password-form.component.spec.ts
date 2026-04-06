@@ -27,15 +27,12 @@ describe('ResetPasswordFormComponent', () => {
   }
 
   describe('initial state', () => {
-    it('should create with invalid form and default input values', () => {
+    it('should create with invalid form, default inputs, and render form without success/progress/error', () => {
       expect(component).toBeTruthy();
       expect(component['resetPasswordForm'].valid).toBe(false);
       expect(component.loading()).toBe(false);
       expect(component.generalError()).toBeNull();
       expect(component.success()).toBe(false);
-    });
-
-    it('should render form but not success banner, progress bar, or error banner', () => {
       expect(fixture.debugElement.query(By.css('form'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('.success-banner'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();

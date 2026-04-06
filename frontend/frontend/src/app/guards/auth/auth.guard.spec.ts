@@ -30,18 +30,17 @@ describe('authGuard', () => {
     return TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
   };
 
-  it('should return true and NOT navigate when the user is authenticated', () => {
-    authSessionService.isAuthenticated.mockReturnValue(true);
+  it.each([
+    [true,  false],
+    [false, true],
+  ])('isAuthenticated=%s => guard returns %s and navigate called=%s', (isAuthenticated, expectNavigate) => {
+    authSessionService.isAuthenticated.mockReturnValue(isAuthenticated);
 
-    expect(executeGuard()).toBe(true);
-    expect(router.navigate).not.toHaveBeenCalled();
-  });
-
-  it('should return false and navigate to /login when the user is NOT authenticated', () => {
-    authSessionService.isAuthenticated.mockReturnValue(false);
-
-    expect(executeGuard()).toBe(false);
-    expect(router.navigate).toHaveBeenCalledOnce();
-    expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    expect(executeGuard()).toBe(isAuthenticated);
+    if (expectNavigate) {
+      expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    } else {
+      expect(router.navigate).not.toHaveBeenCalled();
+    }
   });
 });

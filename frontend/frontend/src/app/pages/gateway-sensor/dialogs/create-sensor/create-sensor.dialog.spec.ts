@@ -128,29 +128,17 @@ describe('CreateSensorDialog (Unit)', () => {
   });
 
   describe('submit error', () => {
-    it('should show API error message, not close dialog, and reset submitting state', () => {
+    it.each([
+      [{ message: 'Duplicate sensor name' } as ApiError, 'Duplicate sensor name'],
+      [{ status: 500 } as ApiError, 'Failed to create sensor'],
+    ])('should show error banner and not close dialog', (error, expectedMsg) => {
       fillValidForm();
-      sensorServiceMock.addNewSensor.mockReturnValue(
-        throwError(() => ({ message: 'Duplicate sensor name' }) as ApiError),
-      );
+      sensorServiceMock.addNewSensor.mockReturnValue(throwError(() => error));
       submitBtn().nativeElement.click();
       fixture.detectChanges();
-      const banner = fixture.debugElement.query(By.css('.error-banner'));
-      expect(banner.nativeElement.textContent).toContain('Duplicate sensor name');
+      expect(fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent).toContain(expectedMsg);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
       expect(component['isSubmitting']).toBe(false);
-    });
-
-    it('should show fallback error when API error has no message', () => {
-      fillValidForm();
-      sensorServiceMock.addNewSensor.mockReturnValue(
-        throwError(() => ({ status: 500 }) as ApiError),
-      );
-      submitBtn().nativeElement.click();
-      fixture.detectChanges();
-      expect(
-        fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent,
-      ).toContain('Failed to create sensor');
     });
   });
 

@@ -59,60 +59,35 @@ describe('SensorApiClientService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('getSensorListByGateway', () => {
-    it('should send GET request with correct URL and query params', () => {
-      service.getSensorListByGateway('gw-1', 1, 20).subscribe((response) => {
+  describe.each([
+    {
+      label: 'getSensorListByGateway',
+      invoke: (s: SensorApiClientService) => s.getSensorListByGateway('gw-1', 1, 20),
+      url: `${apiUrl}/gateway/gw-1/sensors?page=1&limit=20`,
+      page: '1',
+      limit: '20',
+    },
+    {
+      label: 'getSensorListByTenant',
+      invoke: (s: SensorApiClientService) => s.getSensorListByTenant('tenant-1', 1, 10),
+      url: `${apiUrl}/tenant/tenant-1/sensors?page=1&limit=10`,
+      page: '1',
+      limit: '10',
+    },
+  ])('$label', ({ invoke, url, page, limit }) => {
+    it('should send GET with correct URL, params, and return a PaginatedResponse', () => {
+      invoke(service).subscribe((response) => {
         expect(response).toEqual(mockPaginatedResponse);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/sensors?page=1&limit=20`);
-      expect(req.request.method).toBe('GET');
-      expect(req.request.params.get('page')).toBe('1');
-      expect(req.request.params.get('limit')).toBe('20');
-      req.flush(mockPaginatedResponse);
-    });
-
-    it('should return a PaginatedResponse of SensorBackend', () => {
-      service.getSensorListByGateway('gw-1', 1, 20).subscribe((response) => {
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
-        expect(response.sensors.length).toBe(2);
         expect(response.sensors[0].sensor_id).toBe('s-1');
         expect(response.sensors[1].sensor_id).toBe('s-2');
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/sensors?page=1&limit=20`);
-      req.flush(mockPaginatedResponse);
-    });
-  });
-
-  describe('getSensorListByTenant', () => {
-    it('should send GET request with correct URL and query params', () => {
-      service.getSensorListByTenant('tenant-1', 1, 10).subscribe((response) => {
-        expect(response).toEqual(mockPaginatedResponse);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/sensors?page=1&limit=10`);
+      const req = httpMock.expectOne(url);
       expect(req.request.method).toBe('GET');
-      expect(req.request.params.get('page')).toBe('1');
-      expect(req.request.params.get('limit')).toBe('10');
-      req.flush(mockPaginatedResponse);
-    });
-
-    it('should return a PaginatedResponse of SensorBackend', () => {
-      service.getSensorListByTenant('tenant-1', 1, 10).subscribe((response) => {
-        expect(response.count).toBe(2);
-        expect(response.total).toBe(10);
-        expect(response.sensors.length).toBe(2);
-        expect(response.sensors[0].sensor_id).toBe('s-1');
-        expect(response.sensors[0].sensor_name).toBe('Temperature');
-        expect(response.sensors[0].sensor_interval).toBe(60);
-        expect(response.sensors[1].sensor_id).toBe('s-2');
-        expect(response.sensors[1].sensor_name).toBe('Humidity');
-        expect(response.sensors[1].sensor_interval).toBe(60);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/sensors?page=1&limit=10`);
+      expect(req.request.params.get('page')).toBe(page);
+      expect(req.request.params.get('limit')).toBe(limit);
       req.flush(mockPaginatedResponse);
     });
   });
@@ -134,9 +109,12 @@ describe('SensorApiClientService', () => {
       status: 'active',
     };
 
-    it('should send POST request with sensor config as body', () => {
+    it('should send POST with sensor config body and return a SensorBackend', () => {
       service.addNewSensor(mockConfig).subscribe((sensor) => {
         expect(sensor).toEqual(mockResponse);
+        expect(sensor.sensor_id).toBe('s-3');
+        expect(sensor.sensor_name).toBe('New Sensor');
+        expect(sensor.sensor_interval).toBe(60);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/sensor`);
@@ -149,34 +127,16 @@ describe('SensorApiClientService', () => {
       });
       req.flush(mockResponse);
     });
-
-    it('should return a SensorBackend', () => {
-      service.addNewSensor(mockConfig).subscribe((sensor) => {
-        expect(sensor.sensor_id).toBe('s-3');
-        expect(sensor.sensor_name).toBe('New Sensor');
-        expect(sensor.sensor_interval).toBe(60);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/sensor`);
-      req.flush(mockResponse);
-    });
   });
 
   describe('deleteSensor', () => {
-    it('should send DELETE request with sensor id in the URL', () => {
-      service.deleteSensor('s-1').subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}/sensor/s-1`);
-      expect(req.request.method).toBe('DELETE');
-      req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
+    it('should send DELETE with sensor id in URL and return void', () => {
       service.deleteSensor('s-1').subscribe((result) => {
         expect(result).toBeNull();
       });
 
       const req = httpMock.expectOne(`${apiUrl}/sensor/s-1`);
+      expect(req.request.method).toBe('DELETE');
       req.flush(null);
     });
   });

@@ -99,17 +99,11 @@ describe('ConfirmAccountPage', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should render the confirm-account container', () => {
-      const container = fixture.debugElement.query(By.css('.confirm-account-container'));
-      expect(container).toBeTruthy();
-    });
-
-    it('should render the heading', () => {
-      const heading = fixture.debugElement.query(By.css('h1'));
-      expect(heading.nativeElement.textContent).toContain('Conferma Account');
-    });
-
-    it('should render the confirm account form', () => {
+    it('should render the confirm-account container, heading, and form', () => {
+      expect(fixture.debugElement.query(By.css('.confirm-account-container'))).toBeTruthy();
+      expect(
+        fixture.debugElement.query(By.css('h1')).nativeElement.textContent,
+      ).toContain('Conferma Account');
       expect(confirmFormDebug).toBeTruthy();
     });
   });
@@ -117,7 +111,7 @@ describe('ConfirmAccountPage', () => {
   describe('onConfirmAccount', () => {
     const mockRequest: ConfirmAccountResponse = { token: '', newPassword: 'newSecret123' };
 
-    it('should call confirmAccount with empty token and undefined tenantId when route has none', () => {
+    it('should call confirmAccount with empty token and undefined tenantId, then navigate to /dashboard on success', () => {
       authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
 
       confirmFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
@@ -128,6 +122,7 @@ describe('ConfirmAccountPage', () => {
         token: '',
         tenantId: undefined,
       });
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
     it('should merge token from route param into the request', () => {
@@ -176,15 +171,6 @@ describe('ConfirmAccountPage', () => {
         token: 'route-token',
         tenantId: 'tenant-01',
       });
-    });
-
-    it('should navigate to /dashboard on success', () => {
-      authActionsServiceMock.confirmAccount.mockReturnValue(of(undefined));
-
-      confirmFormDebug.triggerEventHandler('submitConfirmAccount', mockRequest);
-      fixture.detectChanges();
-
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
     it('should not navigate when service returns EMPTY', () => {

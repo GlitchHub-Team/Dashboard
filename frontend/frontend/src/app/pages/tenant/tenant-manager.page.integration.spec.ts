@@ -191,11 +191,17 @@ describe('TenantManagerPage (Integration)', () => {
         ['/user-management/tenant-users'],
         { tenantId: 'tenant-1' },
       ],
+      [
+        'dashboard (second tenant)',
+        (f: ComponentFixture<TenantManagerPage>) => getDashboardButtons(f)[1],
+        ['/dashboard'],
+        { tenantId: 'tenant-2' },
+      ],
     ] as const)(
       'should navigate to %s when button is clicked',
       (_label, getBtn, path, queryParams) => {
         const { fixture, tenantServiceMock, routerMock } = setupTestBed();
-        (tenantServiceMock.tenantList as WritableSignal<Tenant[]>).set([mockTenants[0]]);
+        (tenantServiceMock.tenantList as WritableSignal<Tenant[]>).set(mockTenants);
         fixture.detectChanges();
 
         getBtn(fixture).click();
@@ -204,19 +210,6 @@ describe('TenantManagerPage (Integration)', () => {
         expect(routerMock.navigate).toHaveBeenCalledWith(path, { queryParams });
       },
     );
-
-    it('should navigate with correct tenantId for second tenant', () => {
-      const { fixture, tenantServiceMock, routerMock } = setupTestBed();
-      (tenantServiceMock.tenantList as WritableSignal<Tenant[]>).set(mockTenants);
-      fixture.detectChanges();
-
-      getDashboardButtons(fixture)[1].click();
-      fixture.detectChanges();
-
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard'], {
-        queryParams: { tenantId: 'tenant-2' },
-      });
-    });
   });
 
   describe('Table -> Page: Pagination', () => {

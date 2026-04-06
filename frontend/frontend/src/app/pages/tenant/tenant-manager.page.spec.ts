@@ -76,11 +76,8 @@ describe('TenantManagerPage', () => {
     testApi = component as unknown as TenantManagerPageTestApi;
   });
 
-  it('should create', () => {
+  it('should create and fetch tenants on init', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should fetch tenants on init', () => {
     fixture.detectChanges();
     expect(mockTenantService.retrieveTenants).toHaveBeenCalledTimes(1);
   });

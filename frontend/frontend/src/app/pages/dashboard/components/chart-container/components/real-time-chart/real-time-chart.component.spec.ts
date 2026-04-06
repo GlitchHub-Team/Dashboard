@@ -1,191 +1,277 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ComponentRef, Directive, input } from '@angular/core';
-import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { RealTimeChartComponent } from './real-time-chart.component';
-import { BaseChartDirective } from 'ng2-charts';
 import { SensorReading } from '../../../../../../models/sensor-data/sensor-reading.model';
+import { FieldDescriptor } from '../../../../../../models/sensor-data/field-descriptor.model';
 import { Sensor } from '../../../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.enum';
 import { Status } from '../../../../../../models/gateway-sensor-status.enum';
-import { ChartData, ChartOptions } from 'chart.js';
 
-@Directive({ selector: 'canvas[baseChart]', standalone: true })
-class StubBaseChart {
-  type = input<string>();
-  data = input<ChartData<'line'>>();
-  options = input<ChartOptions<'line'>>();
+function createSensor(overrides: Partial<Sensor> = {}): Sensor {
+  return { id: 'sensor-1', gatewayId: 'gw-1', name: 'Test Sensor', profile: SensorProfiles.HEART_RATE_SERVICE, status: Status.ACTIVE, dataInterval: 1000, ...overrides };
 }
 
-describe('RealTimeChartComponent (Unit)', () => {
+function createReadings(count: number, fieldKey: string, baseValue: number): SensorReading[] {
+  return Array.from({ length: count }, (_, i) => ({
+    timestamp: new Date(Date.now() - (count - i) * 1000).toISOString(),
+    value: { [fieldKey]: baseValue + i },
+  }));
+}
+
+function createMultiValueReadings(count: number, fields: Record<string, number>): SensorReading[] {
+  return Array.from({ length: count }, (_, i) => {
+    const value: Record<string, number> = {};
+    for (const [key, base] of Object.entries(fields)) value[key] = base + i;
+    return { timestamp: new Date(Date.now() - (count - i) * 1000).toISOString(), value };
+  });
+}
+
+const SINGLE_FIELD: FieldDescriptor[] = [{ key: 'bpm', label: 'Heart Rate', unit: 'bpm' }];
+const MULTI_FIELDS: FieldDescriptor[] = [
+  { key: 'spo2', label: 'Blood Oxygen', unit: '%' },
+  { key: 'pulseRate', label: 'Pulse Rate', unit: 'bpm' },
+];
+const ECG_FIELDS: FieldDescriptor[] = [{ key: 'ecg', label: 'ECG Waveform', unit: 'mV' }];
+
+describe('RealTimeChartComponent', () => {
   let fixture: ComponentFixture<RealTimeChartComponent>;
   let component: RealTimeChartComponent;
-  let componentRef: ComponentRef<RealTimeChartComponent>;
-
-  const mockSensor: Sensor = { id: 'sensor-1', gatewayId: 'gw-1', name: 'Heart Rate Sensor', profile: SensorProfiles.HEART_RATE_SERVICE, status: Status.ACTIVE, dataInterval: 1000 };
-  const mockReadings: SensorReading[] = [
-    { timestamp: '2025-01-01T10:00:00Z', value: 72 },
-    { timestamp: '2025-01-01T10:01:00Z', value: 75 },
-    { timestamp: '2025-01-01T10:02:00Z', value: 70 },
-  ];
-
-  const setInputs = (sensor: Sensor, readings: SensorReading[]) => {
-    componentRef.setInput('sensor', sensor);
-    componentRef.setInput('readings', readings);
-    fixture.detectChanges();
-  };
-
-  const getStubChart = () =>
-    fixture.debugElement.query(By.directive(StubBaseChart)).injector.get(StubBaseChart);
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [RealTimeChartComponent] })
-      .overrideComponent(RealTimeChartComponent, {
-        remove: { imports: [BaseChartDirective] },
-        add: { imports: [StubBaseChart] },
-      })
-      .compileComponents();
-
+    await TestBed.configureTestingModule({ imports: [RealTimeChartComponent] }).compileComponents();
     fixture = TestBed.createComponent(RealTimeChartComponent);
     component = fixture.componentInstance;
-    componentRef = fixture.componentRef;
   });
 
-  describe('template', () => {
-    it('should render a canvas element', () => {
-      setInputs(mockSensor, mockReadings);
-      expect(fixture.nativeElement.querySelector('canvas')).toBeTruthy();
-    });
+  function setup(readings: SensorReading[], sensor: Sensor, fields: FieldDescriptor[]) {
+    fixture.componentRef.setInput('readings', readings);
+    fixture.componentRef.setInput('sensor', sensor);
+    fixture.componentRef.setInput('fields', fields);
+    fixture.detectChanges();
+  }
 
-    it('should pass chartData and chartOptions to canvas', () => {
-      setInputs(mockSensor, mockReadings);
-      const stub = getStubChart();
-      expect(stub.data()?.datasets[0].data).toEqual([72, 75, 70]);
-      expect(stub.options()?.responsive).toBe(true);
-    });
-  });
-
-  describe('computed: profileDisplay', () => {
-    it.each([
-      [SensorProfiles.HEART_RATE_SERVICE, { label: 'Heart Rate', unit: 'bpm' }],
-      [SensorProfiles.PULSE_OXIMETER_SERVICE, { label: 'Pulse Oximeter', unit: '%SpO₂' }],
-      [SensorProfiles.CUSTOM_ECG_SERVICE, { label: 'ECG', unit: 'mV' }],
-      [SensorProfiles.HEALTH_THERMOMETER_SERVICE, { label: 'Thermometer', unit: '°C' }],
-      [SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE, { label: 'Environmental', unit: '%' }],
-    ] as const)('should return correct display for %s', (profile, expected) => {
-      setInputs({ ...mockSensor, profile }, mockReadings);
-      expect(component['profileDisplay']()).toEqual(expected);
+  describe('creation', () => {
+    it('should create the component', () => {
+      setup([], createSensor(), SINGLE_FIELD);
+      expect(component).toBeTruthy();
     });
   });
 
-  describe('computed: chartData', () => {
-    it('should map readings to chart labels using toLocaleTimeString', () => {
-      setInputs(mockSensor, mockReadings);
-      const labels = component['chartData']().labels!;
-      expect(labels).toHaveLength(3);
-      expect(labels[0]).toBe(new Date('2025-01-01T10:00:00Z').toLocaleTimeString());
-      expect(labels[1]).toBe(new Date('2025-01-01T10:01:00Z').toLocaleTimeString());
-      expect(labels[2]).toBe(new Date('2025-01-01T10:02:00Z').toLocaleTimeString());
+  describe('field selection', () => {
+    it('should auto-select the first field on init', () => {
+      setup(createReadings(5, 'bpm', 70), createSensor(), SINGLE_FIELD);
+      expect(component['selectedField']()).toBe('bpm');
     });
 
-    it('should map readings values to dataset data', () => {
-      setInputs(mockSensor, mockReadings);
-      const { datasets } = component['chartData']();
-      expect(datasets).toHaveLength(1);
-      expect(datasets[0].data).toEqual([72, 75, 70]);
+    describe('multi-field', () => {
+      beforeEach(() => setup(
+        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      ));
+
+      it('should auto-select first field', () => {
+        expect(component['selectedField']()).toBe('spo2');
+      });
+
+      it('should update selectedField when onFieldChange is called', () => {
+        component['onFieldChange']('pulseRate');
+        expect(component['selectedField']()).toBe('pulseRate');
+      });
+
+      it('should resolve the correct field descriptor after change', () => {
+        component['onFieldChange']('pulseRate');
+        expect(component['selectedFieldDescriptor']()).toEqual({ key: 'pulseRate', label: 'Pulse Rate', unit: 'bpm' });
+      });
+    });
+  });
+
+  describe('hasMultipleFields', () => {
+    it('should return false for single-field sensors', () => {
+      setup(createReadings(5, 'bpm', 70), createSensor(), SINGLE_FIELD);
+      expect(component['hasMultipleFields']()).toBe(false);
     });
 
-    it('should use profileDisplay label as dataset label', () => {
-      setInputs(mockSensor, mockReadings);
-      expect(component['chartData']().datasets[0].label).toBe('Heart Rate');
+    it('should return true for multi-field sensors', () => {
+      setup(createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      expect(component['hasMultipleFields']()).toBe(true);
+    });
+  });
+
+  describe('chartData', () => {
+    it('should return empty data when no field is selected', () => {
+      setup([], createSensor(), []);
+      const data = component['chartData']();
+      expect(data.labels).toEqual([]);
+      expect(data.datasets).toEqual([]);
     });
 
-    it('should set correct chart styling properties', () => {
-      setInputs(mockSensor, mockReadings);
+    it('should map readings to chart data for single-field sensor', () => {
+      setup(createReadings(3, 'bpm', 70), createSensor(), SINGLE_FIELD);
+      const data = component['chartData']();
+      expect(data.datasets.length).toBe(1);
+      expect(data.datasets[0].data).toEqual([70, 71, 72]);
+      expect(data.datasets[0].label).toBe('Heart Rate');
+      expect(data.labels!.length).toBe(3);
+    });
+
+    describe('multi-value sensor', () => {
+      beforeEach(() => setup(
+        createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      ));
+
+      it('should map readings to selected field', () => {
+        const data = component['chartData']();
+        expect(data.datasets[0].data).toEqual([95, 96, 97]);
+        expect(data.datasets[0].label).toBe('Blood Oxygen');
+      });
+
+      it('should update chart data when field selection changes', () => {
+        component['onFieldChange']('pulseRate');
+        const data = component['chartData']();
+        expect(data.datasets[0].data).toEqual([70, 71, 72]);
+        expect(data.datasets[0].label).toBe('Pulse Rate');
+      });
+    });
+
+    it('should use non-ECG styling for scalar sensors', () => {
+      setup(createReadings(3, 'bpm', 70), createSensor(), SINGLE_FIELD);
       const dataset = component['chartData']().datasets[0];
       expect(dataset.borderColor).toBe('#4caf50');
-      expect(dataset.backgroundColor).toBe('rgba(76, 175, 80, 0.1)');
       expect(dataset.fill).toBe(true);
       expect(dataset.tension).toBe(0.3);
       expect(dataset.pointRadius).toBe(2);
+      expect(dataset.borderWidth).toBe(2);
     });
 
-    it('should handle empty readings', () => {
-      setInputs(mockSensor, []);
-      const data = component['chartData']();
-      expect(data.labels).toHaveLength(0);
-      expect(data.datasets[0].data).toHaveLength(0);
-    });
-
-    it('should handle single reading', () => {
-      setInputs(mockSensor, [{ timestamp: '2025-01-01T10:00:00Z', value: 80 }]);
-      const data = component['chartData']();
-      expect(data.labels).toHaveLength(1);
-      expect(data.datasets[0].data).toEqual([80]);
-    });
-
-    it('should update when readings change', () => {
-      setInputs(mockSensor, mockReadings);
-      expect(component['chartData']().datasets[0].data).toEqual([72, 75, 70]);
-
-      componentRef.setInput('readings', [...mockReadings, { timestamp: '2025-01-01T10:03:00Z', value: 68 }]);
-      fixture.detectChanges();
-      expect(component['chartData']().datasets[0].data).toEqual([72, 75, 70, 68]);
-    });
-
-    it('should update label when sensor profile changes', () => {
-      setInputs(mockSensor, mockReadings);
-      expect(component['chartData']().datasets[0].label).toBe('Heart Rate');
-
-      componentRef.setInput('sensor', { ...mockSensor, profile: SensorProfiles.CUSTOM_ECG_SERVICE });
-      fixture.detectChanges();
-      expect(component['chartData']().datasets[0].label).toBe('ECG');
+    it('should use ECG styling for ECG sensor', () => {
+      setup(createReadings(3, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS);
+      const dataset = component['chartData']().datasets[0];
+      expect(dataset.borderColor).toBe('#00ff88');
+      expect(dataset.fill).toBe(false);
+      expect(dataset.tension).toBe(0.2);
+      expect(dataset.pointRadius).toBe(0);
+      expect(dataset.borderWidth).toBe(1.5);
     });
   });
 
-  describe('computed: chartOptions', () => {
-    it('should set responsive, maintainAspectRatio, and animation', () => {
-      setInputs(mockSensor, mockReadings);
-      const opts = component['chartOptions']();
-      expect(opts.responsive).toBe(true);
-      expect(opts.maintainAspectRatio).toBe(false);
-      expect(opts.animation).toBe(false);
+  describe('chartOptions', () => {
+    describe('scalar sensor', () => {
+      beforeEach(() => setup(createReadings(3, 'bpm', 70), createSensor(), SINGLE_FIELD));
+
+      it('should show x-axis, enable tooltip, and disable animation', () => {
+        const opts = component['chartOptions']();
+        expect(opts.scales!['x']!['display']).toBe(true);
+        expect(opts.plugins!.tooltip!['enabled']).toBe(true);
+        expect(opts.animation).toBe(false);
+      });
+
+      it('should set y-axis title from selected field', () => {
+        expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Heart Rate (bpm)');
+      });
     });
 
-    it('should set x axis title to "Time"', () => {
-      setInputs(mockSensor, mockReadings);
-      const xScale = component['chartOptions']().scales?.['x'] as any;
-      expect(xScale.title.display).toBe(true);
-      expect(xScale.title.text).toBe('Time');
+    describe('ECG sensor', () => {
+      beforeEach(() => setup(createReadings(3, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS));
+
+      it('should hide x-axis and disable tooltip', () => {
+        const opts = component['chartOptions']();
+        expect(opts.scales!['x']!['display']).toBe(false);
+        expect(opts.plugins!.tooltip!['enabled']).toBe(false);
+      });
     });
 
-    it('should set y axis title with unit', () => {
-      setInputs(mockSensor, mockReadings);
-      const yScale = component['chartOptions']().scales?.['y'] as any;
-      expect(yScale.title.display).toBe(true);
-      expect(yScale.title.text).toBe('Value (bpm)');
+    it('should update y-axis title when field changes', () => {
+      setup(createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      component['onFieldChange']('pulseRate');
+      expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Pulse Rate (bpm)');
     });
 
-    it('should set y axis title without unit for unknown profile', () => {
-      setInputs({ ...mockSensor, profile: 'unknown-profile' as SensorProfiles }, mockReadings);
-      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value');
+    it('should fallback y-axis title when no field selected', () => {
+      setup([], createSensor(), []);
+      expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Value');
+    });
+  });
+
+  describe('template - dropdown', () => {
+    it('should not render dropdown for single-field sensor', () => {
+      setup(createReadings(5, 'bpm', 70), createSensor(), SINGLE_FIELD);
+      expect(fixture.debugElement.query(By.css('mat-select'))).toBeNull();
     });
 
-    it('should enable legend at top position', () => {
-      setInputs(mockSensor, mockReadings);
-      const opts = component['chartOptions']();
-      expect(opts.plugins?.legend?.display).toBe(true);
-      expect(opts.plugins?.legend?.position).toBe('top');
+    describe('multi-field sensor', () => {
+      beforeEach(() => setup(
+        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      ));
+
+      it('should render dropdown', () => {
+        expect(fixture.debugElement.query(By.css('mat-select'))).not.toBeNull();
+      });
+
+      it('should render correct number of options', () => {
+        fixture.debugElement.query(By.css('.mat-mdc-select-trigger')).nativeElement.click();
+        fixture.detectChanges();
+        expect(fixture.debugElement.queryAll(By.css('mat-option')).length).toBe(2);
+      });
+
+      it('should display field labels with units in options', () => {
+        fixture.debugElement.query(By.css('.mat-mdc-select-trigger')).nativeElement.click();
+        fixture.detectChanges();
+        const texts = fixture.debugElement.queryAll(By.css('mat-option')).map((o) => o.nativeElement.textContent.trim());
+        expect(texts).toContain('Blood Oxygen (%)');
+        expect(texts).toContain('Pulse Rate (bpm)');
+      });
+    });
+  });
+
+  describe('template - canvas', () => {
+    it('should always render the chart canvas', () => {
+      setup([], createSensor(), SINGLE_FIELD);
+      expect(fixture.debugElement.query(By.css('canvas'))).not.toBeNull();
     });
 
-    it('should update y axis title when sensor profile changes', () => {
-      setInputs(mockSensor, mockReadings);
-      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value (bpm)');
+    it('should render canvas with chart directive attributes', () => {
+      setup(createReadings(3, 'bpm', 70), createSensor(), SINGLE_FIELD);
+      expect(fixture.debugElement.query(By.css('canvas')).attributes['type']).toBe('line');
+    });
+  });
 
-      componentRef.setInput('sensor', { ...mockSensor, profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE });
+  describe('edge cases', () => {
+    it('should handle empty readings array', () => {
+      setup([], createSensor(), SINGLE_FIELD);
+      const data = component['chartData']();
+      expect(data.datasets[0].data).toEqual([]);
+      expect(data.labels).toEqual([]);
+    });
+
+    it('should handle single reading', () => {
+      setup(createReadings(1, 'bpm', 72), createSensor(), SINGLE_FIELD);
+      const data = component['chartData']();
+      expect(data.datasets[0].data).toEqual([72]);
+      expect(data.labels!.length).toBe(1);
+    });
+
+    it('should handle readings updating over time', () => {
+      const initial = createReadings(3, 'bpm', 70);
+      setup(initial, createSensor(), SINGLE_FIELD);
+      expect(component['chartData']().datasets[0].data).toEqual([70, 71, 72]);
+
+      fixture.componentRef.setInput('readings', [...initial, ...createReadings(2, 'bpm', 73)]);
       fixture.detectChanges();
-      expect((component['chartOptions']().scales?.['y'] as any).title.text).toBe('Value (°C)');
+      expect(component['chartData']().datasets[0].data).toEqual([70, 71, 72, 73, 74]);
+    });
+
+    it('should handle field change preserving readings', () => {
+      setup(createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      expect(component['chartData']().datasets[0].data).toEqual([95, 96, 97]);
+      component['onFieldChange']('pulseRate');
+      expect(component['chartData']().datasets[0].data).toEqual([70, 71, 72]);
     });
   });
 });

@@ -204,11 +204,9 @@ describe('GatewayTableComponent (Unit)', () => {
       fixture.detectChanges();
     });
 
-    it('should render manager header', () => {
+    it('should render manager header in manage mode and hide it in dashboard mode', () => {
       expect(fixture.debugElement.query(By.css('.manager-header'))).toBeTruthy();
-    });
 
-    it('should not render manager header in dashboard mode', () => {
       setInput('actionMode', 'dashboard');
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
@@ -267,11 +265,9 @@ describe('GatewayTableComponent (Unit)', () => {
       expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
 
-    it('should hide expanded component by default', () => {
+    it('should hide expanded component by default and show it when a gateway is expanded', () => {
       expect(fixture.debugElement.query(By.directive(StubGatewayExpanded))).toBeFalsy();
-    });
 
-    it('should show expanded component when a gateway is expanded', () => {
       setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubGatewayExpanded))).toBeTruthy();

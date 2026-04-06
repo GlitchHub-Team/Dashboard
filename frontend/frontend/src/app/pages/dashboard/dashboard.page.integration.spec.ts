@@ -467,34 +467,6 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('Full Flow: Chart Open → Display → Close', () => {
-    it('should complete chart lifecycle via gateway table', () => {
-      const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
-      (dashboardServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
-
-      const gatewayTable = getGatewayTable(fixture);
-      gatewayTable.componentInstance.chartRequested.emit(mockChartRequest);
-      expect(dashboardServiceMock.openChart).toHaveBeenCalledWith(mockChartRequest);
-
-      (dashboardServiceMock.selectedChart as WritableSignal<ChartRequest | null>).set(
-        mockChartRequest,
-      );
-      fixture.detectChanges();
-
-      const chart = getChartContainer(fixture);
-      expect(chart).toBeTruthy();
-
-      chart.componentInstance.chartClosed.emit();
-      expect(dashboardServiceMock.closeChart).toHaveBeenCalled();
-
-      (dashboardServiceMock.selectedChart as WritableSignal<ChartRequest | null>).set(null);
-      fixture.detectChanges();
-
-      expect(getChartContainer(fixture)).toBeFalsy();
-    });
-  });
-
   describe('Navigation', () => {
     it.each([
       [

@@ -73,16 +73,12 @@ describe('UserFormDialogComponent', () => {
       expect(testApi.generalError).toBe('');
     });
 
-    it('should not call retrieveTenants for TENANT_USER role', async () => {
-      await createComponent({ role: UserRole.TENANT_USER });
-
-      expect(tenantServiceMock.retrieveTenants).not.toHaveBeenCalled();
-    });
-
-    it('should call retrieveTenants for TENANT_ADMIN role', async () => {
-      await createComponent({ role: UserRole.TENANT_ADMIN });
-
-      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledTimes(1);
+    it.each([
+      [UserRole.TENANT_USER, 0],
+      [UserRole.TENANT_ADMIN, 1],
+    ])('should call retrieveTenants %i time(s) for role %s', async (role, expectedCalls) => {
+      await createComponent({ role });
+      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledTimes(expectedCalls);
     });
   });
 
@@ -107,20 +103,15 @@ describe('UserFormDialogComponent', () => {
       expect(testApi.form.controls.email.hasError('email')).toBe(false);
     });
 
-    it('should not require tenantId for TENANT_USER', async () => {
-      await createComponent({ role: UserRole.TENANT_USER });
+    it.each([
+      { role: UserRole.TENANT_USER, required: false, formValid: true },
+      { role: UserRole.TENANT_ADMIN, required: true, formValid: false },
+    ])('should tenantId required=$required for role $role', async ({ role, required, formValid }) => {
+      await createComponent({ role });
       testApi.form.setValue({ username: 'u', email: 'u@example.com', tenantId: '' });
 
-      expect(testApi.form.controls.tenantId.hasError('required')).toBe(false);
-      expect(testApi.form.valid).toBe(true);
-    });
-
-    it('should require tenantId for TENANT_ADMIN', async () => {
-      await createComponent({ role: UserRole.TENANT_ADMIN });
-      testApi.form.setValue({ username: 'u', email: 'u@example.com', tenantId: '' });
-
-      expect(testApi.form.controls.tenantId.hasError('required')).toBe(true);
-      expect(testApi.form.valid).toBe(false);
+      expect(testApi.form.controls.tenantId.hasError('required')).toBe(required);
+      expect(testApi.form.valid).toBe(formValid);
     });
 
     it('should mark controls as touched and not call service on invalid save', async () => {
@@ -137,67 +128,43 @@ describe('UserFormDialogComponent', () => {
   });
 
   describe('onSave', () => {
-    it('should call service with form config and close dialog with true on success', async () => {
-      await createComponent({ role: UserRole.TENANT_USER, tenantId: 'tenant-1' });
-      userServiceMock.addNewUser.mockReturnValue(
-        of({ id: 'u1', username: 'new.user', email: 'new.user@example.com' }),
-      );
-      testApi.form.setValue({ username: 'new.user', email: 'new.user@example.com', tenantId: '' });
+    it.each([
+      {
+        label: 'TENANT_USER: tenantId from dialog data',
+        data: { role: UserRole.TENANT_USER, tenantId: 'tenant-1' } as UserFormDialogData,
+        formValue: { username: 'new.user', email: 'new.user@example.com', tenantId: '' },
+        expectedArgs: [{ username: 'new.user', email: 'new.user@example.com' }, UserRole.TENANT_USER, 'tenant-1'],
+      },
+      {
+        label: 'TENANT_ADMIN: tenantId from form',
+        data: { role: UserRole.TENANT_ADMIN } as UserFormDialogData,
+        formValue: { username: 'admin', email: 'admin@example.com', tenantId: 'tenant-2' },
+        expectedArgs: [{ username: 'admin', email: 'admin@example.com' }, UserRole.TENANT_ADMIN, 'tenant-2'],
+      },
+    ])('should call service with correct config and close dialog ($label)', async ({ data, formValue, expectedArgs }) => {
+      await createComponent(data);
+      userServiceMock.addNewUser.mockReturnValue(of({ id: 'u1' }));
+      testApi.form.setValue(formValue);
 
       testApi.onSave();
 
-      expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
-        { username: 'new.user', email: 'new.user@example.com' },
-        UserRole.TENANT_USER,
-        'tenant-1',
-      );
+      expect(userServiceMock.addNewUser).toHaveBeenCalledWith(...expectedArgs);
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
     });
 
-    it('should use tenantId from form for TENANT_ADMIN role', async () => {
-      await createComponent({ role: UserRole.TENANT_ADMIN });
-      userServiceMock.addNewUser.mockReturnValue(
-        of({ id: 'u1', username: 'admin', email: 'admin@example.com' }),
-      );
-      testApi.form.setValue({
-        username: 'admin',
-        email: 'admin@example.com',
-        tenantId: 'tenant-2',
-      });
-
-      testApi.onSave();
-
-      expect(userServiceMock.addNewUser).toHaveBeenCalledWith(
-        { username: 'admin', email: 'admin@example.com' },
-        UserRole.TENANT_ADMIN,
-        'tenant-2',
-      );
-      expect(dialogRefMock.close).toHaveBeenCalledWith(true);
-    });
-
-    it('should show api error message and reset submitting state on error', async () => {
+    it.each([
+      [{ status: 400, message: 'Username already exists' } as ApiError, 'Username already exists'],
+      [{ status: 500 } as ApiError, 'Failed to create user'],
+    ])('should show error and reset submitting on failure', async (error, expectedMsg) => {
       await createComponent({ role: UserRole.TENANT_USER });
-      userServiceMock.addNewUser.mockReturnValue(
-        throwError(() => ({ status: 400, message: 'Username already exists' }) as ApiError),
-      );
+      userServiceMock.addNewUser.mockReturnValue(throwError(() => error));
       testApi.form.setValue({ username: 'new.user', email: 'new.user@example.com', tenantId: '' });
 
       testApi.onSave();
 
-      expect(testApi.generalError).toBe('Username already exists');
+      expect(testApi.generalError).toBe(expectedMsg);
       expect(testApi.isSubmitting).toBe(false);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
-    });
-
-    it('should show fallback error when API message is missing', async () => {
-      await createComponent({ role: UserRole.TENANT_USER });
-      userServiceMock.addNewUser.mockReturnValue(throwError(() => ({ status: 500 }) as ApiError));
-      testApi.form.setValue({ username: 'new.user', email: 'new.user@example.com', tenantId: '' });
-
-      testApi.onSave();
-
-      expect(testApi.generalError).toBe('Failed to create user');
-      expect(testApi.isSubmitting).toBe(false);
     });
   });
 
@@ -223,20 +190,17 @@ describe('UserFormDialogComponent', () => {
   });
 
   describe('template behavior', () => {
-    it('should not render tenant select for non admin roles', async () => {
-      await createComponent({ role: UserRole.TENANT_USER });
-
-      expect(
-        fixture.debugElement.query(By.css('mat-select[formControlName="tenantId"]')),
-      ).toBeNull();
-    });
-
-    it('should render tenant select for TENANT_ADMIN role', async () => {
-      await createComponent({ role: UserRole.TENANT_ADMIN });
-
-      expect(
-        fixture.debugElement.query(By.css('mat-select[formControlName="tenantId"]')),
-      ).toBeTruthy();
+    it.each([
+      [UserRole.TENANT_USER, false],
+      [UserRole.TENANT_ADMIN, true],
+    ])('should render tenant select: %s for role %s', async (role, shouldRender) => {
+      await createComponent({ role });
+      const select = fixture.debugElement.query(By.css('mat-select[formControlName="tenantId"]'));
+      if (shouldRender) {
+        expect(select).toBeTruthy();
+      } else {
+        expect(select).toBeNull();
+      }
     });
 
     it('should render add title', async () => {

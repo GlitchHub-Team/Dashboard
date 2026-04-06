@@ -177,24 +177,16 @@ describe('GatewaySensorManagerPage (Integration)', () => {
   });
 
   describe('Initialization', () => {
-    it('should call loadGateways on init', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      fixture.detectChanges();
-
-      expect(managerServiceMock.loadGateways).toHaveBeenCalledOnce();
-    });
-
-    it('should render manage mode UI: table, header, and create button', () => {
+    it('should call loadGateways and render manage mode UI', () => {
       const { fixture, managerServiceMock } = setupTestBed();
       (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
       fixture.detectChanges();
 
+      expect(managerServiceMock.loadGateways).toHaveBeenCalledOnce();
       const gatewayTable = getGatewayTable(fixture);
       expect(gatewayTable).toBeTruthy();
       expect(gatewayTable.componentInstance.actionMode()).toBe('manage');
-      expect(fixture.nativeElement.querySelector('.manager-header h1').textContent).toContain(
-        'Gestione Gateway',
-      );
+      expect(fixture.nativeElement.querySelector('.manager-header h1').textContent).toContain('Gestione Gateway');
       expect(getGatewayCreateButton(fixture)!.textContent).toContain('Nuovo Gateway');
     });
   });

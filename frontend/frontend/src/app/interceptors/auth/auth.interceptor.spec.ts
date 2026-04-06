@@ -104,25 +104,14 @@ describe('authInterceptor', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 
-  it('should NOT clear token/session or navigate on 401 when token already cleared, but still rethrow', async () => {
-    tokenStorageService.getToken
-      .mockReturnValueOnce('my-jwt-token')  
-      .mockReturnValueOnce(null);           
+  it.each([
+    ['token already cleared',  () => { tokenStorageService.getToken.mockReturnValueOnce('my-jwt-token').mockReturnValueOnce(null); }, '/api/data'],
+    ['login request',          () => { tokenStorageService.getToken.mockReturnValue('my-jwt-token'); },                             '/api/auth/login'],
+  ])('should NOT clear token/session or navigate on 401 when %s, but still rethrow', async (_label, setup, url) => {
+    setup();
 
     await expect(
-      firstValueFrom(executeInterceptor(createRequest('/api/data'), createErrorHandler(401)))
-    ).rejects.toBeInstanceOf(HttpErrorResponse);
-
-    expect(tokenStorageService.clearToken).not.toHaveBeenCalled();
-    expect(userSessionService.clearSession).not.toHaveBeenCalled();
-    expect(router.navigate).not.toHaveBeenCalled();
-  });
-
-  it('should NOT clear token/session or navigate on 401 for login requests, but still rethrow', async () => {
-    tokenStorageService.getToken.mockReturnValue('my-jwt-token');
-
-    await expect(
-      firstValueFrom(executeInterceptor(createRequest('/api/auth/login'), createErrorHandler(401)))
+      firstValueFrom(executeInterceptor(createRequest(url), createErrorHandler(401)))
     ).rejects.toBeInstanceOf(HttpErrorResponse);
 
     expect(tokenStorageService.clearToken).not.toHaveBeenCalled();

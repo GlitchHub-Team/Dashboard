@@ -89,29 +89,23 @@ describe('UserService', () => {
       userApiMock.getUser = vi.fn();
     });
 
-    it('should call API with correct params, adapt the DTO and return the user', () => {
+    it.each([
+      ['with tenantId', 'tenant-1' as string | undefined],
+      ['without tenantId', undefined as string | undefined],
+    ])('should call API, adapt DTO, and return user (%s)', (_label, tenantId) => {
       userApiMock.getUser.mockReturnValue(of(rawDto));
       userAdapterMock.fromDTO.mockReturnValue(adaptedUser);
 
       let result: User | undefined;
-      service.getUser('1', UserRole.TENANT_ADMIN, 'tenant-1').subscribe((user) => {
+      service.getUser('1', UserRole.TENANT_ADMIN, tenantId).subscribe((user) => {
         result = user;
       });
 
-      expect(userApiMock.getUser).toHaveBeenCalledWith('1', UserRole.TENANT_ADMIN, 'tenant-1');
+      expect(userApiMock.getUser).toHaveBeenCalledWith('1', UserRole.TENANT_ADMIN, tenantId);
       expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(rawDto);
       expect(result).toEqual(adaptedUser);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
-    });
-
-    it('should pass undefined when tenantId is omitted', () => {
-      userApiMock.getUser.mockReturnValue(of(rawDto));
-      userAdapterMock.fromDTO.mockReturnValue(adaptedUser);
-
-      service.getUser('1', UserRole.TENANT_ADMIN).subscribe();
-
-      expect(userApiMock.getUser).toHaveBeenCalledWith('1', UserRole.TENANT_ADMIN, undefined);
     });
 
     it.each([
@@ -132,27 +126,21 @@ describe('UserService', () => {
   });
 
   describe('retrieveUsers', () => {
-    it('should retrieve users and update the list', () => {
+    it.each([
+      ['without tenantId', undefined as string | undefined, UserRole.TENANT_ADMIN],
+      ['with tenantId', 'tenant-1' as string | undefined, UserRole.TENANT_USER],
+    ])('should retrieve users and update state (%s)', (_label, tenantId, role) => {
       userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
       userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
 
-      service.retrieveUsers(UserRole.TENANT_ADMIN);
+      service.retrieveUsers(role, tenantId);
 
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 0, 10, undefined);
+      expect(userApiMock.getUsers).toHaveBeenCalledWith(role, 0, 10, tenantId);
       expect(userAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(rawPaginatedResponse);
       expect(service.loading()).toBe(false);
       expect(service.userList()).toEqual(mockUsers);
       expect(service.total()).toBe(2);
       expect(service.error()).toBeNull();
-    });
-
-    it('should retrieve users with tenantId when provided', () => {
-      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
-      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
-
-      service.retrieveUsers(UserRole.TENANT_USER, 'tenant-1');
-
-      expect(userApiMock.getUsers).toHaveBeenCalledWith(UserRole.TENANT_USER, 0, 10, 'tenant-1');
     });
 
     it.each([

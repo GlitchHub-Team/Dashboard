@@ -125,11 +125,8 @@ describe('SensorService', () => {
     service = TestBed.inject(SensorService);
   });
 
-  it('should be created', () => {
+  it('should be created with correct initial state', () => {
     expect(service).toBeTruthy();
-  });
-
-  it('should have correct initial state', () => {
     expect(service.sensorList()).toEqual([]);
     expect(service.loading()).toBe(false);
     expect(service.error()).toBeNull();
@@ -221,28 +218,19 @@ describe('SensorService', () => {
       expect(service.loading()).toBe(false);
     });
 
-    it('should not refetch after success (gateway context)', () => {
-      mockListSuccess('getSensorListByGateway');
-      service.getSensorsByGateway('gw-1', 0, 10);
-      sensorApiMock.getSensorListByGateway.mockClear();
+    it.each([
+      ['gateway', 'getSensorListByGateway' as ListApiKey, () => service.getSensorsByGateway('gw-1', 0, 10)] as const,
+      ['tenant', 'getSensorListByTenant' as ListApiKey, () => service.getSensorsByTenant('tenant-1', 0, 10)] as const,
+    ])('should not refetch after success (%s context)', (_, apiKey, setup) => {
+      mockListSuccess(apiKey);
+      setup();
+      sensorApiMock[apiKey].mockClear();
 
       sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewSensor);
       service.addNewSensor(mockConfig).subscribe();
 
-      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
-    });
-
-    it('should not refetch after success (tenant context)', () => {
-      mockListSuccess('getSensorListByTenant');
-      service.getSensorsByTenant('tenant-1', 0, 10);
-      sensorApiMock.getSensorListByTenant.mockClear();
-
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
-      service.addNewSensor(mockConfig).subscribe();
-
-      expect(sensorApiMock.getSensorListByTenant).not.toHaveBeenCalled();
+      expect(sensorApiMock[apiKey]).not.toHaveBeenCalled();
     });
 
     it('should propagate error to subscriber and not refetch', () => {

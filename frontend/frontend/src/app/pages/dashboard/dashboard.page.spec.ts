@@ -314,14 +314,16 @@ describe('DashboardPage (Unit)', () => {
   });
 
   describe('chart container', () => {
-    it('should render and pass chartRequest when selectedChart is set', () => {
+    it('should show chart container with chartRequest when set, hide when cleared', () => {
+      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
+
       selectedChartSig.set(mockChartRequest);
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeTruthy();
       expect(getChartContainer().chartRequest()).toEqual(mockChartRequest);
-    });
 
-    it('should not render chart container when selectedChart is null', () => {
+      selectedChartSig.set(null);
+      fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
     });
   });
@@ -348,20 +350,20 @@ describe('DashboardPage (Unit)', () => {
       expect(dashboardServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
     });
 
-    it('should open snackbar when commandRequested emits true', () => {
+    it.each([
+      [true, true] as const,
+      [false, false] as const,
+    ])('commandRequested(%s): snackbar opened = %s', (value, shouldCall) => {
       fixture.debugElement
         .query(By.directive(StubGatewayTable))
-        .triggerEventHandler('commandRequested', true);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Command sent successfully', 'Close', {
-        duration: 3000,
-      });
-    });
-
-    it('should not open snackbar when commandRequested emits false', () => {
-      fixture.debugElement
-        .query(By.directive(StubGatewayTable))
-        .triggerEventHandler('commandRequested', false);
-      expect(snackBarMock.open).not.toHaveBeenCalled();
+        .triggerEventHandler('commandRequested', value);
+      if (shouldCall) {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Command sent successfully', 'Close', {
+          duration: 3000,
+        });
+      } else {
+        expect(snackBarMock.open).not.toHaveBeenCalled();
+      }
     });
 
     it('should call openChart on gateway table chartRequested', () => {
@@ -408,18 +410,6 @@ describe('DashboardPage (Unit)', () => {
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubSensorTable))).toBeTruthy();
       expect(fixture.debugElement.query(By.directive(StubGatewayTable))).toBeNull();
-    });
-
-    it('should show and hide chart container reactively', () => {
-      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
-
-      selectedChartSig.set(mockChartRequest);
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeTruthy();
-
-      selectedChartSig.set(null);
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
     });
 
     it('should show and hide error banner reactively', () => {
@@ -470,23 +460,15 @@ describe('DashboardPage (Unit)', () => {
       fixture.detectChanges();
     };
 
-    it('should call loadDashboard with tenantId from queryParams', async () => {
+    it('should call loadDashboard with tenantId from queryParams and set activeTenantId', async () => {
       await setupAsSuperAdmin({ tenantId: 'super-tenant' });
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith('super-tenant');
-    });
-
-    it('should set activeTenantId from queryParams', async () => {
-      await setupAsSuperAdmin({ tenantId: 'super-tenant' });
       expect(component['activeTenantId']()).toBe('super-tenant');
     });
 
-    it('should call loadDashboard with undefined when no tenantId in queryParams', async () => {
+    it('should call loadDashboard with undefined and set activeTenantId to null when no tenantId', async () => {
       await setupAsSuperAdmin({});
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith(undefined);
-    });
-
-    it('should set activeTenantId to null when no tenantId in queryParams', async () => {
-      await setupAsSuperAdmin({});
       expect(component['activeTenantId']()).toBeNull();
     });
   });

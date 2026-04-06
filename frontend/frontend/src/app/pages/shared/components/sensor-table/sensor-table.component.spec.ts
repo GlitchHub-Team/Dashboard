@@ -63,19 +63,12 @@ describe('SensorTableComponent (Unit)', () => {
   });
 
   describe('initial state', () => {
-    it('should create with correct setup', () => {
+    it('should create with correct setup, defaults, and dashboard actionMode', () => {
       expect(component).toBeTruthy();
-      expect(component['displayedColumns']()).toEqual([
-        'id',
-        'name',
-        'profile',
-        'status',
-        'actions',
-      ]);
+      expect(component['displayedColumns']()).toEqual(['id', 'name', 'profile', 'status', 'actions']);
       expect(component['ChartType']).toBe(ChartType);
-    });
+      expect(component.actionMode()).toBe('dashboard');
 
-    it('should default pagination inputs', () => {
       const fresh = TestBed.createComponent(SensorTableComponent);
       fresh.componentRef.setInput('sensors', []);
       fresh.detectChanges();
@@ -83,10 +76,6 @@ describe('SensorTableComponent (Unit)', () => {
       expect(fresh.componentInstance.pageIndex()).toBe(0);
       expect(fresh.componentInstance.limit()).toBe(10);
       expect(fresh.componentInstance.loading()).toBeUndefined();
-    });
-
-    it('should default actionMode to dashboard', () => {
-      expect(component.actionMode()).toBe('dashboard');
     });
   });
 

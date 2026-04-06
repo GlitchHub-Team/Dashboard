@@ -86,7 +86,7 @@ describe('GatewayExpandedComponent (Unit)', () => {
   });
 
   describe('initial state', () => {
-    it('should create with correct inputs and defaults', () => {
+    it('should create with correct inputs/defaults and verify fresh instance pagination defaults', () => {
       expect(component).toBeTruthy();
       expect(component.sensors()).toEqual(mockSensors);
       expect(component.gateway()).toEqual(mockGateway);
@@ -95,9 +95,7 @@ describe('GatewayExpandedComponent (Unit)', () => {
       expect(component.sensorTotal()).toBe(2);
       expect(component.sensorPageIndex()).toBe(0);
       expect(component.sensorLimit()).toBe(10);
-    });
 
-    it('should have correct defaults on fresh instance', () => {
       const fresh = TestBed.createComponent(GatewayExpandedComponent);
       fresh.componentRef.setInput('sensors', []);
       fresh.componentRef.setInput('gateway', mockGateway);
@@ -109,6 +107,16 @@ describe('GatewayExpandedComponent (Unit)', () => {
   });
 
   describe('inputs', () => {
+    it('should pass default inputs to child table', () => {
+      const table = getTableInstance();
+      expect(table.sensors()).toEqual(mockSensors);
+      expect(table.loading()).toBeUndefined();
+      expect(table.actionMode()).toBe('dashboard');
+      expect(table.total()).toBe(2);
+      expect(table.pageIndex()).toBe(0);
+      expect(table.limit()).toBe(10);
+    });
+
     it('should accept all inputs and reflect them on component and child', () => {
       setInput('loading', true);
       setInput('actionMode', 'manage');
@@ -143,18 +151,6 @@ describe('GatewayExpandedComponent (Unit)', () => {
 
       setInput('gateway', { ...mockGateway, id: 'gw-99' });
       expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('gw-99');
-    });
-  });
-
-  describe('input bindings to child', () => {
-    it('should pass all inputs to sensor table', () => {
-      const table = getTableInstance();
-      expect(table.sensors()).toEqual(mockSensors);
-      expect(table.loading()).toBeUndefined();
-      expect(table.actionMode()).toBe('dashboard');
-      expect(table.total()).toBe(2);
-      expect(table.pageIndex()).toBe(0);
-      expect(table.limit()).toBe(10);
     });
   });
 

@@ -93,25 +93,14 @@ describe('TenantApiClientService', () => {
   });
 
   describe('deleteTenant', () => {
-    it('should send DELETE request with tenant id in the URL', () => {
-      service.deleteTenant('tenant-01').subscribe();
+    it('should send DELETE with tenant id in URL and return void', () => {
+      service.deleteTenant('tenant-01').subscribe((result) => {
+        expect(result).toBeNull();
+      });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
       expect(req.request.method).toBe('DELETE');
       req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
-      let result: void | null | undefined;
-
-      service.deleteTenant('tenant-01').subscribe((response) => {
-        result = response;
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
-      req.flush(null);
-
-      expect(result).toBeNull();
     });
   });
 });

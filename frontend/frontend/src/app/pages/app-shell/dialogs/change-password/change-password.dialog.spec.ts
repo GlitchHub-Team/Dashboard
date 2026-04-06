@@ -99,26 +99,26 @@ describe('ChangePasswordDialog', () => {
       buttons.forEach((b) => expect(b.disabled).toBe(true));
     });
 
-    it('should show passwordMismatch error when passwords differ and confirmNewPassword is dirty', () => {
-      const { newPassword, confirmNewPassword } = component['form'].controls;
-      newPassword.setValue('password1');
-      confirmNewPassword.setValue('password2');
-      confirmNewPassword.markAsDirty();
-      fixture.detectChanges();
+    it.each([
+      { pw1: 'password1', pw2: 'password2', expectError: true },
+      { pw1: 'samePass', pw2: 'samePass', expectError: false },
+    ])(
+      'should show passwordMismatch error = $expectError when passwords are pw1=$pw1, pw2=$pw2',
+      ({ pw1, pw2, expectError }) => {
+        const { newPassword, confirmNewPassword } = component['form'].controls;
+        newPassword.setValue(pw1);
+        confirmNewPassword.setValue(pw2);
+        confirmNewPassword.markAsDirty();
+        fixture.detectChanges();
 
-      const mismatchError = fixture.nativeElement.querySelector('.field-error');
-      expect(mismatchError?.textContent).toContain('Le password non coincidono');
-    });
-
-    it('should NOT show passwordMismatch error when passwords match', () => {
-      const { newPassword, confirmNewPassword } = component['form'].controls;
-      newPassword.setValue('samePass');
-      confirmNewPassword.setValue('samePass');
-      confirmNewPassword.markAsDirty();
-      fixture.detectChanges();
-
-      expect(fixture.nativeElement.querySelector('.field-error')).toBeFalsy();
-    });
+        const mismatchError = fixture.nativeElement.querySelector('.field-error');
+        if (expectError) {
+          expect(mismatchError?.textContent).toContain('Le password non coincidono');
+        } else {
+          expect(mismatchError).toBeFalsy();
+        }
+      },
+    );
 
     it('should show required error on oldPassword when touched and empty', () => {
       component['form'].controls.oldPassword.markAsTouched();

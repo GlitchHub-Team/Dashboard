@@ -94,13 +94,12 @@ describe('DashboardService', () => {
     service = TestBed.inject(DashboardService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
-  it('should have null expandedGateway and selectedChart initially', () => {
-    expect(service.expandedGateway()).toBeNull();
-    expect(service.selectedChart()).toBeNull();
+  describe('initial state', () => {
+    it('should be created with null expandedGateway and selectedChart', () => {
+      expect(service).toBeTruthy();
+      expect(service.expandedGateway()).toBeNull();
+      expect(service.selectedChart()).toBeNull();
+    });
   });
 
   it('should forward all gateway service signals', () => {
@@ -122,15 +121,10 @@ describe('DashboardService', () => {
   });
 
   describe('canSendCommands', () => {
-    it('should return true when permission is granted', () => {
-      permissionServiceMock.can.mockReturnValue(true);
-      expect(service.canSendCommands()).toBe(true);
+    it.each([true, false])('should reflect permission service result (%s)', (result) => {
+      permissionServiceMock.can.mockReturnValue(result);
+      expect(service.canSendCommands()).toBe(result);
       expect(permissionServiceMock.can).toHaveBeenCalledWith(Permission.GATEWAY_COMMANDS);
-    });
-
-    it('should return false when permission is denied', () => {
-      permissionServiceMock.can.mockReturnValue(false);
-      expect(service.canSendCommands()).toBe(false);
     });
   });
 

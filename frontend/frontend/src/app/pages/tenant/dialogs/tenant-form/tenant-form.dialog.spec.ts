@@ -48,21 +48,13 @@ describe('TenantFormDialog (Unit)', () => {
   });
 
   describe('initialization', () => {
-    it('should create with default form values when dialog data is null', async () => {
+    it('should create with default form values and render title and form controls', async () => {
       await createComponent(null);
 
       expect(component).toBeTruthy();
-      expect(testApi.tenantForm.value).toEqual({
-        name: '',
-        canImpersonate: false,
-      });
+      expect(testApi.tenantForm.value).toEqual({ name: '', canImpersonate: false });
       expect(testApi.isSubmitting).toBe(false);
       expect(testApi.generalError).toBe('');
-    });
-
-    it('should render title and form controls', async () => {
-      await createComponent(null);
-
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
       ).toContain('Aggiungi Nuovo Tenant');
@@ -98,85 +90,47 @@ describe('TenantFormDialog (Unit)', () => {
   });
 
   describe('onSave', () => {
-    it('should call service with form config and close dialog on success', async () => {
+    it.each([
+      [{ name: 'Tenant One', canImpersonate: true }, { name: 'Tenant One', canImpersonate: true }],
+      [{ name: 'Tenant One', canImpersonate: false }, { name: 'Tenant One', canImpersonate: false }],
+    ])('should call service with correct config and close dialog on success', async (formValue, expectedPayload) => {
       await createComponent(null);
-      tenantServiceMock.addNewTenant.mockReturnValue(of({ id: 'tenant-1', name: 'Tenant One' }));
-      testApi.tenantForm.setValue({ name: 'Tenant One', canImpersonate: true });
+      tenantServiceMock.addNewTenant.mockReturnValue(of({ id: 'tenant-1', name: formValue.name }));
+      testApi.tenantForm.setValue(formValue);
 
       testApi.onSave();
 
-      expect(tenantServiceMock.addNewTenant).toHaveBeenCalledWith({
-        name: 'Tenant One',
-        canImpersonate: true,
-      });
+      expect(tenantServiceMock.addNewTenant).toHaveBeenCalledWith(expectedPayload);
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
     });
 
-    it('should use false for canImpersonate when value is nullish', async () => {
+    it.each([
+      [{ status: 400, message: 'Duplicate tenant name' } as ApiError, 'Duplicate tenant name'],
+      [{ status: 500 } as ApiError, 'Failed to create tenant'],
+    ])('should show error and reset submitting on failure', async (error, expectedMsg) => {
       await createComponent(null);
-      tenantServiceMock.addNewTenant.mockReturnValue(of({ id: 'tenant-1', name: 'Tenant One' }));
-      testApi.tenantForm.controls.name.setValue('Tenant One');
-      testApi.tenantForm.controls.canImpersonate.setValue(false);
-
-      testApi.onSave();
-
-      expect(tenantServiceMock.addNewTenant).toHaveBeenCalledWith({
-        name: 'Tenant One',
-        canImpersonate: false,
-      });
-    });
-
-    it('should show api error message and reset submitting state on error', async () => {
-      await createComponent(null);
-      tenantServiceMock.addNewTenant.mockReturnValue(
-        throwError(() => ({ status: 400, message: 'Duplicate tenant name' }) as ApiError),
-      );
+      tenantServiceMock.addNewTenant.mockReturnValue(throwError(() => error));
       testApi.tenantForm.setValue({ name: 'Tenant One', canImpersonate: false });
 
       testApi.onSave();
       fixture.detectChanges();
 
-      expect(testApi.generalError).toBe('Duplicate tenant name');
+      expect(testApi.generalError).toBe(expectedMsg);
       expect(testApi.isSubmitting).toBe(false);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
-      expect(fixture.debugElement.query(By.css('.error-text')).nativeElement.textContent).toContain(
-        'Duplicate tenant name',
-      );
-    });
-
-    it('should show fallback error when API message is missing', async () => {
-      await createComponent(null);
-      tenantServiceMock.addNewTenant.mockReturnValue(
-        throwError(() => ({ status: 500 }) as ApiError),
-      );
-      testApi.tenantForm.setValue({ name: 'Tenant One', canImpersonate: false });
-
-      testApi.onSave();
-
-      expect(testApi.generalError).toBe('Failed to create tenant');
-      expect(testApi.isSubmitting).toBe(false);
     });
   });
 
   describe('button states', () => {
-    it('should disable save button when form is invalid', async () => {
+    it('should disable save button when form is invalid or while submitting', async () => {
       await createComponent(null);
+      const saveButton = fixture.debugElement.query(By.css('button[color="primary"]')).nativeElement;
 
-      const saveButton = fixture.debugElement.query(
-        By.css('button[color="primary"]'),
-      ).nativeElement;
       expect(saveButton.disabled).toBe(true);
-    });
 
-    it('should disable save button while submitting', async () => {
-      await createComponent(null);
       testApi.tenantForm.setValue({ name: 'Tenant One', canImpersonate: false });
       testApi.isSubmitting = true;
       fixture.detectChanges();
-
-      const saveButton = fixture.debugElement.query(
-        By.css('button[color="primary"]'),
-      ).nativeElement;
       expect(saveButton.disabled).toBe(true);
     });
   });

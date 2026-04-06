@@ -228,19 +228,6 @@ describe('GatewayService', () => {
       expect(result).toEqual(mockNewGateway);
     });
 
-    it('should pass tenantId to adapter when in tenant context', () => {
-      mockTenantSuccess();
-      service.getGatewaysByTenant('tenant-1', 0, 10);
-
-      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
-      mockTenantSuccess();
-
-      service.addNewGateway(mockConfig).subscribe();
-
-      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
-    });
-
     it('should not trigger a refetch or change loading state after success', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
@@ -268,28 +255,11 @@ describe('GatewayService', () => {
       expect(gatewayApiMock.getGatewayList).not.toHaveBeenCalled();
     });
 
-    it('should propagate error to subscriber on failure', () => {
-      const error = { status: 409, message: 'Duplicate gateway' };
-      gatewayApiMock.addNewGateway.mockReturnValue(throwError(() => error));
-      const errorSpy = vi.fn();
-      service.addNewGateway(mockConfig).subscribe({ error: errorSpy });
-      expect(errorSpy).toHaveBeenCalledWith(error);
-    });
-
-    it('should not refetch on error', () => {
+    it('should propagate errors without completing and not refetch', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
       gatewayApiMock.getGatewayListByTenant.mockClear();
 
-      const error = { status: 500, message: 'Error' };
-      gatewayApiMock.addNewGateway.mockReturnValue(throwError(() => error));
-      const errorSpy = vi.fn();
-      service.addNewGateway(mockConfig).subscribe({ error: errorSpy });
-      expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith(error);
-    });
-
-    it('should propagate errors without completing', () => {
       const error = { status: 500, message: 'Error' };
       gatewayApiMock.addNewGateway.mockReturnValue(throwError(() => error));
       const nextSpy = vi.fn();
@@ -303,6 +273,7 @@ describe('GatewayService', () => {
       expect(nextSpy).not.toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalledWith(error);
       expect(completeSpy).not.toHaveBeenCalled();
+      expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
     });
   });
 

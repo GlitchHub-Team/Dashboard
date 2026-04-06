@@ -45,16 +45,6 @@ describe('TenantTableComponent (Unit)', () => {
     });
   });
 
-  describe('loading state', () => {
-    it('should render only spinner when loading is true', () => {
-      setInput('loading', true);
-
-      expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
-      expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
-      expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
-    });
-  });
-
   describe('empty state', () => {
     it('should render empty state when tenant list is empty', () => {
       setInput('tenants', []);
@@ -103,50 +93,43 @@ describe('TenantTableComponent (Unit)', () => {
   });
 
   describe('outputs', () => {
-    it('should emit dashboardRequested when dashboard action is clicked', () => {
+    it.each([
+      [
+        'dashboardRequested',
+        'dashboard',
+        (c: TenantTableComponent) => c.dashboardRequested,
+      ],
+      [
+        'deleteRequested',
+        'delete',
+        (c: TenantTableComponent) => c.deleteRequested,
+      ],
+    ] as const)('should emit %s when %s button is clicked', (_outputName, iconText, getOutput) => {
       const spy = vi.fn();
-      component.dashboardRequested.subscribe(spy);
+      getOutput(component).subscribe(spy);
 
-      const dashboardButton = fixture.debugElement
+      const btn = fixture.debugElement
         .queryAll(By.css('button'))
-        .find((btn) => btn.nativeElement.textContent.includes('dashboard'));
-
-      expect(dashboardButton).toBeTruthy();
+        .find((b) => b.nativeElement.textContent.includes(iconText));
+      expect(btn).toBeTruthy();
 
       const stopPropagation = vi.fn();
-      dashboardButton!.triggerEventHandler('click', { stopPropagation });
-
-      expect(spy).toHaveBeenCalledWith(mockTenants[0]);
-      expect(stopPropagation).toHaveBeenCalledTimes(1);
-    });
-
-    it('should emit deleteRequested when delete action is clicked', () => {
-      const spy = vi.fn();
-      component.deleteRequested.subscribe(spy);
-
-      const deleteButton = fixture.debugElement
-        .queryAll(By.css('button'))
-        .find((btn) => btn.nativeElement.textContent.includes('delete'));
-
-      expect(deleteButton).toBeTruthy();
-
-      const stopPropagation = vi.fn();
-      deleteButton!.triggerEventHandler('click', { stopPropagation });
+      btn!.triggerEventHandler('click', { stopPropagation });
 
       expect(spy).toHaveBeenCalledWith(mockTenants[0]);
       expect(stopPropagation).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('disabled actions while loading', () => {
-    it('should hide action buttons and show spinner when loading is true', () => {
+  describe('loading state', () => {
+    it('should show only spinner, hide table and buttons when loading', () => {
       setInput('loading', true);
       setInput('tenants', mockTenants);
 
-      const buttons = fixture.debugElement.queryAll(By.css('button'));
-      expect(buttons.length).toBe(0);
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
+      expect(fixture.debugElement.queryAll(By.css('button')).length).toBe(0);
     });
   });
 });

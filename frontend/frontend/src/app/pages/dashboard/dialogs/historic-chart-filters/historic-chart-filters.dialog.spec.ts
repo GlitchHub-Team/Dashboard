@@ -52,14 +52,18 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should display correct title', () => {
-      const title = fixture.debugElement.query(By.css('[mat-dialog-title]'));
-      expect(title.nativeElement.textContent).toContain('Filtri grafico dati storici');
-    });
-
-    it('should display sensor name', () => {
-      const sensorInfo = fixture.debugElement.query(By.css('.sensor-info'));
-      expect(sensorInfo.nativeElement.textContent).toContain('Heart Rate Sensor');
+    it('should render title, sensor name, and all section titles', () => {
+      expect(
+        fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
+      ).toContain('Filtri grafico dati storici');
+      expect(
+        fixture.debugElement.query(By.css('.sensor-info')).nativeElement.textContent,
+      ).toContain('Heart Rate Sensor');
+      const titles = fixture.debugElement.queryAll(By.css('.section-title'));
+      expect(titles).toHaveLength(3);
+      expect(titles[0].nativeElement.textContent).toContain('Intervallo Tempo');
+      expect(titles[1].nativeElement.textContent).toContain('Limiti di valore');
+      expect(titles[2].nativeElement.textContent).toContain('Punti Dati');
     });
 
     it('should have form with default values', () => {
@@ -73,32 +77,17 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(form.value.upperBound).toBeNull();
     });
 
-    it('should have Apply button enabled (form is valid with defaults)', () => {
+    it('should have both action buttons enabled', () => {
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
       expect(applyBtn.nativeElement.disabled).toBe(false);
-    });
-
-    it('should have Cancel button enabled', () => {
       const cancelBtn = fixture.debugElement
         .queryAll(By.css('button'))
         .find((btn) => btn.nativeElement.textContent.includes('Annulla'));
       expect(cancelBtn!.nativeElement.disabled).toBe(false);
     });
-
-    it('should render all section titles', () => {
-      const titles = fixture.debugElement.queryAll(By.css('.section-title'));
-      expect(titles).toHaveLength(3);
-      expect(titles[0].nativeElement.textContent).toContain('Intervallo Tempo');
-      expect(titles[1].nativeElement.textContent).toContain('Limiti di valore');
-      expect(titles[2].nativeElement.textContent).toContain('Punti Dati');
-    });
   });
 
   describe('form validation', () => {
-    it('should be valid with default values', () => {
-      expect(component['filtersForm'].valid).toBe(true);
-    });
-
     it('should be invalid when dataPointsCounter exceeds maximum', () => {
       component['filtersForm'].controls.dataPointsCounter.setValue(301);
       expect(component['filtersForm'].valid).toBe(false);
@@ -117,23 +106,13 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(component['filtersForm'].valid).toBe(true);
     });
 
-    it('should be invalid when dataPointsCounter is 0', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(0);
+    it.each([0, -5])('should be invalid when dataPointsCounter is %s', (val) => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(val);
       expect(component['filtersForm'].valid).toBe(false);
     });
 
-    it('should be invalid when dataPointsCounter is negative', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(-5);
-      expect(component['filtersForm'].valid).toBe(false);
-    });
-
-    it('should be valid when dataPointsCounter is 1', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(1);
-      expect(component['filtersForm'].valid).toBe(true);
-    });
-
-    it('should be valid when dataPointsCounter is 300', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(300);
+    it.each([1, 300])('should be valid when dataPointsCounter is %s', (val) => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(val);
       expect(component['filtersForm'].valid).toBe(true);
     });
 
@@ -153,16 +132,11 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(component['filtersForm'].valid).toBe(false);
     });
 
-    it('should disable Apply button when dataPointsCounter exceeds maximum', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(301);
-      fixture.detectChanges();
-
-      const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
-      expect(applyBtn.nativeElement.disabled).toBe(true);
-    });
-
-    it('should disable Apply button when dataPointsCounter is below minimum', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(0);
+    it.each([
+      [301, 'exceeds maximum'],
+      [0, 'is below minimum'],
+    ])('should disable Apply button when dataPointsCounter %s', (val) => {
+      component['filtersForm'].controls.dataPointsCounter.setValue(val);
       fixture.detectChanges();
 
       const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
@@ -247,18 +221,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
         valuesInterval: { lowerBound: 50, upperBound: 200 },
         dataPointsCounter: 250,
       });
-    });
-
-    it('should include correct sensor from dialog data', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(100);
-      fixture.detectChanges();
-
-      const applyBtn = fixture.debugElement.query(By.css('button[color="primary"]'));
-      applyBtn.nativeElement.click();
-
-      const result = dialogRefMock.close.mock.calls[0][0];
-      expect(result.sensor).toEqual(mockSensor);
-      expect(result.chartType).toBe(ChartType.HISTORIC);
     });
 
     it('should omit optional fields when only dataPointsCounter is set', () => {

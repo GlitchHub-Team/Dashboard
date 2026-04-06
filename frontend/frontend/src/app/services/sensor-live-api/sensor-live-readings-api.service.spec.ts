@@ -45,21 +45,13 @@ describe('SensorLiveReadingsApiService', () => {
   });
 
   describe('connect', () => {
-    it('should call webSocket with the correct URL', () => {
-      const mockSocket = createMockSocket();
-      vi.mocked(webSocket).mockReturnValue(mockSocket as any);
-
-      service.connect(mockSensor);
-
-      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/sensor/${mockSensor.id}/real_time_data`);
-    });
-
-    it('should return the observable from the socket', () => {
+    it('should call webSocket with the correct URL and return the socket observable', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
       const result = service.connect(mockSensor);
 
+      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/sensor/${mockSensor.id}/real_time_data`);
       expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
@@ -79,29 +71,20 @@ describe('SensorLiveReadingsApiService', () => {
   });
 
   describe('disconnect', () => {
-    it('should complete the socket after connect', () => {
+    it('should complete the socket and be a no-op on subsequent calls', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
       service.connect(mockSensor);
       service.disconnect();
+      expect(mockSocket.complete).toHaveBeenCalledTimes(1);
 
+      service.disconnect();
       expect(mockSocket.complete).toHaveBeenCalledTimes(1);
     });
 
     it('should not throw when there is no active connection', () => {
       expect(() => service.disconnect()).not.toThrow();
-    });
-
-    it('should set socket to null so a second disconnect is a no-op', () => {
-      const mockSocket = createMockSocket();
-      vi.mocked(webSocket).mockReturnValue(mockSocket as any);
-
-      service.connect(mockSensor);
-      service.disconnect();
-      service.disconnect();
-
-      expect(mockSocket.complete).toHaveBeenCalledTimes(1);
     });
   });
 });

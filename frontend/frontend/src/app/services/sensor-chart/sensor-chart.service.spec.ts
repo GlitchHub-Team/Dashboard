@@ -4,8 +4,8 @@ import { of, Subject, throwError } from 'rxjs';
 import { SensorChartService } from './sensor-chart.service';
 import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
 import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
-import { SensorHistoricAdapter } from '../../adapters/sensor-historic/sensor-historic.adapter';
-import { SensorLiveReadingAdapter } from '../../adapters/sensor-live/sensor-live-reading.adapter';
+import { SensorAdapterFactory } from '../../adapters/sensor-adapter.factory';
+import { FieldDescriptor } from '../../models/sensor-data/field-descriptor.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -28,35 +28,44 @@ describe('SensorChartService', () => {
   };
 
   const mockHistoricResponse: HistoricResponse = {
-    count: {
-      current: 2,
-      real: 2,
-      total: 2,
-    },
-    duration: 60,
-    dataset: {
-      timestamps: [
-        new Date('2026-01-01T00:00:00.000Z').getTime(),
-        new Date('2026-01-01T01:00:00.000Z').getTime(),
-      ],
-      values: [36.6, 37.0],
-    },
-    unit: '°C',
+    count: 2,
+    samples: [
+      {
+        sensor_id: 'sensor-1',
+        gateway_id: 'gateway-1',
+        tenant_id: 'tenant-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+        data: { temperature: 36.6 },
+      },
+      {
+        sensor_id: 'sensor-1',
+        gateway_id: 'gateway-1',
+        tenant_id: 'tenant-1',
+        timestamp: '2026-01-01T01:00:00.000Z',
+        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+        data: { temperature: 37.0 },
+      },
+    ],
   };
 
   const mockAdaptedReadings: SensorReading[] = [
-    { timestamp: '2026-01-01T00:00:00.000Z', value: 36.6 },
-    { timestamp: '2026-01-01T01:00:00.000Z', value: 37.0 },
+    { timestamp: '2026-01-01T00:00:00.000Z', value: { temperature: 36.6 } },
+    { timestamp: '2026-01-01T01:00:00.000Z', value: { temperature: 37.0 } },
   ];
 
   const mockRawReading: RealTimeReading = {
-    timestamp: new Date('2026-01-01T00:00:00.000Z').getTime(),
-    datum: 36.6,
+    sensor_id: 'sensor-1',
+    gateway_id: 'gateway-1',
+    tenant_id: 'tenant-1',
+    timestamp: '2026-01-01T00:00:00.000Z',
+    profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+    data: { temperature: 36.6 },
   };
 
   const mockAdaptedReading: SensorReading = {
     timestamp: '2026-01-01T00:00:00.000Z',
-    value: 36.6,
+    value: { temperature: 36.6 },
   };
 
   const historicApiMock = {
@@ -69,12 +78,18 @@ describe('SensorChartService', () => {
   };
 
   const historicAdapterMock = {
+    fields: [] as FieldDescriptor[],
     fromResponse: vi.fn(),
-    fromDTO: vi.fn(),
   };
 
   const liveReadingsAdapterMock = {
+    fields: [] as FieldDescriptor[],
     fromDTO: vi.fn(),
+  };
+
+  const adapterFactoryMock = {
+    createHistoricAdapter: vi.fn(),
+    createLiveAdapter: vi.fn(),
   };
 
   const historicRequest: ChartRequest = {
@@ -96,13 +111,15 @@ describe('SensorChartService', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
+    adapterFactoryMock.createHistoricAdapter.mockReturnValue(historicAdapterMock);
+    adapterFactoryMock.createLiveAdapter.mockReturnValue(liveReadingsAdapterMock);
+
     TestBed.configureTestingModule({
       providers: [
         SensorChartService,
         { provide: SensorHistoricApiService, useValue: historicApiMock },
         { provide: SensorLiveReadingsApiService, useValue: liveReadingsApiMock },
-        { provide: SensorHistoricAdapter, useValue: historicAdapterMock },
-        { provide: SensorLiveReadingAdapter, useValue: liveReadingsAdapterMock },
+        { provide: SensorAdapterFactory, useValue: adapterFactoryMock },
       ],
     });
 
@@ -113,36 +130,29 @@ describe('SensorChartService', () => {
     expect(service).toBeTruthy();
     expect(service.historicReadings()).toEqual([]);
     expect(service.liveReadings()).toEqual([]);
+    expect(service.fields()).toEqual([]);
     expect(service.loading()).toBe(false);
     expect(service.connectionStatus()).toBe('disconnected');
     expect(service.error()).toBeNull();
   });
 
   describe('startChart - historic', () => {
-    it('should call getHistoricData with the correct args and set state on success', () => {
-      historicApiMock.getHistoricData.mockReturnValue(of(mockHistoricResponse));
+    it('should call getHistoricData, track loading state, and set readings on success', () => {
+      const subject = new Subject<HistoricResponse>();
+      historicApiMock.getHistoricData.mockReturnValue(subject.asObservable());
       historicAdapterMock.fromResponse.mockReturnValue({
+        dataCount: 2,
         readings: mockAdaptedReadings,
-        resolution: 60,
+        fields: [],
       });
 
       service.startChart(historicRequest);
-
       expect(historicApiMock.getHistoricData).toHaveBeenCalledWith(historicRequest);
-      expect(service.historicReadings()).toEqual(mockAdaptedReadings);
-      expect(service.loading()).toBe(false);
-    });
-
-    it('should set loading to true while fetching and false on complete', () => {
-      const subject = new Subject<HistoricResponse>();
-      historicApiMock.getHistoricData.mockReturnValue(subject.asObservable());
-      historicAdapterMock.fromResponse.mockReturnValue({ readings: [], resolution: 0 });
-
-      service.startChart(historicRequest);
       expect(service.loading()).toBe(true);
 
       subject.next(mockHistoricResponse);
       subject.complete();
+      expect(service.historicReadings()).toEqual(mockAdaptedReadings);
       expect(service.loading()).toBe(false);
     });
 
@@ -160,10 +170,10 @@ describe('SensorChartService', () => {
   });
 
   describe('startChart - live', () => {
-    it('should call connect with the correct sensor and transition connectionStatus', () => {
+    it('should connect, transition status, accumulate readings, and disconnect on complete', () => {
       const subject = new Subject<RealTimeReading>();
       liveReadingsApiMock.connect.mockReturnValue(subject.asObservable());
-      liveReadingsAdapterMock.fromDTO.mockReturnValue(mockAdaptedReading);
+      liveReadingsAdapterMock.fromDTO.mockReturnValue([mockAdaptedReading]);
 
       service.startChart(liveRequest);
       expect(liveReadingsApiMock.connect).toHaveBeenCalledWith(mockSensor);
@@ -171,24 +181,19 @@ describe('SensorChartService', () => {
 
       subject.next(mockRawReading);
       expect(service.connectionStatus()).toBe('connected');
-    });
+      expect(service.liveReadings().length).toBe(1);
 
-    it('should append live readings as they arrive', () => {
-      const subject = new Subject<RealTimeReading>();
-      liveReadingsApiMock.connect.mockReturnValue(subject.asObservable());
-      liveReadingsAdapterMock.fromDTO.mockReturnValue(mockAdaptedReading);
-
-      service.startChart(liveRequest);
-
-      subject.next(mockRawReading);
       subject.next(mockRawReading);
       expect(service.liveReadings().length).toBe(2);
+
+      subject.complete();
+      expect(service.connectionStatus()).toBe('disconnected');
     });
 
     it('should trim live readings buffer to MAX_LIVE_READINGS (50)', () => {
       const subject = new Subject<RealTimeReading>();
       liveReadingsApiMock.connect.mockReturnValue(subject.asObservable());
-      liveReadingsAdapterMock.fromDTO.mockImplementation(() => mockAdaptedReading);
+      liveReadingsAdapterMock.fromDTO.mockImplementation(() => [mockAdaptedReading]);
 
       service.startChart(liveRequest);
 
@@ -197,16 +202,6 @@ describe('SensorChartService', () => {
       }
 
       expect(service.liveReadings().length).toBe(50);
-    });
-
-    it('should set connectionStatus to disconnected on complete', () => {
-      const subject = new Subject<RealTimeReading>();
-      liveReadingsApiMock.connect.mockReturnValue(subject.asObservable());
-
-      service.startChart(liveRequest);
-      subject.complete();
-
-      expect(service.connectionStatus()).toBe('disconnected');
     });
 
     it('should set connectionStatus to reconnecting and update error on retry', () => {
@@ -245,7 +240,7 @@ describe('SensorChartService', () => {
     it('should call disconnect and set connectionStatus to disconnected', () => {
       const subject = new Subject<RealTimeReading>();
       liveReadingsApiMock.connect.mockReturnValue(subject.asObservable());
-      liveReadingsAdapterMock.fromDTO.mockReturnValue(mockAdaptedReading);
+      liveReadingsAdapterMock.fromDTO.mockReturnValue([mockAdaptedReading]);
 
       service.startChart(liveRequest);
       subject.next(mockRawReading);
@@ -266,14 +261,15 @@ describe('SensorChartService', () => {
     it('should clear state from a previous chart before starting a new one', () => {
       historicApiMock.getHistoricData.mockReturnValue(of(mockHistoricResponse));
       historicAdapterMock.fromResponse.mockReturnValue({
+        dataCount: 2,
         readings: mockAdaptedReadings,
-        resolution: 60,
+        fields: [],
       });
       service.startChart(historicRequest);
       expect(service.historicReadings().length).toBe(2);
 
       historicApiMock.getHistoricData.mockReturnValue(of(mockHistoricResponse));
-      historicAdapterMock.fromResponse.mockReturnValue({ readings: [], resolution: 0 });
+      historicAdapterMock.fromResponse.mockReturnValue({ dataCount: 0, readings: [], fields: [] });
       service.startChart(historicRequest);
 
       expect(service.historicReadings()).toEqual([]);
@@ -287,10 +283,10 @@ describe('SensorChartService', () => {
       service.startChart(liveRequest);
 
       historicApiMock.getHistoricData.mockReturnValue(of(mockHistoricResponse));
-      historicAdapterMock.fromResponse.mockReturnValue({ readings: [], resolution: 0 });
+      historicAdapterMock.fromResponse.mockReturnValue({ dataCount: 0, readings: [], fields: [] });
       service.startChart(historicRequest);
 
-      liveReadingsAdapterMock.fromDTO.mockReturnValue(mockAdaptedReading);
+      liveReadingsAdapterMock.fromDTO.mockReturnValue([mockAdaptedReading]);
       subject.next(mockRawReading);
 
       expect(service.liveReadings()).toEqual([]);

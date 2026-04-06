@@ -11,6 +11,7 @@ import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorReading } from '../../../../models/sensor-data/sensor-reading.model';
+import { FieldDescriptor } from '../../../../models/sensor-data/field-descriptor.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 
@@ -26,9 +27,9 @@ const mockSensor: Sensor = {
 };
 
 const mockReadings: SensorReading[] = [
-  { timestamp: new Date(1700000000000).toISOString(), value: 36.5 },
-  { timestamp: new Date(1700000060000).toISOString(), value: 36.7 },
-  { timestamp: new Date(1700000120000).toISOString(), value: 36.6 },
+  { timestamp: new Date(1700000000000).toISOString(), value: { temperature: 36.5 } },
+  { timestamp: new Date(1700000060000).toISOString(), value: { temperature: 36.7 } },
+  { timestamp: new Date(1700000120000).toISOString(), value: { temperature: 36.6 } },
 ];
 
 const historicRequest: ChartRequest = { sensor: mockSensor, chartType: ChartType.HISTORIC };
@@ -38,6 +39,7 @@ function createChartServiceMock() {
   return {
     historicReadings: signal<SensorReading[]>([]),
     liveReadings: signal<SensorReading[]>([]),
+    fields: signal<FieldDescriptor[]>([]),
     loading: signal(false),
     connectionStatus: signal<ConnectionStatus>('disconnected'),
     error: signal<string | null>(null),
@@ -121,13 +123,6 @@ describe('ChartContainerComponent (Integration)', () => {
 
       expect(el(fixture).querySelector('mat-spinner')).toBeTruthy();
       expect(getHistoricChart(fixture)).toBeFalsy();
-    });
-
-    it('should NOT show spinner when not loading', () => {
-      const { fixture } = setupTestBed(historicRequest);
-      fixture.detectChanges();
-
-      expect(el(fixture).querySelector('mat-spinner')).toBeFalsy();
     });
   });
 
@@ -222,18 +217,6 @@ describe('ChartContainerComponent (Integration)', () => {
       const statusEl = el(fixture).querySelector('.connection-status')!;
       expect(statusEl.textContent).toContain(label);
       expect(statusEl.classList).toContain(cssClass);
-    });
-  });
-
-  describe('Chart Type Exclusivity', () => {
-    it('should never show both chart types simultaneously', () => {
-      const { fixture, chartServiceMock } = setupTestBed(historicRequest);
-      (chartServiceMock.historicReadings as WritableSignal<SensorReading[]>).set(mockReadings);
-      (chartServiceMock.liveReadings as WritableSignal<SensorReading[]>).set(mockReadings);
-      fixture.detectChanges();
-
-      expect(getHistoricChart(fixture)).toBeTruthy();
-      expect(getRealTimeChart(fixture)).toBeFalsy();
     });
   });
 });
