@@ -53,7 +53,9 @@ describe('TenantTableComponent (Unit)', () => {
       const empty = fixture.debugElement.query(By.css('.empty-state'));
       expect(empty).toBeTruthy();
       expect(empty.query(By.css('mat-icon')).nativeElement.textContent).toContain('business');
-      expect(empty.query(By.css('p')).nativeElement.textContent).toContain('Nessun tenant disponibile');
+      expect(empty.query(By.css('p')).nativeElement.textContent).toContain(
+        'Nessun tenant disponibile',
+      );
       expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
     });
@@ -94,16 +96,8 @@ describe('TenantTableComponent (Unit)', () => {
 
   describe('outputs', () => {
     it.each([
-      [
-        'dashboardRequested',
-        'dashboard',
-        (c: TenantTableComponent) => c.dashboardRequested,
-      ],
-      [
-        'deleteRequested',
-        'delete',
-        (c: TenantTableComponent) => c.deleteRequested,
-      ],
+      ['dashboardRequested', 'dashboard', (c: TenantTableComponent) => c.dashboardRequested],
+      ['deleteRequested', 'delete', (c: TenantTableComponent) => c.deleteRequested],
     ] as const)('should emit %s when %s button is clicked', (_outputName, iconText, getOutput) => {
       const spy = vi.fn();
       getOutput(component).subscribe(spy);
@@ -130,6 +124,27 @@ describe('TenantTableComponent (Unit)', () => {
       expect(fixture.debugElement.query(By.css('mat-table'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.empty-state'))).toBeFalsy();
       expect(fixture.debugElement.queryAll(By.css('button')).length).toBe(0);
+    });
+  });
+
+  describe('paginator', () => {
+    it('should render paginator when tenants are present', () => {
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeTruthy();
+    });
+
+    it('should not render paginator when tenants list is empty', () => {
+      setInput('tenants', []);
+      expect(fixture.debugElement.query(By.css('mat-paginator'))).toBeFalsy();
+    });
+
+    it('should emit pageChange when paginator emits a page event', () => {
+      const spy = vi.fn();
+      component.pageChange.subscribe(spy);
+
+      const event = { pageIndex: 1, pageSize: 25, length: 50 };
+      fixture.debugElement.query(By.css('mat-paginator')).componentInstance.page.emit(event);
+
+      expect(spy).toHaveBeenCalledWith(event);
     });
   });
 });

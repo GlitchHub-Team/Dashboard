@@ -1,9 +1,9 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { PageEvent } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { filter, switchMap } from 'rxjs';
@@ -18,7 +18,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-tenant-manager-page',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatPaginatorModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatIconModule],
   templateUrl: './tenant-manager.page.html',
   styleUrl: './tenant-manager.page.css',
 })
@@ -35,6 +35,17 @@ export class TenantManagerPage implements OnInit {
   protected readonly limit = this.tenantService.limit;
   protected readonly loading = this.tenantService.loading;
   protected readonly error = this.tenantService.error;
+
+  private readonly _dismissedError = signal<string | null>(null);
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
+  }
 
   public ngOnInit(): void {
     this.tenantService.retrieveTenants();
@@ -86,6 +97,8 @@ export class TenantManagerPage implements OnInit {
   }
 
   protected onGoToTenantUserManagement(tenant: Tenant): void {
-    this.router.navigate(['/user-management/tenant-users'], { queryParams: { tenantId: tenant.id } });
-  } 
+    this.router.navigate(['/user-management/tenant-users'], {
+      queryParams: { tenantId: tenant.id },
+    });
+  }
 }

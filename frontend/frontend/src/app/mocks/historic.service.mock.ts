@@ -1,29 +1,21 @@
 // mocks/sensor-historic-mock.service.ts
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, throwError } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, delay, throwError, switchMap, timer } from 'rxjs';
 import { ChartRequest } from '../models/chart/chart-request.model';
 import { HistoricResponse, HistoricSample } from '../models/sensor-data/historic-response.model';
 import { TimeInterval } from '../models/chart/time-interval.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
 import { getMockFieldConfigs } from './sensor-mock.config';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable()
 export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
+  private readonly shouldFailGetHistoricData = true;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'request failed' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetHistoricData) {
+      return this.delayedError(400, 'Failed to fetch historic data');
     }
 
     const isEcg = req.sensor.profile === SensorProfiles.CUSTOM_ECG_SERVICE;
@@ -149,5 +141,11 @@ export class SensorHistoricMockService {
     const to = new Date();
     const from = new Date(to.getTime() - this.DEFAULT_HOURS * 60 * 60 * 1000);
     return { from, to };
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(
+      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
+    );
   }
 }

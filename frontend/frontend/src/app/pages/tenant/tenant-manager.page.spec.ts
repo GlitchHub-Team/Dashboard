@@ -105,7 +105,7 @@ describe('TenantManagerPage', () => {
       name: 'paginator',
       selector: 'mat-paginator',
       expectedText: null,
-      setup: () => undefined,
+      setup: () => mockTenantService.tenantList.set(mockTenants),
     },
   ])('should render $name', ({ selector, expectedText, setup }) => {
     setup();
@@ -193,7 +193,7 @@ describe('TenantManagerPage', () => {
     });
   });
 
-    it.each([
+  it.each([
     { tenant: mockTenants[0], tenantId: 'tenant-01' },
     { tenant: mockTenants[1], tenantId: 'tenant-02' },
   ])('should navigate to tenant user management for $tenantId', ({ tenant, tenantId }) => {

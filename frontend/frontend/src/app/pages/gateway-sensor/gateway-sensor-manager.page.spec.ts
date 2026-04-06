@@ -157,6 +157,16 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
     });
+
+    it('should dismiss the error when dismiss button is clicked', () => {
+      gatewayErrorSig.set('Gateway failed');
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+    });
   });
 
   describe('template rendering', () => {

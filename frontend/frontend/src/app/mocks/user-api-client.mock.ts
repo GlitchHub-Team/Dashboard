@@ -148,7 +148,7 @@ export class UserApiClientMockService {
     },
   ];
 
-  private readonly shouldFailGetUsers = false;
+  private readonly shouldFailGetUsers = true;
   private readonly shouldFailGetUser = false;
   private readonly shouldFailCreateUser = true;
   private readonly shouldFailDeleteUser = false;
@@ -239,8 +239,6 @@ export class UserApiClientMockService {
   }
 
   private delayedError(status: number, message: string): Observable<never> {
-    return timer(500).pipe(
-      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
-    );
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

@@ -186,7 +186,9 @@ describe('GatewaySensorManagerPage (Integration)', () => {
       const gatewayTable = getGatewayTable(fixture);
       expect(gatewayTable).toBeTruthy();
       expect(gatewayTable.componentInstance.actionMode()).toBe('manage');
-      expect(fixture.nativeElement.querySelector('.manager-header h1').textContent).toContain('Gestione Gateway');
+      expect(fixture.nativeElement.querySelector('.manager-header h1').textContent).toContain(
+        'Gestione Gateway',
+      );
       expect(getGatewayCreateButton(fixture)!.textContent).toContain('Nuovo Gateway');
     });
   });
@@ -248,229 +250,236 @@ describe('GatewaySensorManagerPage (Integration)', () => {
       expect(errorBanner).toBeTruthy();
       expect(errorBanner.textContent).toContain(message);
     });
-  });
 
-  describe('Gateway Expand -> Sensor Table', () => {
-    it('should NOT show expanded component when no gateway is expanded', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
+    describe('Gateway Expand -> Sensor Table', () => {
+      it('should NOT show expanded component when no gateway is expanded', () => {
+        const { fixture, managerServiceMock } = setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        fixture.detectChanges();
 
-      expect(getExpandedComponent(fixture)).toBeFalsy();
+        expect(getExpandedComponent(fixture)).toBeFalsy();
+      });
+
+      it('should render full expanded view: sensors, heading, manage header, and delete buttons', () => {
+        const { fixture, managerServiceMock } = setupTestBed();
+        setupWithExpanded(managerServiceMock, fixture);
+
+        expect(getExpandedComponent(fixture)).toBeTruthy();
+        expect(getSensorTable(fixture)).toBeTruthy();
+
+        const cellTexts = Array.from<Element>(
+          fixture.nativeElement.querySelectorAll('.expanded-content mat-row mat-cell'),
+        ).map((c) => c.textContent?.trim());
+        expect(cellTexts).toContain('Temperature');
+        expect(cellTexts).toContain('Humidity');
+
+        expect(fixture.nativeElement.querySelector('.expanded-content h2').textContent).toContain(
+          'gw-1',
+        );
+        expect(
+          fixture.nativeElement.querySelector('.expanded-content .manager-header h3').textContent,
+        ).toContain('Gestione Sensori');
+        expect(getSensorCreateButton(fixture)!.textContent).toContain('Nuovo Sensore');
+        expect(getSensorDeleteButtons(fixture).length).toBe(2);
+      });
+
+      it('should show sensor spinner when sensor loading in expanded view', () => {
+        const { fixture, managerServiceMock } = setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        (managerServiceMock.expandedGateway as WritableSignal<Gateway | null>).set(mockGateways[0]);
+        (managerServiceMock.sensorLoading as WritableSignal<boolean>).set(true);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('.expanded-content mat-spinner')).toBeTruthy();
+      });
     });
 
-    it('should render full expanded view: sensors, heading, manage header, and delete buttons', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      setupWithExpanded(managerServiceMock, fixture);
+    describe('Event Forwarding', () => {
+      it('should call toggleExpandedGateway when gateway row is clicked', () => {
+        const { fixture, managerServiceMock } = setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        fixture.detectChanges();
 
-      expect(getExpandedComponent(fixture)).toBeTruthy();
-      expect(getSensorTable(fixture)).toBeTruthy();
+        getGatewayRows(fixture)[0].click();
 
-      const cellTexts = Array.from<Element>(
-        fixture.nativeElement.querySelectorAll('.expanded-content mat-row mat-cell'),
-      ).map((c) => c.textContent?.trim());
-      expect(cellTexts).toContain('Temperature');
-      expect(cellTexts).toContain('Humidity');
+        expect(managerServiceMock.toggleExpandedGateway).toHaveBeenCalledWith(mockGateways[0]);
+      });
 
-      expect(fixture.nativeElement.querySelector('.expanded-content h2').textContent).toContain(
-        'gw-1',
+      it('should call changeGatewayPage when gateway paginator emits', () => {
+        const { fixture, managerServiceMock } = setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        fixture.detectChanges();
+
+        getGatewayTable(fixture).componentInstance.gatewayPageChange.emit({
+          pageIndex: 2,
+          pageSize: 25,
+          length: 50,
+        });
+
+        expect(managerServiceMock.changeGatewayPage).toHaveBeenCalledWith(2, 25);
+      });
+
+      it('should call changeSensorPage when sensor paginator emits', () => {
+        const { fixture, managerServiceMock } = setupTestBed();
+        setupWithExpanded(managerServiceMock, fixture);
+
+        getSensorTable(fixture).componentInstance.pageChange.emit({
+          pageIndex: 1,
+          pageSize: 10,
+          length: 20,
+        });
+
+        expect(managerServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
+      });
+    });
+
+    describe('Gateway Create Flow', () => {
+      it('should open CreateGatewayDialog and refresh on success', () => {
+        const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
+          setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        fixture.detectChanges();
+
+        getGatewayCreateButton(fixture)!.click();
+        fixture.detectChanges();
+
+        expect(dialogMock.open).toHaveBeenCalledWith(CreateGatewayDialog);
+
+        confirmDialog();
+
+        expect(managerServiceMock.refreshGateways).toHaveBeenCalled();
+        expect(snackBarMock.open).toHaveBeenCalledWith('Gateway creato con successo', 'Close', {
+          duration: 3000,
+        });
+      });
+
+      it('should NOT refresh when dialog is cancelled', () => {
+        const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        fixture.detectChanges();
+
+        getGatewayCreateButton(fixture)!.click();
+        cancelDialog();
+
+        expect(managerServiceMock.refreshGateways).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Gateway Delete Flow', () => {
+      it.each([
+        { idx: 0, gateway: mockGateways[0], name: 'Gateway Alpha' },
+        { idx: 1, gateway: mockGateways[1], name: 'Gateway Beta' },
+      ])(
+        'should open ConfirmDeleteDialog for "$name" and delete on confirm',
+        ({ idx, gateway }) => {
+          const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
+            setupTestBed();
+          (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+          fixture.detectChanges();
+
+          getGatewayDeleteButtons(fixture)[idx].click();
+          fixture.detectChanges();
+
+          expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
+            data: {
+              title: 'Elimina Gateway',
+              message: `Sei sicuro di voler eliminare il gateway "${gateway.name}"?`,
+            },
+          });
+
+          confirmDialog();
+
+          expect(managerServiceMock.deleteGateway).toHaveBeenCalledWith(gateway);
+          expect(snackBarMock.open).toHaveBeenCalledWith(
+            'Gateway eliminato con successo',
+            'Close',
+            {
+              duration: 3000,
+            },
+          );
+        },
       );
-      expect(
-        fixture.nativeElement.querySelector('.expanded-content .manager-header h3').textContent,
-      ).toContain('Gestione Sensori');
-      expect(getSensorCreateButton(fixture)!.textContent).toContain('Nuovo Sensore');
-      expect(getSensorDeleteButtons(fixture).length).toBe(2);
-    });
 
-    it('should show sensor spinner when sensor loading in expanded view', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      (managerServiceMock.expandedGateway as WritableSignal<Gateway | null>).set(mockGateways[0]);
-      (managerServiceMock.sensorLoading as WritableSignal<boolean>).set(true);
-      fixture.detectChanges();
+      it('should NOT delete when dialog is cancelled', () => {
+        const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
+        (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
+        fixture.detectChanges();
 
-      expect(fixture.nativeElement.querySelector('.expanded-content mat-spinner')).toBeTruthy();
-    });
-  });
+        getGatewayDeleteButtons(fixture)[0].click();
+        cancelDialog();
 
-  describe('Event Forwarding', () => {
-    it('should call toggleExpandedGateway when gateway row is clicked', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
-
-      getGatewayRows(fixture)[0].click();
-
-      expect(managerServiceMock.toggleExpandedGateway).toHaveBeenCalledWith(mockGateways[0]);
-    });
-
-    it('should call changeGatewayPage when gateway paginator emits', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
-
-      getGatewayTable(fixture).componentInstance.gatewayPageChange.emit({
-        pageIndex: 2,
-        pageSize: 25,
-        length: 50,
-      });
-
-      expect(managerServiceMock.changeGatewayPage).toHaveBeenCalledWith(2, 25);
-    });
-
-    it('should call changeSensorPage when sensor paginator emits', () => {
-      const { fixture, managerServiceMock } = setupTestBed();
-      setupWithExpanded(managerServiceMock, fixture);
-
-      getSensorTable(fixture).componentInstance.pageChange.emit({
-        pageIndex: 1,
-        pageSize: 10,
-        length: 20,
-      });
-
-      expect(managerServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
-    });
-  });
-
-  describe('Gateway Create Flow', () => {
-    it('should open CreateGatewayDialog and refresh on success', () => {
-      const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
-        setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
-
-      getGatewayCreateButton(fixture)!.click();
-      fixture.detectChanges();
-
-      expect(dialogMock.open).toHaveBeenCalledWith(CreateGatewayDialog);
-
-      confirmDialog();
-
-      expect(managerServiceMock.refreshGateways).toHaveBeenCalled();
-      expect(snackBarMock.open).toHaveBeenCalledWith('Gateway creato con successo', 'Close', {
-        duration: 3000,
+        expect(managerServiceMock.deleteGateway).not.toHaveBeenCalled();
       });
     });
 
-    it('should NOT refresh when dialog is cancelled', () => {
-      const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
+    describe('Sensor Create Flow', () => {
+      it('should open CreateSensorDialog with gateway data and refresh on success', () => {
+        const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
+          setupTestBed();
+        setupWithExpanded(managerServiceMock, fixture);
 
-      getGatewayCreateButton(fixture)!.click();
-      cancelDialog();
+        getSensorCreateButton(fixture)!.click();
+        fixture.detectChanges();
 
-      expect(managerServiceMock.refreshGateways).not.toHaveBeenCalled();
-    });
-  });
+        expect(dialogMock.open).toHaveBeenCalledWith(CreateSensorDialog, {
+          data: { id: 'gw-1', name: 'Gateway Alpha' },
+        });
 
-  describe('Gateway Delete Flow', () => {
-    it.each([
-      { idx: 0, gateway: mockGateways[0], name: 'Gateway Alpha' },
-      { idx: 1, gateway: mockGateways[1], name: 'Gateway Beta' },
-    ])('should open ConfirmDeleteDialog for "$name" and delete on confirm', ({ idx, gateway }) => {
-      const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
-        setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
+        confirmDialog();
 
-      getGatewayDeleteButtons(fixture)[idx].click();
-      fixture.detectChanges();
-
-      expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
-        data: {
-          title: 'Elimina Gateway',
-          message: `Sei sicuro di voler eliminare il gateway "${gateway.name}"?`,
-        },
+        expect(managerServiceMock.refreshSensors).toHaveBeenCalledWith('gw-1');
+        expect(snackBarMock.open).toHaveBeenCalledWith('Sensore creato con successo', 'Close', {
+          duration: 3000,
+        });
       });
 
-      confirmDialog();
+      it('should NOT refresh when dialog is cancelled', () => {
+        const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
+        setupWithExpanded(managerServiceMock, fixture);
 
-      expect(managerServiceMock.deleteGateway).toHaveBeenCalledWith(gateway);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Gateway eliminato con successo', 'Close', {
-        duration: 3000,
+        getSensorCreateButton(fixture)!.click();
+        cancelDialog();
+
+        expect(managerServiceMock.refreshSensors).not.toHaveBeenCalled();
       });
     });
 
-    it('should NOT delete when dialog is cancelled', () => {
-      const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
-      (managerServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
+    describe('Sensor Delete Flow', () => {
+      it.each([
+        { idx: 0, sensor: mockSensors[0], name: 'Temperature' },
+        { idx: 1, sensor: mockSensors[1], name: 'Humidity' },
+      ])('should open ConfirmDeleteDialog for "$name" and delete on confirm', ({ idx, sensor }) => {
+        const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
+          setupTestBed();
+        setupWithExpanded(managerServiceMock, fixture);
 
-      getGatewayDeleteButtons(fixture)[0].click();
-      cancelDialog();
+        getSensorDeleteButtons(fixture)[idx].click();
+        fixture.detectChanges();
 
-      expect(managerServiceMock.deleteGateway).not.toHaveBeenCalled();
-    });
-  });
+        expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
+          data: {
+            title: 'Elimina Sensore',
+            message: `Sei sicuro di voler eliminare il sensore "${sensor.name}"?`,
+          },
+        });
 
-  describe('Sensor Create Flow', () => {
-    it('should open CreateSensorDialog with gateway data and refresh on success', () => {
-      const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
-        setupTestBed();
-      setupWithExpanded(managerServiceMock, fixture);
+        confirmDialog();
 
-      getSensorCreateButton(fixture)!.click();
-      fixture.detectChanges();
-
-      expect(dialogMock.open).toHaveBeenCalledWith(CreateSensorDialog, {
-        data: { id: 'gw-1', name: 'Gateway Alpha' },
+        expect(managerServiceMock.deleteSensor).toHaveBeenCalledWith(sensor);
+        expect(snackBarMock.open).toHaveBeenCalledWith('Sensore eliminato con successo', 'Close', {
+          duration: 3000,
+        });
       });
 
-      confirmDialog();
+      it('should NOT delete when dialog is cancelled', () => {
+        const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
+        setupWithExpanded(managerServiceMock, fixture);
 
-      expect(managerServiceMock.refreshSensors).toHaveBeenCalledWith('gw-1');
-      expect(snackBarMock.open).toHaveBeenCalledWith('Sensore creato con successo', 'Close', {
-        duration: 3000,
+        getSensorDeleteButtons(fixture)[0].click();
+        cancelDialog();
+
+        expect(managerServiceMock.deleteSensor).not.toHaveBeenCalled();
       });
-    });
-
-    it('should NOT refresh when dialog is cancelled', () => {
-      const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
-      setupWithExpanded(managerServiceMock, fixture);
-
-      getSensorCreateButton(fixture)!.click();
-      cancelDialog();
-
-      expect(managerServiceMock.refreshSensors).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Sensor Delete Flow', () => {
-    it.each([
-      { idx: 0, sensor: mockSensors[0], name: 'Temperature' },
-      { idx: 1, sensor: mockSensors[1], name: 'Humidity' },
-    ])('should open ConfirmDeleteDialog for "$name" and delete on confirm', ({ idx, sensor }) => {
-      const { fixture, managerServiceMock, dialogMock, snackBarMock, confirmDialog } =
-        setupTestBed();
-      setupWithExpanded(managerServiceMock, fixture);
-
-      getSensorDeleteButtons(fixture)[idx].click();
-      fixture.detectChanges();
-
-      expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDeleteDialog, {
-        data: {
-          title: 'Elimina Sensore',
-          message: `Sei sicuro di voler eliminare il sensore "${sensor.name}"?`,
-        },
-      });
-
-      confirmDialog();
-
-      expect(managerServiceMock.deleteSensor).toHaveBeenCalledWith(sensor);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Sensore eliminato con successo', 'Close', {
-        duration: 3000,
-      });
-    });
-
-    it('should NOT delete when dialog is cancelled', () => {
-      const { fixture, managerServiceMock, cancelDialog } = setupTestBed();
-      setupWithExpanded(managerServiceMock, fixture);
-
-      getSensorDeleteButtons(fixture)[0].click();
-      cancelDialog();
-
-      expect(managerServiceMock.deleteSensor).not.toHaveBeenCalled();
     });
   });
 });

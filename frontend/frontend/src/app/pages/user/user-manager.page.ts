@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
@@ -50,6 +50,18 @@ export class UserManagerPage implements OnInit {
   protected readonly limit = this.userService.limit;
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
+
+  private readonly _dismissedError = signal<string | null>(null);
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
+  }
+
   protected readonly UserRole = UserRole;
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly activeTenantId = signal<string | null>(null);

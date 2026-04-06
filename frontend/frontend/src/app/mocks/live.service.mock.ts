@@ -10,11 +10,11 @@ import {
   throwError,
   timer,
 } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Sensor } from '../models/sensor/sensor.model';
 import { RealTimeReading } from '../models/sensor-data/real-time-reading.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
 import { getMockFieldConfigs, MockFieldConfig } from './sensor-mock.config';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable()
 export class SensorRealTimeMockService {
@@ -22,7 +22,7 @@ export class SensorRealTimeMockService {
   private currentValues = new Map<string, number>();
   private readingCount = 0;
 
-  private readonly shouldFailConnection = false;
+  private readonly shouldFailConnection = true;
   private readonly shouldDisconnectAfter = 0;
 
   connect(sensor: Sensor): Observable<RealTimeReading> {
@@ -30,18 +30,7 @@ export class SensorRealTimeMockService {
     this.currentValues.clear();
 
     if (this.shouldFailConnection) {
-      return timer(1000).pipe(
-        switchMap(() =>
-          throwError(
-            () =>
-              new HttpErrorResponse({
-                status: 0,
-                statusText: 'Unknown Error',
-                error: { error: 'WebSocket connection failed' },
-              }),
-          ),
-        ),
-      );
+      return this.delayedError(0, 'WebSocket connection failed');
     }
 
     const isEcg = sensor.profile === SensorProfiles.CUSTOM_ECG_SERVICE;
@@ -60,11 +49,7 @@ export class SensorRealTimeMockService {
           this.shouldDisconnectAfter > 0 &&
           this.readingCount >= this.shouldDisconnectAfter
         ) {
-          throw new HttpErrorResponse({
-            status: 0,
-            statusText: 'Unknown Error',
-            error: { error: 'WebSocket connection lost' },
-          });
+          throw { status: 0, message: 'WebSocket connection lost' } as ApiError;
         }
 
         const data = isEcg
@@ -122,5 +107,11 @@ export class SensorRealTimeMockService {
     }
 
     return waveform;
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(
+      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
+    );
   }
 }

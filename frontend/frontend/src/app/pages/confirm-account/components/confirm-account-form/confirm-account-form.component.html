@@ -16,11 +16,14 @@
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Nuova password</mat-label>
     <input matInput type="password" formControlName="newPassword" />
+    <mat-icon matSuffix>lock</mat-icon>
     @if (confirmAccountForm.controls.newPassword; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
-        <mat-error>Campo obbligatorio</mat-error>
-      } @else if (ctrl.errors?.['minlength'] && ctrl.touched) {
-        <mat-error>La password deve essere lunga almeno 8 caratteri</mat-error>
+        @if (ctrl.hasError('required')) {
+          <mat-error>Campo obbligatorio</mat-error>
+        } @else if (ctrl.hasError('minlength')) {
+          <mat-error>La password deve essere lunga almeno 8 caratteri</mat-error>
+        }
       }
     }
   </mat-form-field>
@@ -28,6 +31,7 @@
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Conferma password</mat-label>
     <input matInput type="password" formControlName="confirmNewPassword" />
+    <mat-icon matSuffix>lock</mat-icon>
     @if (confirmAccountForm.controls.confirmNewPassword; as ctrl) {
       @if (ctrl.invalid && ctrl.touched) {
         <mat-error>Campo obbligatorio</mat-error>
@@ -38,7 +42,7 @@
     }
   </mat-form-field>
 
-  <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="loading()">
+  <button mat-flat-button color="primary" type="submit" class="full-width" [disabled]="loading()">
     @if (loading()) {
       <mat-icon class="spin">sync</mat-icon>
     }

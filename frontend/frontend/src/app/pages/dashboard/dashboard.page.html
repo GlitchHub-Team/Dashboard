@@ -27,10 +27,13 @@
         </button>
       </div>
     } @else {
-      @if (error()) {
+      @if (visibleError(); as error) {
         <div class="error-banner">
-          <mat-icon>error</mat-icon>
-          <span>{{ error() }}</span>
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ error }}</span>
+          <button mat-icon-button type="button" (click)="dismissError()">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
       }
       

@@ -52,9 +52,16 @@ export class DashboardPage implements OnInit, OnDestroy {
     () => this.dashboardService.gatewayError() ?? this.dashboardService.sensorError(),
   );
 
+  private readonly _dismissedError = signal<string | null>(null);
+
   // Riceve sicuramente il role da app-shell
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly UserRole = UserRole;
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
 
   // Utilizzato solo quando si fa impersonation di un tenant da SUPER_ADMIN, altrimenti è null e viene ignorato
   protected readonly activeTenantId = signal<string | null>(null);
@@ -76,6 +83,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   protected onBackToTenants(): void {
     this.router.navigate(['/tenant-management']);
+  }
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
   }
 
   protected onGoToTenantUsers(): void {

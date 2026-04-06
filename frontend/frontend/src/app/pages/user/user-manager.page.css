@@ -21,7 +21,7 @@
 .manager-content {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -45,6 +45,27 @@
 .banner-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background: #fdecea;
+  border-left: 4px solid #d32f2f;
+  color: #b71c1c;
+}
+
+.error-banner mat-icon {
+  flex-shrink: 0;
+}
+
+.error-banner span {
+  flex: 1;
+  font-size: 14px;
 }
 
 ::ng-deep .table-container .mat-header-row,

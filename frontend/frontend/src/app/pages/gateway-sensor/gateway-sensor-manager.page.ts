@@ -1,7 +1,8 @@
-import { Component, computed, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
 import { filter, switchMap } from 'rxjs';
@@ -16,7 +17,7 @@ import { CreateSensorDialog } from './dialogs/create-sensor/create-sensor.dialog
 
 @Component({
   selector: 'app-gateway-sensor-manager',
-  imports: [GatewayTableComponent, MatIcon],
+  imports: [GatewayTableComponent, MatIcon, MatButtonModule],
   templateUrl: './gateway-sensor-manager.page.html',
   styleUrl: './gateway-sensor-manager.page.css',
 })
@@ -42,6 +43,17 @@ export class GatewaySensorManagerPage implements OnInit {
   protected readonly error = computed(
     () => this.managerService.gatewayError() ?? this.managerService.sensorError(),
   );
+
+  private readonly _dismissedError = signal<string | null>(null);
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
+  }
 
   public ngOnInit(): void {
     this.managerService.loadGateways();

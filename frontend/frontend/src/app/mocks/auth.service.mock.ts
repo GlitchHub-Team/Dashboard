@@ -47,7 +47,9 @@ export class AuthServiceMock {
   private readonly shouldFailForgotPasswordRequest = false;
   private readonly shouldFailConfirmPasswordChange = true;
   private readonly shouldFailConfirmPasswordReset = false;
-  private readonly shouldFailConfirmAccountCreation = false;
+  private readonly shouldFailConfirmAccountCreation = true;
+  private readonly shouldFailVerifyForgotPasswordToken = false;
+  private readonly shouldFailVerifyAccountToken = false;
 
   login(req: LoginRequest): Observable<AuthResponse> {
     if (this.shouldFailLogin) {
@@ -95,6 +97,28 @@ export class AuthServiceMock {
 
     if (!data.oldPassword) {
       return this.delayedError({ status: 400, message: 'Old password is required' });
+    }
+    return of(undefined).pipe(delay(MOCK_DELAY));
+  }
+
+  verifyForgotPasswordToken(token: string): Observable<void> {
+    if (this.shouldFailVerifyForgotPasswordToken) {
+      return this.delayedError({ status: 400, message: 'Invalid or expired token' });
+    }
+
+    if (!token || token === 'expired-token') {
+      return this.delayedError({ status: 400, message: 'Invalid or expired token' });
+    }
+    return of(undefined).pipe(delay(MOCK_DELAY));
+  }
+
+  verifyAccountToken(token: string): Observable<void> {
+    if (this.shouldFailVerifyAccountToken) {
+      return this.delayedError({ status: 400, message: 'Invalid or expired token' });
+    }
+
+    if (!token || token === 'expired-token') {
+      return this.delayedError({ status: 400, message: 'Invalid or expired token' });
     }
     return of(undefined).pipe(delay(MOCK_DELAY));
   }

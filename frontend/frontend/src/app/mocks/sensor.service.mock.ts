@@ -208,8 +208,8 @@ export class SensorApiClientServiceMock {
     'tenant-5': [],
   };
 
-  private readonly shouldFailGetSensorListByGateway = false;
-  private readonly shouldFailGetSensorListByTenant = false;
+  private readonly shouldFailGetSensorListByGateway = true;
+  private readonly shouldFailGetSensorListByTenant = true;
   private readonly shouldFailAddNewSensor = true;
   private readonly shouldFailDeleteSensor = false;
 

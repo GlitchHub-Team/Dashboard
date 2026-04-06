@@ -401,45 +401,45 @@ describe('UserManagerPage (Integration)', () => {
       expect(errorBanner).toBeTruthy();
       expect(errorBanner.textContent).toContain('Failed to load users');
     });
-  });
 
-  describe('Navigation', () => {
-    it.each([
-      [
-        'tenant-management from tenant banner back button',
-        tenantAdminContext,
-        { tenantId: 'tenant-1' },
-        '.tenant-banner .banner-actions button:last-child',
-        [['/tenant-management']],
-      ],
-      [
-        'dashboard with tenantId from dashboard button',
-        tenantUserContext,
-        { tenantId: 'tenant-123' },
-        '.tenant-banner .banner-actions button:first-child',
-        [['/dashboard'], { queryParams: { tenantId: 'tenant-123' } }],
-      ],
-      [
-        'tenant-management from warning banner',
-        tenantUserContext,
-        {},
-        '.warning-banner button',
-        [['/tenant-management']],
-      ],
-    ] as const)(
-      'should navigate to %s',
-      (_label, routeContext, queryParams, selector, expectedArgs) => {
-        const { fixture, routerMock } = setupTestBed({
-          session: superAdminSession,
-          routeContext,
-          queryParams,
-        });
-        fixture.detectChanges();
+    describe('Navigation', () => {
+      it.each([
+        [
+          'tenant-management from tenant banner back button',
+          tenantAdminContext,
+          { tenantId: 'tenant-1' },
+          '.tenant-banner .banner-actions button:last-child',
+          [['/tenant-management']],
+        ],
+        [
+          'dashboard with tenantId from dashboard button',
+          tenantUserContext,
+          { tenantId: 'tenant-123' },
+          '.tenant-banner .banner-actions button:first-child',
+          [['/dashboard'], { queryParams: { tenantId: 'tenant-123' } }],
+        ],
+        [
+          'tenant-management from warning banner',
+          tenantUserContext,
+          {},
+          '.warning-banner button',
+          [['/tenant-management']],
+        ],
+      ] as const)(
+        'should navigate to %s',
+        (_label, routeContext, queryParams, selector, expectedArgs) => {
+          const { fixture, routerMock } = setupTestBed({
+            session: superAdminSession,
+            routeContext,
+            queryParams,
+          });
+          fixture.detectChanges();
 
-        fixture.nativeElement.querySelector(selector).click();
+          fixture.nativeElement.querySelector(selector).click();
 
-        expect(routerMock.navigate).toHaveBeenCalledWith(...expectedArgs);
-      },
-    );
+          expect(routerMock.navigate).toHaveBeenCalledWith(...expectedArgs);
+        },
+      );
+    });
   });
 });

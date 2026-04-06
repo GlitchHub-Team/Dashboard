@@ -9,7 +9,7 @@ import { ApiError } from '../models/api-error.model';
 @Injectable({ providedIn: 'root' })
 export class TenantApiClientMockService {
   private readonly shouldFailGetTenant = false;
-  private readonly shouldFailGetTenants = false;
+  private readonly shouldFailGetTenants = true;
   private readonly shouldFailCreateTenant = true;
   private readonly shouldFailDeleteTenant = false;
 
@@ -66,8 +66,6 @@ export class TenantApiClientMockService {
   }
 
   private delayedError(status: number, message: string): Observable<never> {
-    return timer(500).pipe(
-      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
-    );
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

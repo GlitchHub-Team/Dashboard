@@ -236,12 +236,12 @@ export class GatewayApiClientServiceMock {
       status: 'active',
       interval: 60,
     },
-  ]
-  
+  ];
+
   private readonly shouldFailGetGatewayListByTenant = false;
   private readonly shouldFailGetGatewayList = false;
   private readonly shouldFailAddNewGateway = true;
-  private readonly shouldFailDeleteGateway = false;
+  private readonly shouldFailDeleteGateway = true;
 
   public getGatewayListByTenant(
     tenantId: string,
@@ -311,8 +311,6 @@ export class GatewayApiClientServiceMock {
   }
 
   private delayedError(status: number, message: string): Observable<never> {
-    return timer(500).pipe(
-      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
-    );
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }
