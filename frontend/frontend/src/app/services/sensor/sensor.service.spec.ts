@@ -43,7 +43,7 @@ describe('SensorService', () => {
         gateway_id: 'gw-1',
         sensor_name: 'Temperature',
         profile: 'health thermometer',
-        sensor_interval: 60,
+        data_interval: 60,
         status: Status.ACTIVE,
       },
       {
@@ -51,7 +51,7 @@ describe('SensorService', () => {
         gateway_id: 'gw-1',
         sensor_name: 'Humidity',
         profile: 'environmental sensing',
-        sensor_interval: 60,
+        data_interval: 60,
         status: Status.INACTIVE,
       },
     ],
@@ -70,7 +70,7 @@ describe('SensorService', () => {
     gateway_id: 'gw-1',
     sensor_name: 'Pressure',
     profile: 'environmental sensing',
-    sensor_interval: 60,
+    data_interval: 60,
     status: Status.ACTIVE,
   };
   const mockNewSensor: Sensor = {

@@ -13,7 +13,7 @@ describe('SensorApiAdapter', () => {
     sensor_name: 'Heart Rate Sensor',
     status: 'active',
     profile: 'heart_rate_service',
-    sensor_interval: 1000,
+    data_interval: 1000,
   };
 
   describe('fromDTO', () => {

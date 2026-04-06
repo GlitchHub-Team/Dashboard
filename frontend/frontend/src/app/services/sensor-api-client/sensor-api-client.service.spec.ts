@@ -21,7 +21,7 @@ describe('SensorApiClientService', () => {
       gateway_id: 'gw-1',
       sensor_name: 'Temperature',
       profile: 'health thermometer',
-      sensor_interval: 60,
+      data_interval: 60,
       status: 'attivo',
     },
     {
@@ -29,7 +29,7 @@ describe('SensorApiClientService', () => {
       gateway_id: 'gw-1',
       sensor_name: 'Humidity',
       profile: 'environmental sensing',
-      sensor_interval: 60,
+      data_interval: 60,
       status: 'inattivo',
     },
   ];
@@ -105,7 +105,7 @@ describe('SensorApiClientService', () => {
       gateway_id: 'gw-1',
       sensor_name: 'New Sensor',
       profile: 'health thermometer',
-      sensor_interval: 60,
+      data_interval: 60,
       status: 'active',
     };
 
@@ -114,7 +114,7 @@ describe('SensorApiClientService', () => {
         expect(sensor).toEqual(mockResponse);
         expect(sensor.sensor_id).toBe('s-3');
         expect(sensor.sensor_name).toBe('New Sensor');
-        expect(sensor.sensor_interval).toBe(60);
+        expect(sensor.data_interval).toBe(60);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/sensor`);
