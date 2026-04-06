@@ -92,6 +92,7 @@ export class SensorService {
       tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete sensor');
+        this._loading.set(false);
         return EMPTY;
       }),
     );

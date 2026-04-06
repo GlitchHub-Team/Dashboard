@@ -91,6 +91,7 @@ export class GatewayService {
       tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete gateway');
+        this._loading.set(false);
         return EMPTY;
       }),
     );

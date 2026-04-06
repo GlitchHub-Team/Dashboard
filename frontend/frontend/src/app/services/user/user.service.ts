@@ -80,6 +80,7 @@ export class UserService {
       tap(() => this.refetchCurrentPage(user.role, user.tenantId)),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete user');
+        this._loading.set(false);
         return EMPTY;
       }),
     );

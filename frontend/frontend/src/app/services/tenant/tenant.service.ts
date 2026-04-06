@@ -82,6 +82,7 @@ export class TenantService {
       tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete tenant');
+        this._loading.set(false);
         return EMPTY;
       }),
     );
