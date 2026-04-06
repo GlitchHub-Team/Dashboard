@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
@@ -11,10 +12,11 @@ import { ApiError } from '../../../../models/api-error.model';
 
 interface TenantFormDialogTestApi {
   tenantForm: TenantFormDialog['tenantForm'];
-  isSubmitting: boolean;
-  generalError: string;
+  isSubmitting: WritableSignal<boolean>;
+  generalError: WritableSignal<string>;
   onSave: () => void;
   onCancel: () => void;
+  dismissError: () => void;
 }
 
 describe('TenantFormDialog (Unit)', () => {
@@ -53,8 +55,8 @@ describe('TenantFormDialog (Unit)', () => {
 
       expect(component).toBeTruthy();
       expect(testApi.tenantForm.value).toEqual({ name: '', canImpersonate: false });
-      expect(testApi.isSubmitting).toBe(false);
-      expect(testApi.generalError).toBe('');
+      expect(testApi.isSubmitting()).toBe(false);
+      expect(testApi.generalError()).toBe('');
       expect(
         fixture.debugElement.query(By.css('[mat-dialog-title]')).nativeElement.textContent,
       ).toContain('Aggiungi Nuovo Tenant');
@@ -115,8 +117,8 @@ describe('TenantFormDialog (Unit)', () => {
       testApi.onSave();
       fixture.detectChanges();
 
-      expect(testApi.generalError).toBe(expectedMsg);
-      expect(testApi.isSubmitting).toBe(false);
+      expect(testApi.generalError()).toBe(expectedMsg);
+      expect(testApi.isSubmitting()).toBe(false);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
     });
   });
@@ -129,7 +131,7 @@ describe('TenantFormDialog (Unit)', () => {
       expect(saveButton.disabled).toBe(true);
 
       testApi.tenantForm.setValue({ name: 'Tenant One', canImpersonate: false });
-      testApi.isSubmitting = true;
+      testApi.isSubmitting.set(true);
       fixture.detectChanges();
       expect(saveButton.disabled).toBe(true);
     });
@@ -142,6 +144,23 @@ describe('TenantFormDialog (Unit)', () => {
       testApi.onCancel();
 
       expect(dialogRefMock.close).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('dismissError', () => {
+    it('should clear error banner when close button is clicked', async () => {
+      await createComponent(null);
+      tenantServiceMock.addNewTenant.mockReturnValue(throwError(() => ({ status: 500 } as ApiError)));
+      testApi.tenantForm.setValue({ name: 'Tenant One', canImpersonate: false });
+      testApi.onSave();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
     });
   });
 });

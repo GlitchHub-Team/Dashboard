@@ -150,7 +150,7 @@ export class UserApiClientMockService {
 
   private readonly shouldFailGetUsers = false;
   private readonly shouldFailGetUser = false;
-  private readonly shouldFailCreateUser = false;
+  private readonly shouldFailCreateUser = true;
   private readonly shouldFailDeleteUser = false;
 
   public getUsers(

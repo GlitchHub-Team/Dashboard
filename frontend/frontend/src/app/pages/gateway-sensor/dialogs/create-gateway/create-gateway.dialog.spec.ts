@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { of, throwError, Observable } from 'rxjs';
 
@@ -21,7 +20,7 @@ describe('CreateGatewayDialog (Unit)', () => {
     gatewayServiceMock = { addNewGateway: vi.fn() };
 
     await TestBed.configureTestingModule({
-      imports: [CreateGatewayDialog, NoopAnimationsModule],
+      imports: [CreateGatewayDialog],
       providers: [
         { provide: MatDialogRef, useValue: dialogRefMock },
         { provide: GatewayService, useValue: gatewayServiceMock },
@@ -99,7 +98,7 @@ describe('CreateGatewayDialog (Unit)', () => {
   describe('submit error', () => {
     it.each([
       [{ message: 'Duplicate gateway name' } as ApiError, 'Duplicate gateway name'],
-      [{ status: 500 } as ApiError, 'Failed to create gateway'],
+      [{ status: 500 } as ApiError, 'Failed to create gateway. Please try again.'],
     ])('should show error banner and not close dialog', (error, expectedMsg) => {
       fillValidForm();
       gatewayServiceMock.addNewGateway.mockReturnValue(throwError(() => error));
@@ -107,7 +106,7 @@ describe('CreateGatewayDialog (Unit)', () => {
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent).toContain(expectedMsg);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
-      expect(component['isSubmitting']).toBe(false);
+      expect(component['isSubmitting']()).toBe(false);
     });
   });
 
@@ -130,6 +129,23 @@ describe('CreateGatewayDialog (Unit)', () => {
     });
   });
 
+  describe('dismissError', () => {
+    it('should clear error banner when close button is clicked', () => {
+      fillValidForm();
+      gatewayServiceMock.addNewGateway.mockReturnValue(throwError(() => ({ message: 'Server error' }) as ApiError));
+      submitBtn().nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+      expect(component['generalError']()).toBe('');
+    });
+  });
+
   describe('error recovery', () => {
     it('should clear error banner on successful retry', () => {
       fillValidForm();
@@ -141,7 +157,7 @@ describe('CreateGatewayDialog (Unit)', () => {
       gatewayServiceMock.addNewGateway.mockReturnValue(of({}));
       submitBtn().nativeElement.click();
       fixture.detectChanges();
-      expect(component['generalError']).toBe('');
+      expect(component['generalError']()).toBe('');
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
     });
   });

@@ -2,8 +2,23 @@
   width: 100%;
 }
 
-.error-text {
-  color: red;
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background: #fdecea;
+  border-left: 4px solid #d32f2f;
+  color: #b71c1c;
+}
+
+.error-banner mat-icon {
+  flex-shrink: 0;
+}
+
+.error-banner span {
+  flex: 1;
+  font-size: 14px;
 }

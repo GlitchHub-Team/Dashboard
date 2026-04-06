@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
@@ -13,10 +13,11 @@ import { ApiError } from '../../../../models/api-error.model';
 
 interface UserFormDialogTestApi {
   form: UserFormDialogComponent['form'];
-  isSubmitting: boolean;
-  generalError: string;
+  isSubmitting: WritableSignal<boolean>;
+  generalError: WritableSignal<string>;
   onSave: () => void;
   onCancel: () => void;
+  dismissError: () => void;
 }
 
 describe('UserFormDialogComponent', () => {
@@ -69,8 +70,8 @@ describe('UserFormDialogComponent', () => {
 
       expect(component).toBeTruthy();
       expect(testApi.form.value).toEqual({ username: '', email: '', tenantId: '' });
-      expect(testApi.isSubmitting).toBe(false);
-      expect(testApi.generalError).toBe('');
+      expect(testApi.isSubmitting()).toBe(false);
+      expect(testApi.generalError()).toBe('');
     });
 
     it.each([
@@ -162,8 +163,8 @@ describe('UserFormDialogComponent', () => {
 
       testApi.onSave();
 
-      expect(testApi.generalError).toBe(expectedMsg);
-      expect(testApi.isSubmitting).toBe(false);
+      expect(testApi.generalError()).toBe(expectedMsg);
+      expect(testApi.isSubmitting()).toBe(false);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
     });
   });
@@ -186,6 +187,23 @@ describe('UserFormDialogComponent', () => {
       testApi.onCancel();
 
       expect(dialogRefMock.close).toHaveBeenCalledWith();
+    });
+  });
+
+  describe('dismissError', () => {
+    it('should clear error banner when close button is clicked', async () => {
+      await createComponent({ role: UserRole.TENANT_USER });
+      userServiceMock.addNewUser.mockReturnValue(throwError(() => ({ status: 500 } as ApiError)));
+      testApi.form.setValue({ username: 'u', email: 'u@example.com', tenantId: '' });
+      testApi.onSave();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
     });
   });
 

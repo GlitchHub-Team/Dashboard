@@ -240,8 +240,8 @@ export class GatewayApiClientServiceMock {
   
   private readonly shouldFailGetGatewayListByTenant = false;
   private readonly shouldFailGetGatewayList = false;
-  private readonly shouldFailAddNewGateway = false;
-  private readonly shouldFailDeleteGateway = true;
+  private readonly shouldFailAddNewGateway = true;
+  private readonly shouldFailDeleteGateway = false;
 
   public getGatewayListByTenant(
     tenantId: string,

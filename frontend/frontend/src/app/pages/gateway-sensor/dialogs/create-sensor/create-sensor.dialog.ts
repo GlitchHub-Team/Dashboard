@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { TitleCasePipe } from '@angular/common';
 
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
@@ -23,7 +23,7 @@ import { sensorProfilesMapper } from '../../../../utils/sensor-profile.utils';
     MatSelectModule,
     MatButtonModule,
     MatProgressSpinner,
-    MatIcon,
+    MatIconModule,
     TitleCasePipe,
     MatDialogModule,
     ReactiveFormsModule,
@@ -81,5 +81,9 @@ export class CreateSensorDialog {
 
   protected onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  protected dismissError(): void {
+    this.generalError.set('');
   }
 }

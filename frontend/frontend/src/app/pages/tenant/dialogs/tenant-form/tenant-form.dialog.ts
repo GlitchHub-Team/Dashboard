@@ -76,4 +76,8 @@ export class TenantFormDialog {
   protected onCancel(): void {
     this.dialogRef.close(false);
   }
+
+  protected dismissError(): void {
+    this.generalError.set('');
+  }
 }

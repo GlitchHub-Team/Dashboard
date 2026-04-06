@@ -210,8 +210,8 @@ export class SensorApiClientServiceMock {
 
   private readonly shouldFailGetSensorListByGateway = false;
   private readonly shouldFailGetSensorListByTenant = false;
-  private readonly shouldFailAddNewSensor = false;
-  private readonly shouldFailDeleteSensor = true;
+  private readonly shouldFailAddNewSensor = true;
+  private readonly shouldFailDeleteSensor = false;
 
 public getSensorListByGateway(
     gatewayId: string,

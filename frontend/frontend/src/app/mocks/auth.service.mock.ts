@@ -45,7 +45,7 @@ export class AuthServiceMock {
   private readonly shouldFailLogin = false;
   private readonly shouldFailLogout = false;
   private readonly shouldFailForgotPasswordRequest = false;
-  private readonly shouldFailConfirmPasswordChange = false;
+  private readonly shouldFailConfirmPasswordChange = true;
   private readonly shouldFailConfirmPasswordReset = false;
   private readonly shouldFailConfirmAccountCreation = false;
 

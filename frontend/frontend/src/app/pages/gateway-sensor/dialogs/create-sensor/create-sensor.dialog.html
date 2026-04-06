@@ -1,10 +1,13 @@
 <h2 mat-dialog-title>Nuovo Sensore</h2>
 
 <mat-dialog-content>
-  @if (generalError()) {
+  @if (generalError(); as error) {
     <div class="error-banner">
-      <mat-icon>error</mat-icon>
-      <span>{{ generalError() }}</span>
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button type="button" (click)="dismissError()">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
   }
 

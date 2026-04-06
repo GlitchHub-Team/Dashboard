@@ -123,14 +123,14 @@ describe('CreateSensorDialog (Unit)', () => {
         dataInterval: 1000,
       });
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
-      expect(component['isSubmitting']).toBe(false);
+      expect(component['isSubmitting']()).toBe(false);
     });
   });
 
   describe('submit error', () => {
     it.each([
       [{ message: 'Duplicate sensor name' } as ApiError, 'Duplicate sensor name'],
-      [{ status: 500 } as ApiError, 'Failed to create sensor'],
+      [{ status: 500 } as ApiError, 'Failed to create sensor. Please try again.'],
     ])('should show error banner and not close dialog', (error, expectedMsg) => {
       fillValidForm();
       sensorServiceMock.addNewSensor.mockReturnValue(throwError(() => error));
@@ -138,7 +138,7 @@ describe('CreateSensorDialog (Unit)', () => {
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent).toContain(expectedMsg);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
-      expect(component['isSubmitting']).toBe(false);
+      expect(component['isSubmitting']()).toBe(false);
     });
   });
 
@@ -161,6 +161,23 @@ describe('CreateSensorDialog (Unit)', () => {
     });
   });
 
+  describe('dismissError', () => {
+    it('should clear error banner when close button is clicked', () => {
+      fillValidForm();
+      sensorServiceMock.addNewSensor.mockReturnValue(throwError(() => ({ message: 'Server error' }) as ApiError));
+      submitBtn().nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+      expect(component['generalError']()).toBe('');
+    });
+  });
+
   describe('error recovery', () => {
     it('should clear error banner on successful retry', () => {
       fillValidForm();
@@ -174,7 +191,7 @@ describe('CreateSensorDialog (Unit)', () => {
       sensorServiceMock.addNewSensor.mockReturnValue(of({}));
       submitBtn().nativeElement.click();
       fixture.detectChanges();
-      expect(component['generalError']).toBe('');
+      expect(component['generalError']()).toBe('');
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
     });
   });

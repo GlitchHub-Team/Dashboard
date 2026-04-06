@@ -64,4 +64,8 @@ export class CreateGatewayDialog {
   protected onCancel(): void {
     this.dialogRef.close(false);
   }
+
+  protected dismissError(): void {
+    this.generalError.set('');
+  }
 }

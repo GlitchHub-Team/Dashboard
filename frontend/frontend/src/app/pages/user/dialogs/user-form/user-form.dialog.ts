@@ -102,4 +102,8 @@ export class UserFormDialogComponent {
   protected onCancel(): void {
     this.dialogRef.close();
   }
+
+  protected dismissError(): void {
+    this.generalError.set('');
+  }
 }
