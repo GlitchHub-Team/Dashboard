@@ -93,7 +93,6 @@ export class GatewayService {
         this._error.set(err.message ?? 'Failed to delete gateway');
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 

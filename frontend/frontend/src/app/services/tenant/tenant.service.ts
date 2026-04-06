@@ -84,7 +84,6 @@ export class TenantService {
         this._error.set(err.message ?? 'Failed to delete tenant');
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 

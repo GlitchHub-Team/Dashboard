@@ -94,7 +94,6 @@ export class SensorService {
         this._error.set(err.message ?? 'Failed to delete sensor');
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 

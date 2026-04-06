@@ -82,7 +82,6 @@ export class UserService {
         this._error.set(err.message ?? 'Failed to delete user');
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 
