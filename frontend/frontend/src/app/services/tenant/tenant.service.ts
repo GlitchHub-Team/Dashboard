@@ -64,12 +64,6 @@ export class TenantService {
       .subscribe();
   }
 
-  public changePage(pageIndex: number, limit: number): void {
-    this._pageIndex.set(pageIndex);
-    this._limit.set(limit);
-    this.retrieveTenants();
-  }
-
   // Il dialog si occupa del loading/errors
   public addNewTenant(config: TenantConfig): Observable<Tenant> {
     return this.tenantApi.createTenant(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
@@ -88,10 +82,6 @@ export class TenantService {
     );
   }
 
-  private refetchCurrentPage(): void {
-    this.changePage(this._pageIndex(), this._limit());
-  }
-
   private setGettingTenantsState(): void {
     this._tenantList.set([]);
     this._loading.set(true);
@@ -101,5 +91,15 @@ export class TenantService {
   private setLoadingState(): void {
     this._loading.set(true);
     this._error.set(null);
+  }
+
+  public changePage(pageIndex: number, limit: number): void {
+    this._pageIndex.set(pageIndex);
+    this._limit.set(limit);
+    this.retrieveTenants();
+  }
+
+  private refetchCurrentPage(): void {
+    this.changePage(this._pageIndex(), this._limit());
   }
 }

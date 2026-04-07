@@ -77,10 +77,6 @@ export class TenantManagerPage implements OnInit {
       });
   }
 
-  protected onPageChange(event: PageEvent): void {
-    this.tenantService.changePage(event.pageIndex, event.pageSize);
-  }
-
   protected onGoToDashboard(tenant: Tenant): void {
     this.router.navigate(['/dashboard'], { queryParams: { tenantId: tenant.id } });
   }
@@ -88,4 +84,8 @@ export class TenantManagerPage implements OnInit {
   protected onGoToTenantUserManagement(tenant: Tenant): void {
     this.router.navigate(['/user-management/tenant-users'], { queryParams: { tenantId: tenant.id } });
   } 
+
+  protected onPageChange(event: PageEvent): void {
+    this.tenantService.changePage(event.pageIndex, event.pageSize);
+  }
 }

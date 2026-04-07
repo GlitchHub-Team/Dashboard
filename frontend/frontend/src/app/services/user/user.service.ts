@@ -61,12 +61,6 @@ export class UserService {
       .subscribe();
   }
 
-  public changePage(pageIndex: number, limit: number, role: UserRole, tenantId?: string): void {
-    this._pageIndex.set(pageIndex);
-    this._limit.set(limit);
-    this.retrieveUser(role, tenantId);
-  }
-
   public addNewUser(config: UserConfig, role: UserRole, tenantId?: string): Observable<User> {
     return this.userApi
       .createUser(config, role, tenantId)
@@ -86,10 +80,6 @@ export class UserService {
     );
   }
 
-  private refetchCurrentPage(role: UserRole, tenantId?: string): void {
-    this.retrieveUser(role, tenantId);
-  }
-
   private setGettingUsersState(): void {
     this._userList.set([]);
     this._loading.set(true);
@@ -99,5 +89,15 @@ export class UserService {
   private setLoadingState(): void {
     this._loading.set(true);
     this._error.set(null);
+  }
+
+  public changePage(pageIndex: number, limit: number, role: UserRole, tenantId?: string): void {
+    this._pageIndex.set(pageIndex);
+    this._limit.set(limit);
+    this.retrieveUser(role, tenantId);
+  }
+
+  private refetchCurrentPage(role: UserRole, tenantId?: string): void {
+    this.retrieveUser(role, tenantId);
   }
 }

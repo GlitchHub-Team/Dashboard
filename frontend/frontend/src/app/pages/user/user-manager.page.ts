@@ -117,12 +117,6 @@ export class UserManagerPage implements OnInit {
       });
   }
 
-  protected onPageChange(event: PageEvent): void {
-    const context = this.context();
-
-    this.userService.changePage(event.pageIndex, event.pageSize, context.role, context.tenantId);
-  }
-
   protected onBackToTenants(): void {
     this.router.navigate(['/tenant-management']);
   }
@@ -133,6 +127,12 @@ export class UserManagerPage implements OnInit {
         queryParams: { tenantId: this.activeTenantId() },
       });
     }
+  }
+
+  protected onPageChange(event: PageEvent): void {
+    const context = this.context();
+
+    this.userService.changePage(event.pageIndex, event.pageSize, context.role, context.tenantId);
   }
 
   private refreshUsers(): void {

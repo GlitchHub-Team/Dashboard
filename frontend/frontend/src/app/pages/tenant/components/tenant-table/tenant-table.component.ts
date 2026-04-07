@@ -16,14 +16,20 @@ import { Tenant } from '../../../../models/tenant/tenant.model';
 export class TenantTableComponent {
   public readonly tenants = input.required<Tenant[]>();
   public readonly loading = input<boolean>(false);
+  public readonly total = input<number>(0);
+  public readonly pageIndex = input<number>(0);
+  public readonly limit = input<number>(10);
 
   public readonly deleteRequested = output<Tenant>();
   public readonly dashboardRequested = output<Tenant>();
   public readonly tenantUserManagementRequested = output<Tenant>();
 
-  private readonly columns = ['id', 'name'];
 
-  protected readonly displayedColumns = computed(() => [...this.columns, 'actions']);
+  protected readonly displayedColumns = computed(() => {
+    const cols: string[] = ['id', 'name'];
+    cols.push('actions');
+    return cols;
+  });
 
   protected onDelete(tenant: Tenant): void {
     this.deleteRequested.emit(tenant);
