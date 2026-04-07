@@ -62,6 +62,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: validEmail, // Cerco email utente nel body
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckSuperAdminInserted(validEmail),
+				integration.CheckCountSuperAdminConfirmAccountTokens(t, 1),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{

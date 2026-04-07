@@ -137,7 +137,7 @@ func TestGetTenantUserListIntegration(t *testing.T) {
 		},
 		Name:   "Fail: URI binding invalid",
 		Method: http.MethodGet,
-		Path:   "/api/v1/tenant/invalid-uuid/tenant_",
+		Path:   "/api/v1/tenant/invalid-uuid/tenant_users",
 		Header: integration.AuthHeader(tenantAdminJWT),
 		Body:   nil,
 

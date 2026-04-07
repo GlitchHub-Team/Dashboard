@@ -70,6 +70,7 @@ func TestCreateTenantUserIntegration(t *testing.T) {
 			WantResponseBody: validEmail, // Cerco email utente nel body
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckTenantMemberInserted(validEmail, tenantID.String()),
+				integration.CheckCountTenantConfirmAccountTokens(t, tenantID.String(), 1),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
