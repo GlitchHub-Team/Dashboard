@@ -6,6 +6,7 @@ import (
 
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
+	transportHttp "backend/internal/infra/transport/http"
 
 	"github.com/google/uuid"
 )
@@ -21,7 +22,7 @@ func TestLogoutUserIntegration(t *testing.T) {
 
 	tests := []*helper.IntegrationTestCase{
 		{
-			PreSetups: []helper.IntegrationTestPreSetup{},
+			PreSetups: nil,
 			Name:      "Success: logout with JWT",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/auth/logout",
@@ -31,20 +32,20 @@ func TestLogoutUserIntegration(t *testing.T) {
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: `"result":"ok"`,
 			ResponseChecks:   nil,
-			PostSetups:       []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) {}},
+			PostSetups:       nil,
 		},
 		{
-			PreSetups: []helper.IntegrationTestPreSetup{},
+			PreSetups: nil,
 			Name:      "Fail: logout no JWT",
 			Method:    http.MethodPost,
 			Path:      "/api/v1/auth/logout",
 			Header:    http.Header{},
 			Body:      nil,
 
-			WantStatusCode:   http.StatusBadRequest,
-			WantResponseBody: "error",
+			WantStatusCode:   http.StatusUnauthorized,
+			WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
 			ResponseChecks:   nil,
-			PostSetups:       []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) {}},
+			PostSetups:       nil,
 		},
 	}
 

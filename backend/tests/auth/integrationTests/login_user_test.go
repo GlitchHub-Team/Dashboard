@@ -1,200 +1,250 @@
 package auth_integration_test
 
-// import (
-// 	"bytes"
-// 	"crypto/sha512"
-// 	"encoding/json"
-// 	"fmt"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	"bytes"
+	"net/http"
 
-// 	"backend/internal/auth"
-// 	"backend/internal/shared/identity"
-// 	"backend/internal/tenant"
-// 	"backend/internal/user"
-// 	"backend/tests/helper"
+	// "net/http/httptest"
+	"testing"
 
-// 	clouddb "backend/internal/infra/database/cloud_db/connection"
-// 	"backend/internal/infra/transport/http/dto"
+	"backend/internal/auth"
+	"backend/internal/shared/identity"
 
-// 	"github.com/google/uuid"
-// 	"golang.org/x/crypto/bcrypt"
-// 	"gorm.io/gorm"
-// )
+	"backend/internal/user"
+	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
-// // helper: create tenant and migrate tenant_members schema
-// func createTenantForTest(t *testing.T, deps helper.IntegrationTestDeps, tenantId uuid.UUID, canImpersonate bool) {
-//     db := (*gorm.DB)(deps.CloudDB)
-//     tenantEntity := tenant.TenantEntity{ID: tenantId.String(), Name: "t-login", CanImpersonate: canImpersonate}
-//     if err := db.Clauses().Create(&tenantEntity).Error; err != nil {
-//         t.Fatalf("cannot create tenant: %v", err)
-//     }
-//     schemaName := "tenant_" + tenantId.String()
-//     if err := db.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS \"%s\"", schemaName)).Error; err != nil {
-//         t.Fatalf("cannot create schema: %v", err)
-//     }
-//     if err := db.Transaction(func(tx *gorm.DB) error {
-//         if err := tx.Exec(fmt.Sprintf("set local search_path to \"%s\"", schemaName)).Error; err != nil {
-//             return err
-//         }
-//         return tx.AutoMigrate(&user.TenantMemberEntity{})
-//     }); err != nil {
-//         t.Fatalf("cannot migrate tenant_members: %v", err)
-//     }
-// }
+	"backend/internal/infra/transport/http/dto"
 
-// // helper: hash password using same pre-hash + bcrypt approach used in production
-// func hashPasswordForTest(plaintext string) (string, error) {
-//     pre := sha512.Sum512([]byte(plaintext))
-//     h, err := bcrypt.GenerateFromPassword(pre[:], bcrypt.DefaultCost)
-//     return string(h), err
-// }
+	"github.com/google/uuid"
+)
 
-// func TestLoginUserIntegration(t *testing.T) {
-//     deps := helper.SetupIntegrationTest(t)
+func TestLoginUserIntegration(t *testing.T) {
+	deps := helper.SetupIntegrationTest(t)
+	
 
-//     // common values
-//     tenantId := uuid.New()
-//     email := "ilogin@domain.test"
-//     password := "P@ssw0rd"
+	// common values
+	tenantId := uuid.New()
+	tenantIdStr := tenantId.String()
 
-//     // prepare DB: tenant + user confirmed with password
-//     createTenantForTest(t, deps, tenantId, true)
-//     hashed, err := hashPasswordForTest(password)
-//     if err != nil {
-//         t.Fatalf("cannot hash password: %v", err)
-//     }
+	confirmedTenantUserEmail := "confirmed@domain.test"
+	unconfirmedTenantUserEmail := "unconfirmed@domain.test"
+	superAdminEmail := "super-admin@m31.com"
+	correctPassword := "P@ssw0rd"
+	wrongPassword := "wrongPassword!"
 
-//     tm := &user.TenantMemberEntity{TenantId: tenantId.String(), Email: email, Name: "ILogin", Password: &hashed, Confirmed: true, Role: string(identity.ROLE_TENANT_USER)}
-//     db := (*gorm.DB)(deps.CloudDB)
-//     if err := db.Scopes(clouddb.WithTenantSchema(tenantId.String(), &user.TenantMemberEntity{})).Create(tm).Error; err != nil {
-//         t.Fatalf("cannot create tenant member: %v", err)
-//     }
+	hashedPassword, err := deps.SecretHasher.HashSecret(correctPassword)
+	if err != nil {
+		t.Fatalf("Cannot hash test password: %v", err)
+	}
 
-//     tests := []*helper.IntegrationTestCase{}
+	confirmedTenantUserEntity := user.TenantMemberEntity{
+		Email: confirmedTenantUserEmail,
+		Password: &hashedPassword,
+		Name: "Confirmed Tenant User",
+		Confirmed: true,
+		Role: string(identity.ROLE_TENANT_USER),
+		TenantId: tenantId.String(),
+	}
+	
+	unconfirmedTenantUserEntity := user.TenantMemberEntity{
+		Email: unconfirmedTenantUserEmail,
+		Password: &hashedPassword,
+		Name: "Unconfirmed Tenant User",
+		Confirmed: false,
+		Role: string(identity.ROLE_TENANT_USER),
+		TenantId: tenantId.String(),
+	}
 
-//     body := auth.LoginUserDTO{
-// 		TenantIdField_NotRequired: dto.TenantIdField_NotRequired{
-// 			TenantId: &tenantId,
-// 		},
-// 		Email: email, Password: password}
+	superAdminEntity := user.SuperAdminEntity{
+		Email: superAdminEmail,
+		Name: "Super Admin",
+		Password: &hashedPassword,
+		Confirmed: true,
+	}
 
-//     // Success: valid credentials
-//     b, _ := json.Marshal(body)
-//     tests = append(tests, &helper.IntegrationTestCase{
-//         PreSetups: []helper.IntegrationTestPreSetup{},
-//         Name:      "Success: valid credentials",
-//         Method:    http.MethodPost,
-//         Path:      "/api/v1/auth/login",
-//         Header:    http.Header{},
-//         Body:      helper.MustJSONBody(t, body),
+	// NOTA: Queste funzioni vengono inserite all'inizio perché il login non cambia lo stato
+	integration.PreSetupCreateTenant(tenantId, true)(deps)
+	preSetup, confirmedTenantUserId := integration.PreSetupAddTenantMember_ReturnUserId(t, &confirmedTenantUserEntity,)
+	preSetup(deps)
 
-//         WantStatusCode:   http.StatusOK,
-//         WantResponseBody: "\"jwt\":",
-//         ResponseChecks: []helper.IntegrationTestCheck{func(r *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
-//             // validate JWT returns a requester with correct user id
-//             var resp map[string]any
-//             if err := json.Unmarshal(r.Body.Bytes(), &resp); err != nil {
-//                 t.Logf("invalid json: %v", err)
-//                 return false
-//             }
-//             jwtStr, ok := resp["jwt"].(string)
-//             if !ok || jwtStr == "" {
-//                 t.Logf("missing jwt in response")
-//                 return false
-//             }
-//             requester, err := deps.AuthTokenManager.GetRequesterFromToken(jwtStr)
-//             if err != nil {
-//                 t.Logf("invalid token: %v", err)
-//                 return false
-//             }
-//             // requester user id must match created user id
-//             if requester.RequesterUserId != tm.ID {
-//                 t.Logf("token user id %v != created %v", requester.RequesterUserId, tm.ID)
-//                 return false
-//             }
-//             return true
-//         }},
-//         PostSetups: []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) { // cleanup tenant
-//             db := (*gorm.DB)(deps.CloudDB)
-//             schemaName := "tenant_" + tenantId.String()
-//             _ = db.Exec(fmt.Sprintf("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schemaName)).Error
-//             _ = db.Exec(fmt.Sprintf("DELETE FROM tenants WHERE id = '%s'", tenantId.String())).Error
-//         }},
-//     })
+	preSetup, _ = integration.PreSetupAddTenantMember_ReturnUserId(t, &unconfirmedTenantUserEntity,)
+	preSetup(deps)
 
-//     // Fail: binding JSON invalid
-//     tests = append(tests, &helper.IntegrationTestCase{
-//         PreSetups: []helper.IntegrationTestPreSetup{},
-//         Name:      "Fail: binding JSON",
-//         Method:    http.MethodPost,
-//         Path:      "/api/v1/auth/login",
-//         Header:    http.Header{},
-//         Body:      bytes.NewBufferString("not-a-json"),
+	preSetup, superAdminId := integration.PreSetupAddSuperAdmin_ReturnUserId(t, &superAdminEntity,)
+	preSetup(deps)
 
-//         WantStatusCode:   http.StatusBadRequest,
-//         WantResponseBody: "error",
-//         ResponseChecks:   nil,
-//         PostSetups:       []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) {}},
-//     })
 
-//     // Fail: account not confirmed
-//     email2 := "unconfirmed@d.test"
-//     hashed2, _ := hashPasswordForTest("pw2")
-//     tm2 := &user.TenantMemberEntity{TenantId: tenantId.String(), Email: email2, Name: "U1", Password: &hashed2, Confirmed: false, Role: string(identity.ROLE_TENANT_USER)}
-//     if err := db.Scopes(clouddb.WithTenantSchema(tenantId.String(), &user.TenantMemberEntity{})).Create(tm2).Error; err != nil {
-//         t.Fatalf("cannot create unconfirmed user: %v", err)
-//     }
-//     body2 := auth.LoginUserDTO{TenantId: &tenantId, Email: email2, Password: "pw2"}
-//     bb2, _ := json.Marshal(body2)
-//     tests = append(tests, &helper.IntegrationTestCase{
-//         PreSetups: []helper.IntegrationTestPreSetup{},
-//         Name:      "Fail: account not confirmed",
-//         Method:    http.MethodPost,
-//         Path:      "/api/v1/auth/login",
-//         Header:    http.Header{},
-//         Body:      bytes.NewBuffer(bb2),
+	// Request body
+	tenantUserBody := auth.LoginUserDTO{
+		TenantIdField_NotRequired: dto.TenantIdField_NotRequired{
+			TenantId: &tenantIdStr,
+		},
+		EmailField: dto.EmailField{
+			Email: confirmedTenantUserEmail,
+		},
+		PasswordField: dto.PasswordField{
+			Password: correctPassword,
+		},
+	}
 
-//         WantStatusCode:   http.StatusNotFound,
-//         WantResponseBody: helper.ErrJsonString(auth.ErrAccountNotConfirmed),
-//         ResponseChecks:   nil,
-//         PostSetups: []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) {}},
-//     })
+	tenantUserBody_NoEmail := auth.LoginUserDTO{
+		TenantIdField_NotRequired: dto.TenantIdField_NotRequired{
+			TenantId: &tenantIdStr,
+		},
+		PasswordField: dto.PasswordField{
+			Password: correctPassword,
+		},
+	}
 
-//     // Fail: wrong credentials (email missing)
-//     body3 := auth.LoginUserDTO{TenantId: &tenantId, Email: "missing@x.test", Password: "whatever"}
-//     b3, _ := json.Marshal(body3)
-//     tests = append(tests, &helper.IntegrationTestCase{
-//         PreSetups: []helper.IntegrationTestPreSetup{},
-//         Name:      "Fail: wrong credentials - email missing",
-//         Method:    http.MethodPost,
-//         Path:      "/api/v1/auth/login",
-//         Header:    http.Header{},
-//         Body:      bytes.NewBuffer(b3),
+	tenantUserBody_WrongPassword := auth.LoginUserDTO{
+		TenantIdField_NotRequired: dto.TenantIdField_NotRequired{
+			TenantId: &tenantIdStr,
+		},
+		EmailField: dto.EmailField{
+			Email: confirmedTenantUserEmail,
+		},
+		PasswordField: dto.PasswordField{
+			Password: wrongPassword,
+		},
+	}
 
-//         WantStatusCode:   http.StatusNotFound,
-//         WantResponseBody: helper.ErrJsonString(auth.ErrWrongCredentials),
-//         ResponseChecks:   nil,
-//         PostSetups:       []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) {}},
-//     })
+	unconfirmedTenantUserBody := auth.LoginUserDTO{
+		TenantIdField_NotRequired: dto.TenantIdField_NotRequired{
+			TenantId: &tenantIdStr,
+		},
+		EmailField: dto.EmailField{
+			Email: unconfirmedTenantUserEmail,
+		},
+		PasswordField: dto.PasswordField{
+			Password: correctPassword,
+		},
+	}
 
-//     // Fail: wrong password for existing email
-//     body4 := auth.LoginUserDTO{TenantId: &tenantId, Email: email, Password: "badpwd"}
-//     b4, _ := json.Marshal(body4)
-//     tests = append(tests, &helper.IntegrationTestCase{
-//         PreSetups: []helper.IntegrationTestPreSetup{},
-//         Name:      "Fail: wrong password",
-//         Method:    http.MethodPost,
-//         Path:      "/api/v1/auth/login",
-//         Header:    http.Header{},
-//         Body:      bytes.NewBuffer(b4),
+	superAdminBody := auth.LoginUserDTO{
+		TenantIdField_NotRequired: dto.TenantIdField_NotRequired{
+			TenantId: nil,
+		},
+		EmailField: dto.EmailField{
+			Email: superAdminEmail,
+		},
+		PasswordField: dto.PasswordField{
+			Password: correctPassword,
+		},
+	}
 
-//         WantStatusCode:   http.StatusNotFound,
-//         WantResponseBody: helper.ErrJsonString(auth.ErrWrongCredentials),
-//         ResponseChecks:   nil,
-//         PostSetups:       []helper.IntegrationTestPostSetup{func(deps helper.IntegrationTestDeps) {}},
-//     })
+	// Requester 
+	expectedTenantUserRequester := identity.Requester{
+		RequesterUserId: *confirmedTenantUserId,
+		RequesterTenantId: &tenantId,
+		RequesterRole: identity.ROLE_TENANT_USER,
+	}
 
-//     helper.RunIntegrationTests(t, tests, deps)
-// }
+	expectedSuperAdminRequester := identity.Requester{
+		RequesterUserId: *superAdminId,
+		RequesterTenantId: nil,
+		RequesterRole: identity.ROLE_SUPER_ADMIN ,
+	}
+
+
+	tests := []*helper.IntegrationTestCase{}
+
+	// Success: valid credentials (tenant user)
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "(Tenant User) Success: valid credentials",
+		Method:    http.MethodPost,
+		Path:      "/api/v1/auth/login",
+		Header:    http.Header{},
+		Body:      helper.MustJSONBody(t, tenantUserBody),
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: "\"jwt\":",
+		ResponseChecks: []helper.IntegrationTestCheck{
+			CheckValidJWTInResponse(t, expectedTenantUserRequester),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{},
+	})
+
+	// Success: valid credentials (tenant user)
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "(Super Admin) Success: valid credentials",
+		Method:    http.MethodPost,
+		Path:      "/api/v1/auth/login",
+		Header:    http.Header{},
+		Body:      helper.MustJSONBody(t, superAdminBody),
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: "\"jwt\":",
+		ResponseChecks: []helper.IntegrationTestCheck{
+			CheckValidJWTInResponse(t, expectedSuperAdminRequester),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{},
+	})
+
+	// Fail: binding JSON invalid
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "Fail: binding JSON",
+		Method:    http.MethodPost,
+		Path:      "/api/v1/auth/login",
+		Header:    http.Header{},
+		Body:      bytes.NewBufferString("not-a-json"),
+
+		WantStatusCode:   http.StatusBadRequest,
+		WantResponseBody: "error",
+		ResponseChecks:   nil,
+		PostSetups:       []helper.IntegrationTestPostSetup{},
+	})
+
+	// Fail: account not confirmed
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "Fail: account not confirmed",
+		Method:    http.MethodPost,
+		Path:      "/api/v1/auth/login",
+		Header:    http.Header{},
+		Body:      helper.MustJSONBody(t, unconfirmedTenantUserBody),
+
+		WantStatusCode:   http.StatusNotFound,
+		WantResponseBody: helper.ErrJsonString(auth.ErrAccountNotConfirmed),
+		ResponseChecks:   nil,
+		PostSetups:       []helper.IntegrationTestPostSetup{},
+	})
+
+	// Fail: wrong credentials (email missing)
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "Fail: wrong credentials - email missing",
+		Method:    http.MethodPost,
+		Path:      "/api/v1/auth/login",
+		Header:    http.Header{},
+		Body:      helper.MustJSONBody(t, tenantUserBody_NoEmail),
+
+		WantStatusCode:   http.StatusBadRequest,
+		WantResponseBody: "invalid format",
+		ResponseChecks:   nil,
+		PostSetups:       []helper.IntegrationTestPostSetup{},
+	})
+
+	// Fail: wrong password for existing email
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{},
+		Name:      "Fail: wrong password",
+		Method:    http.MethodPost,
+		Path:      "/api/v1/auth/login",
+		Header:    http.Header{},
+		Body:      helper.MustJSONBody(t, tenantUserBody_WrongPassword),
+
+		WantStatusCode:   http.StatusNotFound,
+		WantResponseBody: helper.ErrJsonString(auth.ErrWrongCredentials),
+		ResponseChecks:   nil,
+		PostSetups:       []helper.IntegrationTestPostSetup{},
+	})
+
+	helper.RunIntegrationTests(t, tests, deps)
+
+	// Post Setup globale
+	integration.PostSetupDeleteTenant(t, tenantId)(deps)
+}
