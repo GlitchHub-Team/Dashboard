@@ -4,6 +4,16 @@
 </h2>
 
 <mat-dialog-content>
+  @if (generalError(); as error) {
+    <div class="error-banner">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button type="button" (click)="dismissError()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
   <form [formGroup]="commandForm" class="dialog-form">
     <mat-form-field appearance="outline">
       <mat-label>Gateway</mat-label>
@@ -36,20 +46,24 @@
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label> Token di commission </mat-label>
+        <mat-label>Token di commission</mat-label>
         <mat-icon matSuffix>lock</mat-icon>
         <input matInput formControlName="token" type="text" />
+        @if (commandForm.controls.token.invalid && commandForm.controls.token.touched) {
+          <mat-error>Devi inserire il token di commission</mat-error>
+        }
       </mat-form-field>
-      @if (commandForm.controls.token.invalid && commandForm.controls.token.touched) {
-        <mat-error>Devi inserire il token di commission</mat-error>
-      }
     }
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Annulla</button>
-  <button mat-raised-button color="primary" [disabled]="commandForm.invalid" (click)="onConfirm()">
-    Manda
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting()">Annulla</button>
+  <button mat-raised-button color="primary" [disabled]="commandForm.invalid || isSubmitting()" (click)="onConfirm()">
+    @if (isSubmitting()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      Manda
+    }
   </button>
 </mat-dialog-actions>

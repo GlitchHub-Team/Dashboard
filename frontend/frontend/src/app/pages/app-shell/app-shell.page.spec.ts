@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal, WritableSignal, Component, input, output } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
 import { of, EMPTY } from 'rxjs';
 
@@ -68,7 +69,9 @@ describe('AppShellPage (Unit)', () => {
   const tenantServiceMock = { getTenant: vi.fn() };
   const authSessionServiceMock = { logout: vi.fn() };
   const permissionServiceMock = { canAny: vi.fn() };
+  const mockDialogRef = { afterClosed: vi.fn() };
   const dialogMock = { open: vi.fn() };
+  const snackBarMock = { open: vi.fn() };
 
   const rebuildComponent = () => {
     fixture = TestBed.createComponent(AppShellPage);
@@ -81,6 +84,8 @@ describe('AppShellPage (Unit)', () => {
     permissionServiceMock.canAny.mockReturnValue(true);
     userServiceMock.getUser.mockReturnValue(of(mockUser));
     tenantServiceMock.getTenant.mockReturnValue(of(mockTenant));
+    mockDialogRef.afterClosed.mockReturnValue(EMPTY);
+    dialogMock.open.mockReturnValue(mockDialogRef);
 
     currentUserSignal = signal<UserSession | null>(mockSession);
 
@@ -96,6 +101,7 @@ describe('AppShellPage (Unit)', () => {
         { provide: AuthSessionService, useValue: authSessionServiceMock },
         { provide: PermissionService, useValue: permissionServiceMock },
         { provide: MatDialog, useValue: dialogMock },
+        { provide: MatSnackBar, useValue: snackBarMock },
       ],
     })
       .overrideComponent(AppShellPage, {

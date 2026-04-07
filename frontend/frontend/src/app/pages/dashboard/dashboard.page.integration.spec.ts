@@ -396,7 +396,7 @@ describe('DashboardPage (Integration)', () => {
       expect(snackBarMock.open).not.toHaveBeenCalled();
 
       gatewayTable.componentInstance.commandRequested.emit(true);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Command sent successfully', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Close', {
         duration: 3000,
       });
     });

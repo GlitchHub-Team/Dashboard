@@ -58,9 +58,10 @@ export class ForgotPasswordDialog {
     }
 
     // Confeziona e invia la richiesta di reset password, chiude il dialog alla risposta positiva
+    const tenantId = this.forgotPasswordForm.controls.tenantId.value;
     const forgotPasswordRequest: ForgotPasswordRequest = {
       email: this.forgotPasswordForm.controls.email.value!,
-      tenantId: this.forgotPasswordForm.controls.tenantId.value!,
+      ...(tenantId ? { tenantId } : {}),
     };
 
     this.authActionsService
