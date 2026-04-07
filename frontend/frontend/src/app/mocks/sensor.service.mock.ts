@@ -37,7 +37,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor A',
           data_interval: 60,
-          profile: 'custom_ecg',
+          profile: 'ecg_custom',
           status: 'active',
         },
         {
@@ -77,7 +77,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor B',
           data_interval: 60,
-          profile: 'custom_ecg',
+          profile: 'ecg_custom',
           status: 'active',
         },
         {
@@ -117,7 +117,7 @@ export class SensorApiClientServiceMock {
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor C',
           data_interval: 60,
-          profile: 'custom_ecg',
+          profile: 'ecg_custom',
           status: 'active',
         },
         {
@@ -208,12 +208,12 @@ export class SensorApiClientServiceMock {
     'tenant-5': [],
   };
 
-  private readonly shouldFailGetSensorListByGateway = true;
-  private readonly shouldFailGetSensorListByTenant = true;
-  private readonly shouldFailAddNewSensor = true;
+  private readonly shouldFailGetSensorListByGateway = false;
+  private readonly shouldFailGetSensorListByTenant = false;
+  private readonly shouldFailAddNewSensor = false;
   private readonly shouldFailDeleteSensor = false;
 
-public getSensorListByGateway(
+  public getSensorListByGateway(
     gatewayId: string,
     page: number,
     limit: number,
@@ -300,8 +300,6 @@ public getSensorListByGateway(
   }
 
   private delayedError(status: number, message: string): Observable<never> {
-    return timer(500).pipe(
-      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
-    );
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

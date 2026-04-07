@@ -13,13 +13,7 @@ Chart.register(...registerables);
 
 @Component({
   selector: 'app-real-time-chart',
-  imports: [
-    BaseChartDirective,
-    MatFormField,
-    MatLabel,
-    MatSelect,
-    MatOption,
-  ],
+  imports: [BaseChartDirective, MatFormField, MatLabel, MatSelect, MatOption],
   templateUrl: './real-time-chart.component.html',
   styleUrl: './real-time-chart.component.css',
 })
@@ -59,9 +53,7 @@ export class RealTimeChartComponent {
           label: field.label,
           data: readings.map((r) => r.value[field.key]),
           borderColor: this.isEcg() ? '#00ff88' : '#4caf50',
-          backgroundColor: this.isEcg()
-            ? 'rgba(0, 255, 136, 0.05)'
-            : 'rgba(76, 175, 80, 0.1)',
+          backgroundColor: this.isEcg() ? 'rgba(0, 255, 136, 0.05)' : 'rgba(76, 175, 80, 0.1)',
           fill: !this.isEcg(),
           tension: this.isEcg() ? 0.2 : 0.3,
           pointRadius: this.isEcg() ? 0 : 2,
@@ -81,9 +73,9 @@ export class RealTimeChartComponent {
       animation: false,
       scales: {
         x: {
-          display: !ecg,
+          display: true,
           title: {
-            display: !ecg,
+            display: true,
             text: 'Time',
           },
         },

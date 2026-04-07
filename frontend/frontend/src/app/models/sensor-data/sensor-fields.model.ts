@@ -1,23 +1,23 @@
 import { FieldDescriptor } from './field-descriptor.model';
 
 export const HEART_RATE_FIELDS: FieldDescriptor[] = [
-  { key: 'bpm', label: 'Heart Rate', unit: 'bpm' },
+  { key: 'bpm', label: 'Battito cardiaco', unit: 'bpm' },
 ];
 
 export const PULSE_OXIMETER_FIELDS: FieldDescriptor[] = [
-  { key: 'spo2', label: 'Blood Oxygen', unit: '%' },
-  { key: 'pulseRate', label: 'Pulse Rate', unit: 'bpm' },
+  { key: 'spo2', label: 'Ossigeno nel sangue', unit: '%' },
+  { key: 'pulseRate', label: 'Frequenza cardiaca', unit: 'bpm' },
 ];
 
 export const ENVIRONMENTAL_FIELDS: FieldDescriptor[] = [
-  { key: 'temperature', label: 'Temperature', unit: '°C' },
-  { key: 'humidity', label: 'Humidity', unit: '%' },
+  { key: 'temperature', label: 'Temperatura', unit: '°C' },
+  { key: 'humidity', label: 'Umidità', unit: '%' },
 ];
 
 export const HEALTH_THERMOMETER_FIELDS: FieldDescriptor[] = [
-  { key: 'temperature', label: 'Body Temperature', unit: '°C' },
+  { key: 'temperature', label: 'Temperatura corporea', unit: '°C' },
 ];
 
 export const ECG_FIELDS: FieldDescriptor[] = [
-  { key: 'ecg', label: 'ECG Waveform', unit: 'mV' },
+  { key: 'ecg', label: "Forma d'onda ECG", unit: 'mV' },
 ];

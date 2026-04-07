@@ -65,14 +65,10 @@ export class HistoricChartComponent {
     Math.max(0, this.readings().length - this.visiblePoints()),
   );
 
-  protected readonly scrollStep = computed(() =>
-    Math.max(1, Math.floor(this.visiblePoints() / 4)),
-  );
+  protected readonly scrollStep = computed(() => Math.max(1, Math.floor(this.visiblePoints() / 4)));
 
-  protected readonly canScroll = computed(() =>
-    this.readings().length > this.visiblePoints(),
-  );
-  
+  protected readonly canScroll = computed(() => this.readings().length > this.visiblePoints());
+
   protected readonly visibleReadings = computed(() => {
     const all = this.readings();
     const start = this.offset();
@@ -91,9 +87,7 @@ export class HistoricChartComponent {
           label: field.label,
           data: readings.map((r) => r.value[field.key]),
           borderColor: this.isEcg() ? '#00ff88' : '#3f51b5',
-          backgroundColor: this.isEcg()
-            ? 'rgba(0, 255, 136, 0.05)'
-            : 'rgba(63, 81, 181, 0.1)',
+          backgroundColor: this.isEcg() ? 'rgba(0, 255, 136, 0.05)' : 'rgba(63, 81, 181, 0.1)',
           fill: !this.isEcg(),
           tension: this.isEcg() ? 0.2 : 0.3,
           pointRadius: this.isEcg() ? 0 : 2,
@@ -113,9 +107,9 @@ export class HistoricChartComponent {
       animation: ecg ? false : { duration: 300 },
       scales: {
         x: {
-          display: !ecg,
+          display: true,
           title: {
-            display: !ecg,
+            display: true,
             text: 'Time',
           },
         },

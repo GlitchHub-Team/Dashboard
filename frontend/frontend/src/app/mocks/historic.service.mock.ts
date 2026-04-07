@@ -11,7 +11,7 @@ import { ApiError } from '../models/api-error.model';
 @Injectable()
 export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
-  private readonly shouldFailGetHistoricData = true;
+  private readonly shouldFailGetHistoricData = false;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
     if (this.shouldFailGetHistoricData) {
@@ -19,9 +19,7 @@ export class SensorHistoricMockService {
     }
 
     const isEcg = req.sensor.profile === SensorProfiles.CUSTOM_ECG_SERVICE;
-    const samples = isEcg
-      ? this.generateEcgSamples(req)
-      : this.generateScalarSamples(req);
+    const samples = isEcg ? this.generateEcgSamples(req) : this.generateScalarSamples(req);
 
     const response: HistoricResponse = {
       count: samples.length,
@@ -52,14 +50,8 @@ export class SensorHistoricMockService {
 
       fieldConfigs.forEach((fc) => {
         const noise = (Math.random() - 0.5) * fc.amplitude * 0.2;
-        const raw =
-          fc.baseValue +
-          fc.amplitude * Math.sin((2 * Math.PI * i) / count) +
-          noise;
-        data[fc.key] = Math.min(
-          fc.max,
-          Math.max(fc.min, Math.round(raw * 100) / 100),
-        );
+        const raw = fc.baseValue + fc.amplitude * Math.sin((2 * Math.PI * i) / count) + noise;
+        data[fc.key] = Math.min(fc.max, Math.max(fc.min, Math.round(raw * 100) / 100));
       });
 
       samples.push({
@@ -84,7 +76,7 @@ export class SensorHistoricMockService {
     const totalSeconds = Math.floor((to - from) / 1000);
     const count = req.dataPointsCounter
       ? Math.min(req.dataPointsCounter, totalSeconds)
-      : Math.min(totalSeconds, 60);  // cap at 60 seconds for mock
+      : Math.min(totalSeconds, 60); // cap at 60 seconds for mock
 
     const samples: HistoricSample[] = [];
 
@@ -114,7 +106,7 @@ export class SensorHistoricMockService {
     const samplesPerSecond = 250;
 
     for (let i = 0; i < samplesPerSecond; i++) {
-      const t = i / samplesPerSecond;  // 0.0 → 1.0 within this second
+      const t = i / samplesPerSecond; // 0.0 → 1.0 within this second
       let value = 0;
 
       // Baseline noise
@@ -124,9 +116,9 @@ export class SensorHistoricMockService {
       value += 80 * Math.exp(-Math.pow((t - 0.1) * 20, 2));
 
       // QRS complex (sharp spike around t=0.3)
-      value -= 60 * Math.exp(-Math.pow((t - 0.28) * 40, 2));  // Q dip
-      value += 900 * Math.exp(-Math.pow((t - 0.32) * 50, 2));  // R peak
-      value -= 120 * Math.exp(-Math.pow((t - 0.36) * 40, 2));  // S dip
+      value -= 60 * Math.exp(-Math.pow((t - 0.28) * 40, 2)); // Q dip
+      value += 900 * Math.exp(-Math.pow((t - 0.32) * 50, 2)); // R peak
+      value -= 120 * Math.exp(-Math.pow((t - 0.36) * 40, 2)); // S dip
 
       // T wave (broad bump around t=0.55)
       value += 150 * Math.exp(-Math.pow((t - 0.55) * 12, 2));
@@ -144,8 +136,6 @@ export class SensorHistoricMockService {
   }
 
   private delayedError(status: number, message: string): Observable<never> {
-    return timer(500).pipe(
-      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
-    );
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

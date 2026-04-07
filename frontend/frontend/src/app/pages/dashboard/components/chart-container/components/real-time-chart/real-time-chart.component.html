@@ -1,21 +1,12 @@
 @if (hasMultipleFields()) {
   <mat-form-field appearance="outline">
-    <mat-label>Reading</mat-label>
-    <mat-select
-      [value]="selectedField()"
-      (selectionChange)="onFieldChange($event.value)">
+    <mat-label>Stai visualizzando</mat-label>
+    <mat-select [value]="selectedField()" (selectionChange)="onFieldChange($event.value)">
       @for (field of fields(); track field.key) {
-        <mat-option [value]="field.key">
-          {{ field.label }} ({{ field.unit }})
-        </mat-option>
+        <mat-option [value]="field.key"> {{ field.label }} ({{ field.unit }}) </mat-option>
       }
     </mat-select>
   </mat-form-field>
 }
 
-<canvas
-  baseChart
-  type="line"
-  [data]="chartData()"
-  [options]="chartOptions()">
-</canvas>
+<canvas baseChart type="line" [data]="chartData()" [options]="chartOptions()"> </canvas>

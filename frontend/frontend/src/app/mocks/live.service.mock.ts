@@ -1,15 +1,6 @@
 // mocks/sensor-real-time-mock.service.ts
 import { Injectable } from '@angular/core';
-import {
-  Observable,
-  interval,
-  map,
-  Subject,
-  takeUntil,
-  switchMap,
-  throwError,
-  timer,
-} from 'rxjs';
+import { Observable, interval, map, Subject, takeUntil, switchMap, throwError, timer } from 'rxjs';
 import { Sensor } from '../models/sensor/sensor.model';
 import { RealTimeReading } from '../models/sensor-data/real-time-reading.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
@@ -22,7 +13,7 @@ export class SensorRealTimeMockService {
   private currentValues = new Map<string, number>();
   private readingCount = 0;
 
-  private readonly shouldFailConnection = true;
+  private readonly shouldFailConnection = false;
   private readonly shouldDisconnectAfter = 0;
 
   connect(sensor: Sensor): Observable<RealTimeReading> {
@@ -45,10 +36,7 @@ export class SensorRealTimeMockService {
       map(() => {
         this.readingCount++;
 
-        if (
-          this.shouldDisconnectAfter > 0 &&
-          this.readingCount >= this.shouldDisconnectAfter
-        ) {
+        if (this.shouldDisconnectAfter > 0 && this.readingCount >= this.shouldDisconnectAfter) {
           throw { status: 0, message: 'WebSocket connection lost' } as ApiError;
         }
 
@@ -110,8 +98,6 @@ export class SensorRealTimeMockService {
   }
 
   private delayedError(status: number, message: string): Observable<never> {
-    return timer(500).pipe(
-      switchMap(() => throwError(() => ({ status, message }) as ApiError)),
-    );
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

@@ -9,8 +9,8 @@ import { ApiError } from '../models/api-error.model';
 @Injectable({ providedIn: 'root' })
 export class TenantApiClientMockService {
   private readonly shouldFailGetTenant = false;
-  private readonly shouldFailGetTenants = true;
-  private readonly shouldFailCreateTenant = true;
+  private readonly shouldFailGetTenants = false;
+  private readonly shouldFailCreateTenant = false;
   private readonly shouldFailDeleteTenant = false;
 
   private mockTenants: TenantBackend[] = [

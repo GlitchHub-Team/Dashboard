@@ -10,7 +10,15 @@ import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.
 import { Status } from '../../../../../../models/gateway-sensor-status.enum';
 
 function createSensor(overrides: Partial<Sensor> = {}): Sensor {
-  return { id: 'sensor-1', gatewayId: 'gw-1', name: 'Test Sensor', profile: SensorProfiles.HEART_RATE_SERVICE, status: Status.ACTIVE, dataInterval: 1000, ...overrides };
+  return {
+    id: 'sensor-1',
+    gatewayId: 'gw-1',
+    name: 'Test Sensor',
+    profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
+    dataInterval: 1000,
+    ...overrides,
+  };
 }
 
 function createReadings(count: number, fieldKey: string, baseValue: number): SensorReading[] {
@@ -66,11 +74,13 @@ describe('RealTimeChartComponent', () => {
     });
 
     describe('multi-field', () => {
-      beforeEach(() => setup(
-        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
-        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
-        MULTI_FIELDS,
-      ));
+      beforeEach(() =>
+        setup(
+          createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+          createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+          MULTI_FIELDS,
+        ),
+      );
 
       it('should auto-select first field', () => {
         expect(component['selectedField']()).toBe('spo2');
@@ -83,7 +93,11 @@ describe('RealTimeChartComponent', () => {
 
       it('should resolve the correct field descriptor after change', () => {
         component['onFieldChange']('pulseRate');
-        expect(component['selectedFieldDescriptor']()).toEqual({ key: 'pulseRate', label: 'Pulse Rate', unit: 'bpm' });
+        expect(component['selectedFieldDescriptor']()).toEqual({
+          key: 'pulseRate',
+          label: 'Pulse Rate',
+          unit: 'bpm',
+        });
       });
     });
   });
@@ -95,7 +109,11 @@ describe('RealTimeChartComponent', () => {
     });
 
     it('should return true for multi-field sensors', () => {
-      setup(createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       expect(component['hasMultipleFields']()).toBe(true);
     });
   });
@@ -118,11 +136,13 @@ describe('RealTimeChartComponent', () => {
     });
 
     describe('multi-value sensor', () => {
-      beforeEach(() => setup(
-        createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }),
-        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
-        MULTI_FIELDS,
-      ));
+      beforeEach(() =>
+        setup(
+          createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }),
+          createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+          MULTI_FIELDS,
+        ),
+      );
 
       it('should map readings to selected field', () => {
         const data = component['chartData']();
@@ -149,7 +169,11 @@ describe('RealTimeChartComponent', () => {
     });
 
     it('should use ECG styling for ECG sensor', () => {
-      setup(createReadings(3, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS);
+      setup(
+        createReadings(3, 'ecg', 100),
+        createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }),
+        ECG_FIELDS,
+      );
       const dataset = component['chartData']().datasets[0];
       expect(dataset.borderColor).toBe('#00ff88');
       expect(dataset.fill).toBe(false);
@@ -171,22 +195,18 @@ describe('RealTimeChartComponent', () => {
       });
 
       it('should set y-axis title from selected field', () => {
-        expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Heart Rate (bpm)');
-      });
-    });
-
-    describe('ECG sensor', () => {
-      beforeEach(() => setup(createReadings(3, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS));
-
-      it('should hide x-axis and disable tooltip', () => {
-        const opts = component['chartOptions']();
-        expect(opts.scales!['x']!['display']).toBe(false);
-        expect(opts.plugins!.tooltip!['enabled']).toBe(false);
+        expect((component['chartOptions']().scales!['y'] as any).title.text).toBe(
+          'Heart Rate (bpm)',
+        );
       });
     });
 
     it('should update y-axis title when field changes', () => {
-      setup(createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       component['onFieldChange']('pulseRate');
       expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Pulse Rate (bpm)');
     });
@@ -204,11 +224,13 @@ describe('RealTimeChartComponent', () => {
     });
 
     describe('multi-field sensor', () => {
-      beforeEach(() => setup(
-        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
-        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
-        MULTI_FIELDS,
-      ));
+      beforeEach(() =>
+        setup(
+          createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+          createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+          MULTI_FIELDS,
+        ),
+      );
 
       it('should render dropdown', () => {
         expect(fixture.debugElement.query(By.css('mat-select'))).not.toBeNull();
@@ -223,7 +245,9 @@ describe('RealTimeChartComponent', () => {
       it('should display field labels with units in options', () => {
         fixture.debugElement.query(By.css('.mat-mdc-select-trigger')).nativeElement.click();
         fixture.detectChanges();
-        const texts = fixture.debugElement.queryAll(By.css('mat-option')).map((o) => o.nativeElement.textContent.trim());
+        const texts = fixture.debugElement
+          .queryAll(By.css('mat-option'))
+          .map((o) => o.nativeElement.textContent.trim());
         expect(texts).toContain('Blood Oxygen (%)');
         expect(texts).toContain('Pulse Rate (bpm)');
       });
@@ -268,7 +292,11 @@ describe('RealTimeChartComponent', () => {
     });
 
     it('should handle field change preserving readings', () => {
-      setup(createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       expect(component['chartData']().datasets[0].data).toEqual([95, 96, 97]);
       component['onFieldChange']('pulseRate');
       expect(component['chartData']().datasets[0].data).toEqual([70, 71, 72]);

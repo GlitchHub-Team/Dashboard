@@ -11,7 +11,15 @@ import { Status } from '../../../../../../models/gateway-sensor-status.enum';
 import { SENSOR_VISIBLE_POINTS } from '../../../../../../models/chart/sensor-visible-points.model';
 
 function createSensor(overrides: Partial<Sensor> = {}): Sensor {
-  return { id: 'sensor-1', gatewayId: 'gw-1', name: 'Test Sensor', profile: SensorProfiles.HEART_RATE_SERVICE, status: Status.ACTIVE, dataInterval: 1000, ...overrides };
+  return {
+    id: 'sensor-1',
+    gatewayId: 'gw-1',
+    name: 'Test Sensor',
+    profile: SensorProfiles.HEART_RATE_SERVICE,
+    status: Status.ACTIVE,
+    dataInterval: 1000,
+    ...overrides,
+  };
 }
 
 function createReadings(count: number, fieldKey: string, baseValue: number): SensorReading[] {
@@ -72,11 +80,13 @@ describe('HistoricChartComponent', () => {
     });
 
     describe('multi-field', () => {
-      beforeEach(() => setup(
-        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
-        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
-        MULTI_FIELDS,
-      ));
+      beforeEach(() =>
+        setup(
+          createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+          createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+          MULTI_FIELDS,
+        ),
+      );
 
       it('should auto-select first field', () => {
         expect(component['selectedField']()).toBe('spo2');
@@ -89,7 +99,11 @@ describe('HistoricChartComponent', () => {
 
       it('should resolve the correct field descriptor after change', () => {
         component['onFieldChange']('pulseRate');
-        expect(component['selectedFieldDescriptor']()).toEqual({ key: 'pulseRate', label: 'Pulse Rate', unit: 'bpm' });
+        expect(component['selectedFieldDescriptor']()).toEqual({
+          key: 'pulseRate',
+          label: 'Pulse Rate',
+          unit: 'bpm',
+        });
       });
     });
   });
@@ -101,7 +115,11 @@ describe('HistoricChartComponent', () => {
     });
 
     it('should return true for multi-field sensors', () => {
-      setup(createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       expect(component['hasMultipleFields']()).toBe(true);
     });
   });
@@ -113,12 +131,20 @@ describe('HistoricChartComponent', () => {
     });
 
     it('should use configured visible points for ECG', () => {
-      setup(createReadings(5, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS);
+      setup(
+        createReadings(5, 'ecg', 100),
+        createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }),
+        ECG_FIELDS,
+      );
       expect(component['visiblePoints']()).toBe(ECG_VP);
     });
 
     it('should fallback to 50 for unknown sensor profile', () => {
-      setup(createReadings(5, 'bpm', 70), createSensor({ profile: 'unknown_profile' as SensorProfiles }), SINGLE_FIELD);
+      setup(
+        createReadings(5, 'bpm', 70),
+        createSensor({ profile: 'unknown_profile' as SensorProfiles }),
+        SINGLE_FIELD,
+      );
       expect(component['visiblePoints']()).toBe(50);
     });
   });
@@ -174,7 +200,9 @@ describe('HistoricChartComponent', () => {
 
     it('should calculate scrollStep as quarter of visible points', () => {
       setup(createReadings(5, 'bpm', 70), createSensor(), SINGLE_FIELD);
-      expect(component['scrollStep']()).toBe(Math.max(1, Math.floor(component['visiblePoints']() / 4)));
+      expect(component['scrollStep']()).toBe(
+        Math.max(1, Math.floor(component['visiblePoints']() / 4)),
+      );
     });
 
     it('should update offset via onOffsetChange', () => {
@@ -231,7 +259,11 @@ describe('HistoricChartComponent', () => {
     });
 
     it('should map selected field for multi-value sensor', () => {
-      setup(createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       expect(component['chartData']().datasets[0].data).toEqual([95, 96, 97, 98, 99]);
       component['onFieldChange']('pulseRate');
       expect(component['chartData']().datasets[0].data).toEqual([70, 71, 72, 73, 74]);
@@ -248,7 +280,11 @@ describe('HistoricChartComponent', () => {
     });
 
     it('should use ECG styling for ECG sensor', () => {
-      setup(createReadings(3, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS);
+      setup(
+        createReadings(3, 'ecg', 100),
+        createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }),
+        ECG_FIELDS,
+      );
       const dataset = component['chartData']().datasets[0];
       expect(dataset.borderColor).toBe('#00ff88');
       expect(dataset.fill).toBe(false);
@@ -270,23 +306,18 @@ describe('HistoricChartComponent', () => {
       });
 
       it('should set y-axis title from selected field', () => {
-        expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Heart Rate (bpm)');
-      });
-    });
-
-    describe('ECG sensor', () => {
-      beforeEach(() => setup(createReadings(3, 'ecg', 100), createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }), ECG_FIELDS));
-
-      it('should hide x-axis, disable animation, and disable tooltip', () => {
-        const opts = component['chartOptions']();
-        expect(opts.scales!['x']!['display']).toBe(false);
-        expect(opts.animation).toBe(false);
-        expect(opts.plugins!.tooltip!['enabled']).toBe(false);
+        expect((component['chartOptions']().scales!['y'] as any).title.text).toBe(
+          'Heart Rate (bpm)',
+        );
       });
     });
 
     it('should update y-axis title when field changes', () => {
-      setup(createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(3, { spo2: 95, pulseRate: 70 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       component['onFieldChange']('pulseRate');
       expect((component['chartOptions']().scales!['y'] as any).title.text).toBe('Pulse Rate (bpm)');
     });
@@ -304,11 +335,13 @@ describe('HistoricChartComponent', () => {
     });
 
     describe('multi-field sensor', () => {
-      beforeEach(() => setup(
-        createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
-        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
-        MULTI_FIELDS,
-      ));
+      beforeEach(() =>
+        setup(
+          createMultiValueReadings(5, { spo2: 95, pulseRate: 70 }),
+          createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+          MULTI_FIELDS,
+        ),
+      );
 
       it('should render dropdown', () => {
         expect(fixture.debugElement.query(By.css('mat-select'))).not.toBeNull();
@@ -323,7 +356,9 @@ describe('HistoricChartComponent', () => {
       it('should display field labels with units in options', () => {
         fixture.debugElement.query(By.css('.mat-mdc-select-trigger')).nativeElement.click();
         fixture.detectChanges();
-        const texts = fixture.debugElement.queryAll(By.css('mat-option')).map((o) => o.nativeElement.textContent.trim());
+        const texts = fixture.debugElement
+          .queryAll(By.css('mat-option'))
+          .map((o) => o.nativeElement.textContent.trim());
         expect(texts).toContain('Blood Oxygen (%)');
         expect(texts).toContain('Pulse Rate (bpm)');
       });
@@ -356,7 +391,9 @@ describe('HistoricChartComponent', () => {
       });
 
       it('should render left and right scroll buttons', () => {
-        expect(fixture.debugElement.queryAll(By.css('.scroll-controls button[mat-icon-button]')).length).toBe(2);
+        expect(
+          fixture.debugElement.queryAll(By.css('.scroll-controls button[mat-icon-button]')).length,
+        ).toBe(2);
       });
 
       it('should render the slider', () => {
@@ -366,7 +403,9 @@ describe('HistoricChartComponent', () => {
 
     it('should scroll right when right button is clicked', () => {
       setup(createReadings(HR_VP + 50, 'bpm', 0), createSensor(), SINGLE_FIELD);
-      fixture.debugElement.queryAll(By.css('.scroll-controls button[mat-icon-button]'))[1].nativeElement.click();
+      fixture.debugElement
+        .queryAll(By.css('.scroll-controls button[mat-icon-button]'))[1]
+        .nativeElement.click();
       fixture.detectChanges();
       expect(component['offset']()).toBeGreaterThan(0);
     });
@@ -375,7 +414,9 @@ describe('HistoricChartComponent', () => {
       setup(createReadings(HR_VP + 50, 'bpm', 0), createSensor(), SINGLE_FIELD);
       component['onOffsetChange'](20);
       fixture.detectChanges();
-      fixture.debugElement.queryAll(By.css('.scroll-controls button[mat-icon-button]'))[0].nativeElement.click();
+      fixture.debugElement
+        .queryAll(By.css('.scroll-controls button[mat-icon-button]'))[0]
+        .nativeElement.click();
       fixture.detectChanges();
       expect(component['offset']()).toBeLessThan(20);
     });
@@ -411,7 +452,11 @@ describe('HistoricChartComponent', () => {
 
     it('should handle field change preserving offset', () => {
       const vp = SENSOR_VISIBLE_POINTS[SensorProfiles.PULSE_OXIMETER_SERVICE] ?? 50;
-      setup(createMultiValueReadings(vp + 20, { spo2: 80, pulseRate: 60 }), createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }), MULTI_FIELDS);
+      setup(
+        createMultiValueReadings(vp + 20, { spo2: 80, pulseRate: 60 }),
+        createSensor({ profile: SensorProfiles.PULSE_OXIMETER_SERVICE }),
+        MULTI_FIELDS,
+      );
       component['onOffsetChange'](10);
       component['onFieldChange']('pulseRate');
       expect(component['offset']()).toBe(10);

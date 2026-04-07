@@ -45,9 +45,9 @@ export class AuthServiceMock {
   private readonly shouldFailLogin = false;
   private readonly shouldFailLogout = false;
   private readonly shouldFailForgotPasswordRequest = false;
-  private readonly shouldFailConfirmPasswordChange = true;
+  private readonly shouldFailConfirmPasswordChange = false;
   private readonly shouldFailConfirmPasswordReset = false;
-  private readonly shouldFailConfirmAccountCreation = true;
+  private readonly shouldFailConfirmAccountCreation = false;
   private readonly shouldFailVerifyForgotPasswordToken = false;
   private readonly shouldFailVerifyAccountToken = false;
 
@@ -79,7 +79,10 @@ export class AuthServiceMock {
 
   forgotPasswordRequest(req: ForgotPasswordRequest): Observable<void> {
     if (this.shouldFailForgotPasswordRequest) {
-      return this.delayedError({ status: 500, message: 'Server error during forgot password request' });
+      return this.delayedError({
+        status: 500,
+        message: 'Server error during forgot password request',
+      });
     }
 
     if (!MOCK_USERS[req.email]) {
@@ -136,7 +139,10 @@ export class AuthServiceMock {
 
   confirmAccountCreation(req: ConfirmAccountResponse): Observable<AuthResponse> {
     if (this.shouldFailConfirmAccountCreation) {
-      return this.delayedError({ status: 500, message: 'Server error during account confirmation' });
+      return this.delayedError({
+        status: 500,
+        message: 'Server error during account confirmation',
+      });
     }
 
     if (!req.token || req.token === 'expired-token') {

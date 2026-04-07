@@ -148,9 +148,9 @@ export class UserApiClientMockService {
     },
   ];
 
-  private readonly shouldFailGetUsers = true;
+  private readonly shouldFailGetUsers = false;
   private readonly shouldFailGetUser = false;
-  private readonly shouldFailCreateUser = true;
+  private readonly shouldFailCreateUser = false;
   private readonly shouldFailDeleteUser = false;
 
   public getUsers(
