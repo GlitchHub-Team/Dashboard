@@ -1,7 +1,6 @@
 package auth_integration_test
 
 import (
-	"crypto/sha512"
 	"encoding/json"
 	"net/http/httptest"
 	"reflect"
@@ -11,7 +10,6 @@ import (
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
