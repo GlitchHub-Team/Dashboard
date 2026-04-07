@@ -15,13 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// helper: hash password using same pre-hash + bcrypt approach used in production
-func hashPasswordForTest(plaintext string) (string, error) {
-	pre := sha512.Sum512([]byte(plaintext))
-	h, err := bcrypt.GenerateFromPassword(pre[:], bcrypt.DefaultCost)
-	return string(h), err
-}
-
 func CheckValidJWTInResponse(t *testing.T, expectedRequester identity.Requester) helper.IntegrationTestCheck {
 	t.Helper()
 
