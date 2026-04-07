@@ -287,22 +287,22 @@ func TestChangePasswordTokenPgAdapter_DeleteForgotPasswordToken(t *testing.T) {
 	targetExpiryDate := time.Now()
 
 	tenantMemberToken := auth.ForgotPasswordToken{
-		HashedToken: targetHashedToken,
-		TenantId:    &targetTenantId,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetHashedToken,
+		TenantId:   &targetTenantId,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	superAdminToken := auth.ForgotPasswordToken{
-		HashedToken: targetHashedToken,
-		TenantId:    nil,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetHashedToken,
+		TenantId:   nil,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	expectedTenantMemberEntity := &auth.TenantPasswordTokenEntity{
 		Token:     targetHashedToken,
-		TenantId:  &targetTenantIdStr,
+		TenantId:  targetTenantIdStr,
 		UserId:    targetUserId,
 		ExpiresAt: targetExpiryDate,
 	}
@@ -446,7 +446,6 @@ func TestChangePasswordTokenPgAdapter_GetTenantMemberByForgotPasswordToken(t *te
 	// Input ----------------------------------------------------------------------------------
 	targetExpiryDate := time.Now()
 	targetToken := "token"
-	expectedHashedToken := "hashed-token-123"
 
 	targetUserId := uint(1)
 	targetUserName := "name"
@@ -456,16 +455,10 @@ func TestChangePasswordTokenPgAdapter_GetTenantMemberByForgotPasswordToken(t *te
 	targetTenantIdStr := targetTenantId.String()
 	targetConfirmed := true
 	targetRole := identity.ROLE_TENANT_USER
-	// tenantMemberToken := auth.ForgotPasswordToken{
-	// 	HashedToken: targetToken,
-	// 	TenantId:    &targetTenantId,
-	// 	UserId:      targetUserId,
-	// 	ExpiryDate:  targetExpiryDate,
-	// }
 
 	expectedTenantMemberEntity := &auth.TenantPasswordTokenEntity{
 		Token:    targetToken,
-		TenantId: &targetTenantIdStr,
+		TenantId: targetTenantIdStr,
 		UserId:   targetUserId,
 		TenantMember: user.TenantMemberEntity{
 			ID:        targetUserId,
@@ -489,46 +482,25 @@ func TestChangePasswordTokenPgAdapter_GetTenantMemberByForgotPasswordToken(t *te
 		Confirmed:    targetConfirmed,
 	}
 
-	// Step 1: hash token
-	step1HashTokenOk := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return(expectedHashedToken, nil).
-			Times(1)
-	}
-
-	errMockStep1 := errors.New("unexpected error in step 1")
-
-	step1HashTokenError := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return("", errMockStep1).
-			Times(1)
-	}
-
-	// Step 2: Save token
-	errMockStep2 := errors.New("unexpected error in step 2")
+	// Save token
+	errMockStep1 := errors.New("unexpected error in step 2")
 
 	// Get token
-	step2GetTokenOk := func(
+	stepGetTokenOk := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return tenantMemberRepo.EXPECT().
-			GetTokenWithUser(targetTenantId.String(), expectedHashedToken).
+			GetTokenWithUser(targetTenantId.String(), targetToken).
 			Return(expectedTenantMemberEntity, nil).
 			Times(1)
 	}
 
-	step2GetTokenError := func(
+	stepGetTokenError := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return tenantMemberRepo.EXPECT().
-			GetTokenWithUser(targetTenantId.String(), expectedHashedToken).
-			Return(&auth.TenantPasswordTokenEntity{}, errMockStep2).
+			GetTokenWithUser(targetTenantId.String(), targetToken).
+			Return(&auth.TenantPasswordTokenEntity{}, errMockStep1).
 			Times(1)
 	}
 
@@ -539,36 +511,22 @@ func TestChangePasswordTokenPgAdapter_GetTenantMemberByForgotPasswordToken(t *te
 			inputTenantId:    targetTenantId,
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenOk,
+				stepGetTokenOk,
 			},
 			expectedUser:  expectedUser,
 			expectedError: nil,
 		},
 
-		// Step 1
+		// Fail
 		{
-			name:             "Fail (step 1): unexpected error",
+			name:             "Fail: unexpected error",
 			inputTenantId:    targetTenantId,
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenError,
+				stepGetTokenError,
 			},
 			expectedUser:  user.User{},
-			expectedError: errMockStep1,
-		},
-
-		// Step 2
-		{
-			name:             "Fail (step 2): unexpected error",
-			inputTenantId:    targetTenantId,
-			inputTokenString: targetToken,
-			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenError,
-			},
-			expectedUser:  user.User{},
-			expectedError: errMockStep2,
+			expectedError: auth.ErrTokenNotFound,
 		},
 	}
 
@@ -603,7 +561,6 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminByForgotPasswordToken(t *test
 	// Input ----------------------------------------------------------------------------------
 	targetExpiryDate := time.Now()
 	targetToken := "token"
-	expectedHashedToken := "hashed-token-123"
 
 	targetUserId := uint(1)
 	targetUserName := "name"
@@ -635,46 +592,25 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminByForgotPasswordToken(t *test
 		Confirmed:    targetConfirmed,
 	}
 
-	// Step 1: hash token
-	step1HashTokenOk := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return(expectedHashedToken, nil).
-			Times(1)
-	}
-
-	errMockStep1 := errors.New("unexpected error in step 1")
-
-	step1HashTokenError := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return("", errMockStep1).
-			Times(1)
-	}
-
 	// Step 2: Save token
-	errMockStep2 := errors.New("unexpected error in step 2")
+	errMock := errors.New("unexpected error in step 2")
 
 	// Get token
-	step2GetTokenOk := func(
+	stepGetTokenOk := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return superAdminRepo.EXPECT().
-			GetTokenWithUser(expectedHashedToken).
+			GetTokenWithUser(targetToken).
 			Return(expectedTenantMemberEntity, nil).
 			Times(1)
 	}
 
-	step2GetTokenError := func(
+	stepGetTokenError := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return superAdminRepo.EXPECT().
-			GetTokenWithUser(expectedHashedToken).
-			Return(&auth.SuperAdminPasswordTokenEntity{}, errMockStep2).
+			GetTokenWithUser(targetToken).
+			Return(&auth.SuperAdminPasswordTokenEntity{}, errMock).
 			Times(1)
 	}
 
@@ -684,34 +620,21 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminByForgotPasswordToken(t *test
 			name:             "Success",
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenOk,
+				stepGetTokenOk,
 			},
 			expectedUser:  expectedUser,
 			expectedError: nil,
 		},
 
-		// Step 1
+		// Fail
 		{
-			name:             "Fail (step 1): unexpected error",
+			name:             "Fail: unexpected error",
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenError,
+				stepGetTokenError,
 			},
 			expectedUser:  user.User{},
-			expectedError: errMockStep1,
-		},
-
-		// Step 2
-		{
-			name:             "Fail (step 2): unexpected error",
-			inputTokenString: targetToken,
-			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenError,
-			},
-			expectedUser:  user.User{},
-			expectedError: errMockStep2,
+			expectedError: auth.ErrTokenNotFound,
 		},
 	}
 
@@ -746,7 +669,6 @@ func TestChangePasswordTokenPgAdapter_GetTenantForgotPasswordToken(t *testing.T)
 
 	// Input ----------------------------------------------------------------------------------
 	targetToken := "token"
-	expectedHashedToken := "hashed-token-123"
 
 	targetUserId := uint(1)
 	targetTenantId := uuid.New()
@@ -754,59 +676,38 @@ func TestChangePasswordTokenPgAdapter_GetTenantForgotPasswordToken(t *testing.T)
 	targetExpiry := time.Now()
 
 	expectedTenantMemberToken := &auth.TenantPasswordTokenEntity{
-		Token:     expectedHashedToken,
-		TenantId:  &targetTenantIdStr,
+		Token:     targetToken,
+		TenantId:  targetTenantIdStr,
 		UserId:    targetUserId,
 		ExpiresAt: targetExpiry,
 	}
 
 	expectedDomainToken := auth.ForgotPasswordToken{
-		HashedToken: expectedHashedToken,
-		TenantId:    &targetTenantId,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiry,
-	}
-
-	// Step 1: hash token
-	step1HashTokenOk := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return(expectedHashedToken, nil).
-			Times(1)
-	}
-
-	errMockStep1 := errors.New("unexpected error in step 1")
-
-	step1HashTokenError := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return("", errMockStep1).
-			Times(1)
+		Token:      targetToken,
+		TenantId:   &targetTenantId,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiry,
 	}
 
 	// Step 2: Save token
-	errMockStep2 := errors.New("unexpected error in step 2")
+	errMock := errors.New("unexpected error in step 2")
 
 	// Get token
-	step2GetTokenOk := func(
+	stepGetTokenOk := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return tenantMemberRepo.EXPECT().
-			GetToken(targetTenantId.String(), expectedHashedToken).
+			GetToken(targetTenantId.String(), targetToken).
 			Return(expectedTenantMemberToken, nil).
 			Times(1)
 	}
 
-	step2GetTokenError := func(
+	stepGetTokenError := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return tenantMemberRepo.EXPECT().
-			GetToken(targetTenantId.String(), expectedHashedToken).
-			Return(&auth.TenantPasswordTokenEntity{}, errMockStep2).
+			GetToken(targetTenantId.String(), targetToken).
+			Return(&auth.TenantPasswordTokenEntity{}, errMock).
 			Times(1)
 	}
 
@@ -817,36 +718,22 @@ func TestChangePasswordTokenPgAdapter_GetTenantForgotPasswordToken(t *testing.T)
 			inputTenantId:    targetTenantId,
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenOk,
+				stepGetTokenOk,
 			},
 			expectedToken: expectedDomainToken,
 			expectedError: nil,
 		},
 
-		// Step 1
-		{
-			name:             "Fail (step 1): unexpected error",
-			inputTenantId:    targetTenantId,
-			inputTokenString: targetToken,
-			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenError,
-			},
-			expectedToken: auth.ForgotPasswordToken{},
-			expectedError: errMockStep1,
-		},
-
-		// Step 2
+		// Fail
 		{
 			name:             "Fail (step 2): unexpected error",
 			inputTenantId:    targetTenantId,
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenError,
+				stepGetTokenError,
 			},
 			expectedToken: auth.ForgotPasswordToken{},
-			expectedError: errMockStep2,
+			expectedError: errMock,
 		},
 	}
 
@@ -881,62 +768,41 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminForgotPasswordToken(t *testin
 	// Input ----------------------------------------------------------------------------------
 	targetExpiryDate := time.Now()
 	targetToken := "token"
-	expectedHashedToken := "hashed-token-123"
 
 	targetUserId := uint(1)
 
 	expectedTenantMemberEntity := &auth.SuperAdminPasswordTokenEntity{
-		Token:     expectedHashedToken,
+		Token:     targetToken,
 		UserId:    targetUserId,
 		ExpiresAt: targetExpiryDate,
 	}
 
 	expectedDomainToken := auth.ForgotPasswordToken{
-		HashedToken: expectedHashedToken,
-		TenantId:    nil,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
-	}
-	// Step 1: hash token
-	step1HashTokenOk := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return(expectedHashedToken, nil).
-			Times(1)
+		Token:      targetToken,
+		TenantId:   nil,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
-	errMockStep1 := errors.New("unexpected error in step 1")
-
-	step1HashTokenError := func(
-		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
-	) *gomock.Call {
-		return hasher.EXPECT().
-			HashSecret(targetToken).
-			Return("", errMockStep1).
-			Times(1)
-	}
-
-	// Step 2: Save token
-	errMockStep2 := errors.New("unexpected error in step 2")
+	// Save token
+	errMock := errors.New("unexpected error in step 2")
 
 	// Get token
-	step2GetTokenOk := func(
+	stepGetTokenOk := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return superAdminRepo.EXPECT().
-			GetToken(expectedHashedToken).
+			GetToken(targetToken).
 			Return(expectedTenantMemberEntity, nil).
 			Times(1)
 	}
 
-	step2GetTokenError := func(
+	stepGetTokenError := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantPasswordTokenRepository, superAdminRepo *mocks.MockSuperAdminPasswordTokenRepository,
 	) *gomock.Call {
 		return superAdminRepo.EXPECT().
-			GetToken(expectedHashedToken).
-			Return(&auth.SuperAdminPasswordTokenEntity{}, errMockStep2).
+			GetToken(targetToken).
+			Return(&auth.SuperAdminPasswordTokenEntity{}, errMock).
 			Times(1)
 	}
 
@@ -946,8 +812,7 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminForgotPasswordToken(t *testin
 			name:             "Success",
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenOk,
+				stepGetTokenOk,
 			},
 			expectedUser:  expectedDomainToken,
 			expectedError: nil,
@@ -955,25 +820,13 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminForgotPasswordToken(t *testin
 
 		// Step 1
 		{
-			name:             "Fail (step 1): unexpected error",
+			name:             "Fail: unexpected error",
 			inputTokenString: targetToken,
 			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenError,
+				stepGetTokenError,
 			},
 			expectedUser:  auth.ForgotPasswordToken{},
-			expectedError: errMockStep1,
-		},
-
-		// Step 2
-		{
-			name:             "Fail (step 2): unexpected error",
-			inputTokenString: targetToken,
-			setupSteps: []mockSetupFunc_changePasswordTokenPgAdapter{
-				step1HashTokenOk,
-				step2GetTokenError,
-			},
-			expectedUser:  auth.ForgotPasswordToken{},
-			expectedError: errMockStep2,
+			expectedError: errMock,
 		},
 	}
 

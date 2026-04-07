@@ -1,12 +1,14 @@
 package auth
 
 import (
+	"errors"
+
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 	"backend/internal/user"
 
 	"github.com/google/uuid"
-	// "github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 //go:generate mockgen -destination=../../tests/auth/mocks/repository_change_password.go -package=mocks . SuperAdminPasswordTokenRepository,TenantPasswordTokenRepository
@@ -66,7 +68,7 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 	rawToken string, err error,
 ) {
 	// 1. Generate token
-	rawToken, hashedTokenString, err := adapter.tokenGenerator.GenerateToken()
+	rawToken, _, err = adapter.tokenGenerator.GenerateToken()
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +77,7 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 	switch user.Role {
 	case identity.ROLE_SUPER_ADMIN:
 		entity := SuperAdminPasswordTokenEntity{
-			Token:  hashedTokenString,
+			Token:  rawToken,
 			UserId: user.Id,
 		}
 		err = adapter.superAdminRepo.SaveToken(&entity)
@@ -86,8 +88,8 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 	case identity.ROLE_TENANT_ADMIN, identity.ROLE_TENANT_USER:
 		tenantIdString := user.TenantId.String()
 		entity := TenantPasswordTokenEntity{
-			Token:    hashedTokenString,
-			TenantId: &tenantIdString,
+			Token:    rawToken,
+			TenantId: tenantIdString,
 			UserId:   user.Id,
 		}
 		err = adapter.tenantMemberRepo.SaveToken(&entity)
@@ -120,19 +122,18 @@ func (adapter *ChangePasswordTokenPgAdapter) DeleteForgotPasswordToken(token For
 func (adapter *ChangePasswordTokenPgAdapter) GetTenantMemberByForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), tokenString)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || tokenEntity.Token == "" {
+			return user.User{}, ErrTokenNotFound
+		}
 		return
 	}
-
-	// 2. Get token
-	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), hashedTokenString)
-	if err != nil {
-		return user.User{}, err
+	if tokenEntity.Token == "" {
+		return user.User{}, ErrTokenNotFound
 	}
+	tokenEntity.TenantId = tenantId.String()
 
-	// 3. Get user from token
 	userFound, err = user.TenantMemberEntityToUser(&tokenEntity.TenantMember)
 	return
 }
@@ -140,16 +141,15 @@ func (adapter *ChangePasswordTokenPgAdapter) GetTenantMemberByForgotPasswordToke
 func (adapter *ChangePasswordTokenPgAdapter) GetSuperAdminByForgotPasswordToken(tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(tokenString)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || tokenEntity.Token == "" {
+			return user.User{}, ErrTokenNotFound
+		}
 		return
 	}
-
-	// 2. Get token
-	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(hashedTokenString)
-	if err != nil {
-		return
+	if tokenEntity.Token == "" {
+		return user.User{}, ErrTokenNotFound
 	}
 
 	// 3. Get user from token
@@ -162,17 +162,18 @@ func (adapter *ChangePasswordTokenPgAdapter) GetSuperAdminByForgotPasswordToken(
 func (adapter *ChangePasswordTokenPgAdapter) GetTenantForgotPasswordToken(tenantId uuid.UUID, tokenString string) (
 	token ForgotPasswordToken, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), tokenString)
 	if err != nil {
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ForgotPasswordToken{}, ErrTokenNotFound
+		}
+		return ForgotPasswordToken{}, err
 	}
+	if tokenEntity.Token == "" {
+		return ForgotPasswordToken{}, ErrTokenNotFound
+	}
+	tokenEntity.TenantId = tenantId.String()
 
-	// 2. Get token
-	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), hashedTokenString)
-	if err != nil {
-		return
-	}
 	token, err = TenantPasswordTokenEntityToForgotPasswordToken(tokenEntity)
 	return
 }
@@ -180,16 +181,15 @@ func (adapter *ChangePasswordTokenPgAdapter) GetTenantForgotPasswordToken(tenant
 func (adapter *ChangePasswordTokenPgAdapter) GetSuperAdminForgotPasswordToken(tokenString string) (
 	token ForgotPasswordToken, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.superAdminRepo.GetToken(tokenString)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ForgotPasswordToken{}, ErrTokenNotFound
+		}
 		return
 	}
-
-	// 2. Get token
-	tokenEntity, err := adapter.superAdminRepo.GetToken(hashedTokenString)
-	if err != nil {
-		return
+	if tokenEntity.Token == "" {
+		return ForgotPasswordToken{}, ErrTokenNotFound
 	}
 	token = SuperAdminPasswordTokenEntityToForgotPasswordToken(tokenEntity)
 	return

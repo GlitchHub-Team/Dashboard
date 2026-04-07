@@ -39,7 +39,10 @@
       "extensions": [
         "golang.go",
         "angular.ng-template",
-        "dbaeumer.vscode-eslint"
+        "dbaeumer.vscode-eslint",
+        "GitHub.copilot-chat",
+        "mechatroner.rainbow-csv",
+        "ReprEng.csv"
       ]
     }
   }
