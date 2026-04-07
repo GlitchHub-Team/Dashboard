@@ -6,10 +6,10 @@ import { ApiError } from '../models/api-error.model';
 
 @Injectable({ providedIn: 'root' })
 export class GatewayCommandApiClientMockService {
-  private readonly shouldFailCommission = true;
-  private readonly shouldFailDecommission = true;
-  private readonly shouldFailReset = true;
-  private readonly shouldFailReboot = true;
+  private readonly shouldFailCommission = false;
+  private readonly shouldFailDecommission = false;
+  private readonly shouldFailReset = false;
+  private readonly shouldFailReboot = false;
 
   private readonly mockGateway: GatewayBackend = {
     gateway_id: 'gateway-01',

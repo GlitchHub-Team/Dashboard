@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
@@ -45,6 +45,14 @@ export class GatewaySensorManagerPage implements OnInit {
   );
 
   private readonly _dismissedError = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      if (!this.error()) {
+        this._dismissedError.set(null);
+      }
+    });
+  }
 
   protected readonly visibleError = computed(() => {
     const err = this.error();

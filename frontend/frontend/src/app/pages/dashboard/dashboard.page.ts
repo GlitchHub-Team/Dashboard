@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -54,7 +54,15 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   private readonly _dismissedError = signal<string | null>(null);
 
-  // Riceve sicuramente il role da app-shell
+  constructor() {
+    effect(() => {
+      if (!this.error()) {
+        this._dismissedError.set(null);
+      }
+    });
+  }
+
+  // Riceva sicuramente il role da app-shell
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly UserRole = UserRole;
 
