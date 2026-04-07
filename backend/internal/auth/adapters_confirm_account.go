@@ -4,8 +4,10 @@ import (
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 	"backend/internal/user"
+	"errors"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 //go:generate mockgen -destination=../../tests/auth/mocks/repository_confirm_account.go -package=mocks . SuperAdminConfirmTokenRepository,TenantConfirmTokenRepository
@@ -63,7 +65,7 @@ func (adapter *ConfirmTokenPgAdapter) NewConfirmAccountToken(user user.User) (
 	rawToken string, err error,
 ) {
 	// 1. Generate token
-	rawToken, hashedTokenString, err := adapter.tokenGenerator.GenerateToken()
+	rawToken, _, err = adapter.tokenGenerator.GenerateToken()
 	if err != nil {
 		return "", err
 	}
@@ -72,7 +74,7 @@ func (adapter *ConfirmTokenPgAdapter) NewConfirmAccountToken(user user.User) (
 	switch user.Role {
 	case identity.ROLE_SUPER_ADMIN:
 		entity := SuperAdminConfirmTokenEntity{
-			Token:  hashedTokenString,
+			Token:  rawToken,
 			UserId: user.Id,
 		}
 		err = adapter.superAdminRepo.SaveToken(&entity)
@@ -83,8 +85,8 @@ func (adapter *ConfirmTokenPgAdapter) NewConfirmAccountToken(user user.User) (
 	case identity.ROLE_TENANT_ADMIN, identity.ROLE_TENANT_USER:
 		tenantIdString := user.TenantId.String()
 		entity := TenantConfirmTokenEntity{
-			Token:    hashedTokenString,
-			TenantId: &tenantIdString,
+			Token:    rawToken,
+			TenantId: tenantIdString,
 			UserId:   user.Id,
 		}
 		err = adapter.tenantMemberRepo.SaveToken(&entity)
@@ -117,19 +119,14 @@ func (adapter *ConfirmTokenPgAdapter) DeleteConfirmAccountToken(token ConfirmAcc
 func (adapter *ConfirmTokenPgAdapter) GetTenantMemberByConfirmAccountToken(tenantId uuid.UUID, tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), tokenString)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || tokenEntity.Token == "" {
+			return user.User{}, ErrTokenNotFound
+		}
 		return
 	}
 
-	// 2. Get token
-	tokenEntity, err := adapter.tenantMemberRepo.GetTokenWithUser(tenantId.String(), hashedTokenString)
-	if err != nil {
-		return
-	}
-
-	// 3. Get user from token
 	userFound, err = user.TenantMemberEntityToUser(&tokenEntity.TenantMember)
 	return
 }
@@ -137,19 +134,14 @@ func (adapter *ConfirmTokenPgAdapter) GetTenantMemberByConfirmAccountToken(tenan
 func (adapter *ConfirmTokenPgAdapter) GetSuperAdminByConfirmAccountToken(tokenString string) (
 	userFound user.User, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(tokenString)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || tokenEntity.Token == "" {
+			return user.User{}, ErrTokenNotFound
+		}
 		return
 	}
 
-	// 2. Get token
-	tokenEntity, err := adapter.superAdminRepo.GetTokenWithUser(hashedTokenString)
-	if err != nil {
-		return
-	}
-
-	// 3. Get user from token
 	userFound, err = user.SuperAdminEntityToUser(&tokenEntity.SuperAdmin)
 	return
 }
@@ -159,17 +151,15 @@ func (adapter *ConfirmTokenPgAdapter) GetSuperAdminByConfirmAccountToken(tokenSt
 func (adapter *ConfirmTokenPgAdapter) GetTenantConfirmAccountToken(tenantId uuid.UUID, tokenString string) (
 	token ConfirmAccountToken, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), tokenString)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ConfirmAccountToken{}, ErrTokenNotFound
+		}
 		return
 	}
+	tokenEntity.TenantId = tenantId.String()
 
-	// 2. Get token
-	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), hashedTokenString)
-	if err != nil {
-		return
-	}
 	token, err = TenantConfirmTokenEntityToConfirmAccountToken(tokenEntity)
 	return
 }
@@ -177,15 +167,11 @@ func (adapter *ConfirmTokenPgAdapter) GetTenantConfirmAccountToken(tenantId uuid
 func (adapter *ConfirmTokenPgAdapter) GetSuperAdminConfirmAccountToken(tokenString string) (
 	token ConfirmAccountToken, err error,
 ) {
-	// 1. Hash token
-	hashedTokenString, err := adapter.hasher.HashSecret(tokenString)
+	tokenEntity, err := adapter.superAdminRepo.GetToken(tokenString)
 	if err != nil {
-		return
-	}
-
-	// 2. Get token
-	tokenEntity, err := adapter.superAdminRepo.GetToken(hashedTokenString)
-	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ConfirmAccountToken{}, ErrTokenNotFound
+		}
 		return
 	}
 	token = SuperAdminConfirmTokenEntityToConfirmAccountToken(tokenEntity)

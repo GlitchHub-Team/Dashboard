@@ -56,11 +56,11 @@ func NewGinEngine(
 		private.POST("/auth/logout", authController.LogoutUser)
 
 		// Conferma account
-		public.GET("/auth/confirm_account/verify_token/{token}", authController.VerifyConfirmAccountToken)
+		public.POST("/auth/confirm_account/verify_token", authController.VerifyConfirmAccountToken)
 		public.POST("/auth/confirm_account", authController.ConfirmAccount)
 
 		// Password dimenticata
-		public.GET("/auth/forgot_password/verify_token/{token}", authController.VerifyForgotPasswordToken)
+		public.POST("/auth/forgot_password/verify_token", authController.VerifyForgotPasswordToken)
 		public.POST("/auth/forgot_password/request", authController.RequestForgotPasswordToken)
 		public.POST("/auth/forgot_password", authController.ConfirmForgotPasswordToken)
 

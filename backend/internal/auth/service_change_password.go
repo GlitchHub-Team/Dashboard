@@ -84,9 +84,6 @@ func (service *ChangePasswordService) getValidTenantToken(tenantId uuid.UUID, to
 	if err != nil {
 		return ForgotPasswordToken{}, err
 	}
-	if tokenObj == (ForgotPasswordToken{}) {
-		return ForgotPasswordToken{}, ErrTokenNotFound
-	}
 	if tokenObj.IsExpired() {
 		return ForgotPasswordToken{}, ErrTokenExpired
 	}
@@ -101,9 +98,6 @@ func (service *ChangePasswordService) getValidSuperAdminToken(tokenString string
 	tokenObj, err = service.forgotPasswordTokenPort.GetSuperAdminForgotPasswordToken(tokenString)
 	if err != nil {
 		return ForgotPasswordToken{}, err
-	}
-	if tokenObj == (ForgotPasswordToken{}) {
-		return ForgotPasswordToken{}, ErrTokenNotFound
 	}
 	if tokenObj.IsExpired() {
 		return ForgotPasswordToken{}, ErrTokenExpired
@@ -174,13 +168,15 @@ func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPas
 	// - Tenant Member
 	{
 		tokenObj, err = service.getValidTenantToken(*cmd.TenantId, cmd.Token)
-		
 	}
 	if err != nil {
 		return
 	}
-	var userFound user.User
+
 	// 2. Get user
+	var userFound user.User
+
+	// - Super Admin
 	if cmd.TenantId == nil {
 		userFound, err = service.forgotPasswordTokenPort.GetSuperAdminByForgotPasswordToken(cmd.Token)
 	} else
@@ -191,6 +187,10 @@ func (service *ChangePasswordService) ConfirmForgotPassword(cmd ConfirmForgotPas
 
 	if err != nil {
 		return ErrTokenNotFound
+	}
+
+	if !userFound.Confirmed {
+		return ErrAccountNotConfirmed
 	}
 
 	// 3. Crea hash password
