@@ -42,12 +42,6 @@ type TenantMemberRepository interface {
 	GetTenantMember(tenantId string, by UserRepositoryGetUserBy) (
 		tenantMember *TenantMemberEntity, err error,
 	)
-	// GetTenantUser(tenantId string, by UserRepositoryGetUserBy) (
-	// 	tenantMember *TenantMemberEntity, err error,
-	// )
-	// GetTenantAdmin(tenantId string, by UserRepositoryGetUserBy) (
-	// 	tenantMember *TenantMemberEntity, err error,
-	// )
 
 	GetTenantUsers(tenantId string, offset, limit int) (
 		tenantAdmins []TenantMemberEntity, total int64, err error,
@@ -150,7 +144,6 @@ func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRe
 		Where(where, params...).
 		Find(tenantMember).
 		Error
-	repo.log.Sugar().Infof("INSIDE REPO %v", err)
 
 	tenantMember.TenantId = tenantId
 
