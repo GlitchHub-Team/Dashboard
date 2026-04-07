@@ -81,7 +81,7 @@ func CheckTenantMemberPassword(t *testing.T, tenantId string, userId uint, expec
 			}
 
 			if !expectedResult && (expectedPassword == storedPassword) {
-				t.Errorf("Expected non-empty password, got empty password",)
+				t.Errorf("Expected non-empty password, got empty password")
 				return false
 			}
 
@@ -98,7 +98,7 @@ func CheckTenantMemberPassword(t *testing.T, tenantId string, userId uint, expec
 		}
 
 		if !expectedResult && err == nil {
-			t.Errorf("Password hash (%v) DOES match expected password (%v)", storedPassword, expectedPassword,)
+			t.Errorf("Password hash (%v) DOES match expected password (%v)", storedPassword, expectedPassword)
 			return false
 		}
 
@@ -133,7 +133,7 @@ func CheckSuperAdminPassword(t *testing.T, userId uint, expectedPassword string,
 			}
 
 			if !expectedResult && (expectedPassword == storedPassword) {
-				t.Errorf("Expected non-empty password, got empty password",)
+				t.Errorf("Expected non-empty password, got empty password")
 				return false
 			}
 
@@ -150,7 +150,7 @@ func CheckSuperAdminPassword(t *testing.T, userId uint, expectedPassword string,
 		}
 
 		if !expectedResult && err == nil {
-			t.Errorf("Password hash (%v) DOES match expected password (%v)", storedPassword, expectedPassword,)
+			t.Errorf("Password hash (%v) DOES match expected password (%v)", storedPassword, expectedPassword)
 			return false
 		}
 

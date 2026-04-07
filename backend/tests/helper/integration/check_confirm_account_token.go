@@ -29,7 +29,6 @@ func CheckCountTenantConfirmAccountTokens(t *testing.T, tenantId string, expecte
 		}
 
 		return count == expectedCount
-
 	}
 }
 
@@ -102,7 +101,6 @@ func CheckCountSuperAdminConfirmAccountTokens(t *testing.T, expectedCount int64)
 		}
 
 		return count == expectedCount
-
 	}
 }
 

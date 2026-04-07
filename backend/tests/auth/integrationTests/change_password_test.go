@@ -253,7 +253,7 @@ func TestChangePasswordIntegration(t *testing.T) {
 		Header:    integration.AuthHeader(tenantUserJwt_Unconfirmed),
 		Body:      helper.MustJSONBody(t, correctBody),
 
-		WantStatusCode: http.StatusNotFound,
+		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: "account not confirmed",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckTenantMemberPassword(t, tenantIdStr, *tenantUserId_Unconfirmed, "", true),
@@ -340,7 +340,7 @@ func TestChangePasswordIntegration(t *testing.T) {
 		Header:    integration.AuthHeader(superAdminJwt_Invalid),
 		Body:      helper.MustJSONBody(t, shortPasswordBody),
 
-		WantStatusCode: http.StatusBadRequest,
+		WantStatusCode:   http.StatusBadRequest,
 		WantResponseBody: "error",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckSuperAdminPassword(t, *superAdminId_Invalid, oldPassword, true),
@@ -411,7 +411,7 @@ func TestChangePasswordIntegration(t *testing.T) {
 		Header:    integration.AuthHeader(superAdminJwt_Unconfirmed),
 		Body:      helper.MustJSONBody(t, correctBody),
 
-		WantStatusCode: http.StatusNotFound,
+		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: "account not confirmed",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckSuperAdminPassword(t, *superAdminId_Unconfirmed, "", true),

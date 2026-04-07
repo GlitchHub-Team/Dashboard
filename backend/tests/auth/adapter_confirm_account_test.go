@@ -287,17 +287,17 @@ func TestConfirmAccountTokenPgAdapter_DeleteConfirmAccountToken(t *testing.T) {
 	targetExpiryDate := time.Now()
 
 	tenantMemberToken := auth.ConfirmAccountToken{
-		Token: targetHashedToken,
-		TenantId:    &targetTenantId,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetHashedToken,
+		TenantId:   &targetTenantId,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	superAdminToken := auth.ConfirmAccountToken{
-		Token: targetHashedToken,
-		TenantId:    nil,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetHashedToken,
+		TenantId:   nil,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	expectedTenantMemberEntity := &auth.TenantConfirmTokenEntity{
@@ -683,10 +683,10 @@ func TestConfirmAccountTokenPgAdapter_GetTenantConfirmAccountToken(t *testing.T)
 	}
 
 	expectedDomainToken := auth.ConfirmAccountToken{
-		Token: targetToken,
-		TenantId:    &targetTenantId,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiry,
+		Token:      targetToken,
+		TenantId:   &targetTenantId,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiry,
 	}
 
 	// Step 2: Save token
@@ -778,10 +778,10 @@ func TestConfirmAccountTokenPgAdapter_GetSuperAdminConfirmAccountToken(t *testin
 	}
 
 	expectedDomainToken := auth.ConfirmAccountToken{
-		Token: targetToken,
-		TenantId:    nil,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetToken,
+		TenantId:   nil,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	// Save token

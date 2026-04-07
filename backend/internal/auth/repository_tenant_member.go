@@ -158,10 +158,10 @@ func TenantPasswordTokenEntityToForgotPasswordToken(entity *TenantPasswordTokenE
 		return ForgotPasswordToken{}, err
 	}
 	return ForgotPasswordToken{
-		Token: entity.Token,
-		TenantId:    &tenantId,
-		UserId:      entity.UserId,
-		ExpiryDate:  entity.ExpiresAt,
+		Token:      entity.Token,
+		TenantId:   &tenantId,
+		UserId:     entity.UserId,
+		ExpiryDate: entity.ExpiresAt,
 	}, nil
 }
 

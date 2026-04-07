@@ -222,7 +222,6 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 		Token:       bodyDto.Token,
 		NewPassword: bodyDto.NewPassword,
 	})
-
 	if err != nil {
 
 		if errors.Is(err, ErrAccountAlreadyConfirmed) {

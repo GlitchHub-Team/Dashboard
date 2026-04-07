@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
+	transportHttp "backend/internal/infra/transport/http"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
-	transportHttp "backend/internal/infra/transport/http"
 
 	"github.com/google/uuid"
 )

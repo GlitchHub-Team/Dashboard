@@ -33,9 +33,9 @@ func ConfirmAccountTokenToSuperAdminEntity(tokenObj ConfirmAccountToken) *SuperA
 
 func SuperAdminConfirmTokenEntityToConfirmAccountToken(entity *SuperAdminConfirmTokenEntity) ConfirmAccountToken {
 	return ConfirmAccountToken{
-		Token: entity.Token,
-		UserId:      entity.UserId,
-		ExpiryDate:  entity.ExpiresAt,
+		Token:      entity.Token,
+		UserId:     entity.UserId,
+		ExpiryDate: entity.ExpiresAt,
 	}
 }
 
@@ -87,7 +87,6 @@ func (repo *superAdminConfirmTokenPgRepository) GetTokenWithUser(tokenString str
 		Where("token = ?", tokenString).
 		Find(&entity).
 		Error
-
 	if err != nil {
 		return
 	}
@@ -124,9 +123,9 @@ func ForgotPasswordTokenToSuperAdminTokenEntity(tokenObj ForgotPasswordToken) *S
 
 func SuperAdminPasswordTokenEntityToForgotPasswordToken(entity *SuperAdminPasswordTokenEntity) ForgotPasswordToken {
 	return ForgotPasswordToken{
-		Token: entity.Token,
-		UserId:      entity.UserId,
-		ExpiryDate:  entity.ExpiresAt,
+		Token:      entity.Token,
+		UserId:     entity.UserId,
+		ExpiryDate: entity.ExpiresAt,
 	}
 }
 
@@ -178,7 +177,6 @@ func (repo *superAdminPasswordTokenPgRepository) GetTokenWithUser(tokenString st
 		Where("token = ?", tokenString).
 		Find(&entity).
 		Error
-
 	if err != nil {
 		return
 	}

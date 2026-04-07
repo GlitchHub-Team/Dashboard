@@ -60,7 +60,6 @@ func TestVerifyForgotPasswordTokenIntegration(t *testing.T) {
 	// Aggiungi tenant user
 	preSetup, tenantUserId := integration.PreSetupAddTenantMember_ReturnUserId(t, &tenantUserEntity)
 	preSetup(deps)
-	
 
 	// Aggiungi super admin
 	preSetup, superAdminId := integration.PreSetupAddSuperAdmin_ReturnUserId(t, &superAdminEntity)
@@ -124,7 +123,6 @@ func TestVerifyForgotPasswordTokenIntegration(t *testing.T) {
 			Token: wrongToken,
 		},
 	}
-
 
 	tests := []*helper.IntegrationTestCase{}
 

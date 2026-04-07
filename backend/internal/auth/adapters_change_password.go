@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"errors"
+
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 	"backend/internal/user"
-	"errors"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -162,7 +164,7 @@ func (adapter *ChangePasswordTokenPgAdapter) GetTenantForgotPasswordToken(tenant
 ) {
 	tokenEntity, err := adapter.tenantMemberRepo.GetToken(tenantId.String(), tokenString)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound){
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ForgotPasswordToken{}, ErrTokenNotFound
 		}
 		return ForgotPasswordToken{}, err

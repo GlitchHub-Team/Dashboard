@@ -287,17 +287,17 @@ func TestChangePasswordTokenPgAdapter_DeleteForgotPasswordToken(t *testing.T) {
 	targetExpiryDate := time.Now()
 
 	tenantMemberToken := auth.ForgotPasswordToken{
-		Token: targetHashedToken,
-		TenantId:    &targetTenantId,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetHashedToken,
+		TenantId:   &targetTenantId,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	superAdminToken := auth.ForgotPasswordToken{
-		Token: targetHashedToken,
-		TenantId:    nil,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetHashedToken,
+		TenantId:   nil,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	expectedTenantMemberEntity := &auth.TenantPasswordTokenEntity{
@@ -683,10 +683,10 @@ func TestChangePasswordTokenPgAdapter_GetTenantForgotPasswordToken(t *testing.T)
 	}
 
 	expectedDomainToken := auth.ForgotPasswordToken{
-		Token: targetToken,
-		TenantId:    &targetTenantId,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiry,
+		Token:      targetToken,
+		TenantId:   &targetTenantId,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiry,
 	}
 
 	// Step 2: Save token
@@ -778,10 +778,10 @@ func TestChangePasswordTokenPgAdapter_GetSuperAdminForgotPasswordToken(t *testin
 	}
 
 	expectedDomainToken := auth.ForgotPasswordToken{
-		Token: targetToken,
-		TenantId:    nil,
-		UserId:      targetUserId,
-		ExpiryDate:  targetExpiryDate,
+		Token:      targetToken,
+		TenantId:   nil,
+		UserId:     targetUserId,
+		ExpiryDate: targetExpiryDate,
 	}
 
 	// Save token

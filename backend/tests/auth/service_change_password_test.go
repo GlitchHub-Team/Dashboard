@@ -56,17 +56,17 @@ func TestChangePasswordService_VerifyForgotPasswordToken(t *testing.T) {
 	targetExpiryDate := time.Now().Add(time.Hour * 4)
 
 	expectedTokenObj := auth.ForgotPasswordToken{
-		Token: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  targetExpiryDate,
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
 	}
 
 	expectedExpiredTokenObj := auth.ForgotPasswordToken{
-		Token: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  time.Now().Add(time.Hour * -4),
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: time.Now().Add(time.Hour * -4),
+		UserId:     targetUserId,
 	}
 
 	// Step 1: get token -------------------------------------------------------------------------------------
@@ -479,7 +479,6 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 		Confirmed:    false,
 	}
 
-
 	// Tenant User confermato dopo SaveUser() (step 4)
 	targetConfirmedTenantUser := user.User{
 		Id:           targetUserId,
@@ -530,17 +529,17 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 	// targetWrongToken := "token456"
 
 	expectedTokenObj := auth.ForgotPasswordToken{
-		Token: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  targetExpiryDate,
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
 	}
 
 	expectedExpiredTokenObj := auth.ForgotPasswordToken{
-		Token: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  time.Now().Add(time.Hour * -4),
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: time.Now().Add(time.Hour * -4),
+		UserId:     targetUserId,
 	}
 
 	// test case
@@ -641,7 +640,6 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 			Return(expectedUnconfirmedTenantUser, nil).
 			Times(1)
 	}
-
 
 	// - Super Admin
 	step2GetUserOk_SuperAdmin := func(

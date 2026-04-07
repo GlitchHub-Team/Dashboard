@@ -60,7 +60,6 @@ func CheckNoTenantForgotPasswordTokenForUser(t *testing.T, tenantId string, user
 	}
 }
 
-
 func CheckTenantForgotPasswordTokenExpired(t *testing.T, tenantId, hashedToken string) helper.IntegrationTestCheck {
 	t.Helper()
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {

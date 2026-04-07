@@ -21,7 +21,6 @@ import (
 
 func TestLoginUserIntegration(t *testing.T) {
 	deps := helper.SetupIntegrationTest(t)
-	
 
 	// common values
 	tenantId := uuid.New()
@@ -39,41 +38,40 @@ func TestLoginUserIntegration(t *testing.T) {
 	}
 
 	confirmedTenantUserEntity := user.TenantMemberEntity{
-		Email: confirmedTenantUserEmail,
-		Password: &hashedPassword,
-		Name: "Confirmed Tenant User",
+		Email:     confirmedTenantUserEmail,
+		Password:  &hashedPassword,
+		Name:      "Confirmed Tenant User",
 		Confirmed: true,
-		Role: string(identity.ROLE_TENANT_USER),
-		TenantId: tenantId.String(),
+		Role:      string(identity.ROLE_TENANT_USER),
+		TenantId:  tenantId.String(),
 	}
-	
+
 	unconfirmedTenantUserEntity := user.TenantMemberEntity{
-		Email: unconfirmedTenantUserEmail,
-		Password: &hashedPassword,
-		Name: "Unconfirmed Tenant User",
+		Email:     unconfirmedTenantUserEmail,
+		Password:  &hashedPassword,
+		Name:      "Unconfirmed Tenant User",
 		Confirmed: false,
-		Role: string(identity.ROLE_TENANT_USER),
-		TenantId: tenantId.String(),
+		Role:      string(identity.ROLE_TENANT_USER),
+		TenantId:  tenantId.String(),
 	}
 
 	superAdminEntity := user.SuperAdminEntity{
-		Email: superAdminEmail,
-		Name: "Super Admin",
-		Password: &hashedPassword,
+		Email:     superAdminEmail,
+		Name:      "Super Admin",
+		Password:  &hashedPassword,
 		Confirmed: true,
 	}
 
 	// NOTA: Queste funzioni vengono inserite all'inizio perché il login non cambia lo stato
 	integration.PreSetupCreateTenant(tenantId, true)(deps)
-	preSetup, confirmedTenantUserId := integration.PreSetupAddTenantMember_ReturnUserId(t, &confirmedTenantUserEntity,)
+	preSetup, confirmedTenantUserId := integration.PreSetupAddTenantMember_ReturnUserId(t, &confirmedTenantUserEntity)
 	preSetup(deps)
 
-	preSetup, _ = integration.PreSetupAddTenantMember_ReturnUserId(t, &unconfirmedTenantUserEntity,)
+	preSetup, _ = integration.PreSetupAddTenantMember_ReturnUserId(t, &unconfirmedTenantUserEntity)
 	preSetup(deps)
 
-	preSetup, superAdminId := integration.PreSetupAddSuperAdmin_ReturnUserId(t, &superAdminEntity,)
+	preSetup, superAdminId := integration.PreSetupAddSuperAdmin_ReturnUserId(t, &superAdminEntity)
 	preSetup(deps)
-
 
 	// Request body
 	tenantUserBody := auth.LoginUserDTO{
@@ -133,19 +131,18 @@ func TestLoginUserIntegration(t *testing.T) {
 		},
 	}
 
-	// Requester 
+	// Requester
 	expectedTenantUserRequester := identity.Requester{
-		RequesterUserId: *confirmedTenantUserId,
+		RequesterUserId:   *confirmedTenantUserId,
 		RequesterTenantId: &tenantId,
-		RequesterRole: identity.ROLE_TENANT_USER,
+		RequesterRole:     identity.ROLE_TENANT_USER,
 	}
 
 	expectedSuperAdminRequester := identity.Requester{
-		RequesterUserId: *superAdminId,
+		RequesterUserId:   *superAdminId,
 		RequesterTenantId: nil,
-		RequesterRole: identity.ROLE_SUPER_ADMIN ,
+		RequesterRole:     identity.ROLE_SUPER_ADMIN,
 	}
-
 
 	tests := []*helper.IntegrationTestCase{}
 

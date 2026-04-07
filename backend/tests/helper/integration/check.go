@@ -12,8 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 func CheckNoTenant(tenantId string) helper.IntegrationTestCheck {
 	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)

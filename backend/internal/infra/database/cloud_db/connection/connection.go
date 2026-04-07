@@ -101,8 +101,8 @@ func SetCloudDbLifecycle(
 						return
 					}
 					log.Info("Eliminato cloud db di test", zap.String("name", cfg.CloudDBName))
-					})()
-				}
+				})()
+			}
 
 			return nil
 		},

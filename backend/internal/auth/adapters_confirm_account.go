@@ -1,10 +1,11 @@
 package auth
 
 import (
+	"errors"
+
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 	"backend/internal/user"
-	"errors"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

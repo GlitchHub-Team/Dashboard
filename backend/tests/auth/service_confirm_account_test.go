@@ -106,10 +106,10 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	// targetWrongToken := "token456"
 
 	expectedTokenObj := auth.ConfirmAccountToken{
-		Token: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  targetExpiryDate,
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
 	}
 
 	type mockSetupFunc func(
@@ -632,10 +632,10 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 	targetExpiryDate := time.Now().Add(time.Hour * 4)
 
 	expectedTokenObj := auth.ConfirmAccountToken{
-		Token: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  targetExpiryDate,
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
 	}
 
 	type mockSetupFunc func(

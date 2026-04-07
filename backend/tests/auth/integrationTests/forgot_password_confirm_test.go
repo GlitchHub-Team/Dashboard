@@ -258,8 +258,8 @@ func TestConfirmForgotPasswordIntegration(t *testing.T) {
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: "",
 		ResponseChecks: []helper.IntegrationTestCheck{
-			CheckSuperAdminConfirmed(t, *superAdminId, true),        // controlla utente confermato
-			CheckNoSuperAdminForgotPasswordToken(t, correctToken),   // controlla eliminazione token
+			CheckSuperAdminConfirmed(t, *superAdminId, true),      // controlla utente confermato
+			CheckNoSuperAdminForgotPasswordToken(t, correctToken), // controlla eliminazione token
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
 			PostSetupDeleteSuperAdminForgotPasswordToken(t, correctToken),
@@ -284,7 +284,6 @@ func TestConfirmForgotPasswordIntegration(t *testing.T) {
 		PostSetups: []helper.IntegrationTestPostSetup{},
 	})
 
-	
 	// Fail: Token not found (tenant member)
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{},
@@ -322,7 +321,6 @@ func TestConfirmForgotPasswordIntegration(t *testing.T) {
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
 	})
-
 
 	// Fail: Token expired (tenant member)
 	tests = append(tests, &helper.IntegrationTestCase{

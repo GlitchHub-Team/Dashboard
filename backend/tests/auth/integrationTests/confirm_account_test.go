@@ -250,9 +250,9 @@ func TestConfirmAccountIntegration(t *testing.T) {
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: "",
 		ResponseChecks: []helper.IntegrationTestCheck{
-			CheckTenantMemberConfirmed(t, tenantIdStr, *tenantUserId, true), // controlla utente confermato
-			integration.CheckNoTenantConfirmAccountToken(t, tenantIdStr, correctToken),  // controlla eliminazione token
-			CheckValidJWTInResponse(t, expectedTenantUserRequester),         // controlla JWT corretto
+			CheckTenantMemberConfirmed(t, tenantIdStr, *tenantUserId, true),            // controlla utente confermato
+			integration.CheckNoTenantConfirmAccountToken(t, tenantIdStr, correctToken), // controlla eliminazione token
+			CheckValidJWTInResponse(t, expectedTenantUserRequester),                    // controlla JWT corretto
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
 			PostSetupDeleteTenantConfirmAccountToken(t, tenantIdStr, correctToken),
@@ -273,9 +273,9 @@ func TestConfirmAccountIntegration(t *testing.T) {
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: "",
 		ResponseChecks: []helper.IntegrationTestCheck{
-			CheckSuperAdminConfirmed(t, *superAdminId, true),        // controlla utente confermato
-			integration.CheckNoSuperAdminConfirmAccountToken(t, correctToken),   // controlla eliminazione token
-			CheckValidJWTInResponse(t, expectedSuperAdminRequester), // controlla JWT corretto
+			CheckSuperAdminConfirmed(t, *superAdminId, true),                  // controlla utente confermato
+			integration.CheckNoSuperAdminConfirmAccountToken(t, correctToken), // controlla eliminazione token
+			CheckValidJWTInResponse(t, expectedSuperAdminRequester),           // controlla JWT corretto
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
 			PostSetupDeleteSuperAdminConfirmAccountToken(t, correctToken),

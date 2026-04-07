@@ -148,16 +148,16 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	}
 
 	return IntegrationTestDeps{
-		Ctx:              ctx,
-		Router:           router,
-		CloudDB:          cloudDB,
-		SensorDB:         sensorDB,
-		NatsConn:         natsConn,
-		NatsTestConn:     natsTestConn,
-		JetStreamCtx:     jetstreamCtx,
-		JetStreamTestCtx: jetstreamTestCtx,
-		AuthTokenManager: jwtManager,
-		SecretHasher:     secretHasher,
+		Ctx:                    ctx,
+		Router:                 router,
+		CloudDB:                cloudDB,
+		SensorDB:               sensorDB,
+		NatsConn:               natsConn,
+		NatsTestConn:           natsTestConn,
+		JetStreamCtx:           jetstreamCtx,
+		JetStreamTestCtx:       jetstreamTestCtx,
+		AuthTokenManager:       jwtManager,
+		SecretHasher:           secretHasher,
 		SecurityTokenGenerator: securityTokenGenerator,
 	}
 	// return router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx

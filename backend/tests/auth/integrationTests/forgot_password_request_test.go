@@ -32,7 +32,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 	tenantUserEmail := "tu1@example.com"
 	tenantUserEmail_NotFound := "tu1-not.found@example.com"
 	tenantUserEmail_NotConfirmed := "tu1-not-confirmed@example.com"
-	
+
 	userPw := "pw123"
 
 	tenantUserEntity := user.TenantMemberEntity{
@@ -52,7 +52,6 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		Role:      string(identity.ROLE_TENANT_USER),
 		TenantId:  tenantIdStr,
 	}
-
 
 	superAdminEmail := "superadmin@m31.com"
 	superAdminEmail_NotFound := "not-found@m31.com"
@@ -83,7 +82,6 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 
 	preSetup, tenantUserId_NotConfirmed := integration.PreSetupAddTenantMember_ReturnUserId(t, &tenantUserEntity_NotConfirmed)
 	preSetup(deps)
-	
 
 	// Aggiungi super admin
 	preSetup, superAdminId := integration.PreSetupAddSuperAdmin_ReturnUserId(t, &superAdminEntity)
@@ -146,7 +144,6 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 			Email: superAdminEmail_NotConfirmed,
 		},
 	}
-
 
 	tests := []*helper.IntegrationTestCase{}
 
@@ -283,7 +280,6 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
 	})
-
 
 	helper.RunIntegrationTests(t, tests, deps)
 }
