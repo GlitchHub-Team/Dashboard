@@ -5,8 +5,6 @@ import { RealTimeReading } from '../../models/sensor-data/real-time-reading.mode
 
 describe('EcgLiveAdapter', () => {
   const adapter = new EcgLiveAdapter();
-  const SAMPLE_RATE = 250;
-  const SAMPLE_INTERVAL_MS = 1000 / SAMPLE_RATE;
 
   const baseTimestamp = '2024-01-01T00:00:00.000Z';
   const waveform = [0.1, 0.5, 1.2, 0.8, -0.3];
@@ -35,10 +33,11 @@ describe('EcgLiveAdapter', () => {
       });
     });
 
-    it('should offset timestamps by SAMPLE_INTERVAL_MS per sample', () => {
+    it('should offset timestamps using variable spacing based on waveform length', () => {
       const baseTime = new Date(baseTimestamp).getTime();
+      const sampleIntervalMs = 1000 / waveform.length;
       adapter.fromDTO(dto).forEach((reading, i) => {
-        expect(reading.timestamp).toBe(new Date(baseTime + i * SAMPLE_INTERVAL_MS).toISOString());
+        expect(reading.timestamp).toBe(new Date(baseTime + i * sampleIntervalMs).toISOString());
       });
     });
 

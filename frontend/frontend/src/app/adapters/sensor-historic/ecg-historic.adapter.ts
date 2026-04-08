@@ -8,10 +8,6 @@ import { ECG_FIELDS } from '../../models/sensor-data/sensor-fields.model';
 export class EcgHistoricAdapter extends SensorHistoricAdapter {
   readonly fields: FieldDescriptor[] = ECG_FIELDS;
 
-  // Sample rate pescato dai docs di APIDOG
-  private readonly SAMPLE_RATE = 250; 
-  private readonly SAMPLE_INTERVAL_MS = 1000 / this.SAMPLE_RATE;
-
   fromResponse(response: HistoricResponse): HistoricReadings {
     const readings: SensorReading[] = [];
 
@@ -21,7 +17,7 @@ export class EcgHistoricAdapter extends SensorHistoricAdapter {
 
       for (let i = 0; i < waveform.length; i++) {
         readings.push({
-          timestamp: new Date(baseTime + i * this.SAMPLE_INTERVAL_MS).toISOString(),
+          timestamp: new Date(baseTime + i * 1000 / waveform.length).toISOString(),
           value: {
             ecg: waveform[i],
           },

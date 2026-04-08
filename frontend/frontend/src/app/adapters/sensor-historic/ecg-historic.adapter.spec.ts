@@ -5,8 +5,6 @@ import { HistoricResponse } from '../../models/sensor-data/historic-response.mod
 
 describe('EcgHistoricAdapter', () => {
   const adapter = new EcgHistoricAdapter();
-  const SAMPLE_RATE = 250;
-  const SAMPLE_INTERVAL_MS = 1000 / SAMPLE_RATE;
 
   const ts1 = '2024-01-01T00:00:00.000Z';
   const ts2 = '2024-01-01T00:00:01.000Z';
@@ -34,16 +32,18 @@ describe('EcgHistoricAdapter', () => {
       expect(adapter.fromResponse(response).fields).toBe(ECG_FIELDS);
     });
 
-    it('should expand each waveform sample into a reading with offset timestamp', () => {
+    it('should expand each waveform sample into readings with per-packet variable timestamp spacing', () => {
       const { readings } = adapter.fromResponse(response);
       const base1 = new Date(ts1).getTime();
       const base2 = new Date(ts2).getTime();
+      const sample1IntervalMs = 1000 / waveform1.length;
+      const sample2IntervalMs = 1000 / waveform2.length;
 
       waveform1.forEach((v, i) => {
-        expect(readings[i]).toEqual({ timestamp: new Date(base1 + i * SAMPLE_INTERVAL_MS).toISOString(), value: { ecg: v } });
+        expect(readings[i]).toEqual({ timestamp: new Date(base1 + i * sample1IntervalMs).toISOString(), value: { ecg: v } });
       });
       waveform2.forEach((v, i) => {
-        expect(readings[waveform1.length + i]).toEqual({ timestamp: new Date(base2 + i * SAMPLE_INTERVAL_MS).toISOString(), value: { ecg: v } });
+        expect(readings[waveform1.length + i]).toEqual({ timestamp: new Date(base2 + i * sample2IntervalMs).toISOString(), value: { ecg: v } });
       });
     });
 
