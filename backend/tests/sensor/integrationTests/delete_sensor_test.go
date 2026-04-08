@@ -10,13 +10,8 @@ import (
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
 
-	clouddb "backend/internal/infra/database/cloud_db/connection"
-	sensordb "backend/internal/infra/database/sensor_db"
-	natsutils "backend/internal/infra/nats"
-
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"gorm.io/gorm"
 )
 
@@ -31,15 +26,15 @@ type deleteSensorResponse struct {
 }
 
 func TestDeleteSensorIntegration(t *testing.T) {
-	router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx := helper.Setup(t)
+	deps := helper.SetupIntegrationTest(t)
 
-	superAdminJWT := mustGenerateJWTForRequester(t, jwtManager, identity.Requester{
+	superAdminJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId: 1,
 		RequesterRole:   identity.ROLE_SUPER_ADMIN,
 	})
 
 	tenantID := uuid.New()
-	tenantAdminJWT := mustGenerateJWTForRequester(t, jwtManager, identity.Requester{
+	tenantAdminJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId:   999,
 		RequesterTenantId: &tenantID,
 		RequesterRole:     identity.ROLE_TENANT_ADMIN,
@@ -64,7 +59,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 	var successSub *nats.Subscription
 	var successCmd sensor.DeleteSensorCmdEntity
 
-	tests := []helper.TestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio da parte di utente con jwt non valido",
@@ -94,7 +89,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			PostSetups: nil,
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayUnauthorized, "Gateway Unauthorized Delete"),
 				preSetupCreateSensor(sensorUnauthorized, gatewayUnauthorized, "Sensor Unauthorized Delete", 1000, sensor.HEART_RATE, sensor.Active),
 			},
@@ -106,11 +101,11 @@ func TestDeleteSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: sensor.ErrSensorNotFound.Error(),
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkSensorExists(sensorUnauthorized),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorUnauthorized),
 				postSetupDeleteByGateway(gatewayUnauthorized),
 			},
@@ -125,14 +120,14 @@ func TestDeleteSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: sensor.ErrSensorNotFound.Error(),
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkSensorNotExists(sensorNotFound),
 			},
 
 			PostSetups: nil,
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayTimeout, "Gateway Timeout Delete"),
 				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Delete", 1100, sensor.PULSE_OXIMETER, sensor.Active),
 				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.DELETE_SENSOR_CMD_SUBJECT),
@@ -145,18 +140,18 @@ func TestDeleteSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusInternalServerError,
 			WantResponseBody: "",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkSensorExists(sensorTimeout),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorTimeout),
 				postSetupDeleteByGateway(gatewayTimeout),
 				postSetupUnsubscribe(&timeoutSub),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayFailedReply, "Gateway Failed Reply Delete"),
 				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Reply Delete", 1200, sensor.HEALTH_THERMOMETER, sensor.Active),
 				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats delete failed"}, sensor.DELETE_SENSOR_CMD_SUBJECT),
@@ -169,18 +164,18 @@ func TestDeleteSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusInternalServerError,
 			WantResponseBody: "nats delete failed",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkSensorExists(sensorFailedReply),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorFailedReply),
 				postSetupDeleteByGateway(gatewayFailedReply),
 				postSetupUnsubscribe(&failedReplySub),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewaySuccess, "Gateway Success Delete"),
 				preSetupCreateSensor(sensorSuccess, gatewaySuccess, "Sensor Success Delete", 1300, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
 				preSetupCommandResponseListener(
@@ -201,11 +196,11 @@ func TestDeleteSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkDeleteResponseAndDB(&successCmd, sensorSuccess, gatewaySuccess),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorSuccess),
 				postSetupDeleteByGateway(gatewaySuccess),
 				postSetupUnsubscribe(&successSub),
@@ -213,23 +208,15 @@ func TestDeleteSensorIntegration(t *testing.T) {
 		},
 	}
 
-	helper.RunTests(router, ctx, tests, t, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx)
+	helper.RunIntegrationTests(t, tests, deps)
 }
 
 func checkDeleteResponseAndDB(
 	cmd *sensor.DeleteSensorCmdEntity,
 	expectedSensorID string,
 	expectedGatewayID string,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
-	return func(
-		w *httptest.ResponseRecorder,
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) bool {
+) helper.IntegrationTestCheck {
+	return func(w *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		var resp deleteSensorResponse
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			return false
@@ -243,7 +230,7 @@ func checkDeleteResponseAndDB(
 			return false
 		}
 
-		db := (*gorm.DB)(cloudDB)
+		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
 		err := db.Model(&sensor.SensorEntity{}).Where("id = ?", expectedSensorID).Count(&count).Error
 		return err == nil && count == 0

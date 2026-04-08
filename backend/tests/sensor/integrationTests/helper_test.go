@@ -3,21 +3,26 @@ package sensor_integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"backend/internal/gateway"
-	clouddb "backend/internal/infra/database/cloud_db/connection"
-	sensordb "backend/internal/infra/database/sensor_db"
-	natsutils "backend/internal/infra/nats"
 	"backend/internal/sensor"
 	sharedCrypto "backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
+	"backend/internal/tenant"
+	"backend/tests/helper"
 
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
+
+var (
+	tenant1IdStr = "11111111-1111-1111-1111-111111111111"
+	tenant2IdStr = "22222222-2222-2222-2222-222222222222"
 )
 
 func mustGenerateJWTForRequester(t *testing.T, jwtManager sharedCrypto.AuthTokenManager, requester identity.Requester) string {
@@ -54,7 +59,7 @@ func authHeader(jwt string) http.Header {
 func preSetupCreateGateway(
 	gatewayID string,
 	name string,
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+) helper.IntegrationTestPreSetup {
 	return preSetupCreateGatewayWithTenant(gatewayID, name, nil)
 }
 
@@ -62,16 +67,9 @@ func preSetupCreateGatewayWithTenant(
 	gatewayID string,
 	name string,
 	tenantID *string,
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
-	return func(
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) bool {
-		db := (*gorm.DB)(cloudDB)
+) helper.IntegrationTestPreSetup {
+	return func(deps helper.IntegrationTestDeps) bool {
+		db := (*gorm.DB)(deps.CloudDB)
 		entity := gateway.GatewayEntity{
 			ID:       gatewayID,
 			Name:     name,
@@ -82,6 +80,26 @@ func preSetupCreateGatewayWithTenant(
 	}
 }
 
+/*
+Popola il DB con 2 tenant.
+
+NOTA: è una "monkey patch", però funziona
+*/
+func populateTenantDefaultData(db *gorm.DB) error {
+	tenants := []tenant.TenantEntity{
+		{ID: tenant1IdStr, Name: "Tenant 1", CanImpersonate: true},
+		{ID: tenant2IdStr, Name: "Tenant 2", CanImpersonate: false},
+	}
+
+	// Tenant 1 e 2
+	for _, tenant := range tenants {
+		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&tenant).Error; err != nil {
+			return fmt.Errorf("failed to create tenant %v: %v", tenant.ID, err)
+		}
+	}
+	return nil
+}
+
 func preSetupCreateSensor(
 	sensorID string,
 	gatewayID string,
@@ -89,16 +107,9 @@ func preSetupCreateSensor(
 	intervalMs int64,
 	profile sensor.SensorProfile,
 	status sensor.SensorStatus,
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
-	return func(
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) bool {
-		db := (*gorm.DB)(cloudDB)
+) helper.IntegrationTestPreSetup {
+	return func(deps helper.IntegrationTestDeps) bool {
+		db := (*gorm.DB)(deps.CloudDB)
 		entity := sensor.SensorEntity{
 			ID:        sensorID,
 			GatewayID: gatewayID,
@@ -113,16 +124,9 @@ func preSetupCreateSensor(
 
 func postSetupDeleteByGateway(
 	gatewayID string,
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) {
-	return func(
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) {
-		db := (*gorm.DB)(cloudDB)
+) helper.IntegrationTestPostSetup {
+	return func(deps helper.IntegrationTestDeps) {
+		db := (*gorm.DB)(deps.CloudDB)
 		_ = db.Where("gateway_id = ?", gatewayID).Delete(&sensor.SensorEntity{}).Error
 		_ = db.Where("id = ?", gatewayID).Delete(&gateway.GatewayEntity{}).Error
 	}
@@ -130,53 +134,34 @@ func postSetupDeleteByGateway(
 
 func postSetupDeleteSensor(
 	sensorID string,
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) {
-	return func(
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) {
-		db := (*gorm.DB)(cloudDB)
+) helper.IntegrationTestPostSetup {
+	return func(deps helper.IntegrationTestDeps) {
+		db := (*gorm.DB)(deps.CloudDB)
 		_ = db.Where("id = ?", sensorID).Delete(&sensor.SensorEntity{}).Error
 	}
 }
 
 func postSetupUnsubscribe(
 	subscription **nats.Subscription,
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) {
-	return func(
-		_ clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		natsTestConn natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) {
+) helper.IntegrationTestPostSetup {
+	return func(deps helper.IntegrationTestDeps) {
 		if *subscription == nil {
 			return
 		}
 		_ = (*subscription).Unsubscribe()
-		_ = (*nats.Conn)(natsTestConn).Flush()
+		_ = (*nats.Conn)(deps.NatsTestConn).Flush()
 		*subscription = nil
 	}
 }
 
 func checkNoSensorForGateway(
 	gatewayID string,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+) helper.IntegrationTestCheck {
 	return func(
-		_ *httptest.ResponseRecorder,
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
+		r *httptest.ResponseRecorder,
+		deps helper.IntegrationTestDeps,
 	) bool {
-		db := (*gorm.DB)(cloudDB)
+		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
 		err := db.Model(&sensor.SensorEntity{}).Where("gateway_id = ?", gatewayID).Count(&count).Error
 		return err == nil && count == 0
@@ -185,17 +170,12 @@ func checkNoSensorForGateway(
 
 func checkSensorExists(
 	sensorID string,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+) helper.IntegrationTestCheck {
 	return func(
-		_ *httptest.ResponseRecorder,
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
+		r *httptest.ResponseRecorder,
+		deps helper.IntegrationTestDeps,
 	) bool {
-		db := (*gorm.DB)(cloudDB)
+		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
 		err := db.Model(&sensor.SensorEntity{}).Where("id = ?", sensorID).Count(&count).Error
 		return err == nil && count == 1
@@ -204,17 +184,12 @@ func checkSensorExists(
 
 func checkSensorNotExists(
 	sensorID string,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+) helper.IntegrationTestCheck {
 	return func(
-		_ *httptest.ResponseRecorder,
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
+		r *httptest.ResponseRecorder,
+		deps helper.IntegrationTestDeps,
 	) bool {
-		db := (*gorm.DB)(cloudDB)
+		db := (*gorm.DB)(deps.CloudDB)
 		var count int64
 		err := db.Model(&sensor.SensorEntity{}).Where("id = ?", sensorID).Count(&count).Error
 		return err == nil && count == 0
@@ -224,17 +199,12 @@ func checkSensorNotExists(
 func checkSensorStatus(
 	sensorID string,
 	status sensor.SensorStatus,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
+) helper.IntegrationTestCheck {
 	return func(
-		_ *httptest.ResponseRecorder,
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
+		r *httptest.ResponseRecorder,
+		deps helper.IntegrationTestDeps,
 	) bool {
-		db := (*gorm.DB)(cloudDB)
+		db := (*gorm.DB)(deps.CloudDB)
 		var entity sensor.SensorEntity
 		if err := db.Where("id = ?", sensorID).First(&entity).Error; err != nil {
 			return false
@@ -250,16 +220,9 @@ func preSetupCommandResponseListener(
 	reply sensor.CommandResponse,
 	subject string,
 	onMessage ...func(*nats.Msg),
-) func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
-	return func(
-		_ clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		natsTestConn natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) bool {
-		nc := (*nats.Conn)(natsTestConn)
+) helper.IntegrationTestPreSetup {
+	return func(deps helper.IntegrationTestDeps) bool {
+		nc := (*nats.Conn)(deps.NatsTestConn)
 		sub, err := nc.Subscribe(subject, func(msg *nats.Msg) {
 			if len(onMessage) > 0 && onMessage[0] != nil {
 				onMessage[0](msg)
