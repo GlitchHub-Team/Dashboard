@@ -1,16 +1,19 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { Subject, takeUntil } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { RealTimeReading } from '../../models/sensor-data/real-time-reading.model';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { Subject, takeUntil } from 'rxjs';
+import { TokenStorageService } from '../token-storage/token-storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SensorLiveReadingsApiService {
+  private readonly tokenService = inject(TokenStorageService);
   private readonly apiUrl = `${environment.wsUrl}`;
   private socket$: WebSocketSubject<RealTimeReading> | null = null;
   private readonly disconnect$ = new Subject<void>();
@@ -19,7 +22,8 @@ export class SensorLiveReadingsApiService {
   public connect(sensor: Sensor): Observable<RealTimeReading> {
     this.disconnect();
 
-    const url = `${this.apiUrl}/sensor/${sensor.id}/real_time_data`;
+    const params = new HttpParams().set('jwt', this.tokenService.getToken() ?? '');
+    const url = `${this.apiUrl}/sensor/${sensor.id}/real_time_data?${params.toString()}`;
 
     this.socket$ = webSocket<RealTimeReading>(url);
     return this.socket$.pipe(takeUntil(this.disconnect$));

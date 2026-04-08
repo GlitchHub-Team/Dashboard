@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
 
@@ -5,6 +6,8 @@ import { environment } from '../../../environments/environment';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorLiveReadingsApiService } from './sensor-live-readings-api.service';
+import { TokenStorageService } from '../token-storage/token-storage.service';
 
 vi.mock('rxjs/webSocket', () => ({
   webSocket: vi.fn(),
@@ -12,9 +15,11 @@ vi.mock('rxjs/webSocket', () => ({
 }));
 
 describe('SensorLiveReadingsApiService', () => {
-  let service: any;
+  let service: SensorLiveReadingsApiService;
+  let mockTokenService: Partial<TokenStorageService>;
 
   const wsUrl = environment.wsUrl;
+  const mockToken = 'mock-jwt-token';
 
   const mockSensor: Sensor = {
     id: 'sensor-1',
@@ -33,11 +38,21 @@ describe('SensorLiveReadingsApiService', () => {
     };
   };
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.resetAllMocks();
-    vi.resetModules();
-    const module = await import('./sensor-live-readings-api.service');
-    service = new module.SensorLiveReadingsApiService();
+
+    mockTokenService = {
+      getToken: vi.fn().mockReturnValue(mockToken),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        SensorLiveReadingsApiService,
+        { provide: TokenStorageService, useValue: mockTokenService },
+      ],
+    });
+
+    service = TestBed.inject(SensorLiveReadingsApiService);
   });
 
   it('should be created', () => {
@@ -45,13 +60,15 @@ describe('SensorLiveReadingsApiService', () => {
   });
 
   describe('connect', () => {
-    it('should call webSocket with the correct URL and return the socket observable', () => {
+    it('should call webSocket with the correct URL including the token and return the socket observable', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
       const result = service.connect(mockSensor);
 
-      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/sensor/${mockSensor.id}/real_time_data`);
+      expect(webSocket).toHaveBeenCalledWith(
+        `${wsUrl}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
+      );
       expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
