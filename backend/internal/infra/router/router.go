@@ -6,6 +6,7 @@ import (
 
 	"backend/internal/auth"
 	"backend/internal/gateway"
+	"backend/internal/historical_data"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
 	"backend/internal/user"
@@ -25,6 +26,7 @@ func NewGinEngine(
 	authzMiddleware *httpMiddlewares.AuthzMiddleware,
 
 	gatewayController *gateway.GatewayController,
+	historicalDataController *historical_data.Controller,
 	userController *user.Controller,
 	authController *auth.Controller,
 	sensorController *sensor.SensorController,
@@ -98,6 +100,14 @@ func NewGinEngine(
 
 		private.POST("/sensor/:sensor_id/interrupt", sensorController.InterruptSensor)
 		private.POST("/sensor/:sensor_id/resume", sensorController.ResumeSensor)
+	}
+
+	// Historical data
+	{
+		private.GET(
+			"/tenant/:tenant_id/sensor/:sensor_id/historical_data",
+			historicalDataController.GetSensorHistoricalData,
+		)
 	}
 
 	return router
