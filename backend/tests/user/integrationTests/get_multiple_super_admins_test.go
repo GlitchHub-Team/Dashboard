@@ -8,11 +8,12 @@ import (
 	"backend/internal/shared/identity"
 	"backend/internal/user"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 )
 
-func TestGetSuperAdminsIntegration(t *testing.T) {
+func TestGetSuperAdminListIntegration(t *testing.T) {
 	deps := helper.SetupIntegrationTest(t)
 
 	superAdminJWT, _ := helper.NewSuperAdminJWT(deps, uint(1))
@@ -29,53 +30,53 @@ func TestGetSuperAdminsIntegration(t *testing.T) {
 	// Success default pagination
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
-			PreSetupAddSuperAdmin(t, nil, superAdmin2Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin2Entity, false),
 		},
 		Name:   "Success: default pagination",
 		Method: http.MethodGet,
 		Path:   "/api/v1/super_admins",
-		Header: authHeader(superAdminJWT),
+		Header: integration.AuthHeader(superAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: "\"count\":2",
 		ResponseChecks: []helper.IntegrationTestCheck{
-			checkSuperAdminInserted(existingEmail1),
-			checkSuperAdminInserted(existingEmail2),
+			integration.CheckSuperAdminInserted(existingEmail1),
+			integration.CheckSuperAdminInserted(existingEmail2),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			PostSetupDeleteSuperAdmin(existingEmail1),
-			PostSetupDeleteSuperAdmin(existingEmail2),
+			integration.PostSetupDeleteSuperAdmin(existingEmail1),
+			integration.PostSetupDeleteSuperAdmin(existingEmail2),
 		},
 	})
 
 	// Success custom pagination page=2&limit=1
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
-			PreSetupAddSuperAdmin(t, nil, superAdmin2Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin2Entity, false),
 		},
 		Name:   "Success: custom pagination",
 		Method: http.MethodGet,
 		Path:   "/api/v1/super_admins?page=2&limit=1",
-		Header: authHeader(superAdminJWT),
+		Header: integration.AuthHeader(superAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: "\"count\":1",
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1), checkSuperAdminInserted(existingEmail2)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1), integration.CheckSuperAdminInserted(existingEmail2)},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			PostSetupDeleteSuperAdmin(existingEmail1),
-			PostSetupDeleteSuperAdmin(existingEmail2),
+			integration.PostSetupDeleteSuperAdmin(existingEmail1),
+			integration.PostSetupDeleteSuperAdmin(existingEmail2),
 		},
 	})
 
 	// Unauthorized no JWT
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
-			PreSetupAddSuperAdmin(t, nil, superAdmin2Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin2Entity, false),
 		},
 		Name:   "Fail: Unauthorized, no JWT",
 		Method: http.MethodGet,
@@ -85,45 +86,45 @@ func TestGetSuperAdminsIntegration(t *testing.T) {
 
 		WantStatusCode:   http.StatusUnauthorized,
 		WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1), checkSuperAdminInserted(existingEmail2)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1), integration.CheckSuperAdminInserted(existingEmail2)},
 		PostSetups: []helper.IntegrationTestPostSetup{
-			PostSetupDeleteSuperAdmin(existingEmail1),
-			PostSetupDeleteSuperAdmin(existingEmail2),
+			integration.PostSetupDeleteSuperAdmin(existingEmail1),
+			integration.PostSetupDeleteSuperAdmin(existingEmail2),
 		},
 	})
 
 	// Query invalid page=-1
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
 		},
 		Name:   "Fail: Query binding invalid",
 		Method: http.MethodGet,
 		Path:   "/api/v1/super_admins?page=-1",
-		Header: authHeader(superAdminJWT),
+		Header: integration.AuthHeader(superAdminJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusBadRequest,
 		WantResponseBody: "error",
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail1)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail1)},
 	})
 
 	// Unauthorized roles: tenant user should get 401
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
-			PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
+			integration.PreSetupAddSuperAdmin(t, nil, superAdmin1Entity, false),
 		},
 		Name:   "Fail: tenant user cannot list superadmins",
 		Method: http.MethodGet,
 		Path:   "/api/v1/super_admins",
-		Header: authHeader(tenantUserJWT),
+		Header: integration.AuthHeader(tenantUserJWT),
 		Body:   nil,
 
 		WantStatusCode:   http.StatusUnauthorized,
 		WantResponseBody: helper.ErrJsonString(identity.ErrUnauthorizedAccess),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail1)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail1)},
 	})
 
 	helper.RunIntegrationTests(t, tests, deps)

@@ -156,9 +156,9 @@ func TestAuthController_LoginUser(t *testing.T) {
 		PasswordField: dto.PasswordField{
 			Password: targetPassword,
 		},
-		UserRoleField: dto.UserRoleField{
-			UserRole: string(targetUserRole),
-		},
+		// UserRoleField: dto.UserRoleField{
+		// 	UserRole: string(targetUserRole),
+		// },
 	}
 
 	invalidUuidString := "not-a-uuid"
@@ -172,9 +172,9 @@ func TestAuthController_LoginUser(t *testing.T) {
 		PasswordField: dto.PasswordField{
 			Password: targetPassword,
 		},
-		UserRoleField: dto.UserRoleField{
-			UserRole: "invalid_role",
-		},
+		// UserRoleField: dto.UserRoleField{
+		// 	UserRole: "invalid_role",
+		// },
 	}
 
 	baseUrl := "/auth/login"

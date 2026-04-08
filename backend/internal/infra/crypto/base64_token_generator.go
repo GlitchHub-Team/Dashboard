@@ -33,13 +33,13 @@ func NewMainTokenGenerator(
 
 func (generator *MainTokenGenerator) GenerateToken() (string, string, error) {
 	byteNumber := generator.decodedTokenLength
-	token := make([]byte, byteNumber)
+	token := make([]byte, byteNumber) // Byte casuali
 	// NOTA: rand.Read() manda programma in crash se non riesce a scrivere
 	rand.Read(token) //nolint:errcheck
 
 	encodedToken := make([]byte, generator.encoding.EncodedLen(byteNumber))
 	generator.encoding.Encode(encodedToken, token)
-	encodedTokenString := string(encodedToken)
+	encodedTokenString := string(encodedToken) // Token codificato in Base64
 
 	hashedTokenString, err := generator.hasher.HashSecret(encodedTokenString)
 	if err != nil {
