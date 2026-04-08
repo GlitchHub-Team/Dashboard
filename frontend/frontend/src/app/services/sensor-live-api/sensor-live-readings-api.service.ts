@@ -6,7 +6,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { RealTimeReading } from '../../models/sensor-data/real-time-reading.model';
-import { Sensor } from '../../models/sensor/sensor.model';
+import { ChartRequest } from '../../models/chart/chart-request.model';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 
 @Injectable({
@@ -19,11 +19,11 @@ export class SensorLiveReadingsApiService {
   private readonly disconnect$ = new Subject<void>();
 
   // Connette al WS e ritorna l'Observable per recuperare le letture
-  public connect(sensor: Sensor): Observable<RealTimeReading> {
+  public connect(req: ChartRequest): Observable<RealTimeReading> {
     this.disconnect();
 
     const params = new HttpParams().set('jwt', this.tokenService.getToken() ?? '');
-    const url = `${this.apiUrl}/sensor/${sensor.id}/real_time_data?${params.toString()}`;
+    const url = `${this.apiUrl}tenant/${req.tenantId}/sensor/${req.sensor.id}/real_time_data?${params.toString()}`;
 
     this.socket$ = webSocket<RealTimeReading>(url);
     return this.socket$.pipe(takeUntil(this.disconnect$));

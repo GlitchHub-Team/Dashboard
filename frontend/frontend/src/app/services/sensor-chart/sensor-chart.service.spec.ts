@@ -92,6 +92,7 @@ describe('SensorChartService', () => {
   const historicRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-1',
     timeInterval: {
       from: new Date('2026-01-01T00:00:00.000Z'),
       to: new Date('2026-01-02T00:00:00.000Z'),
@@ -102,6 +103,7 @@ describe('SensorChartService', () => {
   const liveRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.REALTIME,
+    tenantId: 'tenant-1',
   };
 
   beforeEach(() => {
@@ -172,7 +174,7 @@ describe('SensorChartService', () => {
       liveReadingsAdapterMock.fromDTO.mockReturnValue([mockAdaptedReading]);
 
       service.startChart(liveRequest);
-      expect(liveReadingsApiMock.connect).toHaveBeenCalledWith(mockSensor);
+      expect(liveReadingsApiMock.connect).toHaveBeenCalledWith(liveRequest);
       expect(service.connectionStatus()).toBe('connecting');
 
       subject.next(mockRawReading);

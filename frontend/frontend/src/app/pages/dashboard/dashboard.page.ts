@@ -129,8 +129,13 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
+  // TODO: aggiungere tenantId alla ChartRequest
   protected onChartOpen(request: ChartRequest): void {
-    this.dashboardService.openChart(request);
+    const requestWithTenantId = {
+      ...request,
+      tenantId: this.activeTenantId() ?? this.userSession.currentUser()!.tenantId!,
+    }
+    this.dashboardService.openChart(requestWithTenantId);
   }
 
   protected onChartClosed(): void {

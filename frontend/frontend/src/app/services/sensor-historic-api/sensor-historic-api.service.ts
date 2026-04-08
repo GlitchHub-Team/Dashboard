@@ -23,7 +23,7 @@ export class SensorHistoricApiService {
     }
 
     return this.http.get<HistoricResponse>(
-      `${this.apiUrl}/sensor/${req.sensor.id}/historical_data`,
+      `${this.apiUrl}tenant/${req.tenantId}/sensor/${req.sensor.id}/historical_data`,
       { params },
     );
   }

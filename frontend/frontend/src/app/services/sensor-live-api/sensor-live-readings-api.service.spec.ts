@@ -6,6 +6,8 @@ import { environment } from '../../../environments/environment';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { Status } from '../../models/gateway-sensor-status.enum';
+import { ChartRequest } from '../../models/chart/chart-request.model';
+import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorLiveReadingsApiService } from './sensor-live-readings-api.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 
@@ -28,6 +30,12 @@ describe('SensorLiveReadingsApiService', () => {
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
     dataInterval: 60,
     status: Status.ACTIVE,
+  };
+
+  const mockRequest: ChartRequest = {
+    sensor: mockSensor,
+    chartType: ChartType.REALTIME,
+    tenantId: 'tenant-1',
   };
 
   const createMockSocket = () => {
@@ -64,10 +72,10 @@ describe('SensorLiveReadingsApiService', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
-      const result = service.connect(mockSensor);
+      const result = service.connect(mockRequest);
 
       expect(webSocket).toHaveBeenCalledWith(
-        `${wsUrl}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
+        `${wsUrl}tenant/${mockRequest.tenantId}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
       );
       expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
@@ -80,8 +88,8 @@ describe('SensorLiveReadingsApiService', () => {
         .mockReturnValueOnce(mockSocket1 as any)
         .mockReturnValueOnce(mockSocket2 as any);
 
-      service.connect(mockSensor);
-      service.connect(mockSensor);
+      service.connect(mockRequest);
+      service.connect(mockRequest);
 
       expect(webSocket).toHaveBeenCalledTimes(2);
     });
@@ -92,7 +100,7 @@ describe('SensorLiveReadingsApiService', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
-      service.connect(mockSensor);
+      service.connect(mockRequest);
       service.disconnect();
       expect(mockSocket.complete).toHaveBeenCalledTimes(1);
 

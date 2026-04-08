@@ -102,6 +102,7 @@ describe('DashboardPage (Unit)', () => {
   const mockChartRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-01',
     timeInterval: { from: new Date('2025-01-01'), to: new Date('2025-01-02') },
   };
 

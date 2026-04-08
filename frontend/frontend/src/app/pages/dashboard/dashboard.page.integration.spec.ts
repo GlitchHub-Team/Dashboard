@@ -59,7 +59,7 @@ const mockSensors: Sensor[] = [
   },
 ];
 
-const mockChartRequest: ChartRequest = { sensor: mockSensors[0], chartType: ChartType.HISTORIC };
+const mockChartRequest: ChartRequest = { sensor: mockSensors[0], chartType: ChartType.HISTORIC, tenantId: 'tenant-1' };
 
 const tenantAdminSession: UserSession = {
   userId: '1',
