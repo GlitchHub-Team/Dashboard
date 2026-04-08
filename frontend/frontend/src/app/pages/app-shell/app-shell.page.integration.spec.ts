@@ -242,7 +242,7 @@ describe('AppShellPage (Integration)', () => {
       expect(dialogMock.open).toHaveBeenCalled();
       afterClosedSubject.next(true);
 
-      expect(snackBarMock.open).toHaveBeenCalledWith('Password modificata con successo', 'Close', { duration: 3000 });
+      expect(snackBarMock.open).toHaveBeenCalledWith('Password modificata con successo', 'Chiudi', { duration: 3000 });
     });
 
     it('should not show snackbar when dialog closes with falsy', async () => {

@@ -359,7 +359,7 @@ describe('DashboardPage (Unit)', () => {
         .query(By.directive(StubGatewayTable))
         .triggerEventHandler('commandRequested', value);
       if (shouldCall) {
-        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Close', {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Chiudi', {
           duration: 3000,
         });
       } else {

@@ -20,7 +20,7 @@ const COMMAND_CASES: [
 ][] = [
   ['commission', 'commissionGateway', ['gw-1', 'tenant-1', 'commission-token']],
   ['decommission', 'decommissionGateway', ['gw-1']],
-  ['restart', 'resetGateway', ['gw-1']],
+  ['reset', 'resetGateway', ['gw-1']],
   ['reboot', 'rebootGateway', ['gw-1']],
 ];
 

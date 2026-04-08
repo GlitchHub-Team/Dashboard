@@ -27,11 +27,15 @@ export class GatewayCommandApiClientService {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/decommission`, {});
   }
 
+  // RESET
   public resetGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reset`, {});
   }
 
+  // RIAVVIO
   public rebootGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reboot`, {});
   }
+
+  // TODO: AGGIUNGI INTERROMPI E RIPRENDI
 }

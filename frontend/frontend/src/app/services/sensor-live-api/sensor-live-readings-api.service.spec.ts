@@ -46,8 +46,9 @@ describe('SensorLiveReadingsApiService', () => {
     };
   };
 
-  beforeEach(() => {
-    vi.resetAllMocks();
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
 
     mockTokenService = {
       getToken: vi.fn().mockReturnValue(mockToken),

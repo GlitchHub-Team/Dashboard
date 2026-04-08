@@ -348,7 +348,7 @@ describe('GatewaySensorManagerPage (Integration)', () => {
         confirmDialog();
 
         expect(managerServiceMock.refreshGateways).toHaveBeenCalled();
-        expect(snackBarMock.open).toHaveBeenCalledWith('Gateway creato con successo', 'Close', {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Gateway creato con successo', 'Chiudi', {
           duration: 3000,
         });
       });
@@ -392,7 +392,7 @@ describe('GatewaySensorManagerPage (Integration)', () => {
           expect(managerServiceMock.deleteGateway).toHaveBeenCalledWith(gateway);
           expect(snackBarMock.open).toHaveBeenCalledWith(
             'Gateway eliminato con successo',
-            'Close',
+            'Chiudi',
             {
               duration: 3000,
             },
@@ -428,7 +428,7 @@ describe('GatewaySensorManagerPage (Integration)', () => {
         confirmDialog();
 
         expect(managerServiceMock.refreshSensors).toHaveBeenCalledWith('gw-1');
-        expect(snackBarMock.open).toHaveBeenCalledWith('Sensore creato con successo', 'Close', {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Sensore creato con successo', 'Chiudi', {
           duration: 3000,
         });
       });
@@ -466,7 +466,7 @@ describe('GatewaySensorManagerPage (Integration)', () => {
         confirmDialog();
 
         expect(managerServiceMock.deleteSensor).toHaveBeenCalledWith(sensor);
-        expect(snackBarMock.open).toHaveBeenCalledWith('Sensore eliminato con successo', 'Close', {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Sensore eliminato con successo', 'Chiudi', {
           duration: 3000,
         });
       });
