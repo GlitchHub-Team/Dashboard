@@ -6,7 +6,6 @@ import (
 	"backend/internal/user"
 
 	"github.com/google/uuid"
-	// "github.com/google/uuid"
 )
 
 //go:generate mockgen -destination=../../tests/auth/mocks/repository_change_password.go -package=mocks . SuperAdminPasswordTokenRepository,TenantPasswordTokenRepository

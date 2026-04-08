@@ -138,16 +138,19 @@ func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRe
 ) {
 	where, params, err := by.getWhere()
 	if err != nil {
-		return &TenantMemberEntity{}, err
+		return
 	}
 
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where(where, params...).
-		Find(&tenantMember).
+		Find(tenantMember).
 		Error
-	tenantMember.TenantId = tenantId
+
+	if tenantMember != nil {
+		tenantMember.TenantId = tenantId
+	}
 	return
 }
 
@@ -164,9 +167,12 @@ func (repo *tenantMemberPgRepository) GetTenantUser(tenantId string, by UserRepo
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_user").
 		Where(where, params...).
-		Find(&tenantMember).
+		Find(tenantMember).
 		Error
-	tenantMember.TenantId = tenantId
+
+	if tenantMember != nil {
+		tenantMember.TenantId = tenantId
+	}
 	return
 }
 
@@ -175,7 +181,7 @@ func (repo *tenantMemberPgRepository) GetTenantAdmin(tenantId string, by UserRep
 ) {
 	where, params, err := by.getWhere()
 	if err != nil {
-		return &TenantMemberEntity{}, err
+		return
 	}
 
 	db := (*gorm.DB)(repo.db)
@@ -183,9 +189,13 @@ func (repo *tenantMemberPgRepository) GetTenantAdmin(tenantId string, by UserRep
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where("role = ?", "tenant_admin").
 		Where(where, params...).
-		Find(&tenantMember).
+		Find(tenantMember).
 		Error
-	tenantMember.TenantId = tenantId
+
+	if tenantMember != nil {
+		tenantMember.TenantId = tenantId
+	}
+
 	return
 }
 

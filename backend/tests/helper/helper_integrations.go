@@ -22,23 +22,71 @@ import (
 	"go.uber.org/fx"
 )
 
-type TestCase struct {
-	PreSetups []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool
+/*
+Oggetto che contiene tutte le possibili dipendenze di un test d'integrazione, compreso
+il context della richiesta e il router.
 
-	Name   string
-	Method string
-	Path   string
-	Header http.Header
-	Body   io.Reader
+NOTA: Ogni parametro che viene aggiunto deve essere puntatore a un tipo concreto o interfaccia.
+*/
+type IntegrationTestDeps struct {
+	Ctx context.Context
 
-	WantStatusCode   int
-	WantResponseBody string
-	ResponseChecks   []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool
+	Router *gin.Engine
 
-	PostSetups []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream)
+	CloudDB  clouddb.CloudDBConnection
+	SensorDB sensordb.SensorDBConnection
+
+	NatsConn     *nats.Conn
+	NatsTestConn natsutils.NatsTestConnection
+
+	JetStreamCtx     jetstream.JetStream
+	JetStreamTestCtx jetstream.JetStream
+
+	AuthTokenManager sharedCrypto.AuthTokenManager
 }
 
-func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream, sharedCrypto.AuthTokenManager, context.Context) {
+type IntegrationTestPreSetup func(deps IntegrationTestDeps) bool
+
+type IntegrationTestPostSetup func(deps IntegrationTestDeps)
+
+type IntegrationTestCheck func(
+	r *httptest.ResponseRecorder, deps IntegrationTestDeps,
+) bool
+
+type IntegrationTestCase struct {
+	/*
+		Insieme di funzioni da eseguire in ordine PRIMA di eseguire il test di integrazione.
+
+		ATTENZIONE: ciascun preSetup chiama usando defer il postSetup nello stesso indice nel campo PostSetups.
+		Per cui se si hanno 3 coppie pre-post, allora il test eseguirà le seguenti chiamate in ordine:
+
+		pre 1, pre 2, pre 3, CORPO TEST, post 3, post 2, post 1
+	*/
+	PreSetups []IntegrationTestPreSetup
+
+	Name   string      // Nome del test
+	Method string      // Metodo HTTP da usare nel router
+	Path   string      // URL da usare nel router
+	Header http.Header // Header HTTP da usare nella richiesta al router
+	Body   io.Reader   // Corpo della richiesta HTTP
+
+	WantStatusCode   int    // Status code HTTP atteso
+	WantResponseBody string // Matching della risposta
+
+	/*
+		Controlli da eseguire dopo che il controller ha inviato la risposta al client
+	*/
+	ResponseChecks []IntegrationTestCheck
+
+	/*
+		Insieme di funzioni da eseguire DOPO aver eseguito il test di integrazione.
+
+		ATTENZIONE: ciascun preSetup chiama usando defer il postSetup nello stesso indice nel campo PostSetups.
+	*/
+	PostSetups []IntegrationTestPostSetup
+}
+
+func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	if testing.Short() {
 		t.Skip("integration test skipped in short mode")
 	}
@@ -50,6 +98,7 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 	var natsTestConn natsutils.NatsTestConnection
 	var jetstreamCtx jetstream.JetStream
 	var jwtManager sharedCrypto.AuthTokenManager
+
 	app := fx.New(
 		modules.AppModules(),
 		fx.Populate(&router),
@@ -84,37 +133,54 @@ func Setup(t *testing.T) (*gin.Engine, clouddb.CloudDBConnection, sensordb.Senso
 		t.Fatalf("Failed to create JetStream context for test connection: %v", err)
 	}
 
-	return router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx
+	return IntegrationTestDeps{
+		Ctx:              ctx,
+		Router:           router,
+		CloudDB:          cloudDB,
+		SensorDB:         sensorDB,
+		NatsConn:         natsConn,
+		NatsTestConn:     natsTestConn,
+		JetStreamCtx:     jetstreamCtx,
+		JetStreamTestCtx: jetstreamTestCtx,
+		AuthTokenManager: jwtManager,
+	}
+	// return router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx
 }
 
-func RunTests(
-	router *gin.Engine,
-	ctx context.Context,
-	tests []TestCase,
+func RunIntegrationTests(
+	// router *gin.Engine,
+	// ctx context.Context,
 	t *testing.T,
-	clouddb clouddb.CloudDBConnection,
-	sensordb sensordb.SensorDBConnection,
-	natsConn *nats.Conn,
-	natsTestConn natsutils.NatsTestConnection,
-	jetstreamCtx jetstream.JetStream,
-	jetstreamTestCtx jetstream.JetStream,
+	tests []IntegrationTestCase,
+	deps IntegrationTestDeps,
+	// clouddb clouddb.CloudDBConnection,
+	// sensordb sensordb.SensorDBConnection,
+	// natsConn *nats.Conn,
+	// natsTestConn natsutils.NatsTestConnection,
+	// jetstreamCtx jetstream.JetStream,
+	// jetstreamTestCtx jetstream.JetStream,
 ) {
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			if len(tt.PreSetups) != len(tt.PostSetups) {
-				t.Fatalf("Number of PreSetups and PostSetups must be the same for test case %s", tt.Name)
+			if len(tt.PreSetups) > len(tt.PostSetups) {
+				t.Fatalf("len(PreSetups) must be <= len(PostSetups) for test case %s", tt.Name)
 			}
 
 			for index, preSetup := range tt.PreSetups {
-				if !preSetup(clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx) {
+				// if !preSetup(clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx) {
+				if preSetup != nil && !preSetup(deps) {
 					t.Errorf("Pre-setup failed for test case %s", tt.Name)
 				}
-				defer tt.PostSetups[index](clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx)
+
+				postSetup := tt.PostSetups[index]
+				if postSetup != nil {
+					defer postSetup(deps)
+				}
 			}
 
 			w := httptest.NewRecorder()
 
-			req, err := http.NewRequestWithContext(ctx, tt.Method, tt.Path, tt.Body)
+			req, err := http.NewRequestWithContext(deps.Ctx, tt.Method, tt.Path, tt.Body)
 			if err != nil {
 				t.Fatalf("Failed to create request: %v", err)
 			}
@@ -126,7 +192,7 @@ func RunTests(
 				}
 			}
 
-			router.ServeHTTP(w, req)
+			deps.Router.ServeHTTP(w, req)
 
 			if w.Code != tt.WantStatusCode {
 				t.Errorf("Expected status code %d, got %d. Body: %s", tt.WantStatusCode, w.Code, w.Body.String())
@@ -138,9 +204,9 @@ func RunTests(
 				}
 			}
 
-			for _, responseCheck := range tt.ResponseChecks {
-				if !responseCheck(w, clouddb, sensordb, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx) {
-					t.Errorf("Response check failed for test case %s", tt.Name)
+			for i, responseCheck := range tt.ResponseChecks {
+				if !responseCheck(w, deps) {
+					t.Errorf("Response check at index %v failed for test case %s", i, tt.Name)
 				}
 			}
 		})

@@ -3,7 +3,6 @@ package auth
 import (
 	"time"
 
-	"backend/internal/tenant"
 	"backend/internal/user"
 
 	clouddb "backend/internal/infra/database/cloud_db/connection"
@@ -18,8 +17,8 @@ Entity per token di conferma account all'interno di un tenant
 type TenantConfirmTokenEntity struct {
 	Token string `gorm:"primaryKey;index:,type:hash"`
 
-	TenantId *string             `gorm:"size:36"`
-	Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
+	TenantId *string `gorm:"-"`
+	// Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
 
 	UserId       uint                    `gorm:"not null"`
 	TenantMember user.TenantMemberEntity `gorm:"foreignKey:UserId;not null"`
@@ -124,8 +123,8 @@ Entity per i token di cambio password dimenticata all'interno di un tenant
 type TenantPasswordTokenEntity struct {
 	Token string `gorm:"primaryKey;index:,type:hash"`
 
-	TenantId *string             `gorm:"size:36;not null"`
-	Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
+	TenantId *string `gorm:"-"`
+	// Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
 
 	UserId       uint                    `gorm:"not null"`
 	TenantMember user.TenantMemberEntity `gorm:"foreignKey:UserId;not null"`

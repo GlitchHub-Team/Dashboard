@@ -7,16 +7,12 @@ import (
 	"testing"
 
 	"backend/internal/gateway"
-	clouddb "backend/internal/infra/database/cloud_db/connection"
-	sensordb "backend/internal/infra/database/sensor_db"
-	natsutils "backend/internal/infra/nats"
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"gorm.io/gorm"
 )
 
@@ -38,9 +34,9 @@ type createSensorResponse struct {
 }
 
 func TestCreateSensorIntegration(t *testing.T) {
-	router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx := helper.Setup(t)
+	deps := helper.SetupIntegrationTest(t)
 
-	superAdminJWT, err := jwtManager.GenerateForRequester(identity.Requester{
+	superAdminJWT, err := deps.AuthTokenManager.GenerateForRequester(identity.Requester{
 		RequesterUserId: 1,
 		RequesterRole:   identity.ROLE_SUPER_ADMIN,
 	})
@@ -49,7 +45,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 	}
 
 	tenantID := uuid.New()
-	tenantAdminJWT, err := jwtManager.GenerateForRequester(identity.Requester{
+	tenantAdminJWT, err := deps.AuthTokenManager.GenerateForRequester(identity.Requester{
 		RequesterUserId:   999,
 		RequesterTenantId: &tenantID,
 		RequesterRole:     identity.ROLE_TENANT_ADMIN,
@@ -69,7 +65,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 	var successSub *nats.Subscription
 	var successCmd sensor.CreateSensorCmdEntity
 
-	tests := []helper.TestCase{
+	tests := []helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio da parte di utente con jwt non valido",
@@ -90,7 +86,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			PostSetups: nil,
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayForUnauthorized, "Gateway Unauthorized"),
 			},
 			Name:   "Creazione di un sensore da un utente non super admin",
@@ -106,11 +102,11 @@ func TestCreateSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: gateway.ErrGatewayNotFound.Error(),
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkNoSensorForGateway(gatewayForUnauthorized),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteByGateway(gatewayForUnauthorized),
 			},
 		},
@@ -129,14 +125,14 @@ func TestCreateSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: gateway.ErrGatewayNotFound.Error(),
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkNoSensorForGateway(gatewayForNotFound),
 			},
 
 			PostSetups: nil,
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayForTimeout, "Gateway Timeout"),
 				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.CREATE_SENSOR_CMD_SUBJECT),
 			},
@@ -153,17 +149,17 @@ func TestCreateSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusInternalServerError,
 			WantResponseBody: "",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkNoSensorForGateway(gatewayForTimeout),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteByGateway(gatewayForTimeout),
 				postSetupUnsubscribe(&timeoutSub),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayForFailedReply, "Gateway Failed Reply"),
 				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats create failed"}, sensor.CREATE_SENSOR_CMD_SUBJECT),
 			},
@@ -180,17 +176,17 @@ func TestCreateSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusInternalServerError,
 			WantResponseBody: "nats create failed",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkNoSensorForGateway(gatewayForFailedReply),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteByGateway(gatewayForFailedReply),
 				postSetupUnsubscribe(&failedReplySub),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayForSuccess, "Gateway Success"),
 				preSetupCommandResponseListener(
 					&successSub,
@@ -215,32 +211,24 @@ func TestCreateSensorIntegration(t *testing.T) {
 
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkResponseMatchesDBAndCommand(&successCmd),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteByGateway(gatewayForSuccess),
 				postSetupUnsubscribe(&successSub),
 			},
 		},
 	}
 
-	helper.RunTests(router, ctx, tests, t, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx)
+	helper.RunIntegrationTests(t, tests, deps)
 }
 
 func checkResponseMatchesDBAndCommand(
 	cmd *sensor.CreateSensorCmdEntity,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
-	return func(
-		w *httptest.ResponseRecorder,
-		cloudDB clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) bool {
+) helper.IntegrationTestCheck {
+	return func(w *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		var resp createSensorResponse
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			return false
@@ -251,7 +239,7 @@ func checkResponseMatchesDBAndCommand(
 			interval = resp.DataInterval
 		}
 
-		db := (*gorm.DB)(cloudDB)
+		db := (*gorm.DB)(deps.CloudDB)
 		var dbSensor sensor.SensorEntity
 		if err := db.Where("id = ?", resp.SensorID).First(&dbSensor).Error; err != nil {
 			return false
