@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/historical_data"
 	"backend/internal/tenant"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/tests/helper"
 
 	"github.com/google/uuid"
