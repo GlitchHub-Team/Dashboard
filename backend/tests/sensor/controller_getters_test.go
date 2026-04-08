@@ -10,6 +10,7 @@ import (
 	transportHttp "backend/internal/infra/transport/http"
 	transportHttpDto "backend/internal/infra/transport/http/dto"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	helper "backend/tests/helper"
@@ -37,7 +38,7 @@ func TestSensorController_GetSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1200 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	expectedCommand := sensor.GetSensorCommand{
@@ -219,7 +220,7 @@ func TestSensorController_GetSensorsByGateway(t *testing.T) {
 			Name:      "A",
 			Interval:  1500 * time.Millisecond,
 			Status:    sensor.Active,
-			Profile:   sensor.HEART_RATE,
+			Profile:   sensorProfile.HEART_RATE,
 		},
 		{
 			Id:        sensorTwoId,
@@ -227,7 +228,7 @@ func TestSensorController_GetSensorsByGateway(t *testing.T) {
 			Name:      "B",
 			Interval:  2 * time.Second,
 			Status:    sensor.Inactive,
-			Profile:   sensor.ENVIRONMENTAL_SENSING,
+			Profile:   sensorProfile.ENVIRONMENTAL_SENSING,
 		},
 	}
 
@@ -463,7 +464,7 @@ func TestSensorController_GetSensorsByTenant(t *testing.T) {
 			Name:      "Tenant sensor",
 			Interval:  2200 * time.Millisecond,
 			Status:    sensor.Active,
-			Profile:   sensor.HEART_RATE,
+			Profile:   sensorProfile.HEART_RATE,
 		},
 	}
 

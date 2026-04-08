@@ -121,7 +121,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayUnauthorizedNil, "Gateway Unauthorized Nil", nil),
-				preSetupCreateSensor(sensorUnauthorizedNil, gatewayUnauthorizedNil, "Sensor Unauthorized Nil", 1000, sensor.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorUnauthorizedNil, gatewayUnauthorizedNil, "Sensor Unauthorized Nil", 1000, sensorProfile.HEART_RATE, sensor.Active),
 			},
 			Name:   "Interruzione di un sensore da un utente non super admin associato ad un gateway con tenantId nil",
 			Method: http.MethodPost,
@@ -143,7 +143,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayUnauthorizedMismatch, "Gateway Unauthorized Mismatch", &tenant1IdStr),
-				preSetupCreateSensor(sensorUnauthorizedMismatch, gatewayUnauthorizedMismatch, "Sensor Unauthorized Mismatch", 1100, sensor.ECG_CUSTOM, sensor.Active),
+				preSetupCreateSensor(sensorUnauthorizedMismatch, gatewayUnauthorizedMismatch, "Sensor Unauthorized Mismatch", 1100, sensorProfile.ECG_CUSTOM, sensor.Active),
 			},
 			Name:   "Interruzione di un sensore da un utente non super admin con tenantId diverso da quello del gateway",
 			Method: http.MethodPost,
@@ -165,7 +165,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayAlreadyInterrupted, "Gateway Already Interrupted"),
-				preSetupCreateSensor(sensorAlreadyInterrupted, gatewayAlreadyInterrupted, "Sensor Already Interrupted", 1200, sensor.HEALTH_THERMOMETER, sensor.Inactive),
+				preSetupCreateSensor(sensorAlreadyInterrupted, gatewayAlreadyInterrupted, "Sensor Already Interrupted", 1200, sensorProfile.HEALTH_THERMOMETER, sensor.Inactive),
 			},
 			Name:   "Interruzione sensore già interrotto",
 			Method: http.MethodPost,
@@ -187,7 +187,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayTimeout, "Gateway Timeout Interrupt"),
-				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Interrupt", 1300, sensor.PULSE_OXIMETER, sensor.Active),
+				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Interrupt", 1300, sensorProfile.PULSE_OXIMETER, sensor.Active),
 				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Interruzione sensore valida ma request NATS in timeout",
@@ -211,7 +211,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayFailedReply, "Gateway Failed Interrupt"),
-				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Interrupt", 1400, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
+				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Interrupt", 1400, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Active),
 				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats interrupt failed"}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Interruzione sensore valida ma reply NATS con success false",
@@ -235,7 +235,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewaySuperAdminNil, "Gateway Super Admin Nil", nil),
-				preSetupCreateSensor(sensorSuperAdminNil, gatewaySuperAdminNil, "Sensor Super Admin Nil", 1500, sensor.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorSuperAdminNil, gatewaySuperAdminNil, "Sensor Super Admin Nil", 1500, sensorProfile.HEART_RATE, sensor.Active),
 				preSetupCommandResponseListener(&superAdminNilSub, true, sensor.CommandResponse{Success: true, Message: "ok"}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Interruzione sensore super admin di sensore con gateway con tenantId nil",
@@ -259,7 +259,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewaySuccess, "Gateway Success Interrupt", &tenant1IdStr),
-				preSetupCreateSensor(sensorSuccess, gatewaySuccess, "Sensor Success Interrupt", 1600, sensor.ECG_CUSTOM, sensor.Active),
+				preSetupCreateSensor(sensorSuccess, gatewaySuccess, "Sensor Success Interrupt", 1600, sensorProfile.ECG_CUSTOM, sensor.Active),
 				preSetupCommandResponseListener(
 					&successSub,
 					true,

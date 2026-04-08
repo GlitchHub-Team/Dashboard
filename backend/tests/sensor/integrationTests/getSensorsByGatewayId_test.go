@@ -82,14 +82,14 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 	sensorTenantMatchB := uuid.NewString()
 
 	expectedNilTenantSuperAdminSensors := []expectedGatewaySensor{
-		{SensorID: sensorNilTenantSuperAdminA, Name: "Alpha Nil Tenant", Interval: 1000, Profile: sensor.HEART_RATE, Status: sensor.Active},
-		{SensorID: sensorNilTenantSuperAdminB, Name: "Beta Nil Tenant", Interval: 1100, Profile: sensor.ECG_CUSTOM, Status: sensor.Active},
-		{SensorID: sensorNilTenantSuperAdminC, Name: "Gamma Nil Tenant", Interval: 1200, Profile: sensor.PULSE_OXIMETER, Status: sensor.Inactive},
+		{SensorID: sensorNilTenantSuperAdminA, Name: "Alpha Nil Tenant", Interval: 1000, Profile: sensorProfile.HEART_RATE, Status: sensor.Active},
+		{SensorID: sensorNilTenantSuperAdminB, Name: "Beta Nil Tenant", Interval: 1100, Profile: sensorProfile.ECG_CUSTOM, Status: sensor.Active},
+		{SensorID: sensorNilTenantSuperAdminC, Name: "Gamma Nil Tenant", Interval: 1200, Profile: sensorProfile.PULSE_OXIMETER, Status: sensor.Inactive},
 	}
 
 	expectedTenantMatchSensors := []expectedGatewaySensor{
-		{SensorID: sensorTenantMatchA, Name: "Alpha Tenant Match", Interval: 1300, Profile: sensor.HEALTH_THERMOMETER, Status: sensor.Active},
-		{SensorID: sensorTenantMatchB, Name: "Beta Tenant Match", Interval: 1400, Profile: sensor.ENVIRONMENTAL_SENSING, Status: sensor.Active},
+		{SensorID: sensorTenantMatchA, Name: "Alpha Tenant Match", Interval: 1300, Profile: sensorProfile.HEALTH_THERMOMETER, Status: sensor.Active},
+		{SensorID: sensorTenantMatchB, Name: "Beta Tenant Match", Interval: 1400, Profile: sensorProfile.ENVIRONMENTAL_SENSING, Status: sensor.Active},
 	}
 
 	tests := []*helper.IntegrationTestCase{
@@ -170,9 +170,9 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayNilTenantSuperAdmin, "Gateway Nil Tenant Super Admin", nil),
-				preSetupCreateSensor(sensorNilTenantSuperAdminA, gatewayNilTenantSuperAdmin, "Alpha Nil Tenant", 1000, sensor.HEART_RATE, sensor.Active),
-				preSetupCreateSensor(sensorNilTenantSuperAdminB, gatewayNilTenantSuperAdmin, "Beta Nil Tenant", 1100, sensor.ECG_CUSTOM, sensor.Active),
-				preSetupCreateSensor(sensorNilTenantSuperAdminC, gatewayNilTenantSuperAdmin, "Gamma Nil Tenant", 1200, sensor.PULSE_OXIMETER, sensor.Inactive),
+				preSetupCreateSensor(sensorNilTenantSuperAdminA, gatewayNilTenantSuperAdmin, "Alpha Nil Tenant", 1000, sensorProfile.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorNilTenantSuperAdminB, gatewayNilTenantSuperAdmin, "Beta Nil Tenant", 1100, sensorProfile.ECG_CUSTOM, sensor.Active),
+				preSetupCreateSensor(sensorNilTenantSuperAdminC, gatewayNilTenantSuperAdmin, "Gamma Nil Tenant", 1200, sensorProfile.PULSE_OXIMETER, sensor.Inactive),
 			},
 			Name:   "Richiesta di un sensore con gateway e tenant id nil da parte di un utente super admin",
 			Method: http.MethodGet,
@@ -196,7 +196,7 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantMismatch, "Gateway Tenant Mismatch", &tenant1IdStr),
-				preSetupCreateSensor(sensorTenantMismatch, gatewayTenantMismatch, "Mismatch Sensor", 1250, sensor.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorTenantMismatch, gatewayTenantMismatch, "Mismatch Sensor", 1250, sensorProfile.HEART_RATE, sensor.Active),
 			},
 			Name:   "Richiesta di sensori di un gateway non nil da parte di un utente non super admin con tenant diverso",
 			Method: http.MethodGet,
@@ -218,8 +218,8 @@ func TestGetSensorsByGatewayIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantMatch, "Gateway Tenant Match", &tenant1IdStr),
-				preSetupCreateSensor(sensorTenantMatchA, gatewayTenantMatch, "Alpha Tenant Match", 1300, sensor.HEALTH_THERMOMETER, sensor.Active),
-				preSetupCreateSensor(sensorTenantMatchB, gatewayTenantMatch, "Beta Tenant Match", 1400, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
+				preSetupCreateSensor(sensorTenantMatchA, gatewayTenantMatch, "Alpha Tenant Match", 1300, sensorProfile.HEALTH_THERMOMETER, sensor.Active),
+				preSetupCreateSensor(sensorTenantMatchB, gatewayTenantMatch, "Beta Tenant Match", 1400, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Active),
 			},
 			Name:   "Richiesta di sensori da parte di un utente non super admin con tenant uguale",
 			Method: http.MethodGet,

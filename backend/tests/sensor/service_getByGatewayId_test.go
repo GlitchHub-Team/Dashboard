@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/gateway"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	gatewayMocks "backend/tests/gateway/mocks"
 	helper "backend/tests/helper"
@@ -106,7 +107,7 @@ func TestService_GetSensorsByGateway(t *testing.T) {
 			Name:      "A",
 			Interval:  1500 * time.Millisecond,
 			Status:    sensor.Active,
-			Profile:   sensor.HEART_RATE,
+			Profile:   sensorProfile.HEART_RATE,
 		},
 		{
 			Id:        uuid.New(),
@@ -114,7 +115,7 @@ func TestService_GetSensorsByGateway(t *testing.T) {
 			Name:      "B",
 			Interval:  2 * time.Second,
 			Status:    sensor.Inactive,
-			Profile:   sensor.ENVIRONMENTAL_SENSING,
+			Profile:   sensorProfile.ENVIRONMENTAL_SENSING,
 		},
 	}
 

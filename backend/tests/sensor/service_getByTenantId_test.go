@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	helper "backend/tests/helper"
 	mocks "backend/tests/sensor/mocks"
@@ -87,7 +88,7 @@ func TestService_GetSensorsByTenant(t *testing.T) {
 			Name:      "A",
 			Interval:  1200 * time.Millisecond,
 			Status:    sensor.Active,
-			Profile:   sensor.HEART_RATE,
+			Profile:   sensorProfile.HEART_RATE,
 		},
 		{
 			Id:        uuid.New(),
@@ -95,7 +96,7 @@ func TestService_GetSensorsByTenant(t *testing.T) {
 			Name:      "B",
 			Interval:  2 * time.Second,
 			Status:    sensor.Inactive,
-			Profile:   sensor.ENVIRONMENTAL_SENSING,
+			Profile:   sensorProfile.ENVIRONMENTAL_SENSING,
 		},
 	}
 

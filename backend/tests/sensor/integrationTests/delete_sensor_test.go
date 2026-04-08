@@ -92,7 +92,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayUnauthorized, "Gateway Unauthorized Delete"),
-				preSetupCreateSensor(sensorUnauthorized, gatewayUnauthorized, "Sensor Unauthorized Delete", 1000, sensor.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorUnauthorized, gatewayUnauthorized, "Sensor Unauthorized Delete", 1000, sensorProfile.HEART_RATE, sensor.Active),
 			},
 			Name:   "Eliminazione di un sensore da un utente non super admin",
 			Method: http.MethodDelete,
@@ -130,7 +130,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayTimeout, "Gateway Timeout Delete"),
-				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Delete", 1100, sensor.PULSE_OXIMETER, sensor.Active),
+				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Delete", 1100, sensorProfile.PULSE_OXIMETER, sensor.Active),
 				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.DELETE_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Eliminazione sensore con timeout NATS e nessuna eliminazione DB",
@@ -154,7 +154,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayFailedReply, "Gateway Failed Reply Delete"),
-				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Reply Delete", 1200, sensor.HEALTH_THERMOMETER, sensor.Active),
+				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Reply Delete", 1200, sensorProfile.HEALTH_THERMOMETER, sensor.Active),
 				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats delete failed"}, sensor.DELETE_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Eliminazione sensore con NATS success false e nessuna eliminazione DB",
@@ -178,7 +178,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewaySuccess, "Gateway Success Delete"),
-				preSetupCreateSensor(sensorSuccess, gatewaySuccess, "Sensor Success Delete", 1300, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
+				preSetupCreateSensor(sensorSuccess, gatewaySuccess, "Sensor Success Delete", 1300, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Active),
 				preSetupCommandResponseListener(
 					&successSub,
 					true,

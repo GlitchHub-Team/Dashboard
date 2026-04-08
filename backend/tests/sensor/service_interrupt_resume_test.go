@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/gateway"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	gatewayMocks "backend/tests/gateway/mocks"
 	helper "backend/tests/helper"
@@ -254,7 +255,7 @@ func TestService_InterruptSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	inactiveSensor := sensor.Sensor{
@@ -263,7 +264,7 @@ func TestService_InterruptSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Inactive,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	gatewayBelongsToTenant := gateway.Gateway{
@@ -525,7 +526,7 @@ func TestService_ResumeSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	inactiveSensor := sensor.Sensor{
@@ -534,7 +535,7 @@ func TestService_ResumeSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Inactive,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	gatewayBelongsToTenant := gateway.Gateway{

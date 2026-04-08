@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/infra/database/pagination"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
@@ -20,7 +21,7 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		GatewayID: targetGatewayId.String(),
 		Name:      "Heart monitor",
 		Interval:  1200,
-		Profile:   string(sensor.HEART_RATE),
+		Profile:   string(sensorProfile.HEART_RATE),
 		Status:    string(sensor.Active),
 	}
 	entityB := sensor.SensorEntity{
@@ -28,7 +29,7 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		GatewayID: targetGatewayId.String(),
 		Name:      "Pulse",
 		Interval:  2000,
-		Profile:   string(sensor.PULSE_OXIMETER),
+		Profile:   string(sensorProfile.PULSE_OXIMETER),
 		Status:    string(sensor.Inactive),
 	}
 
@@ -147,7 +148,7 @@ func TestDbSensorAdapter_GetSensorById(t *testing.T) {
 		GatewayID: targetGatewayId.String(),
 		Name:      "ECG",
 		Interval:  1500,
-		Profile:   string(sensor.ECG_CUSTOM),
+		Profile:   string(sensorProfile.ECG_CUSTOM),
 		Status:    string(sensor.Active),
 	}
 
@@ -226,7 +227,7 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		GatewayID: uuid.New().String(),
 		Name:      "Thermometer",
 		Interval:  1000,
-		Profile:   string(sensor.HEALTH_THERMOMETER),
+		Profile:   string(sensorProfile.HEALTH_THERMOMETER),
 		Status:    string(sensor.Active),
 	}
 	entityB := sensor.SensorEntity{
@@ -234,7 +235,7 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		GatewayID: uuid.New().String(),
 		Name:      "Environment",
 		Interval:  3000,
-		Profile:   string(sensor.ENVIRONMENTAL_SENSING),
+		Profile:   string(sensorProfile.ENVIRONMENTAL_SENSING),
 		Status:    string(sensor.Inactive),
 	}
 

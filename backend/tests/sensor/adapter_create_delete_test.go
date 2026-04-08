@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	helper "backend/tests/helper"
 	mocks "backend/tests/sensor/mocks"
 
@@ -77,7 +78,7 @@ func TestDbSensorAdapter_CreateSensor(t *testing.T) {
 	targetGatewayId := uuid.New()
 	targetName := "Heart monitor"
 	targetInterval := 1500 * time.Millisecond
-	targetProfile := sensor.HEART_RATE
+	targetProfile := sensorProfile.HEART_RATE
 
 	expectedSensor := sensor.Sensor{
 		Id:        targetSensorId,
@@ -184,7 +185,7 @@ func TestDbSensorAdapter_DeleteSensor(t *testing.T) {
 	targetGatewayId := uuid.New()
 	targetName := "Heart monitor"
 	targetInterval := 2 * time.Second
-	targetProfile := sensor.PULSE_OXIMETER
+	targetProfile := sensorProfile.PULSE_OXIMETER
 
 	expectedSensor := sensor.Sensor{
 		Id:        targetSensorId,
@@ -276,7 +277,7 @@ func TestSendCmdAdapter_SendCreateSensorCmd(t *testing.T) {
 	targetSensorId := uuid.New()
 	targetGatewayId := uuid.New()
 	targetInterval := 1750 * time.Millisecond
-	targetProfile := sensor.ECG_CUSTOM
+	targetProfile := sensorProfile.ECG_CUSTOM
 
 	stepSendCreateSensorCmdOk := func(mockBundle sendCmdAdapterMocks) *gomock.Call {
 		return mockBundle.messageBrokerRepo.EXPECT().

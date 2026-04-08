@@ -7,7 +7,6 @@ import (
 
 	"backend/internal/historical_data"
 	transportDto "backend/internal/infra/transport/http/dto"
-	"backend/internal/sensor"
 
 	"github.com/google/uuid"
 )
@@ -28,7 +27,7 @@ func TestNewHistoricalDataResponseDTO_DecodesDataByProfile(t *testing.T) {
 	}{
 		{
 			name:    "heart rate",
-			profile: string(sensor.HEART_RATE),
+			profile: string(sensorProfile.HEART_RATE),
 			rawData: `{"BpmValue":72}`,
 			assertSample: func(t *testing.T, sample historical_data.HistoricalSampleResponseDTO) {
 				t.Helper()
@@ -43,7 +42,7 @@ func TestNewHistoricalDataResponseDTO_DecodesDataByProfile(t *testing.T) {
 		},
 		{
 			name:    "pulse oximeter",
-			profile: string(sensor.PULSE_OXIMETER),
+			profile: string(sensorProfile.PULSE_OXIMETER),
 			rawData: `{"Spo2Value":98,"PulseRateValue":71}`,
 			assertSample: func(t *testing.T, sample historical_data.HistoricalSampleResponseDTO) {
 				t.Helper()
@@ -58,7 +57,7 @@ func TestNewHistoricalDataResponseDTO_DecodesDataByProfile(t *testing.T) {
 		},
 		{
 			name:    "environmental sensing",
-			profile: string(sensor.ENVIRONMENTAL_SENSING),
+			profile: string(sensorProfile.ENVIRONMENTAL_SENSING),
 			rawData: `{"TemperatureValue":21.4,"HumidityValue":56.2}`,
 			assertSample: func(t *testing.T, sample historical_data.HistoricalSampleResponseDTO) {
 				t.Helper()
@@ -73,7 +72,7 @@ func TestNewHistoricalDataResponseDTO_DecodesDataByProfile(t *testing.T) {
 		},
 		{
 			name:    "health thermometer",
-			profile: string(sensor.HEALTH_THERMOMETER),
+			profile: string(sensorProfile.HEALTH_THERMOMETER),
 			rawData: `{"TemperatureValue":36.7}`,
 			assertSample: func(t *testing.T, sample historical_data.HistoricalSampleResponseDTO) {
 				t.Helper()
@@ -88,7 +87,7 @@ func TestNewHistoricalDataResponseDTO_DecodesDataByProfile(t *testing.T) {
 		},
 		{
 			name:    "ecg custom",
-			profile: string(sensor.ECG_CUSTOM),
+			profile: string(sensorProfile.ECG_CUSTOM),
 			rawData: mustMarshalJSON(t, transportDto.ECGData{Waveform: waveform}),
 			assertSample: func(t *testing.T, sample historical_data.HistoricalSampleResponseDTO) {
 				t.Helper()
@@ -156,7 +155,7 @@ func TestNewHistoricalDataResponseDTO_ReturnsErrorForMalformedJSON(t *testing.T)
 			SensorId:  uuid.New(),
 			GatewayId: uuid.New(),
 			TenantId:  uuid.New(),
-			Profile:   string(sensor.HEART_RATE),
+			Profile:   string(sensorProfile.HEART_RATE),
 			Timestamp: time.Now().UTC(),
 			Data:      json.RawMessage(`{"BpmValue":`),
 		},

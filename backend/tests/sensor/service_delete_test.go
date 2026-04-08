@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	helper "backend/tests/helper"
 	mocks "backend/tests/sensor/mocks"
@@ -80,7 +81,7 @@ func TestService_DeleteSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1200 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	newStepGetSensorByIdOk := func(cmd sensor.DeleteSensorCommand) mockSetupFunc_DeleteSensorService {
@@ -200,7 +201,7 @@ func TestService_DeleteSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1200 * time.Millisecond,
 		Status:    sensor.Inactive,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	type testCase struct {

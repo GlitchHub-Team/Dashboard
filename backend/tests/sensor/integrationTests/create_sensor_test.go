@@ -76,7 +76,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1200,
 				GatewayID:    uuid.NewString(),
-				Profile:      string(sensor.HEART_RATE),
+				Profile:      string(sensorProfile.HEART_RATE),
 				SensorName:   "Invalid JWT Sensor",
 			}),
 
@@ -97,7 +97,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1400,
 				GatewayID:    gatewayForUnauthorized,
-				Profile:      string(sensor.ECG_CUSTOM),
+				Profile:      string(sensorProfile.ECG_CUSTOM),
 				SensorName:   "Unauthorized Sensor",
 			}),
 
@@ -120,7 +120,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1500,
 				GatewayID:    gatewayForNotFound,
-				Profile:      string(sensor.HEART_RATE),
+				Profile:      string(sensorProfile.HEART_RATE),
 				SensorName:   "Gateway Missing Sensor",
 			}),
 
@@ -144,7 +144,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1550,
 				GatewayID:    gatewayForTimeout,
-				Profile:      string(sensor.PULSE_OXIMETER),
+				Profile:      string(sensorProfile.PULSE_OXIMETER),
 				SensorName:   "Timeout Sensor",
 			}),
 
@@ -171,7 +171,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1580,
 				GatewayID:    gatewayForFailedReply,
-				Profile:      string(sensor.HEALTH_THERMOMETER),
+				Profile:      string(sensorProfile.HEALTH_THERMOMETER),
 				SensorName:   "Failed Reply Sensor",
 			}),
 
@@ -206,7 +206,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			Body: helper.MustJSONBody(t, createSensorRequest{
 				DataInterval: 1600,
 				GatewayID:    gatewayForSuccess,
-				Profile:      string(sensor.ENVIRONMENTAL_SENSING),
+				Profile:      string(sensorProfile.ENVIRONMENTAL_SENSING),
 				SensorName:   "Successful Sensor",
 			}),
 

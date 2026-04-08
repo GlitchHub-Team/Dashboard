@@ -112,7 +112,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayNilTenantUnauthorized, "Gateway Nil Tenant Unauthorized", nil),
-				preSetupCreateSensor(sensorNilTenantUnauthorized, gatewayNilTenantUnauthorized, "Sensor Nil Tenant Unauthorized", 1400, sensor.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorNilTenantUnauthorized, gatewayNilTenantUnauthorized, "Sensor Nil Tenant Unauthorized", 1400, sensorProfile.HEART_RATE, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId nil da parte di un utente non super admin",
 			Method: http.MethodGet,
@@ -134,7 +134,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayNilTenantSuperAdmin, "Gateway Nil Tenant Super Admin", nil),
-				preSetupCreateSensor(sensorNilTenantSuperAdmin, gatewayNilTenantSuperAdmin, "Sensor Nil Tenant Super Admin", 1500, sensor.PULSE_OXIMETER, sensor.Active),
+				preSetupCreateSensor(sensorNilTenantSuperAdmin, gatewayNilTenantSuperAdmin, "Sensor Nil Tenant Super Admin", 1500, sensorProfile.PULSE_OXIMETER, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId nil da parte di un utente super admin",
 			Method: http.MethodGet,
@@ -145,7 +145,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkGetSensorResponseMatchesExpected(sensorNilTenantSuperAdmin, gatewayNilTenantSuperAdmin, "Sensor Nil Tenant Super Admin", 1500, sensor.PULSE_OXIMETER, sensor.Active),
+				checkGetSensorResponseMatchesExpected(sensorNilTenantSuperAdmin, gatewayNilTenantSuperAdmin, "Sensor Nil Tenant Super Admin", 1500, sensorProfile.PULSE_OXIMETER, sensor.Active),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -156,7 +156,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantMismatch, "Gateway Tenant Mismatch", &tenantIDOneString),
-				preSetupCreateSensor(sensorTenantMismatch, gatewayTenantMismatch, "Sensor Tenant Mismatch", 1600, sensor.HEALTH_THERMOMETER, sensor.Active),
+				preSetupCreateSensor(sensorTenantMismatch, gatewayTenantMismatch, "Sensor Tenant Mismatch", 1600, sensorProfile.HEALTH_THERMOMETER, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId non nil da parte di un utente non super admin con tenant diverso",
 			Method: http.MethodGet,
@@ -178,7 +178,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantMatch, "Gateway Tenant Match", &tenantIDOneString),
-				preSetupCreateSensor(sensorTenantMatch, gatewayTenantMatch, "Sensor Tenant Match", 1700, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
+				preSetupCreateSensor(sensorTenantMatch, gatewayTenantMatch, "Sensor Tenant Match", 1700, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId non nil da parte di un utente non super admin con tenant uguale",
 			Method: http.MethodGet,
@@ -189,7 +189,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkGetSensorResponseMatchesExpected(sensorTenantMatch, gatewayTenantMatch, "Sensor Tenant Match", 1700, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
+				checkGetSensorResponseMatchesExpected(sensorTenantMatch, gatewayTenantMatch, "Sensor Tenant Match", 1700, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Active),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
