@@ -16,7 +16,7 @@ import (
 
 func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 	// Questo package ha una profondita diversa dagli altri integration test,
-	//quindi i path delle credenziali condivise vanno riallineati esplicitamente.
+	// quindi i path delle credenziali condivise vanno riallineati esplicitamente.
 
 	t.Setenv("DASHBOARD_CREDS_PATH", "backend/dashboard.creds")
 	t.Setenv("TEST_CREDS_PATH", "backend/admin_test.creds")

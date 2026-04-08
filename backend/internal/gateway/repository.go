@@ -27,10 +27,11 @@ type GatewayEntity struct {
 	Name     string  `gorm:"type:varchar(255);not null"`
 	TenantId *string `gorm:"type:uuid;index"`
 	// il modo giusto per fare il fk per assurdo
-	Tenant    *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Status    string         `gorm:"type:varchar(50);not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Status           string         `gorm:"type:varchar(50);not null"`
+	PublicIdentifier string         `gorm:"type:varchar(255)"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 func (GatewayEntity) TableName() string { return "gateways" }
@@ -53,6 +54,7 @@ func (entity *GatewayEntity) fromGateway(g Gateway) {
 	entity.ID = g.Id.String()
 	entity.Name = g.Name
 	entity.Status = string(g.Status)
+	entity.PublicIdentifier = g.PublicIdentifier
 
 	if g.TenantId != nil {
 		tenantIdStr := g.TenantId.String()
@@ -70,10 +72,11 @@ func (entity *GatewayEntity) toGateway() Gateway {
 		tenantId = &parsed
 	}
 	return Gateway{
-		Id:       id,
-		Name:     entity.Name,
-		Status:   (GatewayStatus)(entity.Status),
-		TenantId: tenantId,
+		Id:               id,
+		Name:             entity.Name,
+		Status:           (GatewayStatus)(entity.Status),
+		TenantId:         tenantId,
+		PublicIdentifier: entity.PublicIdentifier,
 	}
 }
 
