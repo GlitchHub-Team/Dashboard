@@ -1,7 +1,9 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,6 +30,8 @@ export interface UserFormDialogData {
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatIconModule,
+    MatProgressSpinner,
   ],
   templateUrl: './user-form.dialog.html',
   styleUrl: './user-form.dialog.css',
@@ -54,8 +58,8 @@ export class UserFormDialogComponent {
     tenantId: ['', this.isTenantAdminRole ? [Validators.required] : []],
   });
 
-  protected isSubmitting = false;
-  protected generalError = '';
+  protected readonly isSubmitting = signal(false);
+  protected readonly generalError = signal('');
 
   constructor() {
     if (this.isTenantAdminRole) {
@@ -69,10 +73,10 @@ export class UserFormDialogComponent {
       return;
     }
 
-    if (this.isSubmitting) return;
+    if (this.isSubmitting()) return;
 
-    this.isSubmitting = true;
-    this.generalError = '';
+    this.isSubmitting.set(true);
+    this.generalError.set('');
 
     const config: UserConfig = {
       email: this.form.value.email!,
@@ -89,13 +93,17 @@ export class UserFormDialogComponent {
       .subscribe({
         next: () => this.dialogRef.close(true),
         error: (err: ApiError) => {
-          this.generalError = err.message ?? 'Failed to create user';
-          this.isSubmitting = false;
+          this.generalError.set(err.message ?? 'Failed to create user');
+          this.isSubmitting.set(false);
         },
       });
   }
 
   protected onCancel(): void {
     this.dialogRef.close();
+  }
+
+  protected dismissError(): void {
+    this.generalError.set('');
   }
 }

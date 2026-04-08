@@ -68,7 +68,7 @@
     <ng-container matColumnDef="expandedDetail">
       <mat-cell *matCellDef="let gateway" [attr.colspan]="displayedColumns().length">
         @if (isExpanded(gateway)) {
-          <app-dashboard-gateway-expanded
+          <app-gateway-expanded
             [gateway]="gateway"
             [sensors]="sensors()"
             [loading]="sensorLoading()"

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -35,8 +35,8 @@ export class CreateGatewayDialog {
     interval: [1000, [Validators.required, Validators.min(100)]],
   });
 
-  protected isSubmitting = false;
-  protected generalError = '';
+  protected readonly isSubmitting = signal(false);
+  protected readonly generalError = signal('');
 
   protected onSubmit(): void {
     if (!this.gatewayForm.valid) {
@@ -44,8 +44,8 @@ export class CreateGatewayDialog {
       return;
     }
 
-    this.isSubmitting = true;
-    this.generalError = '';
+    this.isSubmitting.set(true);
+    this.generalError.set('');
 
     const gatewayConfig: GatewayConfig = {
       name: this.gatewayForm.value.name!,
@@ -55,13 +55,17 @@ export class CreateGatewayDialog {
     this.gatewayService.addNewGateway(gatewayConfig).subscribe({
       next: () => this.dialogRef.close(true),
       error: (err: ApiError) => {
-        this.generalError = err.message || 'Failed to create gateway. Please try again.';
-        this.isSubmitting = false;
+        this.generalError.set(err.message || 'Failed to create gateway. Please try again.');
+        this.isSubmitting.set(false);
       },
     });
   }
 
   protected onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  protected dismissError(): void {
+    this.generalError.set('');
   }
 }

@@ -40,9 +40,12 @@ describe('GatewayCommandApiClientService', () => {
   });
 
   describe('commissionGateway', () => {
-    it('should send POST request with gateway id in the URL and tenant id and commission token in the body', () => {
+    it('should POST tenant_id and token in body and return GatewayBackend', () => {
       service.commissionGateway('gw-1', 'tenant-1', 'commission-token').subscribe((gateway) => {
         expect(gateway).toEqual(mockGateway);
+        expect(gateway.gateway_id).toBe('gw-1');
+        expect(gateway.name).toBe('Gateway 1');
+        expect(gateway.status).toBe('active');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/commission`);
@@ -53,75 +56,21 @@ describe('GatewayCommandApiClientService', () => {
       });
       req.flush(mockGateway);
     });
-
-    it('should return a GatewayBackend', () => {
-      service.commissionGateway('gw-1', 'tenant-1', 'commission-token').subscribe((gateway) => {
-        expect(gateway.gateway_id).toBe('gw-1');
-        expect(gateway.name).toBe('Gateway 1');
-        expect(gateway.status).toBe('active');
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/commission`);
-      req.flush(mockGateway);
-    });
   });
 
-  describe('decommissionGateway', () => {
-    it('should send POST request with gateway id in the URL', () => {
-      service.decommissionGateway('gw-1').subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/decommission`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({});
-      req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
-      service.decommissionGateway('gw-1').subscribe((result) => {
+  describe('void gateway commands', () => {
+    it.each([
+      ['decommissionGateway', 'decommission'] as const,
+      ['resetGateway', 'reset'] as const,
+      ['rebootGateway', 'reboot'] as const,
+    ])('%s should POST empty body to /gateway/gw-1/%s and return void', (method, path) => {
+      service[method]('gw-1').subscribe((result) => {
         expect(result).toBeNull();
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/decommission`);
-      req.flush(null);
-    });
-  });
-
-  describe('resetGateway', () => {
-    it('should send POST request with gateway id in the URL', () => {
-      service.resetGateway('gw-1').subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/reset`);
+      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/${path}`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({});
-      req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
-      service.resetGateway('gw-1').subscribe((result) => {
-        expect(result).toBeNull();
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/reset`);
-      req.flush(null);
-    });
-  });
-
-  describe('rebootGateway', () => {
-    it('should send POST request with gateway id in the URL', () => {
-      service.rebootGateway('gw-1').subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/reboot`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({});
-      req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
-      service.rebootGateway('gw-1').subscribe((result) => {
-        expect(result).toBeNull();
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/reboot`);
       req.flush(null);
     });
   });

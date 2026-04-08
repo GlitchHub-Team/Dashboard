@@ -108,31 +108,13 @@ describe('AuthSessionService', () => {
   });
 
   describe('logout', () => {
-    const mockUser = {
-      id: 'user-42',
-      email: 'user@example.com',
-      role: UserRole.SUPER_ADMIN,
-      tenantId: 'tenant-1',
-    };
-
-    it('should call logout API, clear token/session, and navigate on success', () => {
-      userSessionMock.currentUser.mockReturnValue(mockUser);
-      authApiClientMock.logout.mockReturnValue(of(undefined));
-
+    it.each([
+      ['success', of(undefined)],
+      ['API error', throwError(() => ({ status: 500 }))],
+    ])('should clear token/session and navigate on %s', (_scenario, response$) => {
+      authApiClientMock.logout.mockReturnValue(response$);
       service.logout();
-
       expect(authApiClientMock.logout).toHaveBeenCalledWith();
-      expect(tokenStorageMock.clearToken).toHaveBeenCalled();
-      expect(userSessionMock.clearSession).toHaveBeenCalled();
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
-    });
-
-    it('should still clear and redirect even on API error', () => {
-      userSessionMock.currentUser.mockReturnValue(mockUser);
-      authApiClientMock.logout.mockReturnValue(throwError(() => ({ status: 500 })));
-
-      service.logout();
-
       expect(tokenStorageMock.clearToken).toHaveBeenCalled();
       expect(userSessionMock.clearSession).toHaveBeenCalled();
       expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);

@@ -1,12 +1,15 @@
 <div class="manager-layout">
-  @if (error()) {
+  @if (visibleError(); as error) {
     <div class="error-banner">
-      <mat-icon>error</mat-icon>
-      <span>{{ error() }}</span>
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button type="button" (click)="dismissError()">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
   }
   <div class="table-container">
-      <app-dashboard-gateway-table
+      <app-gateway-table
       actionMode="manage"
       [gateways]="gatewayList()"
       [sensors]="sensorList()"

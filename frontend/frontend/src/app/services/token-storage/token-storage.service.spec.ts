@@ -26,47 +26,32 @@ describe('TokenStorageService', () => {
   });
 
   describe('initial state', () => {
-    it('should be created', () => {
+    it('should be created with isValid false when no token in storage', () => {
       expect(service).toBeTruthy();
-    });
-
-    it('should start with isValid false when no token in storage', () => {
       expect(service.isValid()).toBe(false);
     });
   });
 
   describe('initialization from window.sessionStorage', () => {
-    it('should be valid if localStorage has a non-expired token', () => {
-      window.sessionStorage.setItem('jwt', validToken);
+    it.each([
+      [validToken, true],
+      [expiredToken, false],
+    ])('should init isValid=%s from stored token', (token, expected) => {
+      window.sessionStorage.setItem('jwt', token);
 
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({});
       const freshService = TestBed.inject(TokenStorageService);
 
-      expect(freshService.isValid()).toBe(true);
-    });
-
-    it('should be invalid if window.sessionStorage has an expired token', () => {
-      window.sessionStorage.setItem('jwt', expiredToken);
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({});
-      const freshService = TestBed.inject(TokenStorageService);
-
-      expect(freshService.isValid()).toBe(false);
+      expect(freshService.isValid()).toBe(expected);
     });
   });
 
   describe('saveToken', () => {
-    it('should persist token to window.sessionStorage', () => {
+    it('should persist valid token to sessionStorage and set isValid to true', () => {
       service.saveToken(validToken);
 
       expect(window.sessionStorage.getItem('jwt')).toBe(validToken);
-    });
-
-    it('should set isValid to true for a non-expired token', () => {
-      service.saveToken(validToken);
-
       expect(service.isValid()).toBe(true);
     });
 
@@ -99,38 +84,25 @@ describe('TokenStorageService', () => {
   });
 
   describe('clearToken', () => {
-    it('should remove token from window.sessionStorage', () => {
-      service.saveToken(validToken);
-      service.clearToken();
-
-      expect(window.sessionStorage.getItem('jwt')).toBeNull();
-    });
-
-    it('should set isValid to false', () => {
+    it('should remove token from sessionStorage and set isValid to false', () => {
       service.saveToken(validToken);
       expect(service.isValid()).toBe(true);
 
       service.clearToken();
 
+      expect(window.sessionStorage.getItem('jwt')).toBeNull();
       expect(service.isValid()).toBe(false);
     });
   });
 
   describe('isTokenValid', () => {
-    it('should return false when no token exists', () => {
-      expect(service.isTokenValid()).toBe(false);
-    });
-
-    it('should return true for a non-expired token', () => {
-      service.saveToken(validToken);
-
-      expect(service.isTokenValid()).toBe(true);
-    });
-
-    it('should return false for an expired token', () => {
-      service.saveToken(expiredToken);
-
-      expect(service.isTokenValid()).toBe(false);
+    it.each([
+      ['no token', () => {}, false],
+      ['valid token', () => service.saveToken(validToken), true],
+      ['expired token', () => service.saveToken(expiredToken), false],
+    ] as [string, () => void, boolean][])('should return %s => %s', (_label, setup, expected) => {
+      setup();
+      expect(service.isTokenValid()).toBe(expected);
     });
 
     it('should return false for a malformed token', () => {

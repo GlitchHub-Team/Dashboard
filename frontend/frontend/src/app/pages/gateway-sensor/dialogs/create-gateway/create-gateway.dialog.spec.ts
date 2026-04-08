@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { of, throwError, Observable } from 'rxjs';
 
@@ -21,7 +20,7 @@ describe('CreateGatewayDialog (Unit)', () => {
     gatewayServiceMock = { addNewGateway: vi.fn() };
 
     await TestBed.configureTestingModule({
-      imports: [CreateGatewayDialog, NoopAnimationsModule],
+      imports: [CreateGatewayDialog],
       providers: [
         { provide: MatDialogRef, useValue: dialogRefMock },
         { provide: GatewayService, useValue: gatewayServiceMock },
@@ -61,23 +60,17 @@ describe('CreateGatewayDialog (Unit)', () => {
       expect(submitBtn().nativeElement.disabled).toBe(false);
     });
 
-    it('should be invalid when name is empty and show required error when touched', () => {
+    it.each([
+      { control: 'name', value: '', expectedError: 'Campo obbligatorio' },
+      { control: 'interval', value: 50, expectedError: 'Almeno 100ms' },
+    ])('should be invalid and show $expectedError for invalid $control', ({ control, value, expectedError }) => {
       fillValidForm();
-      component['gatewayForm'].controls.name.setValue('');
-      component['gatewayForm'].controls.name.markAsTouched();
+      (component['gatewayForm'].controls as any)[control].setValue(value);
+      (component['gatewayForm'].controls as any)[control].markAsTouched();
       fixture.detectChanges();
       expect(component['gatewayForm'].valid).toBe(false);
-      expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain('Campo obbligatorio');
-    });
-
-    it('should be invalid when interval is below 100 and show min error when touched', () => {
-      fillValidForm();
-      component['gatewayForm'].controls.interval.setValue(50);
-      component['gatewayForm'].controls.interval.markAsTouched();
-      fixture.detectChanges();
-      expect(component['gatewayForm'].valid).toBe(false);
-      const minError = fixture.debugElement.queryAll(By.css('mat-error')).find((e) => e.nativeElement.textContent.includes('Almeno'));
-      expect(minError!.nativeElement.textContent).toContain('Almeno 100ms');
+      const error = fixture.debugElement.queryAll(By.css('mat-error')).find((e) => e.nativeElement.textContent.includes(expectedError));
+      expect(error!.nativeElement.textContent).toContain(expectedError);
     });
   });
 
@@ -103,23 +96,17 @@ describe('CreateGatewayDialog (Unit)', () => {
   });
 
   describe('submit error', () => {
-    it('should show API error message, not close dialog, and reset submitting state', () => {
+    it.each([
+      [{ message: 'Duplicate gateway name' } as ApiError, 'Duplicate gateway name'],
+      [{ status: 500 } as ApiError, 'Failed to create gateway. Please try again.'],
+    ])('should show error banner and not close dialog', (error, expectedMsg) => {
       fillValidForm();
-      gatewayServiceMock.addNewGateway.mockReturnValue(throwError(() => ({ message: 'Duplicate gateway name' }) as ApiError));
+      gatewayServiceMock.addNewGateway.mockReturnValue(throwError(() => error));
       submitBtn().nativeElement.click();
       fixture.detectChanges();
-      const banner = fixture.debugElement.query(By.css('.error-banner'));
-      expect(banner.nativeElement.textContent).toContain('Duplicate gateway name');
+      expect(fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent).toContain(expectedMsg);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
-      expect(component['isSubmitting']).toBe(false);
-    });
-
-    it('should show fallback error when API error has no message', () => {
-      fillValidForm();
-      gatewayServiceMock.addNewGateway.mockReturnValue(throwError(() => ({ status: 500 }) as ApiError));
-      submitBtn().nativeElement.click();
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css('.error-banner')).nativeElement.textContent).toContain('Failed to create gateway');
+      expect(component['isSubmitting']()).toBe(false);
     });
   });
 
@@ -142,6 +129,23 @@ describe('CreateGatewayDialog (Unit)', () => {
     });
   });
 
+  describe('dismissError', () => {
+    it('should clear error banner when close button is clicked', () => {
+      fillValidForm();
+      gatewayServiceMock.addNewGateway.mockReturnValue(throwError(() => ({ message: 'Server error' }) as ApiError));
+      submitBtn().nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+      expect(component['generalError']()).toBe('');
+    });
+  });
+
   describe('error recovery', () => {
     it('should clear error banner on successful retry', () => {
       fillValidForm();
@@ -153,7 +157,7 @@ describe('CreateGatewayDialog (Unit)', () => {
       gatewayServiceMock.addNewGateway.mockReturnValue(of({}));
       submitBtn().nativeElement.click();
       fixture.detectChanges();
-      expect(component['generalError']).toBe('');
+      expect(component['generalError']()).toBe('');
       expect(dialogRefMock.close).toHaveBeenCalledWith(true);
     });
   });

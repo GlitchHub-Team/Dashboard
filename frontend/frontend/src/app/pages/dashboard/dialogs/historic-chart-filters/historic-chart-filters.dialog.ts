@@ -16,7 +16,6 @@ import { MatIcon } from '@angular/material/icon';
 
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { TimeInterval } from '../../../../models/chart/time-interval.model';
-import { ValuesInterval } from '../../../../models/chart/values-interval.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 
@@ -42,16 +41,14 @@ export class HistoricChartFiltersDialog {
 
   protected readonly filtersForm = this.formBuilder.nonNullable.group(
     {
-      dataPointsCounter: [null as number | null, [Validators.required, Validators.min(1)]],
+      dataPointsCounter: [50, [Validators.required, Validators.min(1), Validators.max(300)]],
       from: [null as Date | null],
       fromTime: [null as string | null],
       to: [null as Date | null],
       toTime: [null as string | null],
-      lowerBound: [null as number | null],
-      upperBound: [null as number | null],
     },
     {
-      validators: [this.dateRangeValidator, this.valueRangeValidator],
+      validators: [this.dateRangeValidator],
     },
   );
 
@@ -61,7 +58,7 @@ export class HistoricChartFiltersDialog {
       return;
     }
 
-    const { from, fromTime, to, toTime, lowerBound, upperBound, dataPointsCounter } =
+    const { from, fromTime, to, toTime, dataPointsCounter } =
       this.filtersForm.value;
 
     const timeInterval: TimeInterval | undefined =
@@ -72,14 +69,10 @@ export class HistoricChartFiltersDialog {
           }
         : undefined;
 
-    const valuesInterval: ValuesInterval | undefined =
-      lowerBound != null && upperBound != null ? { lowerBound, upperBound } : undefined;
-
     const chartRequest: ChartRequest = {
       chartType: this.data.chartType,
       sensor: this.data.sensor,
       ...(timeInterval && { timeInterval }),
-      ...(valuesInterval && { valuesInterval }),
       ...(dataPointsCounter != null && { dataPointsCounter }),
     };
 
@@ -115,11 +108,5 @@ export class HistoricChartFiltersDialog {
     toDate.setHours(th, tm, 0, 0);
 
     return fromDate >= toDate ? { invalidDateRange: true } : null;
-  }
-
-  private valueRangeValidator(control: AbstractControl): ValidationErrors | null {
-    const lower = control.get('lowerBound')?.value;
-    const upper = control.get('upperBound')?.value;
-    return lower != null && upper != null && lower >= upper ? { invalidValueRange: true } : null;
   }
 }

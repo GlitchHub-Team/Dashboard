@@ -3,8 +3,8 @@ import { Component, input, output } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
 
-import { DashboardGatewayTableComponent } from './dashboard-gateway-table.component';
-import { DashboardGatewayExpandedComponent } from '../dashboard-gateway-expanded/dashboard-gateway-expanded.component';
+import { GatewayTableComponent } from './gateway-table.component';
+import { GatewayExpandedComponent } from '../gateway-expanded/gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
@@ -13,7 +13,7 @@ import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
 
-@Component({ selector: 'app-dashboard-gateway-expanded', template: '', standalone: true })
+@Component({ selector: 'app-gateway-expanded', template: '', standalone: true })
 class StubGatewayExpanded {
   gateway = input<Gateway>();
   sensors = input<Sensor[]>();
@@ -28,9 +28,9 @@ class StubGatewayExpanded {
   sensorPageChange = output<PageEvent>();
 }
 
-describe('DashboardGatewayTableComponent (Unit)', () => {
-  let component: DashboardGatewayTableComponent;
-  let fixture: ComponentFixture<DashboardGatewayTableComponent>;
+describe('GatewayTableComponent (Unit)', () => {
+  let component: GatewayTableComponent;
+  let fixture: ComponentFixture<GatewayTableComponent>;
 
   const mockGateways: Gateway[] = [
     {
@@ -74,15 +74,15 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DashboardGatewayTableComponent],
+      imports: [GatewayTableComponent],
     })
-      .overrideComponent(DashboardGatewayTableComponent, {
-        remove: { imports: [DashboardGatewayExpandedComponent] },
+      .overrideComponent(GatewayTableComponent, {
+        remove: { imports: [GatewayExpandedComponent] },
         add: { imports: [StubGatewayExpanded] },
       })
       .compileComponents();
 
-    fixture = TestBed.createComponent(DashboardGatewayTableComponent);
+    fixture = TestBed.createComponent(GatewayTableComponent);
     component = fixture.componentInstance;
 
     setInput('gateways', mockGateways);
@@ -204,11 +204,9 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
       fixture.detectChanges();
     });
 
-    it('should render manager header', () => {
+    it('should render manager header in manage mode and hide it in dashboard mode', () => {
       expect(fixture.debugElement.query(By.css('.manager-header'))).toBeTruthy();
-    });
 
-    it('should not render manager header in dashboard mode', () => {
       setInput('actionMode', 'dashboard');
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.manager-header'))).toBeFalsy();
@@ -267,11 +265,9 @@ describe('DashboardGatewayTableComponent (Unit)', () => {
       expect(spy).toHaveBeenCalledWith(mockGateways[0]);
     });
 
-    it('should hide expanded component by default', () => {
+    it('should hide expanded component by default and show it when a gateway is expanded', () => {
       expect(fixture.debugElement.query(By.directive(StubGatewayExpanded))).toBeFalsy();
-    });
 
-    it('should show expanded component when a gateway is expanded', () => {
       setInput('expandedGateway', mockGateways[0]);
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubGatewayExpanded))).toBeTruthy();

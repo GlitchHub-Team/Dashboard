@@ -3,8 +3,8 @@ import { Component, input, output } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
 
-import { DashboardGatewayExpandedComponent } from './dashboard-gateway-expanded.component';
-import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayExpandedComponent } from './gateway-expanded.component';
+import { SensorTableComponent } from '../sensor-table/sensor-table.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
@@ -13,7 +13,7 @@ import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
 
-@Component({ selector: 'app-dashboard-sensor-table', template: '', standalone: true })
+@Component({ selector: 'app-sensor-table', template: '', standalone: true })
 class StubSensorTable {
   sensors = input<Sensor[]>();
   loading = input<boolean>();
@@ -27,9 +27,9 @@ class StubSensorTable {
   pageChange = output<PageEvent>();
 }
 
-describe('DashboardGatewayExpandedComponent (Unit)', () => {
-  let component: DashboardGatewayExpandedComponent;
-  let fixture: ComponentFixture<DashboardGatewayExpandedComponent>;
+describe('GatewayExpandedComponent (Unit)', () => {
+  let component: GatewayExpandedComponent;
+  let fixture: ComponentFixture<GatewayExpandedComponent>;
 
   const mockGateway: Gateway = {
     id: 'gw-1',
@@ -70,14 +70,14 @@ describe('DashboardGatewayExpandedComponent (Unit)', () => {
   const getTableInstance = () => getTable().componentInstance as StubSensorTable;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [DashboardGatewayExpandedComponent] })
-      .overrideComponent(DashboardGatewayExpandedComponent, {
-        remove: { imports: [DashboardSensorTableComponent] },
+    await TestBed.configureTestingModule({ imports: [GatewayExpandedComponent] })
+      .overrideComponent(GatewayExpandedComponent, {
+        remove: { imports: [SensorTableComponent] },
         add: { imports: [StubSensorTable] },
       })
       .compileComponents();
 
-    fixture = TestBed.createComponent(DashboardGatewayExpandedComponent);
+    fixture = TestBed.createComponent(GatewayExpandedComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('sensors', mockSensors);
     fixture.componentRef.setInput('gateway', mockGateway);
@@ -86,7 +86,7 @@ describe('DashboardGatewayExpandedComponent (Unit)', () => {
   });
 
   describe('initial state', () => {
-    it('should create with correct inputs and defaults', () => {
+    it('should create with correct inputs/defaults and verify fresh instance pagination defaults', () => {
       expect(component).toBeTruthy();
       expect(component.sensors()).toEqual(mockSensors);
       expect(component.gateway()).toEqual(mockGateway);
@@ -95,10 +95,8 @@ describe('DashboardGatewayExpandedComponent (Unit)', () => {
       expect(component.sensorTotal()).toBe(2);
       expect(component.sensorPageIndex()).toBe(0);
       expect(component.sensorLimit()).toBe(10);
-    });
 
-    it('should have correct defaults on fresh instance', () => {
-      const fresh = TestBed.createComponent(DashboardGatewayExpandedComponent);
+      const fresh = TestBed.createComponent(GatewayExpandedComponent);
       fresh.componentRef.setInput('sensors', []);
       fresh.componentRef.setInput('gateway', mockGateway);
       fresh.detectChanges();
@@ -109,6 +107,16 @@ describe('DashboardGatewayExpandedComponent (Unit)', () => {
   });
 
   describe('inputs', () => {
+    it('should pass default inputs to child table', () => {
+      const table = getTableInstance();
+      expect(table.sensors()).toEqual(mockSensors);
+      expect(table.loading()).toBeUndefined();
+      expect(table.actionMode()).toBe('dashboard');
+      expect(table.total()).toBe(2);
+      expect(table.pageIndex()).toBe(0);
+      expect(table.limit()).toBe(10);
+    });
+
     it('should accept all inputs and reflect them on component and child', () => {
       setInput('loading', true);
       setInput('actionMode', 'manage');
@@ -143,18 +151,6 @@ describe('DashboardGatewayExpandedComponent (Unit)', () => {
 
       setInput('gateway', { ...mockGateway, id: 'gw-99' });
       expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('gw-99');
-    });
-  });
-
-  describe('input bindings to child', () => {
-    it('should pass all inputs to sensor table', () => {
-      const table = getTableInstance();
-      expect(table.sensors()).toEqual(mockSensors);
-      expect(table.loading()).toBeUndefined();
-      expect(table.actionMode()).toBe('dashboard');
-      expect(table.total()).toBe(2);
-      expect(table.pageIndex()).toBe(0);
-      expect(table.limit()).toBe(10);
     });
   });
 

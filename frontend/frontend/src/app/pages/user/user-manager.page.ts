@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
@@ -12,7 +12,7 @@ import { UserService } from '../../services/user/user.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { UserTableComponent } from './components/user-table/user-table.component';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
@@ -50,6 +50,18 @@ export class UserManagerPage implements OnInit {
   protected readonly limit = this.userService.limit;
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
+
+  private readonly _dismissedError = signal<string | null>(null);
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
+  }
+
   protected readonly UserRole = UserRole;
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly activeTenantId = signal<string | null>(null);

@@ -32,7 +32,7 @@ export class TenantApiClientService {
   public createTenant(config: TenantConfig): Observable<TenantBackend> {
     return this.http.post<TenantBackend>(`${this.apiUrl}/tenant`, {
       // Mapping del body rispetto a quando documentato su APIDOG
-      name: config.name,
+      tenant_name: config.name,
       can_impersonate: config.canImpersonate,
     });
   }

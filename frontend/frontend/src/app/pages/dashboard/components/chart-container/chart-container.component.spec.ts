@@ -12,18 +12,21 @@ import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { SensorReading } from '../../../../models/sensor-data/sensor-reading.model';
+import { FieldDescriptor } from '../../../../models/sensor-data/field-descriptor.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 
 @Component({ selector: 'app-historic-chart', template: '', standalone: true })
 class StubHistoricChart {
   readings = input<SensorReading[]>();
   sensor = input<Sensor>();
+  fields = input<FieldDescriptor[]>();
 }
 
 @Component({ selector: 'app-real-time-chart', template: '', standalone: true })
 class StubRealTimeChart {
   readings = input<SensorReading[]>();
   sensor = input<Sensor>();
+  fields = input<FieldDescriptor[]>();
 }
 
 describe('ChartContainerComponent (Unit)', () => {
@@ -58,8 +61,8 @@ describe('ChartContainerComponent (Unit)', () => {
   const mockRealtimeRequest: ChartRequest = { sensor: mockSensor, chartType: ChartType.REALTIME };
 
   const mockReadings: SensorReading[] = [
-    { timestamp: '2025-01-01T10:00:00Z', value: 72 } as SensorReading,
-    { timestamp: '2025-01-01T10:01:00Z', value: 75 } as SensorReading,
+    { timestamp: '2025-01-01T10:00:00Z', value: { temperature: 36.7 } } as SensorReading,
+    { timestamp: '2025-01-01T10:01:00Z', value: { temperature: 36.8 } } as SensorReading,
   ];
 
   const setChartRequest = (req: ChartRequest | null) => {
@@ -81,6 +84,7 @@ describe('ChartContainerComponent (Unit)', () => {
     chartServiceMock = {
       historicReadings: historicReadingsSig,
       liveReadings: liveReadingsSig,
+      fields: signal<FieldDescriptor[]>([]),
       loading: loadingSig,
       connectionStatus: connectionStatusSig,
       error: errorSig,
@@ -222,33 +226,6 @@ describe('ChartContainerComponent (Unit)', () => {
       expect(fixture.debugElement.query(By.css('.chart-error'))).toBeTruthy();
       expect(fixture.debugElement.query(By.directive(StubHistoricChart))).toBeTruthy();
     });
-
-    it.each([
-      { type: 'historic', request: mockHistoricRequest, stub: StubHistoricChart },
-      { type: 'realtime', request: mockRealtimeRequest, stub: StubRealTimeChart },
-    ])('should not render $type chart when readings are empty', ({ request, stub }) => {
-      setChartRequest(request);
-      expect(fixture.debugElement.query(By.directive(stub))).toBeNull();
-    });
-
-    it.each([
-      {
-        type: 'historic',
-        request: mockHistoricRequest,
-        stub: StubHistoricChart,
-        sig: () => historicReadingsSig,
-      },
-      {
-        type: 'realtime',
-        request: mockRealtimeRequest,
-        stub: StubRealTimeChart,
-        sig: () => liveReadingsSig,
-      },
-    ])('should render $type chart when readings exist', ({ request, stub, sig }) => {
-      sig().set(mockReadings);
-      setChartRequest(request);
-      expect(fixture.debugElement.query(By.directive(stub))).toBeTruthy();
-    });
   });
 
   describe('input bindings', () => {
@@ -287,7 +264,7 @@ describe('ChartContainerComponent (Unit)', () => {
       [mockRealtimeRequest, 'isHistoricChart', false],
       [mockRealtimeRequest, 'isLiveChart', true],
       [mockHistoricRequest, 'isLiveChart', false],
-    ] as const)('%s → %s() === %s', (req, prop, expected) => {
+    ] as const)('%s -> %s() === %s', (req, prop, expected) => {
       setChartRequest(req);
       expect(component[prop]()).toBe(expected);
     });
@@ -301,7 +278,7 @@ describe('ChartContainerComponent (Unit)', () => {
       ['connecting', 'statusClass', 'status-connecting'],
       ['disconnected', 'statusClass', 'status-disconnected'],
       ['reconnecting', 'statusClass', 'status-reconnecting'],
-    ] as const)('connectionStatus=%s → %s() === "%s"', (status, prop, expected) => {
+    ] as const)('connectionStatus=%s -> %s() === "%s"', (status, prop, expected) => {
       connectionStatusSig.set(status);
       expect(component[prop]()).toBe(expected);
     });

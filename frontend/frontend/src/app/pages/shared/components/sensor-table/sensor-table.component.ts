@@ -9,14 +9,14 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TitleCasePipe } from '@angular/common';
 import { UpperCasePipe } from '@angular/common';
 
-import { HistoricChartFiltersDialog } from '../../dialogs/historic-chart-filters/historic-chart-filters.dialog';
+import { HistoricChartFiltersDialog } from '../../../dashboard/dialogs/historic-chart-filters/historic-chart-filters.dialog';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
 
 @Component({
-  selector: 'app-dashboard-sensor-table',
+  selector: 'app-sensor-table',
   imports: [
     MatProgressSpinner,
     MatTableModule,
@@ -27,10 +27,10 @@ import { ActionMode } from '../../../../models/action-mode.model';
     UpperCasePipe,
     MatButtonModule,
   ],
-  templateUrl: './dashboard-sensor-table.component.html',
-  styleUrl: './dashboard-sensor-table.component.css',
+  templateUrl: './sensor-table.component.html',
+  styleUrl: './sensor-table.component.css',
 })
-export class DashboardSensorTableComponent {
+export class SensorTableComponent {
   private readonly dialog = inject(MatDialog);
 
   public readonly sensors = input.required<Sensor[]>();

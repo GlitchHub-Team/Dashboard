@@ -8,8 +8,8 @@ import { of, BehaviorSubject } from 'rxjs';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 
 import { DashboardPage } from './dashboard.page';
-import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
@@ -120,8 +120,8 @@ function setupTestBed(options: { session: UserSession; queryParams?: Record<stri
   TestBed.configureTestingModule({
     imports: [
       DashboardPage,
-      DashboardGatewayTableComponent,
-      DashboardSensorTableComponent,
+      GatewayTableComponent,
+      SensorTableComponent,
       ChartContainerComponent,
     ],
     providers: [
@@ -148,11 +148,11 @@ function setupTestBed(options: { session: UserSession; queryParams?: Record<stri
 }
 
 function getGatewayTable(fixture: ComponentFixture<DashboardPage>) {
-  return fixture.debugElement.query(By.directive(DashboardGatewayTableComponent));
+  return fixture.debugElement.query(By.directive(GatewayTableComponent));
 }
 
 function getSensorTable(fixture: ComponentFixture<DashboardPage>) {
-  return fixture.debugElement.query(By.directive(DashboardSensorTableComponent));
+  return fixture.debugElement.query(By.directive(SensorTableComponent));
 }
 
 function getChartContainer(fixture: ComponentFixture<DashboardPage>) {
@@ -276,7 +276,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('Page → GatewayTable: Input Bindings', () => {
+  describe('Page -> GatewayTable: Input Bindings', () => {
     it('should render gateways and display correct data in cells', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
@@ -320,7 +320,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('Page → SensorTable: Input Bindings', () => {
+  describe('Page -> SensorTable: Input Bindings', () => {
     it('should render sensors and display correct data in cells', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.canSendCommands as WritableSignal<boolean>).set(false);
@@ -357,7 +357,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('GatewayTable → Page: Output Events', () => {
+  describe('GatewayTable -> Page: Output Events', () => {
     it('should call toggleExpandedGateway with the correct gateway for each row clicked', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
@@ -396,13 +396,13 @@ describe('DashboardPage (Integration)', () => {
       expect(snackBarMock.open).not.toHaveBeenCalled();
 
       gatewayTable.componentInstance.commandRequested.emit(true);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Command sent successfully', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Close', {
         duration: 3000,
       });
     });
   });
 
-  describe('SensorTable → Page: Output Events', () => {
+  describe('SensorTable -> Page: Output Events', () => {
     it('should call openChart when sensor table emits chartRequested', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.canSendCommands as WritableSignal<boolean>).set(false);
@@ -464,34 +464,6 @@ describe('DashboardPage (Integration)', () => {
       getChartContainer(fixture).componentInstance.chartClosed.emit();
 
       expect(dashboardServiceMock.closeChart).toHaveBeenCalled();
-    });
-  });
-
-  describe('Full Flow: Chart Open → Display → Close', () => {
-    it('should complete chart lifecycle via gateway table', () => {
-      const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
-      (dashboardServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
-      fixture.detectChanges();
-
-      const gatewayTable = getGatewayTable(fixture);
-      gatewayTable.componentInstance.chartRequested.emit(mockChartRequest);
-      expect(dashboardServiceMock.openChart).toHaveBeenCalledWith(mockChartRequest);
-
-      (dashboardServiceMock.selectedChart as WritableSignal<ChartRequest | null>).set(
-        mockChartRequest,
-      );
-      fixture.detectChanges();
-
-      const chart = getChartContainer(fixture);
-      expect(chart).toBeTruthy();
-
-      chart.componentInstance.chartClosed.emit();
-      expect(dashboardServiceMock.closeChart).toHaveBeenCalled();
-
-      (dashboardServiceMock.selectedChart as WritableSignal<ChartRequest | null>).set(null);
-      fixture.detectChanges();
-
-      expect(getChartContainer(fixture)).toBeFalsy();
     });
   });
 

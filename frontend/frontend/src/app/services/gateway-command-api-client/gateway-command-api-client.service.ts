@@ -12,7 +12,6 @@ export class GatewayCommandApiClientService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}`;
 
-  // TODO: Manca l'invio del commission_token, da dove lo prendo ???
   public commissionGateway(
     gatewayId: string,
     tenantId: string,

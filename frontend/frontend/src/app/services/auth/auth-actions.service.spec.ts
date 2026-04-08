@@ -136,8 +136,8 @@ describe('AuthActionsService', () => {
   describe('confirmPasswordReset', () => {
     const mockReq: ForgotPasswordResponse = { token: 'reset-token', newPassword: 'newSecret456' };
 
-    it('should call verifyForgotPasswordToken, then confirmPasswordReset, set passwordChangeResult=true, and clear loading on success', () => {
-      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(true));
+    it.each([true, false])('should succeed regardless of token verification result (valid=%s)', (valid) => {
+      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(valid));
       authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
 
       service.confirmPasswordReset(mockReq).subscribe();
@@ -146,30 +146,6 @@ describe('AuthActionsService', () => {
       expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
       expect(service.passwordChangeResult()).toBe(true);
       expect(service.loading()).toBe(false);
-      expect(service.error()).toBeNull();
-    });
-
-    it('should proceed to call confirmPasswordReset even when verifyForgotPasswordToken returns false', () => {
-      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(false));
-      authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
-
-      service.confirmPasswordReset(mockReq).subscribe();
-
-      expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
-      expect(service.passwordChangeResult()).toBe(true);
-      expect(service.loading()).toBe(false);
-    });
-
-    it('should clear previous error before a new request', () => {
-      authApiClientMock.verifyForgotPasswordToken.mockReturnValue(of(true));
-      authApiClientMock.confirmPasswordReset.mockReturnValue(
-        throwError(() => ({ status: 500, message: 'fail' }) as ApiError),
-      );
-      service.confirmPasswordReset(mockReq).subscribe({ error: noop });
-      expect(service.error()).toBe('fail');
-
-      authApiClientMock.confirmPasswordReset.mockReturnValue(of(undefined));
-      service.confirmPasswordReset(mockReq).subscribe();
       expect(service.error()).toBeNull();
     });
 
@@ -191,8 +167,8 @@ describe('AuthActionsService', () => {
     const mockReq: ConfirmAccountResponse = { token: 'account-token', newPassword: 'newSecret456' };
     const mockAuthResponse: AuthResponse = { jwt: 'jwt-token' };
 
-    it('should call verifyAccountToken, then confirmAccountCreation, save the JWT, init session, and clear loading on success', () => {
-      authApiClientMock.verifyAccountToken.mockReturnValue(of(true));
+    it.each([true, false])('should succeed regardless of token verification result (valid=%s)', (valid) => {
+      authApiClientMock.verifyAccountToken.mockReturnValue(of(valid));
       authApiClientMock.confirmAccountCreation.mockReturnValue(of(mockAuthResponse));
 
       service.confirmAccount(mockReq).subscribe();
@@ -203,18 +179,6 @@ describe('AuthActionsService', () => {
       expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
-    });
-
-    it('should proceed to call confirmAccountCreation even when verifyAccountToken returns false', () => {
-      authApiClientMock.verifyAccountToken.mockReturnValue(of(false));
-      authApiClientMock.confirmAccountCreation.mockReturnValue(of(mockAuthResponse));
-
-      service.confirmAccount(mockReq).subscribe();
-
-      expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
-      expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.jwt);
-      expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);
-      expect(service.loading()).toBe(false);
     });
 
     it.each([

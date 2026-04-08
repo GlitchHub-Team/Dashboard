@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal, WritableSignal, Component, input, output } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
 import { of, EMPTY } from 'rxjs';
 
@@ -68,7 +69,9 @@ describe('AppShellPage (Unit)', () => {
   const tenantServiceMock = { getTenant: vi.fn() };
   const authSessionServiceMock = { logout: vi.fn() };
   const permissionServiceMock = { canAny: vi.fn() };
+  const mockDialogRef = { afterClosed: vi.fn() };
   const dialogMock = { open: vi.fn() };
+  const snackBarMock = { open: vi.fn() };
 
   const rebuildComponent = () => {
     fixture = TestBed.createComponent(AppShellPage);
@@ -81,6 +84,8 @@ describe('AppShellPage (Unit)', () => {
     permissionServiceMock.canAny.mockReturnValue(true);
     userServiceMock.getUser.mockReturnValue(of(mockUser));
     tenantServiceMock.getTenant.mockReturnValue(of(mockTenant));
+    mockDialogRef.afterClosed.mockReturnValue(EMPTY);
+    dialogMock.open.mockReturnValue(mockDialogRef);
 
     currentUserSignal = signal<UserSession | null>(mockSession);
 
@@ -96,6 +101,7 @@ describe('AppShellPage (Unit)', () => {
         { provide: AuthSessionService, useValue: authSessionServiceMock },
         { provide: PermissionService, useValue: permissionServiceMock },
         { provide: MatDialog, useValue: dialogMock },
+        { provide: MatSnackBar, useValue: snackBarMock },
       ],
     })
       .overrideComponent(AppShellPage, {
@@ -112,13 +118,10 @@ describe('AppShellPage (Unit)', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should render shell layout structure', () => {
+    it('should render shell layout with header, sidebar, and router outlet', () => {
       expect(fixture.debugElement.query(By.css('.shell-layout'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('.main-content'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('main'))).toBeTruthy();
-    });
-
-    it('should render header, sidebar, and router outlet', () => {
       expect(fixture.debugElement.query(By.directive(StubHeader))).toBeTruthy();
       expect(fixture.debugElement.query(By.directive(StubSideBar))).toBeTruthy();
       expect(fixture.debugElement.query(By.directive(StubRouterOutlet))).toBeTruthy();
@@ -181,7 +184,7 @@ describe('AppShellPage (Unit)', () => {
       expect(component['navItems']()).toHaveLength(0);
     });
 
-    it('should filter items based on specific permissions', () => {
+    it('should filter navItems and bind them to sidebar based on permissions', () => {
       permissionServiceMock.canAny.mockImplementation((permissions: Permission[]) =>
         permissions.includes(Permission.DASHBOARD_ACCESS),
       );
@@ -190,6 +193,11 @@ describe('AppShellPage (Unit)', () => {
       const items = component['navItems']();
       expect(items).toHaveLength(1);
       expect(items[0].label).toBe('Dashboard');
+      expect(items[0].route).toBe('/dashboard');
+
+      const sidebar = fixture.debugElement.query(By.directive(StubSideBar))
+        .componentInstance as StubSideBar;
+      expect(sidebar.navItems()!).toHaveLength(1);
     });
 
     it('should call canAny with an array for each gated item', () => {
@@ -199,30 +207,6 @@ describe('AppShellPage (Unit)', () => {
       permissionServiceMock.canAny.mock.calls.forEach((call: unknown[][]) => {
         expect(Array.isArray(call[0])).toBe(true);
       });
-    });
-
-    it('should pass filtered items to sidebar', () => {
-      permissionServiceMock.canAny.mockImplementation((permissions: Permission[]) =>
-        permissions.includes(Permission.DASHBOARD_ACCESS),
-      );
-      rebuildComponent();
-
-      const sidebar = fixture.debugElement.query(By.directive(StubSideBar))
-        .componentInstance as StubSideBar;
-      const items = sidebar.navItems()!;
-      expect(items).toHaveLength(1);
-      expect(items[0].label).toBe('Dashboard');
-    });
-
-    it('should show only Dashboard for TENANT_USER', () => {
-      permissionServiceMock.canAny.mockImplementation((permissions: Permission[]) =>
-        permissions.some((p) => [Permission.DASHBOARD_ACCESS].includes(p)),
-      );
-      rebuildComponent();
-
-      const items = component['navItems']();
-      expect(items).toHaveLength(1);
-      expect(items[0].route).toBe('/dashboard');
     });
 
     it('should show Dashboard and Gestione Tenant User for TENANT_ADMIN', () => {

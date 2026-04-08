@@ -1,63 +1,127 @@
+// mocks/sensor-historic-mock.service.ts
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, throwError } from 'rxjs';
+import { Observable, of, delay, throwError, switchMap, timer } from 'rxjs';
 import { ChartRequest } from '../models/chart/chart-request.model';
-import { HistoricResponse } from '../models/sensor-data/historic-response.model';
-import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { HistoricResponse, HistoricSample } from '../models/sensor-data/historic-response.model';
 import { TimeInterval } from '../models/chart/time-interval.model';
-import { HttpErrorResponse } from '@angular/common/http';
+import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { getMockFieldConfigs } from './sensor-mock.config';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable()
 export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
+  private readonly shouldFailGetHistoricData = false;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetHistoricData) {
+      return this.delayedError(400, 'Failed to fetch historic data');
     }
+
+    const isEcg = req.sensor.profile === SensorProfiles.CUSTOM_ECG_SERVICE;
+    const samples = isEcg ? this.generateEcgSamples(req) : this.generateScalarSamples(req);
+
+    const response: HistoricResponse = {
+      count: samples.length,
+      samples,
+    };
+
+    return of(response).pipe(delay(800));
+  }
+
+  private generateScalarSamples(req: ChartRequest): HistoricSample[] {
     const defaultInterval = this.getDefaultInterval();
     const from = (req.timeInterval?.from ?? defaultInterval.from).getTime();
     const to = (req.timeInterval?.to ?? defaultInterval.to).getTime();
     const durationMs = to - from;
-    const resolution = 60_000; // 60 seconds in ms
+    const resolution = 60_000;
     const totalPoints = Math.floor(durationMs / resolution);
-    const count = req.dataPointsCounter
-      ? Math.min(req.dataPointsCounter, totalPoints)
-      : totalPoints;
+    const count = Math.min(req.dataPointsCounter!, totalPoints);
     const step = totalPoints / count;
 
-    const baseValue = this.getBaseValue(req.sensor.profile);
-    const amplitude = this.getAmplitude(req.sensor.profile);
-    const lowerBound = req.valuesInterval?.lowerBound ?? -Infinity;
-    const upperBound = req.valuesInterval?.upperBound ?? Infinity;
-    const unit = this.getUnit(req.sensor.profile);
-
-    const timestamps: number[] = [];
-    const values: number[] = [];
+    const fieldConfigs = getMockFieldConfigs(req.sensor.profile);
+    const samples: HistoricSample[] = [];
 
     for (let i = 0; i < count; i++) {
-      timestamps.push(from + Math.floor(i * step) * resolution);
-      const noise = (Math.random() - 0.5) * amplitude * 0.2;
-      const raw = baseValue + amplitude * Math.sin((2 * Math.PI * i) / count) + noise;
-      values.push(Math.min(upperBound, Math.max(lowerBound, Math.round(raw * 100) / 100)));
+      const timestamp = from + Math.floor(i * step) * resolution;
+      const data: Record<string, number> = {};
+
+      fieldConfigs.forEach((fc) => {
+        const noise = (Math.random() - 0.5) * fc.amplitude * 0.2;
+        const raw = fc.baseValue + fc.amplitude * Math.sin((2 * Math.PI * i) / count) + noise;
+        data[fc.key] = Math.min(fc.max, Math.max(fc.min, Math.round(raw * 100) / 100));
+      });
+
+      samples.push({
+        sensor_id: req.sensor.id,
+        gateway_id: req.sensor.gatewayId,
+        tenant_id: 'mock-tenant',
+        timestamp: new Date(timestamp).toISOString(),
+        profile: req.sensor.profile,
+        data: data,
+      });
     }
 
-    const response: HistoricResponse = {
-      count: { current: count, real: count, total: totalPoints },
-      duration: durationMs,
-      dataset: { timestamps, values },
-      unit,
-    };
+    return samples;
+  }
 
-    return of(response).pipe(delay(800));
+  private generateEcgSamples(req: ChartRequest): HistoricSample[] {
+    const defaultInterval = this.getDefaultInterval();
+    const from = (req.timeInterval?.from ?? defaultInterval.from).getTime();
+    const to = (req.timeInterval?.to ?? defaultInterval.to).getTime();
+
+    const totalSeconds = Math.floor((to - from) / 1000);
+    const count = Math.min(req.dataPointsCounter!, totalSeconds);
+
+    const samples: HistoricSample[] = [];
+
+    for (let s = 0; s < count; s++) {
+      const timestamp = from + s * 1000;
+      const waveform = this.generateEcgWaveform(s);
+
+      samples.push({
+        sensor_id: req.sensor.id,
+        gateway_id: req.sensor.gatewayId,
+        tenant_id: 'mock-tenant',
+        timestamp: new Date(timestamp).toISOString(),
+        profile: req.sensor.profile,
+        data: { Waveform: waveform },
+      });
+    }
+
+    return samples;
+  }
+
+  /**
+   * Generates a somewhat realistic ECG waveform for 1 second (250 samples).
+   * Simulates the PQRST pattern repeating ~once per second.
+   */
+  private generateEcgWaveform(secondIndex: number): number[] {
+    const waveform: number[] = [];
+    const samplesPerSecond = 250;
+
+    for (let i = 0; i < samplesPerSecond; i++) {
+      const t = i / samplesPerSecond; // 0.0 -> 1.0 within this second
+      let value = 0;
+
+      // Baseline noise
+      value += (Math.random() - 0.5) * 20;
+
+      // P wave (small bump around t=0.1)
+      value += 80 * Math.exp(-Math.pow((t - 0.1) * 20, 2));
+
+      // QRS complex (sharp spike around t=0.3)
+      value -= 60 * Math.exp(-Math.pow((t - 0.28) * 40, 2)); // Q dip
+      value += 900 * Math.exp(-Math.pow((t - 0.32) * 50, 2)); // R peak
+      value -= 120 * Math.exp(-Math.pow((t - 0.36) * 40, 2)); // S dip
+
+      // T wave (broad bump around t=0.55)
+      value += 150 * Math.exp(-Math.pow((t - 0.55) * 12, 2));
+
+      waveform.push(Math.round(value));
+    }
+
+    return waveform;
   }
 
   private getDefaultInterval(): TimeInterval {
@@ -66,48 +130,7 @@ export class SensorHistoricMockService {
     return { from, to };
   }
 
-  private getBaseValue(profile: SensorProfiles): number {
-    switch (profile) {
-      case SensorProfiles.HEART_RATE_SERVICE:
-        return 75;
-      case SensorProfiles.PULSE_OXIMETER_SERVICE:
-        return 97;
-      case SensorProfiles.CUSTOM_ECG_SERVICE:
-        return 0;
-      case SensorProfiles.HEALTH_THERMOMETER_SERVICE:
-        return 36.6;
-      case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
-        return 22;
-    }
-  }
-
-  private getAmplitude(profile: SensorProfiles): number {
-    switch (profile) {
-      case SensorProfiles.HEART_RATE_SERVICE:
-        return 15;
-      case SensorProfiles.PULSE_OXIMETER_SERVICE:
-        return 3;
-      case SensorProfiles.CUSTOM_ECG_SERVICE:
-        return 1.5;
-      case SensorProfiles.HEALTH_THERMOMETER_SERVICE:
-        return 0.5;
-      case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
-        return 5;
-    }
-  }
-
-  private getUnit(profile: SensorProfiles): string {
-    switch (profile) {
-      case SensorProfiles.HEART_RATE_SERVICE:
-        return 'bpm';
-      case SensorProfiles.PULSE_OXIMETER_SERVICE:
-        return '%';
-      case SensorProfiles.CUSTOM_ECG_SERVICE:
-        return 'mV';
-      case SensorProfiles.HEALTH_THERMOMETER_SERVICE:
-        return '°C';
-      case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
-        return '°C';
-    }
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

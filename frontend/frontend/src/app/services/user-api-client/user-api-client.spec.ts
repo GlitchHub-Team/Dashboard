@@ -14,21 +14,21 @@ const GET_USERS_CASES = [
     role: UserRole.SUPER_ADMIN,
     tenantId: undefined,
     page: 0,
-    size: 10,
+    limit: 10,
     url: 'super_admins',
   },
   {
     role: UserRole.TENANT_ADMIN,
     tenantId: 'tenant-1',
     page: 2,
-    size: 25,
+    limit: 25,
     url: 'tenant/tenant-1/tenant_admins',
   },
   {
     role: UserRole.TENANT_USER,
     tenantId: 'tenant-1',
     page: 1,
-    size: 20,
+    limit: 20,
     url: 'tenant/tenant-1/tenant_users',
   },
 ] as const;
@@ -105,8 +105,8 @@ describe('UserApiClientService', () => {
   describe('getUsers', () => {
     it.each(GET_USERS_CASES)(
       'should send GET request for $role to $url',
-      ({ role, tenantId, page, size, url }) => {
-        service.getUsers(role, page, size, tenantId).subscribe((response) => {
+      ({ role, tenantId, page, limit, url }) => {
+        service.getUsers(role, page, limit, tenantId).subscribe((response) => {
           expect(response).toEqual(paginatedUserResponse);
         });
 
@@ -114,7 +114,7 @@ describe('UserApiClientService', () => {
           (request) =>
             request.url === `${apiUrl}/${url}` &&
             request.params.get('page') === `${page}` &&
-            request.params.get('size') === `${size}`,
+            request.params.get('limit') === `${limit}`,
         );
         expect(req.request.method).toBe('GET');
         req.flush(paginatedUserResponse);

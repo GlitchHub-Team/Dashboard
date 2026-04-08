@@ -44,11 +44,8 @@ describe('UserSessionService', () => {
   });
 
   describe('initial state', () => {
-    it('should be created', () => {
+    it('should be created with null currentUser', () => {
       expect(service).toBeTruthy();
-    });
-
-    it('should start with null user when storage is empty', () => {
       expect(service.currentUser()).toBeNull();
     });
   });
@@ -93,17 +90,11 @@ describe('UserSessionService', () => {
   });
 
   describe('initSession', () => {
-    it('should set current user decoded from token', () => {
+    it('should decode token, set currentUser, and persist to sessionStorage', () => {
       service.initSession(mockToken);
 
       expect(service.currentUser()).toEqual(mockSession);
-    });
-
-    it('should persist decoded session to sessionStorage', () => {
-      service.initSession(mockToken);
-
-      const stored = JSON.parse(sessionStorage.getItem('currentUser')!);
-      expect(stored).toEqual(mockSession);
+      expect(JSON.parse(sessionStorage.getItem('currentUser')!)).toEqual(mockSession);
     });
 
     it('should not set user when token is invalid', () => {
@@ -131,17 +122,11 @@ describe('UserSessionService', () => {
   });
 
   describe('clearSession', () => {
-    it('should set current user to null', () => {
+    it('should set currentUser to null and remove from sessionStorage', () => {
       service.initSession(mockToken);
       service.clearSession();
 
       expect(service.currentUser()).toBeNull();
-    });
-
-    it('should remove user from sessionStorage', () => {
-      service.initSession(mockToken);
-      service.clearSession();
-
       expect(sessionStorage.getItem('currentUser')).toBeNull();
     });
   });
