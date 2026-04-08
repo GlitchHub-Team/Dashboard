@@ -1,0 +1,13 @@
+<nav>
+  @for (item of navItems(); track item.route) {
+    
+    @if (item.separator) {
+      <mat-divider></mat-divider>
+    }
+    
+    <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.label }}</span>
+    </a>
+  }
+</nav>

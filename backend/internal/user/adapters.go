@@ -1,6 +1,8 @@
 package user
 
 import (
+	"errors"
+
 	"backend/internal/infra/database"
 	"backend/internal/infra/database/pagination"
 
@@ -8,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 //go:generate mockgen -destination=../../tests/user/mocks/ports.go -package=mocks . SaveUserPort,DeleteUserPort,GetUserPort
@@ -52,6 +55,9 @@ func (adapter *UserPostgreAdapter) SaveUser(user User) (
 
 		err = adapter.tenantMemberRepo.SaveTenantMember(entity)
 		if err != nil {
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				err = ErrUserAlreadyExists
+			}
 			return
 		}
 
@@ -63,6 +69,9 @@ func (adapter *UserPostgreAdapter) SaveUser(user User) (
 
 		err = adapter.superAdminRepo.SaveSuperAdmin(entity)
 		if err != nil {
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				err = ErrUserAlreadyExists
+			}
 			return
 		}
 
@@ -91,6 +100,9 @@ func (adapter *UserPostgreAdapter) deleteTenantMember(tenantId uuid.UUID, userId
 	}
 	err = adapter.tenantMemberRepo.DeleteTenantMember(&oldMember)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = ErrUserNotFound
+		}
 		return User{}, err
 	}
 	user, err = TenantMemberEntityToUser(&oldMember)
@@ -154,6 +166,9 @@ func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (
 			tenantId.String(), getUserBy,
 		)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = ErrUserNotFound
+			}
 			return User{}, err
 		}
 
@@ -165,6 +180,9 @@ func (adapter *UserPostgreAdapter) GetUser(tenantId *uuid.UUID, userId uint) (
 	// Super Admin
 	superAdmin, err := adapter.superAdminRepo.GetSuperAdmin(getUserBy)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = ErrUserNotFound
+		}
 		return User{}, err
 	}
 
@@ -181,6 +199,9 @@ func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email str
 			UserRepositoryGetUserBy{Email: &email},
 		)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = ErrUserNotFound
+			}
 			return User{}, err
 		}
 
@@ -191,6 +212,9 @@ func (adapter *UserPostgreAdapter) GetUserByEmail(tenantId *uuid.UUID, email str
 	// Super Admin
 	superAdmin, err := adapter.superAdminRepo.GetSuperAdmin(UserRepositoryGetUserBy{Email: &email})
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = ErrUserNotFound
+		}
 		return User{}, err
 	}
 

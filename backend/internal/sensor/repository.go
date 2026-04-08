@@ -73,13 +73,13 @@ func NewSensorNatsRepository(log *zap.Logger, nc *nats.Conn) *sensorNatsReposito
 }
 
 type SensorEntity struct {
-	Id        string                `gorm:"primaryKey"`
-	GatewayId string                `gorm:"column:gateway_id;index"`
-	Gateway   gateway.GatewayEntity `gorm:"foreignKey:GatewayId;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ID        string                `gorm:"type:uuid;primaryKey"`
+	GatewayID string                `gorm:"type:uuid;index;not null"`
+	Gateway   gateway.GatewayEntity `gorm:"foreignKey:GatewayID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Name      string                `gorm:"size:255;not null"`
 	Interval  int64                 `gorm:"not null"`
 	Profile   string                `gorm:"size:50;not null"`
-	Status    string                `gorm:"size:50;not null,check:status = 'active' or status = 'inactive',default:'active'"`
+	Status    string                `gorm:"size:50;not null;check:status = 'active' or status = 'inactive';default:'active'"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -110,8 +110,8 @@ func (SensorEntity) TableName() string { return "sensors" }
 
 func FromSensor(s Sensor) *SensorEntity {
 	entity := &SensorEntity{}
-	entity.Id = s.Id.String()
-	entity.GatewayId = s.GatewayId.String()
+	entity.ID = s.Id.String()
+	entity.GatewayID = s.GatewayId.String()
 	entity.Name = s.Name
 	entity.Interval = s.Interval.Milliseconds()
 	entity.Profile = string(s.Profile)
@@ -121,8 +121,8 @@ func FromSensor(s Sensor) *SensorEntity {
 
 func (entity *SensorEntity) ToSensor() Sensor {
 	return Sensor{
-		Id:        uuid.MustParse(entity.Id),
-		GatewayId: uuid.MustParse(entity.GatewayId),
+		Id:        uuid.MustParse(entity.ID),
+		GatewayId: uuid.MustParse(entity.GatewayID),
 		Name:      entity.Name,
 		Interval:  time.Duration(entity.Interval) * time.Millisecond,
 		Profile:   SensorProfile(entity.Profile),

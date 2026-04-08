@@ -16,16 +16,16 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 	targetGatewayId := uuid.New()
 
 	entityA := sensor.SensorEntity{
-		Id:        uuid.New().String(),
-		GatewayId: targetGatewayId.String(),
+		ID:        uuid.New().String(),
+		GatewayID: targetGatewayId.String(),
 		Name:      "Heart monitor",
 		Interval:  1200,
 		Profile:   string(sensor.HEART_RATE),
 		Status:    string(sensor.Active),
 	}
 	entityB := sensor.SensorEntity{
-		Id:        uuid.New().String(),
-		GatewayId: targetGatewayId.String(),
+		ID:        uuid.New().String(),
+		GatewayID: targetGatewayId.String(),
 		Name:      "Pulse",
 		Interval:  2000,
 		Profile:   string(sensor.PULSE_OXIMETER),
@@ -143,8 +143,8 @@ func TestDbSensorAdapter_GetSensorById(t *testing.T) {
 	targetGatewayId := uuid.New()
 
 	entity := sensor.SensorEntity{
-		Id:        targetSensorId.String(),
-		GatewayId: targetGatewayId.String(),
+		ID:        targetSensorId.String(),
+		GatewayID: targetGatewayId.String(),
 		Name:      "ECG",
 		Interval:  1500,
 		Profile:   string(sensor.ECG_CUSTOM),
@@ -222,16 +222,16 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 	targetTenantId := uuid.New()
 
 	entityA := sensor.SensorEntity{
-		Id:        uuid.New().String(),
-		GatewayId: uuid.New().String(),
+		ID:        uuid.New().String(),
+		GatewayID: uuid.New().String(),
 		Name:      "Thermometer",
 		Interval:  1000,
 		Profile:   string(sensor.HEALTH_THERMOMETER),
 		Status:    string(sensor.Active),
 	}
 	entityB := sensor.SensorEntity{
-		Id:        uuid.New().String(),
-		GatewayId: uuid.New().String(),
+		ID:        uuid.New().String(),
+		GatewayID: uuid.New().String(),
 		Name:      "Environment",
 		Interval:  3000,
 		Profile:   string(sensor.ENVIRONMENTAL_SENSING),

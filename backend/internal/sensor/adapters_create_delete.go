@@ -41,8 +41,8 @@ var (
 
 func (adapter *DbSensorAdapter) CreateSensor(sensorId uuid.UUID, gatewayId uuid.UUID, name string, interval time.Duration, profile SensorProfile) (Sensor, error) {
 	entity := &SensorEntity{
-		Id:        sensorId.String(),
-		GatewayId: gatewayId.String(),
+		ID:        sensorId.String(),
+		GatewayID: gatewayId.String(),
 		Name:      name,
 		Interval:  interval.Milliseconds(),
 		Profile:   string(profile),
@@ -57,7 +57,7 @@ func (adapter *DbSensorAdapter) CreateSensor(sensorId uuid.UUID, gatewayId uuid.
 
 func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error) {
 	entity := &SensorEntity{
-		Id: sensorId.String(),
+		ID: sensorId.String(),
 	}
 	err := adapter.repo.DeleteSensor(entity)
 	if err != nil {

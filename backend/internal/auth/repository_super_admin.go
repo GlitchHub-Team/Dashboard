@@ -25,17 +25,17 @@ type SuperAdminConfirmTokenEntity struct {
 
 func ConfirmAccountTokenToSuperAdminEntity(tokenObj ConfirmAccountToken) *SuperAdminConfirmTokenEntity {
 	return &SuperAdminConfirmTokenEntity{
-		Token:     tokenObj.hashedToken,
-		UserId:    tokenObj.userId,
-		ExpiresAt: tokenObj.expiryDate,
+		Token:     tokenObj.Token,
+		UserId:    tokenObj.UserId,
+		ExpiresAt: tokenObj.ExpiryDate,
 	}
 }
 
 func SuperAdminConfirmTokenEntityToConfirmAccountToken(entity *SuperAdminConfirmTokenEntity) ConfirmAccountToken {
 	return ConfirmAccountToken{
-		hashedToken: entity.Token,
-		userId:      entity.UserId,
-		expiryDate:  entity.ExpiresAt,
+		Token:      entity.Token,
+		UserId:     entity.UserId,
+		ExpiryDate: entity.ExpiresAt,
 	}
 }
 
@@ -46,6 +46,8 @@ func (SuperAdminConfirmTokenEntity) TableName() string { return "super_admin_con
 type superAdminConfirmTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+
+var _ SuperAdminConfirmTokenRepository = (*superAdminConfirmTokenPgRepository)(nil)
 
 func newSuperAdminConfirmTokenPgRepository(db clouddb.CloudDBConnection) *superAdminConfirmTokenPgRepository {
 	return &superAdminConfirmTokenPgRepository{
@@ -71,7 +73,7 @@ func (repo *superAdminConfirmTokenPgRepository) GetToken(tokenString string) (
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Where("token = ?", tokenString).
-		First(&entity).
+		Find(&entity).
 		Error
 	return
 }
@@ -81,10 +83,18 @@ func (repo *superAdminConfirmTokenPgRepository) GetTokenWithUser(tokenString str
 ) {
 	db := (*gorm.DB)(repo.db)
 	err = db.
-		Joins("User").
+		Preload("SuperAdmin").
 		Where("token = ?", tokenString).
-		First(&entity).
+		Find(&entity).
 		Error
+	if err != nil {
+		return
+	}
+
+	err = db.
+		Find(&entity.SuperAdmin, entity.UserId).
+		Error
+
 	return
 }
 
@@ -103,28 +113,31 @@ type SuperAdminPasswordTokenEntity struct {
 	ExpiresAt time.Time
 }
 
-func ForgotPasswordTokenToSuperAdminEntity(tokenObj ForgotPasswordToken) *SuperAdminPasswordTokenEntity {
+func ForgotPasswordTokenToSuperAdminTokenEntity(tokenObj ForgotPasswordToken) *SuperAdminPasswordTokenEntity {
 	return &SuperAdminPasswordTokenEntity{
-		Token:     tokenObj.hashedToken,
-		UserId:    tokenObj.userId,
-		ExpiresAt: tokenObj.expiryDate,
+		Token:     tokenObj.Token,
+		UserId:    tokenObj.UserId,
+		ExpiresAt: tokenObj.ExpiryDate,
 	}
 }
 
 func SuperAdminPasswordTokenEntityToForgotPasswordToken(entity *SuperAdminPasswordTokenEntity) ForgotPasswordToken {
 	return ForgotPasswordToken{
-		hashedToken: entity.Token,
-		userId:      entity.UserId,
-		expiryDate:  entity.ExpiresAt,
+		Token:      entity.Token,
+		UserId:     entity.UserId,
+		ExpiryDate: entity.ExpiresAt,
 	}
 }
 
 func (SuperAdminPasswordTokenEntity) TableName() string { return "super_admin_forgot_password_tokens" }
 
 // repository -----------------------------------------------------------------------------------------
+
 type superAdminPasswordTokenPgRepository struct {
 	db clouddb.CloudDBConnection
 }
+
+var _ SuperAdminPasswordTokenRepository = (*superAdminPasswordTokenPgRepository)(nil)
 
 func newSuperAdminPasswordTokenPgRepository(db clouddb.CloudDBConnection) *superAdminPasswordTokenPgRepository {
 	return &superAdminPasswordTokenPgRepository{
@@ -150,7 +163,7 @@ func (repo *superAdminPasswordTokenPgRepository) GetToken(tokenString string) (
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Where("token = ?", tokenString).
-		First(&entity).
+		Find(&entity).
 		Error
 	return
 }
@@ -160,9 +173,17 @@ func (repo *superAdminPasswordTokenPgRepository) GetTokenWithUser(tokenString st
 ) {
 	db := (*gorm.DB)(repo.db)
 	err = db.
-		Joins("User").
+		Preload("SuperAdmin").
 		Where("token = ?", tokenString).
-		First(&entity).
+		Find(&entity).
 		Error
+	if err != nil {
+		return
+	}
+
+	err = db.
+		Find(&entity.SuperAdmin, entity.UserId).
+		Error
+
 	return
 }

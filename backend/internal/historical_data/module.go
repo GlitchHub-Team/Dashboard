@@ -9,12 +9,20 @@ var Module = fx.Module(
 
 	// Metodi pubblici
 	fx.Provide(
-	//..
+		NewHistoricalDataController,
+		fx.Annotate(
+			NewGetHistoricalDataService,
+			fx.As(new(GetSensorHistoricalDataUseCase)),
+		),
+		fx.Annotate(
+			NewHistoricalDataTimescaleAdapter,
+			fx.As(new(GetHistoricalDataPort)),
+		),
 	),
 
 	// Metodi privati
 	fx.Provide(
 		fx.Private,
-		// ...
+		newHistoricalDataTimescaleRepository,
 	),
 )

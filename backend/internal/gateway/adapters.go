@@ -26,12 +26,12 @@ type GetGatewayPort interface {
 	GetAll() ([]Gateway, error)
 }
 
-func NewGatewayPostgreAdapter(repository *gatewayPostgreRepository, log *zap.Logger) (SaveGatewayPort, RemoveGatewayPort, GetGatewayPort) {
+func NewGatewayPostgreAdapter(repository *gatewayPostgreRepository, log *zap.Logger) *GatewayPostgreAdapter {
 	adapter := &GatewayPostgreAdapter{
 		repo: repository,
 		log:  log,
 	}
-	return adapter, adapter, adapter
+	return adapter
 }
 
 func (a *GatewayPostgreAdapter) Save(g Gateway) (Gateway, error) {

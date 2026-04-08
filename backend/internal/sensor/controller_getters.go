@@ -22,7 +22,7 @@ func (c *SensorController) GetSensor(ctx *gin.Context) {
 		return
 	}
 
-	sensorIdParam := ctx.Param("sensorId")
+	sensorIdParam := ctx.Param("sensor_id")
 	sensorId, err := uuid.Parse(sensorIdParam)
 	if err != nil {
 		transportHttp.RequestError(ctx, ErrInvalidSensorID)
@@ -56,7 +56,7 @@ func (c *SensorController) GetSensorsByGateway(ctx *gin.Context) {
 		return
 	}
 
-	gatewayIdParam := ctx.Param("gatewayId")
+	gatewayIdParam := ctx.Param("gateway_id")
 	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
 		transportHttp.RequestError(ctx, gateway.ErrInvalidGatewayID)
@@ -112,7 +112,7 @@ func (c *SensorController) GetSensorsByTenant(ctx *gin.Context) {
 		return
 	}
 
-	tenantIdParam := ctx.Param("tenantId")
+	tenantIdParam := ctx.Param("tenant_id")
 	tenantId, err := uuid.Parse(tenantIdParam)
 	if err != nil {
 		transportHttp.RequestError(ctx, tenant.ErrInvalidTenantID)

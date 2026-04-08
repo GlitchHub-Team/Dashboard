@@ -1,0 +1,31 @@
+<mat-toolbar>
+  <span class="spacer"></span>
+
+  @if (currentTenant(); as tenant) {
+    <span class="tenant-badge">{{ tenant }}</span>
+  }
+
+  @if (currentUserRole(); as role) {
+    <span class="role-badge">{{ role | uppercase }}</span>
+  }
+
+  <button mat-icon-button [matMenuTriggerFor]="userMenu">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+
+  <mat-menu #userMenu="matMenu">
+    @if (username(); as name) {
+      <div class="menu-header">{{ name }}</div>
+    }
+
+    <button mat-menu-item (click)="changePasswordRequested.emit()">
+      <mat-icon>lock</mat-icon>
+      <span>Cambia Password</span>
+    </button>
+
+    <button mat-menu-item (click)="logoutRequested.emit()">
+      <mat-icon>logout</mat-icon>
+      <span>Esci</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
