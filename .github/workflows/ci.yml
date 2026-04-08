@@ -13,18 +13,18 @@ jobs:
   validate:
     runs-on: self-hosted
     env:
-      NATS_HOST: ${{ vars.NATS_HOST }}
+      NATS_HOST: 127.0.0.1
       NATS_PORT: ${{ vars.NATS_PORT }}
       NATS_HTTP_PORT: ${{ vars.NATS_HTTP_PORT }}
       NATS_ENCRYPTION_KEY: ${{ secrets.NATS_ENCRYPTION_KEY }}
       NATS_SYS_ACCOUNT_ID: ${{ vars.NATS_SYS_ACCOUNT_ID }}
       NATS_APPLICATION_CORE_ID: ${{ vars.NATS_APPLICATION_CORE_ID }}
-      POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+      POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
       POSTGRES_DB: ${{ vars.POSTGRES_DB }}
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      CLOUD_POSTGRES_HOST: ${{ vars.CLOUD_POSTGRES_HOST }}
+      CLOUD_POSTGRES_HOST: 127.0.0.1
       CLOUD_POSTGRES_PORT: ${{ vars.CLOUD_POSTGRES_PORT }}
       CLOUD_POSTGRES_DB: ${{ vars.CLOUD_POSTGRES_DB }}
       CLOUD_POSTGRES_USER: ${{ secrets.CLOUD_POSTGRES_USER }}
@@ -39,6 +39,9 @@ jobs:
       BCRYPT_COST: ${{ vars.BCRYPT_COST }}
       AUTH_TOKEN_DURATION: ${{ vars.AUTH_TOKEN_DURATION }}
       AUTH_TOKEN_SECRET: ${{ secrets.AUTH_TOKEN_SECRET }}
+      GF_SECURITY_ADMIN_USER: ${{ secrets.GF_SECURITY_ADMIN_USER }}
+      GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+      GF_USERS_ALLOW_SIGN_UP: ${{ vars.GF_USERS_ALLOW_SIGN_UP }}
 
     steps:
       - name: Checkout
