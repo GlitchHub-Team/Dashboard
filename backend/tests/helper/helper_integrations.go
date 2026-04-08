@@ -43,7 +43,9 @@ type IntegrationTestDeps struct {
 	JetStreamCtx     jetstream.JetStream
 	JetStreamTestCtx jetstream.JetStream
 
-	AuthTokenManager sharedCrypto.AuthTokenManager
+	AuthTokenManager       sharedCrypto.AuthTokenManager
+	SecretHasher           sharedCrypto.SecretHasher
+	SecurityTokenGenerator sharedCrypto.SecurityTokenGenerator
 }
 
 type IntegrationTestPreSetup func(deps IntegrationTestDeps) bool
@@ -99,6 +101,8 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	var natsTestConn natsutils.NatsTestConnection
 	var jetstreamCtx jetstream.JetStream
 	var jwtManager sharedCrypto.AuthTokenManager
+	var secretHasher sharedCrypto.SecretHasher
+	var securityTokenGenerator sharedCrypto.SecurityTokenGenerator
 
 	app := fx.New(
 		modules.AppModules(),
@@ -109,6 +113,8 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 		fx.Populate(&natsTestConn),
 		fx.Populate(&jetstreamCtx),
 		fx.Populate(&jwtManager),
+		fx.Populate(&secretHasher),
+		fx.Populate(&securityTokenGenerator),
 
 		// Imposta configurazione di test per i database a prescindere dall'env
 		fx.Decorate(func(cfg *config.Config) *config.Config {
@@ -142,15 +148,17 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	}
 
 	return IntegrationTestDeps{
-		Ctx:              ctx,
-		Router:           router,
-		CloudDB:          cloudDB,
-		SensorDB:         sensorDB,
-		NatsConn:         natsConn,
-		NatsTestConn:     natsTestConn,
-		JetStreamCtx:     jetstreamCtx,
-		JetStreamTestCtx: jetstreamTestCtx,
-		AuthTokenManager: jwtManager,
+		Ctx:                    ctx,
+		Router:                 router,
+		CloudDB:                cloudDB,
+		SensorDB:               sensorDB,
+		NatsConn:               natsConn,
+		NatsTestConn:           natsTestConn,
+		JetStreamCtx:           jetstreamCtx,
+		JetStreamTestCtx:       jetstreamTestCtx,
+		AuthTokenManager:       jwtManager,
+		SecretHasher:           secretHasher,
+		SecurityTokenGenerator: securityTokenGenerator,
 	}
 	// return router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx
 }

@@ -6,6 +6,7 @@ import (
 	transportHttp "backend/internal/infra/transport/http"
 	"backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
+	"backend/internal/tenant"
 	"backend/internal/user"
 
 	"github.com/gin-gonic/gin"
@@ -177,6 +178,7 @@ func (controller *Controller) VerifyConfirmAccountToken(ctx *gin.Context) {
 		transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
 		return
 	}
+
 	var tenantId *uuid.UUID
 	if bodyDto.TenantId != nil {
 		parsed, _ := uuid.Parse(*bodyDto.TenantId)
@@ -302,7 +304,7 @@ func (controller *Controller) RequestForgotPasswordToken(ctx *gin.Context) {
 		Email:    bodyDto.Email,
 	})
 	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) || errors.Is(err, ErrAccountNotConfirmed) {
+		if errors.Is(err, tenant.ErrTenantNotFound) || errors.Is(err, user.ErrUserNotFound) || errors.Is(err, ErrAccountNotConfirmed) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
@@ -336,7 +338,7 @@ func (controller *Controller) ConfirmForgotPasswordToken(ctx *gin.Context) {
 		NewPassword: bodyDto.NewPassword,
 	})
 	if err != nil {
-		if errors.Is(err, ErrAccountNotConfirmed) {
+		if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrTokenNotFound) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
 		}

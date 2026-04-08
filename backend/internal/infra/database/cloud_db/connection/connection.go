@@ -93,14 +93,13 @@ func SetCloudDbLifecycle(
 					)
 				}
 
-				// NOTA: devo usare goroutine perché l'hook impone dei limiti temporali stretti
+				// NOTA: bisogna usare goroutine perché l'hook impone dei limiti temporali stretti
 				go (func() {
 					err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.CloudDBName)).Error
 					if err != nil {
 						log.Sugar().Errorf("impossibile eliminare Cloud DB di test %v: %v", cfg.CloudDBName, err)
 						return
 					}
-
 					log.Info("Eliminato cloud db di test", zap.String("name", cfg.CloudDBName))
 				})()
 			}

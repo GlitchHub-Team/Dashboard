@@ -1,4 +1,4 @@
-package user_integration_test
+package integration
 
 import (
 	"fmt"
@@ -13,7 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func postSetupDeleteTenant(t *testing.T, tenantId uuid.UUID) helper.IntegrationTestPostSetup {
+func PostSetupDeleteTenant(t *testing.T, tenantId uuid.UUID) helper.IntegrationTestPostSetup {
+	t.Helper()
 	return func(deps helper.IntegrationTestDeps) {
 		db := (*gorm.DB)(deps.CloudDB)
 		schemaName := "tenant_" + tenantId.String()

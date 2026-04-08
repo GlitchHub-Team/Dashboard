@@ -17,10 +17,10 @@ debbano essere modificate in modo incompatibile l'una con l'altra.
 */
 type ForgotPasswordToken struct {
 	// id          int
-	HashedToken string
-	TenantId    *uuid.UUID
-	UserId      uint
-	ExpiryDate  time.Time
+	Token      string
+	TenantId   *uuid.UUID
+	UserId     uint
+	ExpiryDate time.Time
 }
 
 func (token *ForgotPasswordToken) IsExpired() bool {
@@ -38,10 +38,10 @@ debbano essere modificate in modo incompatibile l'una con l'altra.
 */
 type ConfirmAccountToken struct {
 	// id          int
-	HashedToken string
-	TenantId    *uuid.UUID
-	UserId      uint
-	ExpiryDate  time.Time
+	Token      string
+	TenantId   *uuid.UUID
+	UserId     uint
+	ExpiryDate time.Time
 }
 
 func (token *ConfirmAccountToken) IsExpired() bool {

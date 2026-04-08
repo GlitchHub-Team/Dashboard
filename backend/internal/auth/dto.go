@@ -10,7 +10,6 @@ type LoginUserDTO struct {
 	dto.TenantIdField_NotRequired
 	dto.EmailField
 	dto.PasswordField
-	dto.UserRoleField
 }
 
 type LogoutUserDTO struct {

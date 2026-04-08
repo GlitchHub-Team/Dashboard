@@ -1,4 +1,4 @@
-package user_integration_test
+package integration
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ import (
 /*
 Ritorna il pre setup per creare il tenant con ID tenantId.
 */
-func preSetupCreateTenant(tenantId uuid.UUID, canImpersonate bool) helper.IntegrationTestPreSetup {
+func PreSetupCreateTenant(tenantId uuid.UUID, canImpersonate bool) helper.IntegrationTestPreSetup {
 	return func(deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)
 
@@ -77,7 +77,7 @@ func PreSetupAddTenantUser(
 			return false
 		}
 
-		localPreSetup, createdUserId := preSetupAddTenantMember_ReturnUserId(t, &entity)
+		localPreSetup, createdUserId := PreSetupAddTenantMember_ReturnUserId(t, &entity)
 		ok := localPreSetup(deps)
 		if ok && setPath {
 			(*tc).Path = fmt.Sprintf("/api/v1/tenant/%v/tenant_user/%d", entity.TenantId, *createdUserId)
@@ -116,7 +116,7 @@ func PreSetupAddTenantAdmin(
 			return false
 		}
 
-		localPreSetup, createdUserId := preSetupAddTenantMember_ReturnUserId(t, &entity)
+		localPreSetup, createdUserId := PreSetupAddTenantMember_ReturnUserId(t, &entity)
 		ok := localPreSetup(deps)
 		t.Logf("ok: %v (#%v)", ok, *createdUserId)
 		if ok && setPath {
@@ -160,7 +160,7 @@ func PreSetupAddSuperAdmin(
 Ritorna il pre setup per aggiungere super admin e un puntatore al valore che conterrà l'id dell'utente creato, una
 volta chiamato il setup ritornato.
 */
-func preSetupAddTenantMember_ReturnUserId(t *testing.T, entity *user.TenantMemberEntity) (helper.IntegrationTestPreSetup, *uint) {
+func PreSetupAddTenantMember_ReturnUserId(t *testing.T, entity *user.TenantMemberEntity) (helper.IntegrationTestPreSetup, *uint) {
 	t.Helper()
 	createdUserId := new(uint)
 

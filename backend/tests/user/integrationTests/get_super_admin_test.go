@@ -7,6 +7,7 @@ import (
 	transportHttp "backend/internal/infra/transport/http"
 	"backend/internal/user"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
 )
@@ -45,23 +46,23 @@ func TestGetSuperAdminIntegration(t *testing.T) {
 	// Success: get existing super admin
 	var tcSuccess helper.IntegrationTestCase
 	tcSuccess = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{PreSetupAddSuperAdmin(t, &tcSuccess, existingSuperAdmin1Entity, true)},
+		PreSetups: []helper.IntegrationTestPreSetup{integration.PreSetupAddSuperAdmin(t, &tcSuccess, existingSuperAdmin1Entity, true)},
 		Name:      "Success: get existing super admin",
 		Method:    http.MethodGet,
-		Header:    authHeader(superAdminJWT),
+		Header:    integration.AuthHeader(superAdminJWT),
 		Body:      nil,
 
 		WantStatusCode:   http.StatusOK,
 		WantResponseBody: existingEmail1,
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail1)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail1)},
 	}
 	tests = append(tests, &tcSuccess)
 
 	// Unauthorized: no JWT
 	var tcNoJwt helper.IntegrationTestCase
 	tcNoJwt = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{PreSetupAddSuperAdmin(t, &tcNoJwt, existingSuperAdmin1Entity, true)},
+		PreSetups: []helper.IntegrationTestPreSetup{integration.PreSetupAddSuperAdmin(t, &tcNoJwt, existingSuperAdmin1Entity, true)},
 		Name:      "Fail: Unauthorized access, no JWT",
 		Method:    http.MethodGet,
 		Header:    http.Header{},
@@ -69,54 +70,54 @@ func TestGetSuperAdminIntegration(t *testing.T) {
 
 		WantStatusCode:   http.StatusUnauthorized,
 		WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail1)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail1)},
 	}
 	tests = append(tests, &tcNoJwt)
 
 	// URI invalid
 	tests = append(tests, &helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{PreSetupAddSuperAdmin(t, nil, existingSuperAdmin1Entity, false)},
+		PreSetups: []helper.IntegrationTestPreSetup{integration.PreSetupAddSuperAdmin(t, nil, existingSuperAdmin1Entity, false)},
 		Name:      "Fail: URI binding invalid",
 		Method:    http.MethodGet,
 		Path:      "/api/v1/super_admin/invalid-id",
-		Header:    authHeader(superAdminJWT),
+		Header:    integration.AuthHeader(superAdminJWT),
 		Body:      nil,
 
 		WantStatusCode:   http.StatusBadRequest,
 		WantResponseBody: "error",
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail1)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail1)},
 	})
 
 	// Unauthorized roles (tenant user/admin) should be obfuscated as not found
 	var tcUnauthTenantUser helper.IntegrationTestCase
 	tcUnauthTenantUser = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{PreSetupAddSuperAdmin(t, &tcUnauthTenantUser, existingSuperAdmin1Entity, true)},
+		PreSetups: []helper.IntegrationTestPreSetup{integration.PreSetupAddSuperAdmin(t, &tcUnauthTenantUser, existingSuperAdmin1Entity, true)},
 		Name:      "Fail: tenant user cannot get super admin",
 		Method:    http.MethodGet,
-		Header:    authHeader(tenantUserJWT),
+		Header:    integration.AuthHeader(tenantUserJWT),
 		Body:      nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail1)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail1)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail1)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail1)},
 	}
 	tests = append(tests, &tcUnauthTenantUser)
 
 	var tcUnauthTenantAdmin helper.IntegrationTestCase
 	tcUnauthTenantAdmin = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{PreSetupAddSuperAdmin(t, &tcUnauthTenantAdmin, existingSuperAdmin2Entity, true)},
+		PreSetups: []helper.IntegrationTestPreSetup{integration.PreSetupAddSuperAdmin(t, &tcUnauthTenantAdmin, existingSuperAdmin2Entity, true)},
 		Name:      "Fail: tenant admin cannot get super admin",
 		Method:    http.MethodGet,
-		Header:    authHeader(tenantAdminJWT),
+		Header:    integration.AuthHeader(tenantAdminJWT),
 		Body:      nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkSuperAdminInserted(existingEmail2)},
-		PostSetups:       []helper.IntegrationTestPostSetup{PostSetupDeleteSuperAdmin(existingEmail2)},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckSuperAdminInserted(existingEmail2)},
+		PostSetups:       []helper.IntegrationTestPostSetup{integration.PostSetupDeleteSuperAdmin(existingEmail2)},
 	}
 	tests = append(tests, &tcUnauthTenantAdmin)
 
@@ -126,12 +127,12 @@ func TestGetSuperAdminIntegration(t *testing.T) {
 		Name:      "Fail: user not found",
 		Method:    http.MethodGet,
 		Path:      "/api/v1/super_admin/999999",
-		Header:    authHeader(superAdminJWT),
+		Header:    integration.AuthHeader(superAdminJWT),
 		Body:      nil,
 
 		WantStatusCode:   http.StatusNotFound,
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{checkNoSuperAdmin("doesnotexist@t.test")},
+		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckNoSuperAdmin("doesnotexist@t.test")},
 		PostSetups:       nil,
 	})
 

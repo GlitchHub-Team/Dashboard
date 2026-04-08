@@ -56,17 +56,17 @@ func TestChangePasswordService_VerifyForgotPasswordToken(t *testing.T) {
 	targetExpiryDate := time.Now().Add(time.Hour * 4)
 
 	expectedTokenObj := auth.ForgotPasswordToken{
-		HashedToken: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  targetExpiryDate,
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
 	}
 
 	expectedExpiredTokenObj := auth.ForgotPasswordToken{
-		HashedToken: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  time.Now().Add(time.Hour * -4),
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: time.Now().Add(time.Hour * -4),
+		UserId:     targetUserId,
 	}
 
 	// Step 1: get token -------------------------------------------------------------------------------------
@@ -469,6 +469,16 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 		Confirmed:    targetConfirmed,
 	}
 
+	expectedUnconfirmedTenantUser := user.User{
+		Id:           targetUserId,
+		Name:         targetUserName,
+		Email:        targetUserEmail,
+		PasswordHash: nil,
+		Role:         identity.ROLE_TENANT_USER, // NOTA: potrebbe anche essere Tenant Admin
+		TenantId:     &targetTenantId,
+		Confirmed:    false,
+	}
+
 	// Tenant User confermato dopo SaveUser() (step 4)
 	targetConfirmedTenantUser := user.User{
 		Id:           targetUserId,
@@ -491,6 +501,16 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 		Confirmed:    targetConfirmed,
 	}
 
+	expectedUnconfirmedSuperAdmin := user.User{
+		Id:           targetUserId,
+		Name:         targetUserName,
+		Email:        targetUserEmail,
+		PasswordHash: nil,
+		Role:         identity.ROLE_SUPER_ADMIN,
+		TenantId:     nil,
+		Confirmed:    false,
+	}
+
 	// Super Admin confermato dopo SaveUser() (step 4)
 	targetConfirmedSuperAdmin := user.User{
 		Id:           targetUserId,
@@ -509,17 +529,17 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 	// targetWrongToken := "token456"
 
 	expectedTokenObj := auth.ForgotPasswordToken{
-		HashedToken: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  targetExpiryDate,
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
 	}
 
 	expectedExpiredTokenObj := auth.ForgotPasswordToken{
-		HashedToken: expectedTokenHash,
-		TenantId:    &targetTenantId,
-		ExpiryDate:  time.Now().Add(time.Hour * -4),
-		UserId:      targetUserId,
+		Token:      expectedTokenHash,
+		TenantId:   &targetTenantId,
+		ExpiryDate: time.Now().Add(time.Hour * -4),
+		UserId:     targetUserId,
 	}
 
 	// test case
@@ -612,6 +632,15 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 			Times(1)
 	}
 
+	step2GetUserUnconfirmed_TenantMember := func(
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockForgotPasswordPort.EXPECT().
+			GetTenantMemberByForgotPasswordToken(targetTenantId, targetCorrectToken).
+			Return(expectedUnconfirmedTenantUser, nil).
+			Times(1)
+	}
+
 	// - Super Admin
 	step2GetUserOk_SuperAdmin := func(
 		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
@@ -628,6 +657,15 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 		return mockForgotPasswordPort.EXPECT().
 			GetSuperAdminByForgotPasswordToken(targetCorrectToken).
 			Return(user.User{}, errMockStep2).
+			Times(1)
+	}
+
+	step2GetUserUnconfirmed_SuperAdmin := func(
+		mockLogger *zap.Logger, mockTokenGenerator *cryptoMocks.MockSecurityTokenGenerator, mockSecretHasher *cryptoMocks.MockSecretHasher, mockForgotPasswordPort *mocks.MockForgotPasswordTokenPort, mockSendEmailPort *mocks.MockSendForgotPasswordEmailPort, mockGetUserPort *userMocks.MockGetUserPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+	) *gomock.Call {
+		return mockForgotPasswordPort.EXPECT().
+			GetSuperAdminByForgotPasswordToken(targetCorrectToken).
+			Return(expectedUnconfirmedSuperAdmin, nil).
 			Times(1)
 	}
 
@@ -784,6 +822,16 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 
 		// Step 2
 		{
+			name:  "(Tenant Member) Fail (step 2): unconfirmed user",
+			input: baseInput_TenantMember,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetTokenOk_TenantMember,
+				step2GetUserUnconfirmed_TenantMember,
+			},
+			expectedUser:  user.User{},
+			expectedError: auth.ErrAccountNotConfirmed,
+		},
+		{
 			name:  "(Tenant Member) Fail (step 2): unexpected error",
 			input: baseInput_TenantMember,
 			setupSteps: []mockSetupFunc_ChangePasswordService{
@@ -872,6 +920,16 @@ func TestChangePasswordService_ConfirmForgotPassword(t *testing.T) {
 		},
 
 		// Step 2
+		{
+			name:  "(Super Admin) Fail (step 2): unconfirmed user",
+			input: baseInput_SuperAdmin,
+			setupSteps: []mockSetupFunc_ChangePasswordService{
+				step1GetTokenOk_SuperAdmin,
+				step2GetUserUnconfirmed_SuperAdmin,
+			},
+			expectedUser:  user.User{},
+			expectedError: auth.ErrAccountNotConfirmed,
+		},
 		{
 			name:  "(Super Admin) Fail (step 2): unexpected error",
 			input: baseInput_SuperAdmin,

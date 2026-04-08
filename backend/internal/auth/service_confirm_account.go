@@ -83,7 +83,6 @@ func (service *ConfirmUserAccountService) getValidSuperAdminToken(token string) 
 	if tokenObj.IsExpired() {
 		return ConfirmAccountToken{}, ErrTokenExpired
 	}
-
 	return tokenObj, err
 }
 
