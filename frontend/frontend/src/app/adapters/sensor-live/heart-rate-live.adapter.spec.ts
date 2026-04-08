@@ -7,9 +7,6 @@ describe('HeartRateLiveAdapter', () => {
   const adapter = new HeartRateLiveAdapter();
 
   const dto: RealTimeReading = {
-    sensor_id: 's1',
-    gateway_id: 'gw1',
-    tenant_id: 't1',
     timestamp: '2024-05-20T10:00:00.000Z',
     profile: 'heart_rate',
     data: { BpmValue: 75 },

@@ -7,9 +7,6 @@ describe('HealthThermometerLiveAdapter', () => {
   const adapter = new HealthThermometerLiveAdapter();
 
   const dto: RealTimeReading = {
-    sensor_id: 's1',
-    gateway_id: 'gw1',
-    tenant_id: 't1',
     timestamp: '2024-03-10T08:30:00.000Z',
     profile: 'health_thermometer',
     data: { TemperatureValue: 36.6 },

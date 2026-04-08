@@ -45,9 +45,6 @@ export class SensorRealTimeMockService {
           : this.generateScalarData(getMockFieldConfigs(sensor.profile));
 
         return {
-          sensor_id: sensor.id,
-          gateway_id: sensor.gatewayId,
-          tenant_id: 'mock-tenant',
           timestamp: new Date().toISOString(),
           profile: sensor.profile,
           data,

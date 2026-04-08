@@ -7,9 +7,6 @@ describe('EnvironmentalLiveAdapter', () => {
   const adapter = new EnvironmentalLiveAdapter();
 
   const dto: RealTimeReading = {
-    sensor_id: 's1',
-    gateway_id: 'gw1',
-    tenant_id: 't1',
     timestamp: '2024-06-15T12:00:00.000Z',
     profile: 'environmental_sensing',
     data: { TemperatureValue: 22.5, HumidityValue: 60 },

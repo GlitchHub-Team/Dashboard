@@ -10,9 +10,6 @@ describe('EcgLiveAdapter', () => {
   const waveform = [0.1, 0.5, 1.2, 0.8, -0.3];
 
   const dto: RealTimeReading = {
-    sensor_id: 's1',
-    gateway_id: 'gw1',
-    tenant_id: 't1',
     timestamp: baseTimestamp,
     profile: 'ecg_custom',
     data: { Waveform: waveform },

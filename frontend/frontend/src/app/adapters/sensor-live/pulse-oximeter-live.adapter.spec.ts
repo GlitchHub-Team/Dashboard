@@ -7,9 +7,6 @@ describe('PulseOximeterLiveAdapter', () => {
   const adapter = new PulseOximeterLiveAdapter();
 
   const dto: RealTimeReading = {
-    sensor_id: 's1',
-    gateway_id: 'gw1',
-    tenant_id: 't1',
     timestamp: '2024-01-01T00:00:00.000Z',
     profile: 'pulse_oximeter',
     data: { Spo2Value: 98, PulseRateValue: 72 },
