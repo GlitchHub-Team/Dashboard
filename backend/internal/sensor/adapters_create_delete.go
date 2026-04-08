@@ -39,7 +39,10 @@ var (
 	_ DeleteSensorCmdPort = (*SendCmdAdapter)(nil)
 )
 
-func (adapter *DbSensorAdapter) CreateSensor(sensorId uuid.UUID, gatewayId uuid.UUID, name string, interval time.Duration, profile SensorProfile) (Sensor, error) {
+func (adapter *DbSensorAdapter) CreateSensor(
+	sensorId uuid.UUID, 
+	gatewayId uuid.UUID, 
+	name string, interval time.Duration, profile sensorProfile.SensorProfile) (Sensor, error) {
 	entity := &SensorEntity{
 		ID:        sensorId.String(),
 		GatewayID: gatewayId.String(),
@@ -67,7 +70,7 @@ func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error)
 	return entity.ToSensor(), nil
 }
 
-func (adapter *SendCmdAdapter) SendCreateSensorCmd(sensorId uuid.UUID, gatewayId uuid.UUID, interval time.Duration, profile SensorProfile) error {
+func (adapter *SendCmdAdapter) SendCreateSensorCmd(sensorId uuid.UUID, gatewayId uuid.UUID, interval time.Duration, profile sensorProfile.SensorProfile) error {
 	cmd := &CreateSensorCmdEntity{
 		SensorId:  sensorId.String(),
 		GatewayId: gatewayId.String(),
