@@ -11,7 +11,6 @@ import { LoginFormComponent } from './components/login-form/login-form.component
 import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.dialog';
 import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { TenantService } from '../../services/tenant/tenant.service';
-import { UserRole } from '../../models/user/user-role.enum';
 import { Tenant } from '../../models/tenant/tenant.model';
 
 const mockTenants: Tenant[] = [
@@ -60,12 +59,11 @@ function getLoginForm(fixture: ComponentFixture<LoginPage>) {
 
 function fillAndSubmitForm(
   fixture: ComponentFixture<LoginPage>,
-  opts: { email: string; password: string; role: UserRole; tenantId?: string },
+  opts: { email: string; password: string; tenantId?: string },
 ): void {
   const form = getLoginForm(fixture);
   form.controls.email.setValue(opts.email);
   form.controls.password.setValue(opts.password);
-  form.controls.role.setValue(opts.role);
   if (opts.tenantId) form.controls.tenantId.setValue(opts.tenantId);
   fixture.detectChanges();
   fixture.debugElement.query(By.css('form')).triggerEventHandler('ngSubmit');
@@ -130,47 +128,23 @@ describe('LoginPage (Integration)', () => {
     });
   });
 
-  describe('Role and Tenant Dropdown', () => {
-    it('should not show tenant dropdown initially', () => {
+  describe('Tenant Dropdown', () => {
+    it('should always show 3 form fields (email, password, tenant)', () => {
       const { fixture } = setupTestBed();
       fixture.detectChanges();
 
       const formFields = fixture.nativeElement.querySelectorAll('mat-form-field');
       expect(formFields.length).toBe(3);
     });
-
-    it('should show tenant dropdown when TENANT_ADMIN role is selected', () => {
-      const { fixture } = setupTestBed();
-      fixture.detectChanges();
-      getLoginForm(fixture).controls.role.setValue(UserRole.TENANT_ADMIN);
-      fixture.detectChanges();
-
-      const formFields = fixture.nativeElement.querySelectorAll('mat-form-field');
-      expect(formFields.length).toBe(4);
-    });
-
-    it('should hide tenant dropdown when switching from TENANT_ADMIN to SUPER_ADMIN', () => {
-      const { fixture } = setupTestBed();
-      fixture.detectChanges();
-      const form = getLoginForm(fixture);
-      form.controls.role.setValue(UserRole.TENANT_ADMIN);
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelectorAll('mat-form-field').length).toBe(4);
-
-      form.controls.role.setValue(UserRole.SUPER_ADMIN);
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelectorAll('mat-form-field').length).toBe(3);
-    });
   });
 
   describe('Form -> Page: Login Flow', () => {
-    it('should call login and navigate to /dashboard for Super Admin', () => {
+    it('should call login and navigate to /dashboard without tenantId', () => {
       const { fixture, authMock, routerMock } = setupTestBed();
       fixture.detectChanges();
       fillAndSubmitForm(fixture, {
         email: 'admin@example.com',
         password: 'secret123',
-        role: UserRole.SUPER_ADMIN,
       });
 
       expect(authMock.login).toHaveBeenCalledWith({
@@ -181,13 +155,12 @@ describe('LoginPage (Integration)', () => {
       expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
     });
 
-    it('should call login with tenantId for Tenant Admin', () => {
+    it('should call login with tenantId when provided', () => {
       const { fixture, authMock, routerMock } = setupTestBed();
       fixture.detectChanges();
       fillAndSubmitForm(fixture, {
         email: 'user@example.com',
         password: 'secret123',
-        role: UserRole.TENANT_ADMIN,
         tenantId: 'tenant-01',
       });
 
@@ -206,7 +179,6 @@ describe('LoginPage (Integration)', () => {
       fillAndSubmitForm(fixture, {
         email: 'admin@example.com',
         password: 'secret123',
-        role: UserRole.SUPER_ADMIN,
       });
 
       expect(authMock.login).toHaveBeenCalled();
@@ -227,21 +199,7 @@ describe('LoginPage (Integration)', () => {
       fillAndSubmitForm(fixture, {
         email: 'not-an-email',
         password: 'secret123',
-        role: UserRole.SUPER_ADMIN,
       });
-
-      expect(authMock.login).not.toHaveBeenCalled();
-    });
-
-    it('should not call login when Tenant Admin has no tenantId', () => {
-      const { fixture, authMock } = setupTestBed();
-      fixture.detectChanges();
-      const form = getLoginForm(fixture);
-      form.controls.email.setValue('user@example.com');
-      form.controls.password.setValue('secret123');
-      form.controls.role.setValue(UserRole.TENANT_ADMIN);
-      fixture.detectChanges();
-      submitEmpty(fixture);
 
       expect(authMock.login).not.toHaveBeenCalled();
     });
@@ -310,7 +268,6 @@ describe('LoginPage (Integration)', () => {
       fillAndSubmitForm(fixture, {
         email: 'admin@example.com',
         password: 'secret123',
-        role: UserRole.SUPER_ADMIN,
       });
 
       expect(authMock.login).toHaveBeenCalled();
