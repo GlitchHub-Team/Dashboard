@@ -60,10 +60,9 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
         fixture.debugElement.query(By.css('.sensor-info')).nativeElement.textContent,
       ).toContain('Heart Rate Sensor');
       const titles = fixture.debugElement.queryAll(By.css('.section-title'));
-      expect(titles).toHaveLength(3);
+      expect(titles).toHaveLength(2);
       expect(titles[0].nativeElement.textContent).toContain('Intervallo Tempo');
-      expect(titles[1].nativeElement.textContent).toContain('Limiti di valore');
-      expect(titles[2].nativeElement.textContent).toContain('Punti Dati');
+      expect(titles[1].nativeElement.textContent).toContain('Punti Dati');
     });
 
     it('should have form with default values', () => {
@@ -73,8 +72,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(form.value.fromTime).toBeNull();
       expect(form.value.to).toBeNull();
       expect(form.value.toTime).toBeNull();
-      expect(form.value.lowerBound).toBeNull();
-      expect(form.value.upperBound).toBeNull();
     });
 
     it('should have both action buttons enabled', () => {
@@ -98,8 +95,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       ['fromTime', null],
       ['to', null],
       ['toTime', null],
-      ['lowerBound', null],
-      ['upperBound', null],
     ] as const)('should remain valid when optional field %s is null', (field, value) => {
       component['filtersForm'].controls.dataPointsCounter.setValue(100);
       component['filtersForm'].controls[field].setValue(value as never);
@@ -122,13 +117,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       component['filtersForm'].controls.to.setValue(new Date('2025-01-01'));
       component['filtersForm'].controls.toTime.setValue('12:00');
       expect(component['filtersForm'].hasError('invalidDateRange')).toBe(true);
-      expect(component['filtersForm'].valid).toBe(false);
-    });
-
-    it('should be invalid when lowerBound is not less than upperBound', () => {
-      component['filtersForm'].controls.lowerBound.setValue(100);
-      component['filtersForm'].controls.upperBound.setValue(50);
-      expect(component['filtersForm'].hasError('invalidValueRange')).toBe(true);
       expect(component['filtersForm'].valid).toBe(false);
     });
 
@@ -177,17 +165,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
         .find((e) => e.nativeElement.textContent.includes('deve essere precedente'));
       expect(error).toBeTruthy();
     });
-
-    it('should show invalid value range error', () => {
-      component['filtersForm'].controls.lowerBound.setValue(100);
-      component['filtersForm'].controls.upperBound.setValue(50);
-      fixture.detectChanges();
-
-      const error = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .find((e) => e.nativeElement.textContent.includes('inferiore deve essere più basso'));
-      expect(error).toBeTruthy();
-    });
   });
 
   describe('apply', () => {
@@ -200,8 +177,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
         fromTime: '10:30',
         to,
         toTime: '20:00',
-        lowerBound: 50,
-        upperBound: 200,
         dataPointsCounter: 250,
       });
       fixture.detectChanges();
@@ -218,7 +193,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
         sensor: mockSensor,
         chartType: ChartType.HISTORIC,
         timeInterval: { from: expectedFrom, to: expectedTo },
-        valuesInterval: { lowerBound: 50, upperBound: 200 },
         dataPointsCounter: 250,
       });
     });
@@ -229,7 +203,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
 
       const result = dialogRefMock.close.mock.calls[0][0];
       expect(result.timeInterval).toBeUndefined();
-      expect(result.valuesInterval).toBeUndefined();
       expect(result.dataPointsCounter).toBe(100);
     });
 
@@ -242,15 +215,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(result.timeInterval).toBeUndefined();
     });
 
-    it('should omit valuesInterval when only one of lowerBound/upperBound is set', () => {
-      component['filtersForm'].controls.dataPointsCounter.setValue(100);
-      component['filtersForm'].controls.lowerBound.setValue(10);
-      component['onApply']();
-
-      const result = dialogRefMock.close.mock.calls[0][0];
-      expect(result.valuesInterval).toBeUndefined();
-    });
-
     it('should mark all as touched and not close when form is invalid', () => {
       component['filtersForm'].controls.dataPointsCounter.setValue(0);
       component['onApply']();
@@ -259,8 +223,6 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
       expect(component['filtersForm'].controls.fromTime.touched).toBe(true);
       expect(component['filtersForm'].controls.to.touched).toBe(true);
       expect(component['filtersForm'].controls.toTime.touched).toBe(true);
-      expect(component['filtersForm'].controls.lowerBound.touched).toBe(true);
-      expect(component['filtersForm'].controls.upperBound.touched).toBe(true);
       expect(component['filtersForm'].controls.dataPointsCounter.touched).toBe(true);
       expect(dialogRefMock.close).not.toHaveBeenCalled();
     });

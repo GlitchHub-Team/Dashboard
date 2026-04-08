@@ -200,7 +200,7 @@ describe('ForgotPasswordDialog', () => {
       ['', 'Email is required.'],
       ['bad-email', 'Please enter a valid email address.'],
       ['user@example.com', ''],
-    ])('email="%s" → "%s"', (value, expected) => {
+    ])('email="%s" -> "%s"', (value, expected) => {
       component['forgotPasswordForm'].controls.email.setValue(value);
       component['forgotPasswordForm'].controls.email.markAsTouched();
       expect(component['getFieldError']('email', 'Email')).toBe(expected);

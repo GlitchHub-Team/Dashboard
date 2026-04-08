@@ -33,7 +33,6 @@ describe('SensorHistoricApiService', () => {
       from: new Date('2026-01-01T00:00:00.000Z'),
       to: new Date('2026-01-02T00:00:00.000Z'),
     },
-    valuesInterval: { lowerBound: 0, upperBound: 100 },
     dataPointsCounter: 250,
   };
 
@@ -88,8 +87,6 @@ describe('SensorHistoricApiService', () => {
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('from_time')).toBe('2026-01-01T00:00:00.000Z');
       expect(req.request.params.get('to_time')).toBe('2026-01-02T00:00:00.000Z');
-      expect(req.request.params.get('lower_bound')).toBe('0');
-      expect(req.request.params.get('upper_bound')).toBe('100');
       expect(req.request.params.get('max_data_points')).toBe('250');
       req.flush(mockHistoricResponse);
     });

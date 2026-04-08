@@ -41,20 +41,6 @@
       <mat-error>La data/ora "Da" deve essere precedente alla data "A".</mat-error>
     }
 
-    <h3 class="section-title">Limiti di valore</h3>
-
-    <div class="row">
-      <mat-form-field appearance="outline">
-        <mat-label>Limite Inferiore</mat-label>
-        <input matInput type="number" formControlName="lowerBound" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Limite Superiore</mat-label>
-        <input matInput type="number" formControlName="upperBound" />
-      </mat-form-field>
-    </div>
-
     @if (filtersForm.hasError('invalidValueRange')) {
       <mat-error>Il limite inferiore deve essere più basso del limite superiore</mat-error>
     }

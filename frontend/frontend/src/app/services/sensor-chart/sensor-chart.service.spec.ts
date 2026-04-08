@@ -99,7 +99,6 @@ describe('SensorChartService', () => {
       from: new Date('2026-01-01T00:00:00.000Z'),
       to: new Date('2026-01-02T00:00:00.000Z'),
     },
-    valuesInterval: { lowerBound: 0, upperBound: 100 },
     dataPointsCounter: 250,
   };
 

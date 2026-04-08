@@ -276,7 +276,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('Page → GatewayTable: Input Bindings', () => {
+  describe('Page -> GatewayTable: Input Bindings', () => {
     it('should render gateways and display correct data in cells', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
@@ -320,7 +320,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('Page → SensorTable: Input Bindings', () => {
+  describe('Page -> SensorTable: Input Bindings', () => {
     it('should render sensors and display correct data in cells', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.canSendCommands as WritableSignal<boolean>).set(false);
@@ -357,7 +357,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('GatewayTable → Page: Output Events', () => {
+  describe('GatewayTable -> Page: Output Events', () => {
     it('should call toggleExpandedGateway with the correct gateway for each row clicked', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.gatewayList as WritableSignal<Gateway[]>).set(mockGateways);
@@ -402,7 +402,7 @@ describe('DashboardPage (Integration)', () => {
     });
   });
 
-  describe('SensorTable → Page: Output Events', () => {
+  describe('SensorTable -> Page: Output Events', () => {
     it('should call openChart when sensor table emits chartRequested', () => {
       const { fixture, dashboardServiceMock } = setupTestBed({ session: tenantAdminSession });
       (dashboardServiceMock.canSendCommands as WritableSignal<boolean>).set(false);

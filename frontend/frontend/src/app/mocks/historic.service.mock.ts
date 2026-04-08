@@ -36,9 +36,7 @@ export class SensorHistoricMockService {
     const durationMs = to - from;
     const resolution = 60_000;
     const totalPoints = Math.floor(durationMs / resolution);
-    const count = req.dataPointsCounter
-      ? Math.min(req.dataPointsCounter, totalPoints)
-      : totalPoints;
+    const count = Math.min(req.dataPointsCounter!, totalPoints);
     const step = totalPoints / count;
 
     const fieldConfigs = getMockFieldConfigs(req.sensor.profile);
@@ -72,11 +70,8 @@ export class SensorHistoricMockService {
     const from = (req.timeInterval?.from ?? defaultInterval.from).getTime();
     const to = (req.timeInterval?.to ?? defaultInterval.to).getTime();
 
-    // Each sample = 1 second = 250 waveform values
     const totalSeconds = Math.floor((to - from) / 1000);
-    const count = req.dataPointsCounter
-      ? Math.min(req.dataPointsCounter, totalSeconds)
-      : Math.min(totalSeconds, 60); // cap at 60 seconds for mock
+    const count = Math.min(req.dataPointsCounter!, totalSeconds);
 
     const samples: HistoricSample[] = [];
 
@@ -106,7 +101,7 @@ export class SensorHistoricMockService {
     const samplesPerSecond = 250;
 
     for (let i = 0; i < samplesPerSecond; i++) {
-      const t = i / samplesPerSecond; // 0.0 → 1.0 within this second
+      const t = i / samplesPerSecond; // 0.0 -> 1.0 within this second
       let value = 0;
 
       // Baseline noise
