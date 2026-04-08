@@ -74,7 +74,7 @@ export class AppShellPage {
       disableClose: true,
     }).afterClosed().subscribe((result) => {
       if (result) {
-        this.snackBar.open('Password modificata con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Password modificata con successo', 'Chiudi', { duration: 3000 });
       }
     });
   }

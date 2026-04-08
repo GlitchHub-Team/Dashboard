@@ -104,7 +104,7 @@ export class UserManagerPage implements OnInit {
       )
       .subscribe(() => {
         this.refreshUsers();
-        this.snackBar.open('Utente creato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Utente creato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 
@@ -125,7 +125,7 @@ export class UserManagerPage implements OnInit {
       )
       .subscribe(() => {
         this.refreshUsers();
-        this.snackBar.open('Utente eliminato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Utente eliminato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 

@@ -38,6 +38,21 @@
       </mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="publicKey">
+      <mat-header-cell *matHeaderCellDef>Public Key</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">
+        @if (gateway.publicIdentifier) {
+          <button
+            mat-icon-button
+            matTooltip="Copia Public Key"
+            (click)="copyToClipboard(gateway.publicIdentifier); $event.stopPropagation()"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        }
+      </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="commands">
       <mat-header-cell *matHeaderCellDef>Comandi</mat-header-cell>
       <mat-cell *matCellDef="let gateway">

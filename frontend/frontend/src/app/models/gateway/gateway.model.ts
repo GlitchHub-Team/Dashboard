@@ -6,4 +6,5 @@ export interface Gateway {
   name: string;
   status: Status;
   interval: number;
+  publicIdentifier?: string;
 }

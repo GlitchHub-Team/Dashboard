@@ -3,6 +3,8 @@ import { Component, input, output } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { By } from '@angular/platform-browser';
 
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 import { GatewayTableComponent } from './gateway-table.component';
 import { GatewayExpandedComponent } from '../gateway-expanded/gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
@@ -39,10 +41,11 @@ describe('GatewayTableComponent (Unit)', () => {
       name: 'Gateway Alpha',
       status: Status.ACTIVE,
       interval: 60,
+      publicIdentifier: 'pk-gw-1',
     },
     {
       id: 'gw-2',
-      tenantId: 'tenant-1',
+      tenantId: undefined,
       name: 'Gateway Beta',
       status: Status.INACTIVE,
       interval: 120,
@@ -63,6 +66,7 @@ describe('GatewayTableComponent (Unit)', () => {
   const mockChartRequest: ChartRequest = {
     sensor: mockSensors[0],
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-1',
     timeInterval: null!,
   };
 
@@ -75,6 +79,7 @@ describe('GatewayTableComponent (Unit)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [GatewayTableComponent],
+      providers: [{ provide: MatSnackBar, useValue: { open: vi.fn() } }],
     })
       .overrideComponent(GatewayTableComponent, {
         remove: { imports: [GatewayExpandedComponent] },
@@ -192,6 +197,7 @@ describe('GatewayTableComponent (Unit)', () => {
         'tenantId',
         'name',
         'status',
+        'publicKey',
         'commands',
         'delete',
       ]);
@@ -249,6 +255,34 @@ describe('GatewayTableComponent (Unit)', () => {
         .queryAll(By.css('mat-cell button'))
         .filter((btn) => btn.nativeElement.textContent.includes('terminal'));
       expect(commandButtons.length).toBe(2);
+    });
+  });
+
+  describe('publicKey column', () => {
+    beforeEach(() => {
+      setInput('actionMode', 'manage');
+      fixture.detectChanges();
+    });
+
+    it('should render copy button only for gateways with a publicIdentifier', () => {
+      const copyButtons = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .filter((btn) => btn.nativeElement.textContent.includes('content_copy'));
+      expect(copyButtons.length).toBe(1);
+    });
+
+    it('should call navigator.clipboard.writeText when copy button is clicked', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+
+      const copyButton = fixture.debugElement
+        .queryAll(By.css('mat-cell button'))
+        .find((btn) => btn.nativeElement.textContent.includes('content_copy'));
+      copyButton!.triggerEventHandler('click', { stopPropagation: vi.fn() });
+
+      expect(writeText).toHaveBeenCalledWith('pk-gw-1');
+
+      vi.unstubAllGlobals();
     });
   });
 

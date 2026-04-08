@@ -81,7 +81,7 @@ describe('SensorLiveReadingsApiService', () => {
       expect(result).toBeDefined();
     });
 
-    it('should create a new socket on each call', () => {
+    it('should disconnect the previous socket and create a new one on each call', () => {
       const mockSocket1 = createMockSocket();
       const mockSocket2 = createMockSocket();
       vi.mocked(webSocket)
@@ -92,6 +92,7 @@ describe('SensorLiveReadingsApiService', () => {
       service.connect(mockRequest);
 
       expect(webSocket).toHaveBeenCalledTimes(2);
+      expect(mockSocket1.complete).toHaveBeenCalledTimes(1);
     });
   });
 

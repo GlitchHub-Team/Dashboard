@@ -123,7 +123,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   protected onCommandRequested(result: boolean): void {
     if (result) {
-      this.snackBar.open('Comando inviato correttamente', 'Close', {
+      this.snackBar.open('Comando inviato correttamente', 'Chiudi', {
         duration: 3000,
       });
     }
