@@ -40,11 +40,11 @@ export class UserService {
     );
   }
 
-  public retrieveUser(role: UserRole, tenantId?: string): void {
+  public retrieveUsers(role: UserRole, tenantId?: string): void {
     this.setGettingUsersState();
 
     this.userApi
-      .getUsers(role, this._pageIndex(), this._limit(), tenantId)
+      .getUsers(role, this._pageIndex() + 1, this._limit(), tenantId)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da UserBackend a User)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -61,6 +61,12 @@ export class UserService {
       .subscribe();
   }
 
+  public changePage(pageIndex: number, limit: number, role: UserRole, tenantId?: string): void {
+    this._pageIndex.set(pageIndex);
+    this._limit.set(limit);
+    this.retrieveUsers(role, tenantId);
+  }
+
   public addNewUser(config: UserConfig, role: UserRole, tenantId?: string): Observable<User> {
     return this.userApi
       .createUser(config, role, tenantId)
@@ -74,10 +80,14 @@ export class UserService {
       tap(() => this.refetchCurrentPage(user.role, user.tenantId)),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete user');
+        this._loading.set(false);
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
+  }
+
+  private refetchCurrentPage(role: UserRole, tenantId?: string): void {
+    this.retrieveUsers(role, tenantId);
   }
 
   private setGettingUsersState(): void {

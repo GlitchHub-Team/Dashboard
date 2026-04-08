@@ -1,62 +1,53 @@
+// mocks/sensor-real-time-mock.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, interval, map, Subject, takeUntil, switchMap, throwError, timer } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Sensor } from '../models/sensor/sensor.model';
 import { RealTimeReading } from '../models/sensor-data/real-time-reading.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
+import { getMockFieldConfigs, MockFieldConfig } from './sensor-mock.config';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable()
 export class SensorRealTimeMockService {
   private readonly stop$ = new Subject<void>();
-  private currentValue = 0;
+  private currentValues = new Map<string, number>();
   private readingCount = 0;
 
-  // Toggle these to simulate different scenarios
   private readonly shouldFailConnection = false;
-  private readonly shouldDisconnectAfter = 10; // 0 = never, N = after N readings
+  private readonly shouldDisconnectAfter = 0;
 
   connect(sensor: Sensor): Observable<RealTimeReading> {
     this.readingCount = 0;
+    this.currentValues.clear();
 
-    // Simulate connection failure
     if (this.shouldFailConnection) {
-      return timer(1000).pipe(
-        switchMap(() =>
-          throwError(
-            () =>
-              new HttpErrorResponse({
-                status: 0,
-                statusText: 'Unknown Error',
-                error: { error: 'WebSocket connection failed' },
-              }),
-          ),
-        ),
-      );
+      return this.delayedError(0, 'WebSocket connection failed');
     }
 
-    this.currentValue = this.getBaseValue(sensor.profile);
+    const isEcg = sensor.profile === SensorProfiles.CUSTOM_ECG_SERVICE;
+
+    if (!isEcg) {
+      const fieldConfigs = getMockFieldConfigs(sensor.profile);
+      fieldConfigs.forEach((fc) => this.currentValues.set(fc.key, fc.baseValue));
+    }
 
     return interval(1000).pipe(
       takeUntil(this.stop$),
       map(() => {
         this.readingCount++;
 
-        // Simulate disconnection after N readings
         if (this.shouldDisconnectAfter > 0 && this.readingCount >= this.shouldDisconnectAfter) {
-          throw new HttpErrorResponse({
-            status: 0,
-            statusText: 'Unknown Error',
-            error: { error: 'WebSocket connection lost' },
-          });
+          throw { status: 0, message: 'WebSocket connection lost' } as ApiError;
         }
 
-        const delta = (Math.random() - 0.5) * this.getStep(sensor.profile);
-        this.currentValue += delta;
-        this.currentValue = Math.round(this.currentValue * 100) / 100;
+        const data = isEcg
+          ? { Waveform: this.generateEcgWaveform() }
+          : this.generateScalarData(getMockFieldConfigs(sensor.profile));
 
         return {
-          datum: this.currentValue,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
+          profile: sensor.profile,
+          data,
         };
       }),
     );
@@ -66,33 +57,44 @@ export class SensorRealTimeMockService {
     this.stop$.next();
   }
 
-  private getBaseValue(profile: SensorProfiles): number {
-    switch (profile) {
-      case SensorProfiles.HEART_RATE_SERVICE:
-        return 75;
-      case SensorProfiles.PULSE_OXIMETER_SERVICE:
-        return 97;
-      case SensorProfiles.CUSTOM_ECG_SERVICE:
-        return 0;
-      case SensorProfiles.HEALTH_THERMOMETER_SERVICE:
-        return 36.6;
-      case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
-        return 22;
-    }
+  private generateScalarData(fieldConfigs: MockFieldConfig[]): Record<string, number> {
+    const data: Record<string, number> = {};
+
+    fieldConfigs.forEach((fc) => {
+      const current = this.currentValues.get(fc.key)!;
+      const delta = (Math.random() - 0.5) * fc.step;
+      const next = Math.min(fc.max, Math.max(fc.min, current + delta));
+      const rounded = Math.round(next * 100) / 100;
+
+      this.currentValues.set(fc.key, rounded);
+      data[fc.key] = rounded;
+    });
+
+    return data;
   }
 
-  private getStep(profile: SensorProfiles): number {
-    switch (profile) {
-      case SensorProfiles.HEART_RATE_SERVICE:
-        return 3;
-      case SensorProfiles.PULSE_OXIMETER_SERVICE:
-        return 1;
-      case SensorProfiles.CUSTOM_ECG_SERVICE:
-        return 0.5;
-      case SensorProfiles.HEALTH_THERMOMETER_SERVICE:
-        return 0.2;
-      case SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE:
-        return 1;
+  private generateEcgWaveform(): number[] {
+    const waveform: number[] = [];
+    const samplesPerSecond = 250;
+
+    for (let i = 0; i < samplesPerSecond; i++) {
+      const t = i / samplesPerSecond;
+      let value = 0;
+
+      value += (Math.random() - 0.5) * 20;
+      value += 80 * Math.exp(-Math.pow((t - 0.1) * 20, 2));
+      value -= 60 * Math.exp(-Math.pow((t - 0.28) * 40, 2));
+      value += 900 * Math.exp(-Math.pow((t - 0.32) * 50, 2));
+      value -= 120 * Math.exp(-Math.pow((t - 0.36) * 40, 2));
+      value += 150 * Math.exp(-Math.pow((t - 0.55) * 12, 2));
+
+      waveform.push(Math.round(value));
     }
+
+    return waveform;
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

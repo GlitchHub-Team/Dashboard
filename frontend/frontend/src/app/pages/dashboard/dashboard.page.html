@@ -27,16 +27,19 @@
         </button>
       </div>
     } @else {
-      @if (error()) {
+      @if (visibleError(); as error) {
         <div class="error-banner">
-          <mat-icon>error</mat-icon>
-          <span>{{ error() }}</span>
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ error }}</span>
+          <button mat-icon-button type="button" (click)="dismissError()">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
       }
       
       <div class="table-container">
         @if (canSendCommands()) {
-          <app-dashboard-gateway-table
+          <app-gateway-table
             actionMode="dashboard"
             [gateways]="gatewayList()"
             [sensors]="sensorList()"
@@ -56,7 +59,7 @@
             (sensorPageChange)="onSensorPageChange($event)"
           />
         } @else {
-          <app-dashboard-sensor-table
+          <app-sensor-table
             [sensors]="sensorList()"
             [loading]="sensorLoading()"
             [total]="sensorTotal()"

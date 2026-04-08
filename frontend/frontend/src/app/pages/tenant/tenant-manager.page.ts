@@ -1,9 +1,9 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { PageEvent } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { filter, switchMap } from 'rxjs';
@@ -11,14 +11,14 @@ import { filter, switchMap } from 'rxjs';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-tenant-manager-page',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatPaginatorModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, TenantTableComponent, MatIconModule],
   templateUrl: './tenant-manager.page.html',
   styleUrl: './tenant-manager.page.css',
 })
@@ -35,6 +35,17 @@ export class TenantManagerPage implements OnInit {
   protected readonly limit = this.tenantService.limit;
   protected readonly loading = this.tenantService.loading;
   protected readonly error = this.tenantService.error;
+
+  private readonly _dismissedError = signal<string | null>(null);
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
+  }
 
   public ngOnInit(): void {
     this.tenantService.retrieveTenants();
@@ -82,10 +93,8 @@ export class TenantManagerPage implements OnInit {
   }
 
   protected onGoToTenantUserManagement(tenant: Tenant): void {
-    this.router.navigate(['/user-management/tenant-users'], { queryParams: { tenantId: tenant.id } });
-  } 
-
-  protected onPageChange(event: PageEvent): void {
-    this.tenantService.changePage(event.pageIndex, event.pageSize);
+    this.router.navigate(['/user-management/tenant-users'], {
+      queryParams: { tenantId: tenant.id },
+    });
   }
 }

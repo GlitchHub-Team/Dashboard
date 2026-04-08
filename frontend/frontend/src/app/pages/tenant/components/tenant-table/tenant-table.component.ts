@@ -4,12 +4,20 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Tenant } from '../../../../models/tenant/tenant.model';
 
 @Component({
   selector: 'app-tenant-table',
   standalone: true,
-  imports: [MatProgressSpinner, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [
+    MatProgressSpinner,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatPaginatorModule,
+  ],
   templateUrl: './tenant-table.component.html',
   styleUrl: './tenant-table.component.css',
 })
@@ -23,6 +31,7 @@ export class TenantTableComponent {
   public readonly deleteRequested = output<Tenant>();
   public readonly dashboardRequested = output<Tenant>();
   public readonly tenantUserManagementRequested = output<Tenant>();
+  public readonly pageChange = output<PageEvent>();
 
 
   protected readonly displayedColumns = computed(() => {
@@ -41,5 +50,9 @@ export class TenantTableComponent {
 
   protected onGoToTenantUserManagement(tenant: Tenant): void {
     this.tenantUserManagementRequested.emit(tenant);
+  }
+
+  protected onPageChange(event: PageEvent): void {
+    this.pageChange.emit(event);
   }
 }

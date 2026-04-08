@@ -15,8 +15,8 @@ describe('TenantService', () => {
   let service: TenantService;
 
   const tenantBackendList: TenantBackend[] = [
-    { tenant_id: 'tenant-01', name: 'Tenant 1', can_impersonate: false },
-    { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
+    { tenant_id: 'tenant-01', tenant_name: 'Tenant 1', can_impersonate: false },
+    { tenant_id: 'tenant-02', tenant_name: 'Tenant 2', can_impersonate: true },
   ];
 
   const paginatedBackendResponse: PaginatedTenantResponse<TenantBackend> = {
@@ -39,7 +39,7 @@ describe('TenantService', () => {
   const mockConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
   const createdTenantBackend: TenantBackend = {
     tenant_id: 'tenant-03',
-    name: 'Tenant 3',
+    tenant_name: 'Tenant 3',
     can_impersonate: false,
   };
   const createdTenant: Tenant = {
@@ -124,7 +124,7 @@ describe('TenantService', () => {
 
       service.retrieveTenants();
 
-      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(0, 10);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
       expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual(mappedTenants);
@@ -143,7 +143,7 @@ describe('TenantService', () => {
 
       service.retrieveTenants();
 
-      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(0, 10);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual([]);
       expect(service.error()).toBe(expected);
@@ -159,7 +159,7 @@ describe('TenantService', () => {
 
       expect(service.pageIndex()).toBe(2);
       expect(service.limit()).toBe(25);
-      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(2, 25);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(3, 25);
     });
   });
 
@@ -195,7 +195,7 @@ describe('TenantService', () => {
       });
 
       expect(tenantApiMock.deleteTenant).toHaveBeenCalledWith('tenant-03');
-      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(0, 10);
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
       expect(service.tenantList()).toEqual(mappedTenants);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();

@@ -1,16 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
+import { signal, Component, input, output } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { of, EMPTY } from 'rxjs';
 
 import { LoginPage } from './login.page';
+import { LoginFormComponent } from './components/login-form/login-form.component';
 import { AuthSessionService } from '../../services/auth/auth-session.service';
 import { ForgotPasswordDialog } from './dialogs/forgot-password/forgot-password.dialog';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
-import { UserRole } from '../../models/user/user-role.enum';
+
+@Component({ selector: 'app-login-form', template: '', standalone: true })
+class StubLoginForm {
+  loading = input(false);
+  generalError = input<string | null>(null);
+  submitLogin = output<LoginRequest>();
+  forgotPassword = output<void>();
+  dismissError = output<void>();
+}
 
 describe('LoginPage', () => {
   let component: LoginPage;
@@ -47,14 +56,18 @@ describe('LoginPage', () => {
         { provide: Router, useValue: routerMock },
         { provide: MatDialog, useValue: dialogMock },
       ],
-      schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    })
+      .overrideComponent(LoginPage, {
+        remove: { imports: [LoginFormComponent] },
+        add: { imports: [StubLoginForm] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(LoginPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    loginFormDebug = fixture.debugElement.query(By.css('app-login-form'));
+    loginFormDebug = fixture.debugElement.query(By.directive(StubLoginForm));
   });
 
   it('should create and render shell, heading, and login form', () => {

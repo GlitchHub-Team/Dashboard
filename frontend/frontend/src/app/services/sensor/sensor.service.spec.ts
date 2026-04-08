@@ -43,7 +43,7 @@ describe('SensorService', () => {
         gateway_id: 'gw-1',
         sensor_name: 'Temperature',
         profile: 'health thermometer',
-        sensor_interval: 60,
+        data_interval: 60,
         status: Status.ACTIVE,
       },
       {
@@ -51,7 +51,7 @@ describe('SensorService', () => {
         gateway_id: 'gw-1',
         sensor_name: 'Humidity',
         profile: 'environmental sensing',
-        sensor_interval: 60,
+        data_interval: 60,
         status: Status.INACTIVE,
       },
     ],
@@ -70,7 +70,7 @@ describe('SensorService', () => {
     gateway_id: 'gw-1',
     sensor_name: 'Pressure',
     profile: 'environmental sensing',
-    sensor_interval: 60,
+    data_interval: 60,
     status: Status.ACTIVE,
   };
   const mockNewSensor: Sensor = {
@@ -125,11 +125,8 @@ describe('SensorService', () => {
     service = TestBed.inject(SensorService);
   });
 
-  it('should be created', () => {
+  it('should be created with correct initial state', () => {
     expect(service).toBeTruthy();
-  });
-
-  it('should have correct initial state', () => {
     expect(service.sensorList()).toEqual([]);
     expect(service.loading()).toBe(false);
     expect(service.error()).toBeNull();
@@ -158,7 +155,7 @@ describe('SensorService', () => {
       mockListSuccess(apiKey);
       invoke(service, 0, 10);
 
-      expect(sensorApiMock[apiKey]).toHaveBeenCalledWith(id, 0, 10);
+      expect(sensorApiMock[apiKey]).toHaveBeenCalledWith(id, 1, 10);
       expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
       expect(service.sensorList()).toEqual(mockSensors);
       expect(service.total()).toBe(10);
@@ -221,28 +218,19 @@ describe('SensorService', () => {
       expect(service.loading()).toBe(false);
     });
 
-    it('should not refetch after success (gateway context)', () => {
-      mockListSuccess('getSensorListByGateway');
-      service.getSensorsByGateway('gw-1', 0, 10);
-      sensorApiMock.getSensorListByGateway.mockClear();
+    it.each([
+      ['gateway', 'getSensorListByGateway' as ListApiKey, () => service.getSensorsByGateway('gw-1', 0, 10)] as const,
+      ['tenant', 'getSensorListByTenant' as ListApiKey, () => service.getSensorsByTenant('tenant-1', 0, 10)] as const,
+    ])('should not refetch after success (%s context)', (_, apiKey, setup) => {
+      mockListSuccess(apiKey);
+      setup();
+      sensorApiMock[apiKey].mockClear();
 
       sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewSensor);
       service.addNewSensor(mockConfig).subscribe();
 
-      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
-    });
-
-    it('should not refetch after success (tenant context)', () => {
-      mockListSuccess('getSensorListByTenant');
-      service.getSensorsByTenant('tenant-1', 0, 10);
-      sensorApiMock.getSensorListByTenant.mockClear();
-
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
-      service.addNewSensor(mockConfig).subscribe();
-
-      expect(sensorApiMock.getSensorListByTenant).not.toHaveBeenCalled();
+      expect(sensorApiMock[apiKey]).not.toHaveBeenCalled();
     });
 
     it('should propagate error to subscriber and not refetch', () => {
@@ -298,7 +286,7 @@ describe('SensorService', () => {
       service.deleteSensor('s-1').subscribe();
 
       expect(sensorApiMock.deleteSensor).toHaveBeenCalledWith('s-1');
-      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 0, 10);
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 1, 10);
       expect(service.loading()).toBe(false);
     });
 
@@ -348,7 +336,7 @@ describe('SensorService', () => {
 
       service.changePage(2, 20);
 
-      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 2, 20);
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 3, 20);
     });
 
     it('should refetch by tenant when tenant context is active', () => {
@@ -359,7 +347,7 @@ describe('SensorService', () => {
 
       service.changePage(3, 15);
 
-      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 3, 15);
+      expect(sensorApiMock.getSensorListByTenant).toHaveBeenCalledWith('tenant-1', 4, 15);
     });
 
     it('should do nothing if no context is set', () => {

@@ -1,9 +1,11 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -23,6 +25,8 @@ import { TenantService } from '../../../../services/tenant/tenant.service';
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatIconModule,
+    MatProgressSpinner,
   ],
   templateUrl: './tenant-form.dialog.html',
   styleUrl: './tenant-form.dialog.css',
@@ -38,8 +42,8 @@ export class TenantFormDialog {
     canImpersonate: [false, Validators.required],
   });
 
-  protected isSubmitting = false;
-  protected generalError = '';
+  protected readonly isSubmitting = signal(false);
+  protected readonly generalError = signal('');
 
   protected onSave(): void {
     if (!this.tenantForm.valid) {
@@ -47,10 +51,10 @@ export class TenantFormDialog {
       return;
     }
 
-    if (this.isSubmitting) return;
+    if (this.isSubmitting()) return;
 
-    this.isSubmitting = true;
-    this.generalError = '';
+    this.isSubmitting.set(true);
+    this.generalError.set('');
 
     const config: TenantConfig = {
       name: this.tenantForm.value.name!,
@@ -63,13 +67,17 @@ export class TenantFormDialog {
       .subscribe({
         next: () => this.dialogRef.close(true),
         error: (err: ApiError) => {
-          this.generalError = err.message ?? 'Failed to create tenant';
-          this.isSubmitting = false;
+          this.generalError.set(err.message ?? 'Failed to create tenant');
+          this.isSubmitting.set(false);
         },
       });
   }
 
   protected onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  protected dismissError(): void {
+    this.generalError.set('');
   }
 }

@@ -1,14 +1,13 @@
 export interface HistoricResponse {
-  count: {
-    current: number;
-    real: number;
-    total: number;
-  };
-  duration: number;
-  // Timestamp in milliseconds UNIX
-  dataset: {
-    timestamps: number[];
-    values: number[];
-  };
-  unit: string;
+  count: number;
+  samples: HistoricSample[];
+}
+
+export interface HistoricSample {
+  sensor_id: string;
+  gateway_id: string;
+  tenant_id: string;
+  timestamp: string;
+  profile: string;
+  data: Record<string, any>;
 }

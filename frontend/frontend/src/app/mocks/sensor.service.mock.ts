@@ -1,13 +1,12 @@
 // mocks/sensor-service.mock.ts
 import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { delay, switchMap } from 'rxjs/operators';
 
 import { SensorBackend } from '../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../models/sensor/sensor-config.model';
 import { PaginatedSensorResponse } from '../models/sensor/paginated-sensor-response.model';
-import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable({
   providedIn: 'root',
@@ -21,121 +20,121 @@ export class SensorApiClientServiceMock {
           sensor_id: 'sensor-01',
           gateway_id: 'gateway-01',
           sensor_name: 'Heart Rate Monitor A',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'heart_rate',
-          status: 'attivo',
+          status: 'inactive',
         },
         {
           sensor_id: 'sensor-02',
           gateway_id: 'gateway-01',
           sensor_name: 'Thermometer A',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'health_thermometer',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-03',
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor A',
-          sensor_interval: 60,
-          profile: 'custom_ecg',
-          status: 'attivo',
+          data_interval: 60,
+          profile: 'ecg_custom',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-04',
           gateway_id: 'gateway-01',
           sensor_name: 'Pulse Oximeter A',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'pulse_oximeter',
-          status: 'attivo',
+          status: 'inactive',
         },
         {
           sensor_id: 'sensor-05',
           gateway_id: 'gateway-01',
           sensor_name: 'Environment Sensor A',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'environmental_sensing',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-06',
           gateway_id: 'gateway-01',
           sensor_name: 'Heart Rate Monitor B',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'heart_rate',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-07',
           gateway_id: 'gateway-01',
           sensor_name: 'Thermometer B',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'health_thermometer',
-          status: 'attivo',
+          status: 'inactive',
         },
         {
           sensor_id: 'sensor-08',
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor B',
-          sensor_interval: 60,
-          profile: 'custom_ecg',
-          status: 'attivo',
+          data_interval: 60,
+          profile: 'ecg_custom',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-09',
           gateway_id: 'gateway-01',
           sensor_name: 'Pulse Oximeter B',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'pulse_oximeter',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-10',
           gateway_id: 'gateway-01',
           sensor_name: 'Environment Sensor B',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'environmental_sensing',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-11',
           gateway_id: 'gateway-01',
           sensor_name: 'Heart Rate Monitor C',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'heart_rate',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-12',
           gateway_id: 'gateway-01',
           sensor_name: 'Thermometer C',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'health_thermometer',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-13',
           gateway_id: 'gateway-01',
           sensor_name: 'ECG Monitor C',
-          sensor_interval: 60,
-          profile: 'custom_ecg',
-          status: 'attivo',
+          data_interval: 60,
+          profile: 'ecg_custom',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-14',
           gateway_id: 'gateway-01',
           sensor_name: 'Pulse Oximeter C',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'pulse_oximeter',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-15',
           gateway_id: 'gateway-01',
           sensor_name: 'Environment Sensor C',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'environmental_sensing',
-          status: 'attivo',
+          status: 'active',
         },
       ],
     ],
@@ -146,41 +145,41 @@ export class SensorApiClientServiceMock {
           sensor_id: 'sensor-20',
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Heart Rate',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'heart_rate',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-21',
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Pulse Oximeter',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'pulse_oximeter',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-22',
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Thermometer',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'health_thermometer',
-          status: 'attivo',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-23',
           gateway_id: 'gateway-02',
           sensor_name: 'ICU ECG',
-          sensor_interval: 60,
-          profile: 'custom_ecg',
-          status: 'attivo',
+          data_interval: 60,
+          profile: 'ecg_custom',
+          status: 'active',
         },
         {
           sensor_id: 'sensor-24',
           gateway_id: 'gateway-02',
           sensor_name: 'ICU Environment',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'environmental_sensing',
-          status: 'attivo',
+          status: 'active',
         },
       ],
     ],
@@ -192,9 +191,9 @@ export class SensorApiClientServiceMock {
           sensor_id: 'sensor-30',
           gateway_id: 'gateway-04',
           sensor_name: 'Ward C Heart Rate',
-          sensor_interval: 60,
+          data_interval: 60,
           profile: 'heart_rate',
-          status: 'attivo',
+          status: 'active',
         },
       ],
     ],
@@ -209,23 +208,20 @@ export class SensorApiClientServiceMock {
     'tenant-5': [],
   };
 
+  private readonly shouldFailGetSensorListByGateway = false;
+  private readonly shouldFailGetSensorListByTenant = false;
+  private readonly shouldFailAddNewSensor = false;
+  private readonly shouldFailDeleteSensor = false;
+
   public getSensorListByGateway(
     gatewayId: string,
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetSensorListByGateway) {
+      return this.delayedError(400, 'Failed to fetch sensors by gateway');
     }
+
     const all = this.mockSensors.get(gatewayId) ?? [];
     return of(this.paginate(all, page, limit)).pipe(delay(600));
   }
@@ -235,28 +231,33 @@ export class SensorApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedSensorResponse<SensorBackend>> {
+    if (this.shouldFailGetSensorListByTenant) {
+      return this.delayedError(400, 'Failed to fetch sensors by tenant');
+    }
+
     const gatewayIds = this.tenantGatewayMap[tenantId] ?? [];
     const all = gatewayIds.flatMap((id) => this.mockSensors.get(id) ?? []);
     return of(this.paginate(all, page, limit)).pipe(delay(800));
   }
 
   public addNewSensor(config: SensorConfig): Observable<SensorBackend> {
+    if (this.shouldFailAddNewSensor) {
+      return this.delayedError(400, 'Failed to create sensor');
+    }
+
     const gatewaySensors = this.mockSensors.get(config.gatewayId);
 
     if (!gatewaySensors) {
-      return throwError(() => ({
-        status: 404,
-        message: `Gateway ${config.gatewayId} not found`,
-      })).pipe(delay(400));
+      return this.delayedError(404, `Gateway ${config.gatewayId} not found`);
     }
 
     const newSensor: SensorBackend = {
       sensor_id: `sensor-${Date.now()}`,
       gateway_id: config.gatewayId,
       sensor_name: config.name,
-      sensor_interval: config.dataInterval,
+      data_interval: config.dataInterval,
       profile: config.profile,
-      status: 'attivo',
+      status: 'active',
     };
 
     gatewaySensors.push(newSensor);
@@ -265,6 +266,10 @@ export class SensorApiClientServiceMock {
   }
 
   public deleteSensor(sensorId: string): Observable<void> {
+    if (this.shouldFailDeleteSensor) {
+      return this.delayedError(400, 'Failed to delete sensor');
+    }
+
     let found = false;
 
     for (const [gatewayId, sensors] of this.mockSensors) {
@@ -277,17 +282,14 @@ export class SensorApiClientServiceMock {
     }
 
     if (!found) {
-      return throwError(() => ({
-        status: 404,
-        message: `Sensor ${sensorId} not found`,
-      })).pipe(delay(400));
+      return this.delayedError(404, `Sensor ${sensorId} not found`);
     }
 
     return of(undefined).pipe(delay(400));
   }
 
   private paginate<T>(items: T[], page: number, limit: number): PaginatedSensorResponse<T> {
-    const start = page * limit;
+    const start = (page - 1) * limit;
     const sensors = items.slice(start, start + limit);
 
     return {
@@ -295,5 +297,9 @@ export class SensorApiClientServiceMock {
       total: items.length,
       sensors,
     };
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

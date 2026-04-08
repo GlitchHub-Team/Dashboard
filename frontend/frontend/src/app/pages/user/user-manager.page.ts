@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
@@ -12,7 +12,7 @@ import { UserService } from '../../services/user/user.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { UserTableComponent } from './components/user-table/user-table.component';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
@@ -50,31 +50,43 @@ export class UserManagerPage implements OnInit {
   protected readonly limit = this.userService.limit;
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
+
+  private readonly _dismissedError = signal<string | null>(null);
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
+  }
+
   protected readonly UserRole = UserRole;
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly activeTenantId = signal<string | null>(null);
 
   public ngOnInit(): void {
-    combineLatest([
-      this.activatedRoute.data,
-      this.activatedRoute.queryParams
-    ]).subscribe(([data, params]) => {
-      const baseContext = data['userManagerContext'] || this.context();
-      const urlTenantId = params['tenantId'];
-      const currentUserRole = this.currentRole;
-      const currentUserTenant = this.userSession.currentUser()?.tenantId;
+    combineLatest([this.activatedRoute.data, this.activatedRoute.queryParams]).subscribe(
+      ([data, params]) => {
+        const baseContext = data['userManagerContext'] || this.context();
+        const urlTenantId = params['tenantId'];
+        const currentUserRole = this.currentRole;
+        const currentUserTenant = this.userSession.currentUser()?.tenantId;
 
-      const resolvedTenantId = currentUserRole === UserRole.SUPER_ADMIN 
-        ? (urlTenantId || null) 
-        : (currentUserTenant || null);
+        const resolvedTenantId =
+          currentUserRole === UserRole.SUPER_ADMIN
+            ? urlTenantId || null
+            : currentUserTenant || null;
 
-      this.activeTenantId.set(resolvedTenantId);
-      this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
+        this.activeTenantId.set(resolvedTenantId);
+        this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
 
-      if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
-        this.refreshUsers();
-      }
-    });
+        if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
+          this.refreshUsers();
+        }
+      },
+    );
   }
 
   protected onCreateUser(): void {
@@ -137,6 +149,6 @@ export class UserManagerPage implements OnInit {
 
   private refreshUsers(): void {
     const context = this.context();
-    this.userService.retrieveUser(context.role, context.tenantId);
+    this.userService.retrieveUsers(context.role, context.tenantId);
   }
 }

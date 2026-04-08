@@ -1,92 +1,111 @@
 name: CI
 
 on:
-  pull_request:
   push:
     branches:
       - main
-      - master
-      - develop
+      - 'issue-*'
 
 permissions:
   contents: read
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    env:
+      NATS_HOST: 127.0.0.1
+      NATS_PORT: ${{ vars.NATS_PORT }}
+      NATS_HTTP_PORT: ${{ vars.NATS_HTTP_PORT }}
+      NATS_ENCRYPTION_KEY: ${{ secrets.NATS_ENCRYPTION_KEY }}
+      NATS_SYS_ACCOUNT_ID: ${{ vars.NATS_SYS_ACCOUNT_ID }}
+      NATS_APPLICATION_CORE_ID: ${{ vars.NATS_APPLICATION_CORE_ID }}
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      CLOUD_POSTGRES_HOST: 127.0.0.1
+      CLOUD_POSTGRES_PORT: ${{ vars.CLOUD_POSTGRES_PORT }}
+      CLOUD_POSTGRES_DB: ${{ vars.CLOUD_POSTGRES_DB }}
+      CLOUD_POSTGRES_USER: ${{ secrets.CLOUD_POSTGRES_USER }}
+      CLOUD_POSTGRES_PASSWORD: ${{ secrets.CLOUD_POSTGRES_PASSWORD }}
+      DASHBOARD_CREDS_PATH: dashboard.creds
+      TEST_CREDS_PATH: admin_test.creds
+      CA_PEM_PATH: ca.pem
+      PORT: ${{ vars.PORT }}
+      MAIL_ADAPTER: ${{ vars.MAIL_ADAPTER }}
+      TOKEN_LENGTH: ${{ vars.TOKEN_LENGTH }}
+      TOKEN_DURATION: ${{ vars.TOKEN_DURATION }}
+      BCRYPT_COST: ${{ vars.BCRYPT_COST }}
+      AUTH_TOKEN_DURATION: ${{ vars.AUTH_TOKEN_DURATION }}
+      AUTH_TOKEN_SECRET: ${{ secrets.AUTH_TOKEN_SECRET }}
+      GF_SECURITY_ADMIN_USER: ${{ secrets.GF_SECURITY_ADMIN_USER }}
+      GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+      GF_USERS_ALLOW_SIGN_UP: ${{ vars.GF_USERS_ALLOW_SIGN_UP }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Go
-        if: ${{ hashFiles('go.mod') != '' || hashFiles('backend/go.mod') != '' }}
         uses: actions/setup-go@v5
         with:
           go-version: "1.26.0"
 
-      - name: Setup gofumpt
-        if: ${{ hashFiles('go.mod') != '' || hashFiles('backend/go.mod') != '' }}
+      - name: Setup Go tools
         shell: bash
         run: |
           set -euo pipefail
           go install mvdan.cc/gofumpt@v0.9.2
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-
-      - name: Setup golangci-lint
-        if: ${{ hashFiles('go.mod') != '' || hashFiles('backend/go.mod') != '' }}
-        shell: bash
-        run: |
-          set -euo pipefail
           go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
-      - name: Go checks (root module)
-        if: ${{ hashFiles('go.mod') != '' }}
+      - name: Start Infrastructure
+        uses: GlitchHub-Team/Infrastructure/.github/actions/start@main
+        with:
+          NATS_STREAM_SETUPPER_CREDS: ${{ secrets.NATS_STREAM_SETUPPER_CREDS }}
+          NATS_SERVER_TLS_KEY: ${{ secrets.NATS_SERVER_TLS_KEY }}
+          GATEWAY1_CREDS: ${{ secrets.GATEWAY1_CREDS }}
+          GATEWAY2_CREDS: ${{ secrets.GATEWAY2_CREDS }}
+
+      - name: Init integration credentials
         shell: bash
         run: |
           set -euo pipefail
-          go mod download
 
-          if find . -type f -name '*.go' -not -path './vendor/*' | grep -q .; then
-            UNFORMATTED="$(gofumpt -l $(find . -type f -name '*.go' -not -path './vendor/*'))"
-            if [ -n "${UNFORMATTED}" ]; then
-              echo "These Go files are not gofumpt-formatted:"
-              echo "${UNFORMATTED}"
-              exit 1
-            fi
-            golangci-lint run
-            go test ./...
-          else
-            echo "No Go files in root module; skipping gofumpt/lint/test."
+          if [ -z "${{ secrets.DASHBOARD_CREDS }}" ]; then
+            echo "::error::Missing secret DASHBOARD_CREDS"
+            exit 1
           fi
 
-      - name: Go checks (backend module)
-        if: ${{ hashFiles('backend/go.mod') != '' }}
+          if [ -z "${{ secrets.TEST_CREDS }}" ]; then
+            echo "::error::Missing secret TEST_CREDS"
+            exit 1
+          fi
+
+          mkdir -p backend
+
+          printf '%s\n' "${{ secrets.DASHBOARD_CREDS }}" > backend/dashboard.creds
+          printf '%s\n' "${{ secrets.TEST_CREDS }}" > backend/admin_test.creds
+
+          chmod 600 backend/dashboard.creds backend/admin_test.creds
+      
+      - name: Go checks (root module)
         shell: bash
         run: |
           set -euo pipefail
           cd backend
-          go mod download
-
-          if find . -type f -name '*.go' -not -path './vendor/*' | grep -q .; then
-            UNFORMATTED="$(gofumpt -l $(find . -type f -name '*.go' -not -path './vendor/*'))"
-            if [ -n "${UNFORMATTED}" ]; then
-              echo "These backend Go files are not gofumpt-formatted:"
-              echo "${UNFORMATTED}"
-              exit 1
-            fi
-            golangci-lint run
-            go test ./...
-          else
-            echo "No Go files in backend module; skipping gofumpt/lint/test."
-          fi
+          gofumpt -w .
+          golangci-lint run
+          go test ./...
+          go build .
 
       - name: Setup Node
         if: ${{ hashFiles('package.json') != '' || hashFiles('frontend/package.json') != '' }}
         uses: actions/setup-node@v4
         with:
           node-version: "20.19.0"
+
 
       - name: Node checks (root)
         if: ${{ hashFiles('package.json') != '' }}
@@ -128,3 +147,7 @@ jobs:
           else
             echo "No app source/config detected in frontend; skipping npm scripts."
           fi
+
+      - name: Stop
+        if: always()
+        uses: GlitchHub-Team/Infrastructure/.github/actions/stop@main

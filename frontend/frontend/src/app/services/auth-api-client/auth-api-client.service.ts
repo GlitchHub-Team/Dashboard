@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
@@ -17,7 +17,8 @@ export class AuthApiClientService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/auth`;
 
-  // Si aspetta di ricevere solo il token JWT
+  // Riferimento su API DOG sezione User Auth https://app.apidog.com/project/1225781
+
   public login(req: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, {
       email: req.email,
@@ -30,29 +31,28 @@ export class AuthApiClientService {
     return this.http.post<void>(`${this.apiUrl}/logout`, {});
   }
 
-  // API DOG - Password Dimenticata
-  // Da dove lo tiro fuori il tenant id ???
-  public verifyForgotPasswordToken(token: string): Observable<boolean> {
-    return this.http
-      .get<{ result: boolean }>(`${this.apiUrl}/forgot_password/verify_token/${token}`, {})
-      .pipe(map((response) => response.result));
+  public verifyForgotPasswordToken(token: string, tenantId?: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/forgot_password/verify_token`, {
+      token: token,
+      tenant_id: tenantId,
+    });
   }
 
   public forgotPasswordRequest(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot_password/request`, {
       email: forgotPasswordRequest.email,
-      tenant_id: forgotPasswordRequest.tenantId,
+      ...(forgotPasswordRequest.tenantId ? { tenant_id: forgotPasswordRequest.tenantId } : {}),
     });
   }
 
   public confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot_password`, {
       token: req.token,
+      tenant_id: req.tenantId,
       new_password: req.newPassword,
     });
   }
 
-  // API DOG - Cambia password (serve old e new password)
   public confirmPasswordChange(data: PasswordChange): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/change_password`, {
       old_password: data.oldPassword,
@@ -60,17 +60,17 @@ export class AuthApiClientService {
     });
   }
 
-  // API DOG - Conferma account
-  // Da dove lo tiro fuori il tenant id ???
-  public verifyAccountToken(token: string): Observable<boolean> {
-    return this.http
-      .get<{ result: boolean }>(`${this.apiUrl}/confirm_account/verify_token/${token}`, {})
-      .pipe(map((response) => response.result));
+  public verifyAccountToken(token: string, tenantId?: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/confirm_account/verify_token/`, {
+      token: token,
+      tenant_id: tenantId,
+    });
   }
 
   public confirmAccountCreation(req: ConfirmAccountResponse): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/confirm_account`, {
       token: req.token,
+      tenant_id: req.tenantId,
       new_password: req.newPassword,
     });
   }

@@ -14,7 +14,6 @@ export class SensorHistoricApiService {
   private readonly apiUrl = `${environment.apiUrl}`;
 
   public getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
-    // DataPoints è richiesto quindi sono sicuro che sia valorizzato
     let params = new HttpParams().set('max_data_points', req.dataPointsCounter!);
 
     if (req.timeInterval) {
@@ -23,15 +22,8 @@ export class SensorHistoricApiService {
         .set('to_time', req.timeInterval.to.toISOString());
     }
 
-    // APIDOG richiede che siano number
-    if (req.valuesInterval) {
-      params = params
-        .set('lower_bound', req.valuesInterval.lowerBound)
-        .set('upper_bound', req.valuesInterval.upperBound);
-    }
-
     return this.http.get<HistoricResponse>(
-      `${this.apiUrl}/sensor/${req.sensor.id}/historical-data`,
+      `${this.apiUrl}/sensor/${req.sensor.id}/historical_data`,
       { params },
     );
   }

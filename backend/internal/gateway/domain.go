@@ -1,17 +1,35 @@
 package gateway
 
-type GatewayStatus int
-
-const (
-	GATEWAY_STATUS_ACTIVE 	GatewayStatus = iota
-	GATEWAY_STATUS_INACTIVE
+import (
+	"github.com/google/uuid"
 )
 
+type GatewayStatus string
+
+const (
+	GATEWAY_STATUS_ACTIVE   GatewayStatus = "active"
+	GATEWAY_STATUS_INACTIVE GatewayStatus = "inactive"
+)
 
 type Gateway struct {
-	Id string
-	Name string
-	// Tenant *uuid.UUID
-	Status GatewayStatus
+	Id       uuid.UUID
+	Name     string
+	TenantId *uuid.UUID
+	// Sensors	map[uuid.UUID]sensor.Sensor
+	Status        GatewayStatus
+	IntervalLimit int64
 }
 
+func (g Gateway) IsZero() bool {
+	return g == (Gateway{})
+}
+
+func (g Gateway) IsCommissioned() bool {
+	return g.TenantId != nil
+}
+
+func (g *Gateway) GetId() uuid.UUID { return g.Id }
+
+func (g *Gateway) BelongsToTenant(userTenantId uuid.UUID) bool {
+	return g.TenantId != nil && *g.TenantId == userTenantId
+}

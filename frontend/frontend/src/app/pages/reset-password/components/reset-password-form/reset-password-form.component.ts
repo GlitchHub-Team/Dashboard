@@ -40,7 +40,7 @@ export class ResetPasswordFormComponent {
 
   protected resetPasswordForm = this.formBuilder.nonNullable.group(
     {
-      newPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, Validators.minLength(8)]],
       confirmNewPassword: ['', [Validators.required]],
     },
     { validators: this.passwordsMatchValidator },
@@ -54,7 +54,8 @@ export class ResetPasswordFormComponent {
 
     // Come per confirm-account il token viene recuperato dalla page
     const forgotPasswordResponse: ForgotPasswordResponse = {
-      token: '',
+      token: '', // Il token viene aggiunto nella page, quindi qui può essere lasciato vuoto
+      tenantId: undefined, // Il tenant_id viene gestito a livello di page, quindi può essere lasciato undefined qui
       newPassword: this.resetPasswordForm.controls.newPassword.value!,
     };
 

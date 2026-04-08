@@ -160,18 +160,14 @@ describe('GatewaySensorManagerService', () => {
   });
 
   describe('changeGatewayPage', () => {
-    it('should collapse expanded gateway and clear sensors', () => {
+    it('should collapse gateway, clear sensors, and delegate to gatewayService.changePage', () => {
       service.toggleExpandedGateway(mockGateway);
       sensorServiceMock.clearSensors.mockClear();
 
-      service.changeGatewayPage(1, 10);
+      service.changeGatewayPage(2, 25);
 
       expect(service.expandedGateway()).toBeNull();
       expect(sensorServiceMock.clearSensors).toHaveBeenCalledOnce();
-    });
-
-    it('should call gatewayService.changePage', () => {
-      service.changeGatewayPage(2, 25);
       expect(gatewayServiceMock.changePage).toHaveBeenCalledWith(2, 25);
     });
   });
@@ -206,18 +202,14 @@ describe('GatewaySensorManagerService', () => {
   });
 
   describe('deleteGateway', () => {
-    it('should call gatewayService.deleteGateway with gateway id', () => {
-      service.deleteGateway(mockGateway).subscribe();
-      expect(gatewayServiceMock.deleteGateway).toHaveBeenCalledWith('gw-1');
-    });
-
     it.each([
       [0, 10],
       [3, 20],
-    ])('should refresh gateways at page %i with limit %i after deletion', (page, limit) => {
+    ])('should call deleteGateway and refresh at page %i with limit %i', (page, limit) => {
       gatewayPageIndexSig.set(page);
       gatewayLimitSig.set(limit);
       service.deleteGateway(mockGateway).subscribe();
+      expect(gatewayServiceMock.deleteGateway).toHaveBeenCalledWith('gw-1');
       expect(gatewayServiceMock.changePage).toHaveBeenCalledWith(page, limit);
     });
 
@@ -253,18 +245,14 @@ describe('GatewaySensorManagerService', () => {
   });
 
   describe('deleteSensor', () => {
-    it('should call sensorService.deleteSensor with sensor id', () => {
-      service.deleteSensor(mockSensor).subscribe();
-      expect(sensorServiceMock.deleteSensor).toHaveBeenCalledWith('sensor-1');
-    });
-
     it.each([
       [0, 10],
       [2, 15],
-    ])('should refresh sensors at page %i with limit %i after deletion', (page, limit) => {
+    ])('should call deleteSensor and refresh sensors at page %i with limit %i', (page, limit) => {
       sensorPageIndexSig.set(page);
       sensorLimitSig.set(limit);
       service.deleteSensor(mockSensor).subscribe();
+      expect(sensorServiceMock.deleteSensor).toHaveBeenCalledWith('sensor-1');
       expect(sensorServiceMock.getSensorsByGateway).toHaveBeenCalledWith('gw-1', page, limit);
     });
 

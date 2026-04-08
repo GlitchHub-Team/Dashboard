@@ -18,15 +18,15 @@ describe('TenantApiClientService', () => {
     count: 2,
     total: 2,
     tenants: [
-      { tenant_id: 'tenant-01', name: 'Tenant 1', can_impersonate: false },
-      { tenant_id: 'tenant-02', name: 'Tenant 2', can_impersonate: true },
+      { tenant_id: 'tenant-01', tenant_name: 'Tenant 1', can_impersonate: false },
+      { tenant_id: 'tenant-02', tenant_name: 'Tenant 2', can_impersonate: true },
     ],
   };
 
   const tenantConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
   const createdTenant: TenantBackend = {
     tenant_id: 'tenant-03',
-    name: 'Tenant 3',
+    tenant_name: 'Tenant 3',
     can_impersonate: false,
   };
 
@@ -85,7 +85,7 @@ describe('TenantApiClientService', () => {
       const req = httpMock.expectOne(`${apiUrl}/tenant`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
-        name: tenantConfig.name,
+        tenant_name: tenantConfig.name,
         can_impersonate: tenantConfig.canImpersonate,
       });
       req.flush(createdTenant);
@@ -93,25 +93,14 @@ describe('TenantApiClientService', () => {
   });
 
   describe('deleteTenant', () => {
-    it('should send DELETE request with tenant id in the URL', () => {
-      service.deleteTenant('tenant-01').subscribe();
+    it('should send DELETE with tenant id in URL and return void', () => {
+      service.deleteTenant('tenant-01').subscribe((result) => {
+        expect(result).toBeNull();
+      });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
       expect(req.request.method).toBe('DELETE');
       req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
-      let result: void | null | undefined;
-
-      service.deleteTenant('tenant-01').subscribe((response) => {
-        result = response;
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-01`);
-      req.flush(null);
-
-      expect(result).toBeNull();
     });
   });
 });

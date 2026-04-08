@@ -26,13 +26,11 @@ describe('HeaderComponent', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should have default null values for signals', () => {
+    it('should have null defaults and update when inputs change', () => {
       expect(component.username()).toBeNull();
       expect(component.currentTenant()).toBeNull();
       expect(component.currentUserRole()).toBeNull();
-    });
 
-    it('should update signals when inputs change', () => {
       fixture.componentRef.setInput('username', 'test@user.com');
       fixture.componentRef.setInput('currentTenant', 'Alpha');
       fixture.componentRef.setInput('currentUserRole', 'admin');

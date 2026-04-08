@@ -10,7 +10,7 @@ import { TenantManagerPage } from './tenant-manager.page';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 
 interface TenantManagerPageTestApi {
   onCreateTenant: () => void;
@@ -76,11 +76,8 @@ describe('TenantManagerPage', () => {
     testApi = component as unknown as TenantManagerPageTestApi;
   });
 
-  it('should create', () => {
+  it('should create and fetch tenants on init', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should fetch tenants on init', () => {
     fixture.detectChanges();
     expect(mockTenantService.retrieveTenants).toHaveBeenCalledTimes(1);
   });
@@ -108,7 +105,7 @@ describe('TenantManagerPage', () => {
       name: 'paginator',
       selector: 'mat-paginator',
       expectedText: null,
-      setup: () => undefined,
+      setup: () => mockTenantService.tenantList.set(mockTenants),
     },
   ])('should render $name', ({ selector, expectedText, setup }) => {
     setup();
@@ -196,7 +193,7 @@ describe('TenantManagerPage', () => {
     });
   });
 
-    it.each([
+  it.each([
     { tenant: mockTenants[0], tenantId: 'tenant-01' },
     { tenant: mockTenants[1], tenantId: 'tenant-02' },
   ])('should navigate to tenant user management for $tenantId', ({ tenant, tenantId }) => {

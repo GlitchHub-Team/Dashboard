@@ -1,0 +1,33 @@
+services:
+  dashboard:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    user: vscode
+    env_file:
+      - ../Infrastructure/.env
+      - .env
+    volumes:
+      - ..:/workspaces/app:cached
+    command: sleep infinity
+    environment:
+      DASHBOARD_CREDS_PATH: dashboard.creds
+      TEST_CREDS_PATH: admin_test.creds
+      CA_PEM_PATH: ca.pem
+      PORT: ${PORT}
+      MAIL_ADAPTER: ${MAIL_ADAPTER}
+      TOKEN_LENGTH: ${TOKEN_LENGTH}
+      TOKEN_DURATION: ${TOKEN_DURATION}
+      BCRYPT_COST: ${BCRYPT_COST}
+      AUTH_TOKEN_DURATION: ${AUTH_TOKEN_DURATION}
+      AUTH_TOKEN_SECRET: ${AUTH_TOKEN_SECRET}
+    depends_on:
+      timescale:
+        condition: service_healthy
+      cloud-db:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+include:
+  - path: ../Infrastructure/docker-compose.yml

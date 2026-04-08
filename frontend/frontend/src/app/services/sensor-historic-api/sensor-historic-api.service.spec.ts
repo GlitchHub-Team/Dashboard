@@ -33,26 +33,29 @@ describe('SensorHistoricApiService', () => {
       from: new Date('2026-01-01T00:00:00.000Z'),
       to: new Date('2026-01-02T00:00:00.000Z'),
     },
-    valuesInterval: { lowerBound: 0, upperBound: 100 },
     dataPointsCounter: 250,
   };
 
   const mockHistoricResponse: HistoricResponse = {
-    count: {
-      current: 250,
-      real: 500,
-      total: 1000,
-    },
-    duration: 60,
-    dataset: {
-      timestamps: [
-        new Date('2026-01-01T00:00:00.000Z').getTime(),
-        new Date('2026-01-01T00:01:00.000Z').getTime(),
-        // ... more timestamps
-      ],
-      values: [20, 21 /* ... more values */],
-    },
-    unit: '°C',
+    count: 2,
+    samples: [
+      {
+        sensor_id: 'sensor-1',
+        gateway_id: 'gateway-1',
+        tenant_id: 'tenant-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+        data: { temperature: 20 },
+      },
+      {
+        sensor_id: 'sensor-1',
+        gateway_id: 'gateway-1',
+        tenant_id: 'tenant-1',
+        timestamp: '2026-01-01T00:01:00.000Z',
+        profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+        data: { temperature: 21 },
+      },
+    ],
   };
 
   beforeEach(() => {
@@ -75,34 +78,16 @@ describe('SensorHistoricApiService', () => {
   });
 
   describe('getHistoricData', () => {
-    it('should send GET request to correct URL', () => {
+    it('should send GET to correct URL with all query params and return a HistoricResponse', () => {
       service.getHistoricData(mockChartRequest).subscribe((response) => {
         expect(response).toEqual(mockHistoricResponse);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical_data`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockHistoricResponse);
-    });
-
-    it('should send correct query params', () => {
-      service.getHistoricData(mockChartRequest).subscribe();
-
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
       expect(req.request.params.get('from_time')).toBe('2026-01-01T00:00:00.000Z');
       expect(req.request.params.get('to_time')).toBe('2026-01-02T00:00:00.000Z');
-      expect(req.request.params.get('lower_bound')).toBe('0');
-      expect(req.request.params.get('upper_bound')).toBe('100');
       expect(req.request.params.get('max_data_points')).toBe('250');
-      req.flush(mockHistoricResponse);
-    });
-
-    it('should return a HistoricResponse', () => {
-      service.getHistoricData(mockChartRequest).subscribe((response) => {
-        expect(response).toEqual(mockHistoricResponse);
-      });
-
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical-data`);
       req.flush(mockHistoricResponse);
     });
   });

@@ -42,7 +42,7 @@ export class ChangePasswordDialog {
   protected form = this.formBuilder.nonNullable.group(
     {
       oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, Validators.minLength(8)]],
       confirmNewPassword: ['', [Validators.required]],
     },
     { validators: this.passwordsMatchValidator },
@@ -93,6 +93,10 @@ export class ChangePasswordDialog {
 
     if (control.hasError('required')) {
       return `Campo obbligatorio.`;
+    }
+
+    if (control.hasError('minlength')) {
+      return `La password deve essere lunga almeno 8 caratteri.`;
     }
 
     return 'Invalid value';

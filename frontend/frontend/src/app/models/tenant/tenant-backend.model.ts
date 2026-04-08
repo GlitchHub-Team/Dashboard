@@ -1,5 +1,5 @@
 export interface TenantBackend {
   tenant_id: string;
-  name: string;
+  tenant_name: string;
   can_impersonate: boolean;
 }

@@ -1,31 +1,40 @@
 <div class="manager-container">
   <div class="manager-header">
     <h1>{{ context().title }}</h1>
-    <button mat-raised-button color="primary" (click)="onCreateUser()" [disabled]="loading() || (!activeTenantId() && context().role === UserRole.TENANT_USER)">
-     <mat-icon>add</mat-icon> Aggiungi Nuovo Utente
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onCreateUser()"
+      [disabled]="loading() || (!activeTenantId() && context().role === UserRole.TENANT_USER)"
+    >
+      <mat-icon>add</mat-icon> Aggiungi Nuovo Utente
     </button>
   </div>
 
-    @if (activeTenantId() && currentRole === UserRole.SUPER_ADMIN) {
+  @if (activeTenantId() && currentRole === UserRole.SUPER_ADMIN) {
     <div class="info-banner tenant-banner">
       <span
         >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
       >
-        <div class="banner-actions">
-          @if(context().role === UserRole.TENANT_USER) {
-            <button mat-button color="accent" (click)="onBackToDashboard()">
-              <mat-icon>dashboard</mat-icon>
-              Vai alla Dashboard
-            </button>
-          }
-          <button mat-button color="primary" (click)="onBackToTenants()">
-            <mat-icon>arrow_back</mat-icon>
-            Torna ai Tenant
+      <div class="banner-actions">
+        @if (context().role === UserRole.TENANT_USER) {
+          <button mat-button color="accent" (click)="onBackToDashboard()">
+            <mat-icon>dashboard</mat-icon>
+            Vai alla Dashboard
           </button>
-        </div>
+        }
+        <button mat-button color="primary" (click)="onBackToTenants()">
+          <mat-icon>arrow_back</mat-icon>
+          Torna ai Tenant
+        </button>
+      </div>
     </div>
   }
-  @if (currentRole === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_USER && !activeTenantId()) {
+  @if (
+    currentRole === UserRole.SUPER_ADMIN &&
+    context().role === UserRole.TENANT_USER &&
+    !activeTenantId()
+  ) {
     <div class="info-banner warning-banner">
       <span>Per visualizzare i dati, devi selezionare un tenant.</span>
       <button mat-button color="primary" (click)="onBackToTenants()">
@@ -33,34 +42,31 @@
         Vai a Gestione Tenant
       </button>
     </div>
-  } @else {
-    @if (error()) {
-      <div class="error-banner">
-        <mat-icon>error</mat-icon>
-        <span>{{ error() }}</span>
-      </div>
-    }
+  }
+
+  @if (visibleError(); as error) {
+    <div class="error-banner">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button type="button" (click)="dismissError()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
   }
 
   @if (activeTenantId() || context().role !== UserRole.TENANT_USER) {
-  <div class="manager-content table-container">
-    @if (error()) {
-      <div class="error-banner">
-        <span>{{ error() }}</span>
-      </div>
-    }
-
-    <app-user-table
-      [users]="users()"
-      [loading]="loading()"
-      [total]="total()"
-      [pageIndex]="pageIndex()"
-      [limit]="limit()"
-      [targetRole]="context().role"
-      (deleteRequested)="onDeleteUser($event)"
-      (pageChange)="onPageChange($event)"
-    >
-    </app-user-table>
-  </div>
+    <div class="manager-content table-container">
+      <app-user-table
+        [users]="users()"
+        [loading]="loading()"
+        [total]="total()"
+        [pageIndex]="pageIndex()"
+        [limit]="limit()"
+        [targetRole]="context().role"
+        (deleteRequested)="onDeleteUser($event)"
+        (pageChange)="onPageChange($event)"
+      >
+      </app-user-table>
+    </div>
   }
 </div>
