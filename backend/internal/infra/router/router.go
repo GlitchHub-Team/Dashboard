@@ -7,6 +7,7 @@ import (
 	"backend/internal/auth"
 	"backend/internal/gateway"
 	"backend/internal/historical_data"
+	"backend/internal/real_time_data"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
 	"backend/internal/user"
@@ -27,9 +28,10 @@ func NewGinEngine(
 
 	gatewayController *gateway.GatewayController,
 	historicalDataController *historical_data.Controller,
+	realTimeDataController *real_time_data.Controller,
 	userController *user.Controller,
 	authController *auth.Controller,
-	sensorController *sensor.SensorController,
+	sensorController *sensor.Controller,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -103,10 +105,20 @@ func NewGinEngine(
 	}
 
 	// Historical data
+	// TODO: in teoria il dato del tenant_id non serve nell'URL... da parlarne con Hoss 
 	{
 		private.GET(
 			"/tenant/:tenant_id/sensor/:sensor_id/historical_data",
 			historicalDataController.GetSensorHistoricalData,
+		)
+	}
+
+	// Real time data
+	{
+		// TODO: cambiare da public a private (in qualche modo)
+		public.GET(
+			"/tenant/:tenant_id/sensor/:sensor_id/real_time_data",
+			realTimeDataController.GetRealTimeData,
 		)
 	}
 

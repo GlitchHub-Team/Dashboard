@@ -54,7 +54,7 @@ func (a *GatewayPostgreAdapter) GetById(gatewayId string) (Gateway, error) {
 	if err != nil {
 		return Gateway{}, err
 	}
-	return entity.toGateway(), nil
+	return entity.ToGateway(), nil
 }
 
 func (a *GatewayPostgreAdapter) GetByTenantId(tenantId string) ([]Gateway, error) {
@@ -64,7 +64,7 @@ func (a *GatewayPostgreAdapter) GetByTenantId(tenantId string) ([]Gateway, error
 	}
 	gateways := make([]Gateway, len(entities))
 	for i := range entities {
-		gateways[i] = entities[i].toGateway()
+		gateways[i] = entities[i].ToGateway()
 	}
 	return gateways, nil
 }
@@ -76,7 +76,7 @@ func (a *GatewayPostgreAdapter) GetAll() ([]Gateway, error) {
 	}
 	gateways := make([]Gateway, len(entities))
 	for i := range entities {
-		gateways[i] = entities[i].toGateway()
+		gateways[i] = entities[i].ToGateway()
 	}
 	return gateways, nil
 }

@@ -77,6 +77,7 @@ type CreateGatewayService struct {
 	saveGatewayPort SaveGatewayPort
 }
 
+// TODO: perché non viene salvato l'interval limit???
 func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
 	if !command.IsSuperAdmin() {
 		return Gateway{}, identity.ErrUnauthorizedAccess

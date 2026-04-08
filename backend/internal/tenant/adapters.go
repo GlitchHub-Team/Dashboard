@@ -1,47 +1,19 @@
 package tenant
 
 import (
+	"backend/internal/infra/database"
 	"errors"
 
 	"github.com/google/uuid"
 )
 
-// ROBE ===============================================================================================
+// Metodi struct ===============================================================================================
 
 func (TenantEntity) TableName() string { return "tenants" }
-
-func (entity *TenantEntity) fromTenant(tenant Tenant) {
-	if tenant.Id != uuid.Nil {
-		entity.ID = tenant.Id.String()
-	} else {
-		entity.ID = uuid.New().String()
-	}
-	entity.Name = tenant.Name
-	entity.CanImpersonate = tenant.CanImpersonate
-}
-
-func (entity *TenantEntity) toTenant() (Tenant, error) {
-	if entity.ID == "" {
-		return Tenant{}, nil
-	}
-
-	id, err := uuid.Parse(entity.ID)
-	if err != nil {
-		return Tenant{}, err
-	}
-
-	return Tenant{
-		Id:             id,
-		Name:           entity.Name,
-		CanImpersonate: entity.CanImpersonate,
-	}, nil
-}
 
 type TenantPostgreAdapter struct {
 	repo *TenantPostgreRepository
 }
-
-// Repository =========================================================================================
 
 // Adapter ============================================================================================
 
@@ -61,16 +33,15 @@ func NewTenantPostgreAdapter(repository *TenantPostgreRepository) (
 // CREATE =============================================================================================
 
 func (adapter *TenantPostgreAdapter) CreateTenant(tenant Tenant) (Tenant, error) {
-	entity := &TenantEntity{}
-
-	entity.fromTenant(tenant)
+	entity, _ := DomainToTenantEntity(tenant)
 
 	err := adapter.repo.SaveTenant(entity)
 	if err != nil {
 		return Tenant{}, err
 	}
 
-	return entity.toTenant()
+	savedTenant, err := TenantEntityToDomain(entity)
+	return savedTenant, err
 }
 
 // DELETE =============================================================================================
@@ -89,12 +60,13 @@ func (adapter *TenantPostgreAdapter) DeleteTenant(tenantId uuid.UUID) (Tenant, e
 		return Tenant{}, errors.New("tenant not found")
 	}
 
-	oldTenant, err := adapter.repo.DeleteTenant(oldEntity)
+	err = adapter.repo.DeleteTenant(oldEntity)
 	if err != nil {
 		return Tenant{}, err
 	}
 
-	return oldTenant, nil
+	oldTenant, err := TenantEntityToDomain(oldEntity)
+	return oldTenant, err
 }
 
 // GET ================================================================================================
@@ -116,7 +88,9 @@ func (adapter *TenantPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, erro
 	if err != nil {
 		return Tenant{}, err
 	}
-	return entity.toTenant()
+
+	tenant, err := TenantEntityToDomain(entity)
+	return tenant, err
 }
 
 func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, error) {
@@ -126,15 +100,8 @@ func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, error) {
 	}
 
 	var tenants []Tenant
-	for _, entity := range entities {
-		tenant, err := entity.toTenant()
-		if err != nil {
-			return nil, err
-		}
-		tenants = append(tenants, tenant)
-	}
-
-	return tenants, nil
+	tenants, err = database.MapEntityListToDomain(entities, TenantEntityToDomain)
+	return tenants, err
 }
 
 func (adapter *TenantPostgreAdapter) GetTenantByUser(userId uuid.UUID) (Tenant, error) {
@@ -142,7 +109,9 @@ func (adapter *TenantPostgreAdapter) GetTenantByUser(userId uuid.UUID) (Tenant, 
 	if err != nil {
 		return Tenant{}, err
 	}
-	return entity.toTenant()
+
+	tenant, err := TenantEntityToDomain(entity)
+	return tenant, err
 }
 
 // Compile-time checks ================================================================================

@@ -5,6 +5,7 @@ import (
 
 	"backend/internal/gateway"
 	clouddb "backend/internal/infra/database/cloud_db/connection"
+	profile "backend/internal/sensor/profile"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -24,10 +25,15 @@ const (
 
 type DatabaseRepository interface {
 	CreateSensor(entity *SensorEntity) error
+	
 	DeleteSensor(entity *SensorEntity) error
+	
 	UpdateSensor(sensorId string, status string) error
-	GetSensorsByGatewayId(gatewayId string, offset int, limit int) ([]SensorEntity, uint, error)
+
 	GetSensorById(sensorId string) (SensorEntity, error)
+	GetSensorByTenant(tenantId, sensorId string) (SensorEntity, error)
+	GetSensorWithGateway(sensorId string) (SensorEntity, error)
+	GetSensorsByGatewayId(gatewayId string, offset int, limit int) ([]SensorEntity, uint, error)
 	GetSensorsByTenantId(tenantId string, offset int, limit int) ([]SensorEntity, uint, error)
 }
 
@@ -125,7 +131,7 @@ func (entity *SensorEntity) ToSensor() Sensor {
 		GatewayId: uuid.MustParse(entity.GatewayID),
 		Name:      entity.Name,
 		Interval:  time.Duration(entity.Interval) * time.Millisecond,
-		Profile:   SensorProfile(entity.Profile),
+		Profile:   profile.SensorProfile(entity.Profile),
 		Status:    SensorStatus(entity.Status),
 	}
 }

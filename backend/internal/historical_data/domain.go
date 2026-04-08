@@ -1,6 +1,7 @@
 package historical_data
 
 import (
+	sensorProfile "backend/internal/sensor/profile"
 	"encoding/json"
 	"errors"
 	"time"
@@ -19,7 +20,7 @@ type HistoricalSample struct {
 	SensorId  uuid.UUID
 	GatewayId uuid.UUID
 	TenantId  uuid.UUID
-	Profile   string
+	Profile   sensorProfile.SensorProfile
 	Timestamp time.Time
 	Data      json.RawMessage
 }

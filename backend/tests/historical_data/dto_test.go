@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/historical_data"
 	transportDto "backend/internal/infra/transport/http/dto"
+	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/google/uuid"
 )
@@ -112,7 +113,7 @@ func TestNewHistoricalDataResponseDTO_DecodesDataByProfile(t *testing.T) {
 					SensorId:  uuid.New(),
 					GatewayId: uuid.New(),
 					TenantId:  uuid.New(),
-					Profile:   test.profile,
+					Profile:   sensorProfile.SensorProfile(test.profile),
 					Timestamp: timestamp,
 					Data:      json.RawMessage(test.rawData),
 				},
@@ -155,7 +156,7 @@ func TestNewHistoricalDataResponseDTO_ReturnsErrorForMalformedJSON(t *testing.T)
 			SensorId:  uuid.New(),
 			GatewayId: uuid.New(),
 			TenantId:  uuid.New(),
-			Profile:   string(sensorProfile.HEART_RATE),
+			Profile:   sensorProfile.HEART_RATE,
 			Timestamp: time.Now().UTC(),
 			Data:      json.RawMessage(`{"BpmValue":`),
 		},

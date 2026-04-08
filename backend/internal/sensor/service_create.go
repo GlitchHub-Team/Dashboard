@@ -5,18 +5,18 @@ import (
 
 	"backend/internal/gateway"
 	"backend/internal/shared/identity"
-
+	profile "backend/internal/sensor/profile"
 	"github.com/google/uuid"
 )
 
 //go:generate mockgen -destination=../../tests/sensor/mocks/port_create.go -package=mocks . CreateSensorPort,CreateSensorCmdPort
 
 type CreateSensorPort interface {
-	CreateSensor(sensorId uuid.UUID, gatewayId uuid.UUID, name string, interval time.Duration, profile SensorProfile) (Sensor, error)
+	CreateSensor(sensorId uuid.UUID, gatewayId uuid.UUID, name string, interval time.Duration, profile profile.SensorProfile) (Sensor, error)
 }
 
 type CreateSensorCmdPort interface {
-	SendCreateSensorCmd(sensord uuid.UUID, gatewayId uuid.UUID, interval time.Duration, profile SensorProfile) error
+	SendCreateSensorCmd(sensord uuid.UUID, gatewayId uuid.UUID, interval time.Duration, profile profile.SensorProfile) error
 }
 
 type CreateSensorService struct {

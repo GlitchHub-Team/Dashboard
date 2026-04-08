@@ -44,6 +44,8 @@ var Module = fx.Module(
 			fx.As(new(CreateSensorPort)),
 			fx.As(new(DeleteSensorPort)),
 			fx.As(new(GetSensorByIdPort)),
+			fx.As(new(GetSensorByTenantPort)),
+			fx.As(new(GetSensorWithGatewayPort)),
 			fx.As(new(GetSensorsByTenantIdPort)),
 			fx.As(new(GetSensorsByGatewayIdPort)),
 			fx.As(new(UpdateSensorStatusPort)),

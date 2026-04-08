@@ -1,7 +1,7 @@
 package dto
 
 type TenantIdField struct {
-	TenantId string `uri:"tenant_id" form:"tenant_id" json:"tenant_id" binding:"required,uuid4"`
+	TenantId string `uri:"tenant_id" form:"tenant_id" json:"tenant_id" binding:"required,uuid"`
 }
 
 type TenantIdField_NotRequired struct {

@@ -33,6 +33,7 @@ func (authz *AuthzMiddleware) RequireAuthToken(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": transportHttp.ErrMissingIdentity.Error(),
 		})
+		return
 	}
 
 	// Estrai token da "Bearer <token>"

@@ -11,6 +11,7 @@ package mocks
 
 import (
 	sensor "backend/internal/sensor"
+	profile "backend/internal/sensor/profile"
 	reflect "reflect"
 	time "time"
 
@@ -43,18 +44,18 @@ func (m *MockCreateSensorPort) EXPECT() *MockCreateSensorPortMockRecorder {
 }
 
 // CreateSensor mocks base method.
-func (m *MockCreateSensorPort) CreateSensor(sensorId, gatewayId uuid.UUID, name string, interval time.Duration, profile sensor.SensorProfile) (sensor.Sensor, error) {
+func (m *MockCreateSensorPort) CreateSensor(sensorId, gatewayId uuid.UUID, name string, interval time.Duration, arg4 profile.SensorProfile) (sensor.Sensor, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSensor", sensorId, gatewayId, name, interval, profile)
+	ret := m.ctrl.Call(m, "CreateSensor", sensorId, gatewayId, name, interval, arg4)
 	ret0, _ := ret[0].(sensor.Sensor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSensor indicates an expected call of CreateSensor.
-func (mr *MockCreateSensorPortMockRecorder) CreateSensor(sensorId, gatewayId, name, interval, profile any) *gomock.Call {
+func (mr *MockCreateSensorPortMockRecorder) CreateSensor(sensorId, gatewayId, name, interval, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSensor", reflect.TypeOf((*MockCreateSensorPort)(nil).CreateSensor), sensorId, gatewayId, name, interval, profile)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSensor", reflect.TypeOf((*MockCreateSensorPort)(nil).CreateSensor), sensorId, gatewayId, name, interval, arg4)
 }
 
 // MockCreateSensorCmdPort is a mock of CreateSensorCmdPort interface.
@@ -82,15 +83,15 @@ func (m *MockCreateSensorCmdPort) EXPECT() *MockCreateSensorCmdPortMockRecorder 
 }
 
 // SendCreateSensorCmd mocks base method.
-func (m *MockCreateSensorCmdPort) SendCreateSensorCmd(sensord, gatewayId uuid.UUID, interval time.Duration, profile sensor.SensorProfile) error {
+func (m *MockCreateSensorCmdPort) SendCreateSensorCmd(sensord, gatewayId uuid.UUID, interval time.Duration, arg3 profile.SensorProfile) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendCreateSensorCmd", sensord, gatewayId, interval, profile)
+	ret := m.ctrl.Call(m, "SendCreateSensorCmd", sensord, gatewayId, interval, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendCreateSensorCmd indicates an expected call of SendCreateSensorCmd.
-func (mr *MockCreateSensorCmdPortMockRecorder) SendCreateSensorCmd(sensord, gatewayId, interval, profile any) *gomock.Call {
+func (mr *MockCreateSensorCmdPortMockRecorder) SendCreateSensorCmd(sensord, gatewayId, interval, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCreateSensorCmd", reflect.TypeOf((*MockCreateSensorCmdPort)(nil).SendCreateSensorCmd), sensord, gatewayId, interval, profile)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCreateSensorCmd", reflect.TypeOf((*MockCreateSensorCmdPort)(nil).SendCreateSensorCmd), sensord, gatewayId, interval, arg3)
 }

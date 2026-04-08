@@ -27,8 +27,8 @@ type GatewayEntity struct {
 	Name     string  `gorm:"type:varchar(255);not null"`
 	TenantId *string `gorm:"type:uuid;index"`
 	// il modo giusto per fare il fk per assurdo
-	Tenant    *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Status    string         `gorm:"type:varchar(50);not null"`
+	Tenant    *tenant.TenantEntity `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Status    string               `gorm:"type:varchar(50);not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -49,7 +49,36 @@ func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) 
 
 // methods ============================================================================================
 
-func (entity *GatewayEntity) fromGateway(g Gateway) {
+func GatewayEntityToDomain(entity *GatewayEntity) (Gateway, error) {
+	if entity == nil {
+		return Gateway{}, nil
+	}
+
+	gatewayId, err := uuid.Parse(entity.ID)
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	var tenantId *uuid.UUID
+
+	if entity.TenantId != nil {
+		parsed, err := uuid.Parse(*entity.TenantId)
+		tenantId = &parsed
+		if err != nil {
+			return Gateway{}, err
+		}
+	}
+
+	return Gateway{
+		Id: gatewayId,
+		Name: entity.Name,
+		TenantId: tenantId,
+		Status: GatewayStatus(entity.Status),
+		// IntervalLimit: entity.,
+	}, nil
+}
+
+func (entity *GatewayEntity) FromGateway(g Gateway) {
 	entity.ID = g.Id.String()
 	entity.Name = g.Name
 	entity.Status = string(g.Status)
@@ -62,7 +91,7 @@ func (entity *GatewayEntity) fromGateway(g Gateway) {
 	}
 }
 
-func (entity *GatewayEntity) toGateway() Gateway {
+func (entity *GatewayEntity) ToGateway() Gateway {
 	id, _ := uuid.Parse(entity.ID)
 	var tenantId *uuid.UUID
 	if entity.TenantId != nil {
@@ -79,7 +108,7 @@ func (entity *GatewayEntity) toGateway() Gateway {
 
 func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
 	entity := &GatewayEntity{}
-	entity.fromGateway(gateway)
+	entity.FromGateway(gateway)
 
 	existing := &GatewayEntity{}
 	db := (*gorm.DB)(repo.db)

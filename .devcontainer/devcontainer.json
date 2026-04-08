@@ -42,7 +42,8 @@
         "dbaeumer.vscode-eslint",
         "GitHub.copilot-chat",
         "mechatroner.rainbow-csv",
-        "ReprEng.csv"
+        "ReprEng.csv",
+        "Gruntfuggly.todo-tree"
       ]
     }
   }
