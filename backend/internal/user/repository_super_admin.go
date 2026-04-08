@@ -101,8 +101,7 @@ func (repo *superAdminPgRepository) GetSuperAdmins(offset, limit int) (
 ) {
 	db := (*gorm.DB)(repo.db)
 	baseQuery := db.
-		Model(&SuperAdminEntity{}).
-		Where("role = ?", "tenant_user")
+		Model(&SuperAdminEntity{})
 
 	// Ottieni count
 	if err := baseQuery.Count(&total).Error; err != nil {
@@ -124,7 +123,6 @@ func (repo *superAdminPgRepository) CountSuperAdmins() (total int64, err error) 
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Model(&SuperAdminEntity{}).
-		Where("role = ?", "super_admin").
 		Count(&total).
 		Error
 

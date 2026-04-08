@@ -6,18 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	clouddb "backend/internal/infra/database/cloud_db/connection"
-	sensordb "backend/internal/infra/database/sensor_db"
-	natsutils "backend/internal/infra/nats"
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
-	"backend/internal/tenant"
 	"backend/tests/helper"
+	"backend/tests/helper/integration"
 
 	"github.com/google/uuid"
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
-	"gorm.io/gorm"
 )
 
 type getSensorResponse struct {
@@ -31,24 +25,28 @@ type getSensorResponse struct {
 }
 
 func TestGetSensorByIdIntegration(t *testing.T) {
-	router, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx, jwtManager, ctx := helper.Setup(t)
+	deps := helper.SetupIntegrationTest(t)
 
-	superAdminJWT := mustGenerateJWTForRequester(t, jwtManager, identity.Requester{
+	superAdminJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId: 1,
 		RequesterRole:   identity.ROLE_SUPER_ADMIN,
 	})
 
-	tenantIDs := mustLoadAtLeastTwoTenantIDs(t, cloudDB)
-	tenantIDOne := tenantIDs[0]
-	tenantIDTwo := tenantIDs[1]
+	tenantIDOne := uuid.MustParse(tenant1IdStr)
+	tenantIDTwo := uuid.MustParse(tenant2IdStr)
 
-	tenantAdminTenantOneJWT := mustGenerateJWTForRequester(t, jwtManager, identity.Requester{
+	err := populateTenantDefaultData(deps.CloudDB)
+	if err != nil {
+		t.Fatalf("Impossibile popolare DB con dati di default: %v", err)
+	}
+
+	tenantAdminTenantOneJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId:   999,
 		RequesterTenantId: &tenantIDOne,
 		RequesterRole:     identity.ROLE_TENANT_ADMIN,
 	})
 
-	tenantAdminTenantTwoJWT := mustGenerateJWTForRequester(t, jwtManager, identity.Requester{
+	tenantAdminTenantTwoJWT := mustGenerateJWTForRequester(t, deps.AuthTokenManager, identity.Requester{
 		RequesterUserId:   1000,
 		RequesterTenantId: &tenantIDTwo,
 		RequesterRole:     identity.ROLE_TENANT_ADMIN,
@@ -68,13 +66,13 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 
 	tenantIDOneString := tenantIDOne.String()
 
-	tests := []helper.TestCase{
+	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Invio della richiesta con jwt invalido",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/sensor/" + uuid.NewString(),
-			Header:    authHeader("invalid.jwt.token"),
+			Header:    integration.AuthHeader("invalid.jwt.token"),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusUnauthorized,
@@ -88,7 +86,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 			Name:      "Invio della richiesta con sensorId invalido",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/sensor/not-a-uuid",
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusBadRequest,
@@ -102,7 +100,7 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 			Name:      "Richiesta di un sensore che non esiste",
 			Method:    http.MethodGet,
 			Path:      "/api/v1/sensor/" + uuid.NewString(),
-			Header:    authHeader(superAdminJWT),
+			Header:    integration.AuthHeader(superAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -112,121 +110,121 @@ func TestGetSensorByIdIntegration(t *testing.T) {
 			PostSetups: nil,
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayNilTenantUnauthorized, "Gateway Nil Tenant Unauthorized", nil),
 				preSetupCreateSensor(sensorNilTenantUnauthorized, gatewayNilTenantUnauthorized, "Sensor Nil Tenant Unauthorized", 1400, sensor.HEART_RATE, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId nil da parte di un utente non super admin",
 			Method: http.MethodGet,
 			Path:   "/api/v1/sensor/" + sensorNilTenantUnauthorized,
-			Header: authHeader(tenantAdminTenantOneJWT),
+			Header: integration.AuthHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: sensor.ErrSensorNotFound.Error(),
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkSensorExists(sensorNilTenantUnauthorized),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorNilTenantUnauthorized),
 				postSetupDeleteByGateway(gatewayNilTenantUnauthorized),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayNilTenantSuperAdmin, "Gateway Nil Tenant Super Admin", nil),
 				preSetupCreateSensor(sensorNilTenantSuperAdmin, gatewayNilTenantSuperAdmin, "Sensor Nil Tenant Super Admin", 1500, sensor.PULSE_OXIMETER, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId nil da parte di un utente super admin",
 			Method: http.MethodGet,
 			Path:   "/api/v1/sensor/" + sensorNilTenantSuperAdmin,
-			Header: authHeader(superAdminJWT),
+			Header: integration.AuthHeader(superAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkGetSensorResponseMatchesExpected(sensorNilTenantSuperAdmin, gatewayNilTenantSuperAdmin, "Sensor Nil Tenant Super Admin", 1500, sensor.PULSE_OXIMETER, sensor.Active),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorNilTenantSuperAdmin),
 				postSetupDeleteByGateway(gatewayNilTenantSuperAdmin),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantMismatch, "Gateway Tenant Mismatch", &tenantIDOneString),
 				preSetupCreateSensor(sensorTenantMismatch, gatewayTenantMismatch, "Sensor Tenant Mismatch", 1600, sensor.HEALTH_THERMOMETER, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId non nil da parte di un utente non super admin con tenant diverso",
 			Method: http.MethodGet,
 			Path:   "/api/v1/sensor/" + sensorTenantMismatch,
-			Header: authHeader(tenantAdminTenantTwoJWT),
+			Header: integration.AuthHeader(tenantAdminTenantTwoJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: sensor.ErrSensorNotFound.Error(),
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkSensorExists(sensorTenantMismatch),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorTenantMismatch),
 				postSetupDeleteByGateway(gatewayTenantMismatch),
 			},
 		},
 		{
-			PreSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantMatch, "Gateway Tenant Match", &tenantIDOneString),
 				preSetupCreateSensor(sensorTenantMatch, gatewayTenantMatch, "Sensor Tenant Match", 1700, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
 			},
 			Name:   "Richiesta di un sensore con gatewayId non nil da parte di un utente non super admin con tenant uguale",
 			Method: http.MethodGet,
 			Path:   "/api/v1/sensor/" + sensorTenantMatch,
-			Header: authHeader(tenantAdminTenantOneJWT),
+			Header: integration.AuthHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
-			ResponseChecks: []func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool{
+			ResponseChecks: []helper.IntegrationTestCheck{
 				checkGetSensorResponseMatchesExpected(sensorTenantMatch, gatewayTenantMatch, "Sensor Tenant Match", 1700, sensor.ENVIRONMENTAL_SENSING, sensor.Active),
 			},
 
-			PostSetups: []func(clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream){
+			PostSetups: []helper.IntegrationTestPostSetup{
 				postSetupDeleteSensor(sensorTenantMatch),
 				postSetupDeleteByGateway(gatewayTenantMatch),
 			},
 		},
 	}
 
-	helper.RunTests(router, ctx, tests, t, cloudDB, sensorDB, natsConn, natsTestConn, jetstreamCtx, jetstreamTestCtx)
+	helper.RunIntegrationTests(t, tests, deps)
 }
 
-func mustLoadAtLeastTwoTenantIDs(t *testing.T, cloudDB clouddb.CloudDBConnection) []uuid.UUID {
-	t.Helper()
+// func mustLoadAtLeastTwoTenantIDs(t *testing.T, CloudDB clouddb.CloudDBConnection) []uuid.UUID {
+// 	t.Helper()
 
-	db := (*gorm.DB)(cloudDB)
-	var tenantEntities []tenant.TenantEntity
-	if err := db.Model(&tenant.TenantEntity{}).Order("id ASC").Limit(2).Find(&tenantEntities).Error; err != nil {
-		t.Fatalf("failed to load tenants for integration setup: %v", err)
-	}
-	if len(tenantEntities) < 2 {
-		t.Fatalf("expected at least 2 tenants in DB, got %d", len(tenantEntities))
-	}
+// 	db := (*gorm.DB)(CloudDB)
+// 	var tenantEntities []tenant.TenantEntity
+// 	if err := db.Model(&tenant.TenantEntity{}).Order("id ASC").Limit(2).Find(&tenantEntities).Error; err != nil {
+// 		t.Fatalf("failed to load tenants for integration setup: %v", err)
+// 	}
+// 	if len(tenantEntities) < 2 {
+// 		t.Fatalf("expected at least 2 tenants in DB, got %d", len(tenantEntities))
+// 	}
 
-	tenantIDs := make([]uuid.UUID, 0, len(tenantEntities))
-	for _, entity := range tenantEntities {
-		tenantID, err := uuid.Parse(entity.ID)
-		if err != nil {
-			t.Fatalf("invalid tenant id in DB: %v", err)
-		}
-		tenantIDs = append(tenantIDs, tenantID)
-	}
+// 	tenantIDs := make([]uuid.UUID, 0, len(tenantEntities))
+// 	for _, entity := range tenantEntities {
+// 		tenantID, err := uuid.Parse(entity.ID)
+// 		if err != nil {
+// 			t.Fatalf("invalid tenant id in DB: %v", err)
+// 		}
+// 		tenantIDs = append(tenantIDs, tenantID)
+// 	}
 
-	return tenantIDs
-}
+// 	return tenantIDs
+// }
 
 func checkGetSensorResponseMatchesExpected(
 	expectedSensorID string,
@@ -235,16 +233,8 @@ func checkGetSensorResponseMatchesExpected(
 	expectedInterval int64,
 	expectedProfile sensor.SensorProfile,
 	expectedStatus sensor.SensorStatus,
-) func(*httptest.ResponseRecorder, clouddb.CloudDBConnection, sensordb.SensorDBConnection, *nats.Conn, natsutils.NatsTestConnection, jetstream.JetStream, jetstream.JetStream) bool {
-	return func(
-		w *httptest.ResponseRecorder,
-		_ clouddb.CloudDBConnection,
-		_ sensordb.SensorDBConnection,
-		_ *nats.Conn,
-		_ natsutils.NatsTestConnection,
-		_ jetstream.JetStream,
-		_ jetstream.JetStream,
-	) bool {
+) helper.IntegrationTestCheck {
+	return func(w *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		var resp getSensorResponse
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			return false
