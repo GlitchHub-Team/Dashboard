@@ -37,7 +37,6 @@ func (repo *historicalDataTimescaleRepository) GetSensorHistoricalData(
 	query, args := buildHistoricalDataQuery(tenantId, sensorId, filter)
 
 	db := (*gorm.DB)(repo.db)
-
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err

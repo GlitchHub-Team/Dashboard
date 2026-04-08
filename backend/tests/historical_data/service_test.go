@@ -8,157 +8,297 @@ import (
 	"backend/internal/historical_data"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
+	"backend/tests/historical_data/mocks"
+	tenantmocks "backend/tests/tenant/mocks"
 
 	"github.com/google/uuid"
+	"go.uber.org/mock/gomock"
 )
 
-type fakeGetHistoricalDataPort struct {
-	samples        []historical_data.HistoricalSample
-	err            error
-	called         bool
-	gotTenantId    uuid.UUID
-	gotSensorId    uuid.UUID
-	gotFilterLimit int
-}
+type mockSetupFunc_GetHistoricalDataService func(
+	getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+	getTenantPort *tenantmocks.MockGetTenantPort,
+) *gomock.Call
 
-func (f *fakeGetHistoricalDataPort) GetSensorHistoricalData(
-	tenantId uuid.UUID,
-	sensorId uuid.UUID,
-	filter historical_data.HistoricalDataFilter,
-) ([]historical_data.HistoricalSample, error) {
-	f.called = true
-	f.gotTenantId = tenantId
-	f.gotSensorId = sensorId
-	f.gotFilterLimit = filter.Limit
-	return f.samples, f.err
-}
-
-type fakeGetTenantPort struct {
-	tenant tenant.Tenant
-	err    error
-}
-
-func (f *fakeGetTenantPort) GetTenant(uuid.UUID) (tenant.Tenant, error) {
-	return f.tenant, f.err
-}
-
-func TestGetHistoricalDataService_GetSensorHistoricalData_Success(t *testing.T) {
-	targetTenantId := uuid.New()
-	targetSensorId := uuid.New()
-
-	expectedSamples := []historical_data.HistoricalSample{
-		{
-			SensorId:  targetSensorId,
-			TenantId:  targetTenantId,
-			Profile:   "HeartRate",
-			Timestamp: time.Now().UTC(),
-		},
-	}
-
-	getHistoricalDataPort := &fakeGetHistoricalDataPort{samples: expectedSamples}
-	getTenantPort := &fakeGetTenantPort{
-		tenant: tenant.Tenant{
-			Id:             targetTenantId,
-			CanImpersonate: false,
-		},
-	}
-
-	service := historical_data.NewGetHistoricalDataService(getHistoricalDataPort, getTenantPort)
-
-	samples, err := service.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &targetTenantId,
-			RequesterRole:     identity.ROLE_TENANT_ADMIN,
-		},
-		TenantId: targetTenantId,
-		SensorId: targetSensorId,
-	})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if !getHistoricalDataPort.called {
-		t.Fatalf("expected port to be called")
-	}
-
-	if getHistoricalDataPort.gotTenantId != targetTenantId {
-		t.Fatalf("unexpected tenant id: got %v want %v", getHistoricalDataPort.gotTenantId, targetTenantId)
-	}
-
-	if getHistoricalDataPort.gotSensorId != targetSensorId {
-		t.Fatalf("unexpected sensor id: got %v want %v", getHistoricalDataPort.gotSensorId, targetSensorId)
-	}
-
-	if getHistoricalDataPort.gotFilterLimit != historical_data.DefaultHistoricalDataLimit {
-		t.Fatalf(
-			"unexpected filter limit: got %d want %d",
-			getHistoricalDataPort.gotFilterLimit,
-			historical_data.DefaultHistoricalDataLimit,
-		)
-	}
-
-	if len(samples) != 1 {
-		t.Fatalf("unexpected sample count: got %d want 1", len(samples))
+func newStepTenantOk_GetHistoricalDataService(
+	targetTenantId uuid.UUID, canImpersonate bool,
+) mockSetupFunc_GetHistoricalDataService {
+	return func(
+		getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+		getTenantPort *tenantmocks.MockGetTenantPort,
+	) *gomock.Call {
+		return getTenantPort.EXPECT().
+			GetTenant(targetTenantId).
+			Return(tenant.Tenant{
+				Id:             targetTenantId,
+				CanImpersonate: canImpersonate,
+			}, nil).
+			Times(1)
 	}
 }
 
-func TestGetHistoricalDataService_GetSensorHistoricalData_Unauthorized(t *testing.T) {
+func newStepTenantNotFound_GetHistoricalDataService(
+	targetTenantId uuid.UUID,
+) mockSetupFunc_GetHistoricalDataService {
+	return func(
+		getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+		getTenantPort *tenantmocks.MockGetTenantPort,
+	) *gomock.Call {
+		return getTenantPort.EXPECT().
+			GetTenant(targetTenantId).
+			Return(tenant.Tenant{}, nil).
+			Times(1)
+	}
+}
+
+func newStepTenantError_GetHistoricalDataService(
+	targetTenantId uuid.UUID,
+	mockError error,
+) mockSetupFunc_GetHistoricalDataService {
+	return func(
+		getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+		getTenantPort *tenantmocks.MockGetTenantPort,
+	) *gomock.Call {
+		return getTenantPort.EXPECT().
+			GetTenant(targetTenantId).
+			Return(tenant.Tenant{}, mockError).
+			Times(1)
+	}
+}
+
+func TestService_GetSensorHistoricalData(t *testing.T) {
 	targetTenantId := uuid.New()
 	otherTenantId := uuid.New()
-
-	getHistoricalDataPort := &fakeGetHistoricalDataPort{}
-	getTenantPort := &fakeGetTenantPort{
-		tenant: tenant.Tenant{
-			Id:             targetTenantId,
-			CanImpersonate: false,
+	targetSensorId := uuid.New()
+	expectedSamples := []historical_data.HistoricalSample{
+		{
+			SensorId: targetSensorId,
+			TenantId: targetTenantId,
+			Profile:  "HeartRate",
 		},
 	}
 
-	service := historical_data.NewGetHistoricalDataService(getHistoricalDataPort, getTenantPort)
+	type testCase struct {
+		name          string
+		input         historical_data.GetSensorHistoricalDataCommand
+		setupSteps    []mockSetupFunc_GetHistoricalDataService
+		expectedData  []historical_data.HistoricalSample
+		expectedError error
+	}
 
-	_, err := service.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &otherTenantId,
-			RequesterRole:     identity.ROLE_TENANT_USER,
-		},
+	step1TenantOk_CanImpersonate := newStepTenantOk_GetHistoricalDataService(targetTenantId, true)
+	step1TenantOk_CannotImpersonate := newStepTenantOk_GetHistoricalDataService(targetTenantId, false)
+	step1TenantNotFound := newStepTenantNotFound_GetHistoricalDataService(targetTenantId)
+
+	errMockStep1 := newMockError(1)
+	step1TenantError := newStepTenantError_GetHistoricalDataService(targetTenantId, errMockStep1)
+
+	expectedFilter := historical_data.HistoricalDataFilter{
+		Limit: historical_data.DefaultHistoricalDataLimit,
+	}
+
+	step2GetHistoricalDataOk := func(
+		getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+		getTenantPort *tenantmocks.MockGetTenantPort,
+	) *gomock.Call {
+		return getHistoricalDataPort.EXPECT().
+			GetSensorHistoricalData(targetTenantId, targetSensorId, expectedFilter).
+			Return(expectedSamples, nil).
+			Times(1)
+	}
+	errMockStep2 := newMockError(2)
+	step2GetHistoricalDataError := func(
+		getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+		getTenantPort *tenantmocks.MockGetTenantPort,
+	) *gomock.Call {
+		return getHistoricalDataPort.EXPECT().
+			GetSensorHistoricalData(targetTenantId, targetSensorId, expectedFilter).
+			Return(nil, errMockStep2).
+			Times(1)
+	}
+	step2NeverCalled := func(
+		getHistoricalDataPort *mocks.MockGetHistoricalDataPort,
+		getTenantPort *tenantmocks.MockGetTenantPort,
+	) *gomock.Call {
+		return getHistoricalDataPort.EXPECT().
+			GetSensorHistoricalData(gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(0)
+	}
+
+	superAdminRequester := identity.Requester{
+		RequesterUserId: uint(1),
+		RequesterRole:   identity.ROLE_SUPER_ADMIN,
+	}
+	authorizedTenantAdminRequester := identity.Requester{
+		RequesterUserId:   uint(2),
+		RequesterTenantId: &targetTenantId,
+		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	}
+	unauthorizedTenantAdminRequester := identity.Requester{
+		RequesterUserId:   uint(2),
+		RequesterTenantId: &otherTenantId,
+		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	}
+	authorizedTenantUserRequester := identity.Requester{
+		RequesterUserId:   uint(3),
+		RequesterTenantId: &targetTenantId,
+		RequesterRole:     identity.ROLE_TENANT_USER,
+	}
+	unauthorizedTenantUserRequester := identity.Requester{
+		RequesterUserId:   uint(3),
+		RequesterTenantId: &otherTenantId,
+		RequesterRole:     identity.ROLE_TENANT_USER,
+	}
+
+	baseInput := historical_data.GetSensorHistoricalDataCommand{
 		TenantId: targetTenantId,
-		SensorId: uuid.New(),
-	})
-	if !errors.Is(err, identity.ErrUnauthorizedAccess) {
-		t.Fatalf("unexpected error: got %v want %v", err, identity.ErrUnauthorizedAccess)
+		SensorId: targetSensorId,
 	}
 
-	if getHistoricalDataPort.called {
-		t.Fatalf("expected port not to be called")
+	inputWith := func(requester identity.Requester) historical_data.GetSensorHistoricalDataCommand {
+		return historical_data.GetSensorHistoricalDataCommand{
+			Requester: requester,
+			TenantId:  baseInput.TenantId,
+			SensorId:  baseInput.SensorId,
+		}
 	}
-}
-
-func TestGetHistoricalDataService_GetSensorHistoricalData_InvalidDateRange(t *testing.T) {
-	targetTenantId := uuid.New()
-
-	getHistoricalDataPort := &fakeGetHistoricalDataPort{}
-	getTenantPort := &fakeGetTenantPort{}
-
-	service := historical_data.NewGetHistoricalDataService(getHistoricalDataPort, getTenantPort)
 
 	from := time.Now().UTC()
-	to := from.Add(-time.Hour)
+	to := from.Add(-time.Minute)
 
-	_, err := service.GetSensorHistoricalData(historical_data.GetSensorHistoricalDataCommand{
-		Requester: identity.Requester{
-			RequesterTenantId: &targetTenantId,
-			RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	cases := []testCase{
+		{
+			name:  "(Super Admin) Success: impersonation ok",
+			input: inputWith(superAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CanImpersonate,
+				step2GetHistoricalDataOk,
+			},
+			expectedData:  expectedSamples,
+			expectedError: nil,
 		},
-		TenantId: targetTenantId,
-		SensorId: uuid.New(),
-		From:     &from,
-		To:       &to,
-	})
-	if !errors.Is(err, historical_data.ErrInvalidDateRange) {
-		t.Fatalf("unexpected error: got %v want %v", err, historical_data.ErrInvalidDateRange)
+		{
+			name:  "(Tenant Admin) Success: authorization ok",
+			input: inputWith(authorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CanImpersonate,
+				step2GetHistoricalDataOk,
+			},
+			expectedData:  expectedSamples,
+			expectedError: nil,
+		},
+		{
+			name:  "(Tenant User) Success: authorization ok",
+			input: inputWith(authorizedTenantUserRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CanImpersonate,
+				step2GetHistoricalDataOk,
+			},
+			expectedData:  expectedSamples,
+			expectedError: nil,
+		},
+		{
+			name: "Fail: invalid date range",
+			input: historical_data.GetSensorHistoricalDataCommand{
+				Requester: authorizedTenantAdminRequester,
+				TenantId:  targetTenantId,
+				SensorId:  targetSensorId,
+				From:      &from,
+				To:        &to,
+			},
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: historical_data.ErrInvalidDateRange,
+		},
+		{
+			name:  "Fail (step 1): tenant not found",
+			input: inputWith(authorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantNotFound,
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: tenant.ErrTenantNotFound,
+		},
+		{
+			name:  "Fail (step 1): unexpected tenant error",
+			input: inputWith(authorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantError,
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: errMockStep1,
+		},
+		{
+			name:  "(Super Admin) Fail: impersonation forbidden",
+			input: inputWith(superAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CannotImpersonate,
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: identity.ErrUnauthorizedAccess,
+		},
+		{
+			name:  "(Tenant Admin) Fail: wrong tenant",
+			input: inputWith(unauthorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CanImpersonate,
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: identity.ErrUnauthorizedAccess,
+		},
+		{
+			name:  "(Tenant User) Fail: wrong tenant",
+			input: inputWith(unauthorizedTenantUserRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CanImpersonate,
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: identity.ErrUnauthorizedAccess,
+		},
+		{
+			name:  "Fail (step 2): historical data port error",
+			input: inputWith(authorizedTenantAdminRequester),
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step1TenantOk_CanImpersonate,
+				step2GetHistoricalDataError,
+			},
+			expectedData:  nil,
+			expectedError: errMockStep2,
+		},
 	}
 
-	if getHistoricalDataPort.called {
-		t.Fatalf("expected port not to be called")
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			getHistoricalDataPort := mocks.NewMockGetHistoricalDataPort(ctrl)
+			getTenantPort := tenantmocks.NewMockGetTenantPort(ctrl)
+
+			var expectedCalls []any
+			for _, step := range tc.setupSteps {
+				if call := step(getHistoricalDataPort, getTenantPort); call != nil {
+					expectedCalls = append(expectedCalls, call)
+				}
+			}
+			if len(expectedCalls) > 0 {
+				gomock.InOrder(expectedCalls...)
+			}
+
+			service := historical_data.NewGetHistoricalDataService(getHistoricalDataPort, getTenantPort)
+
+			data, err := service.GetSensorHistoricalData(tc.input)
+			if !errors.Is(err, tc.expectedError) {
+				t.Fatalf("expected error %v, got %v", tc.expectedError, err)
+			}
+			if tc.expectedError == nil && len(data) != len(tc.expectedData) {
+				t.Fatalf("expected %d samples, got %d", len(tc.expectedData), len(data))
+			}
+		})
 	}
 }
