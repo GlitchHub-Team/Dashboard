@@ -224,7 +224,7 @@ describe('UserManagerPage (Integration)', () => {
         routeContext: tenantAdminContext,
       });
 
-      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[0]]);
+      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[1]]);
       fixture.detectChanges();
 
       getDeleteButtons(fixture)[0].click();
@@ -235,7 +235,7 @@ describe('UserManagerPage (Integration)', () => {
         expect.objectContaining({
           data: {
             title: 'Elimina Utente',
-            message: 'Sei sicuro di voler eliminare "alice@test.com"?',
+            message: 'Sei sicuro di voler eliminare "bob@test.com"?',
           },
         }),
       );
@@ -278,7 +278,7 @@ describe('UserManagerPage (Integration)', () => {
       fixture.detectChanges();
       userServiceMock.retrieveUsers.mockClear();
 
-      getDeleteButtons(fixture)[1].click();
+      getDeleteButtons(fixture)[0].click();
       fixture.detectChanges();
 
       expect(dialogMock.open).toHaveBeenCalledWith(
@@ -306,7 +306,7 @@ describe('UserManagerPage (Integration)', () => {
         routeContext: tenantAdminContext,
       });
 
-      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[0]]);
+      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[1]]);
       fixture.detectChanges();
       userServiceMock.retrieveUsers.mockClear();
 
@@ -467,6 +467,41 @@ describe('UserManagerPage (Integration)', () => {
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeFalsy();
+    });
+
+    it('should show tab group for TENANT_ADMIN session', () => {
+      const { fixture } = setupTestBed({
+        session: tenantAdminSession,
+        routeContext: tenantAdminContext,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-tab-group')).toBeTruthy();
+    });
+
+    it('should NOT show tab group for SUPER_ADMIN session', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: { tenantId: 'tenant-1' },
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-tab-group')).toBeFalsy();
+    });
+
+    it('should hide the delete button for the current user\'s row', () => {
+      const { fixture, userServiceMock } = setupTestBed({
+        session: tenantAdminSession,
+        routeContext: tenantAdminContext,
+      });
+      // mockUsers[0] has id='1' which matches tenantAdminSession.userId='1'
+      (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
+      fixture.detectChanges();
+
+      const deleteButtons = getDeleteButtons(fixture);
+      // alice (id='1') has no button; bob and charlie do
+      expect(deleteButtons.length).toBe(mockUsers.length - 1);
     });
 
     describe('Navigation', () => {

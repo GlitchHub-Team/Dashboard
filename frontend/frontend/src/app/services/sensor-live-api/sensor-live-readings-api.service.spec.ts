@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
-import { webSocket } from 'rxjs/webSocket';
 
 import { environment } from '../../../environments/environment';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -11,14 +10,10 @@ import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorLiveReadingsApiService } from './sensor-live-readings-api.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 
-vi.mock('rxjs/webSocket', () => ({
-  webSocket: vi.fn(),
-  WebSocketSubject: vi.fn(),
-}));
-
 describe('SensorLiveReadingsApiService', () => {
   let service: SensorLiveReadingsApiService;
   let mockTokenService: Partial<TokenStorageService>;
+  let createWebSocketSpy: ReturnType<typeof vi.spyOn>;
 
   const wsUrl = environment.wsUrl;
   const mockToken = 'mock-jwt-token';
@@ -46,8 +41,7 @@ describe('SensorLiveReadingsApiService', () => {
     };
   };
 
-  beforeEach(async () => {
-    vi.resetModules();
+  beforeEach(() => {
     vi.clearAllMocks();
 
     mockTokenService = {
@@ -62,6 +56,7 @@ describe('SensorLiveReadingsApiService', () => {
     });
 
     service = TestBed.inject(SensorLiveReadingsApiService);
+    createWebSocketSpy = vi.spyOn(service as any, 'createWebSocket');
   });
 
   it('should be created', () => {
@@ -69,44 +64,65 @@ describe('SensorLiveReadingsApiService', () => {
   });
 
   describe('connect', () => {
-    it('should call webSocket with the correct URL including the token and return the socket observable', () => {
+    it('should create a WebSocket with the correct URL and return an observable', () => {
       const mockSocket = createMockSocket();
-      vi.mocked(webSocket).mockReturnValue(mockSocket as any);
+      createWebSocketSpy.mockReturnValue(mockSocket as any);
 
       const result = service.connect(mockRequest);
 
-      expect(webSocket).toHaveBeenCalledWith(
+      expect(createWebSocketSpy).toHaveBeenCalledWith(
         `${wsUrl}/tenant/${mockRequest.tenantId}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
       );
       expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 
-    it('should disconnect the previous socket and create a new one on each call', () => {
+    it('should use an empty string as JWT when token is null', () => {
+      vi.mocked(mockTokenService.getToken!).mockReturnValue(null);
+      const mockSocket = createMockSocket();
+      createWebSocketSpy.mockReturnValue(mockSocket as any);
+
+      service.connect(mockRequest);
+
+      expect(createWebSocketSpy).toHaveBeenCalledWith(
+        `${wsUrl}/tenant/${mockRequest.tenantId}/sensor/${mockSensor.id}/real_time_data?jwt=`,
+      );
+    });
+
+    it('should disconnect the previous socket before creating a new one', () => {
       const mockSocket1 = createMockSocket();
       const mockSocket2 = createMockSocket();
-      vi.mocked(webSocket)
+      createWebSocketSpy
         .mockReturnValueOnce(mockSocket1 as any)
         .mockReturnValueOnce(mockSocket2 as any);
 
       service.connect(mockRequest);
       service.connect(mockRequest);
 
-      expect(webSocket).toHaveBeenCalledTimes(2);
+      expect(createWebSocketSpy).toHaveBeenCalledTimes(2);
       expect(mockSocket1.complete).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('disconnect', () => {
-    it('should complete the socket and be a no-op on subsequent calls', () => {
+    it('should complete the socket when there is an active connection', () => {
       const mockSocket = createMockSocket();
-      vi.mocked(webSocket).mockReturnValue(mockSocket as any);
+      createWebSocketSpy.mockReturnValue(mockSocket as any);
 
       service.connect(mockRequest);
       service.disconnect();
-      expect(mockSocket.complete).toHaveBeenCalledTimes(1);
 
+      expect(mockSocket.complete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should only complete once when called multiple times', () => {
+      const mockSocket = createMockSocket();
+      createWebSocketSpy.mockReturnValue(mockSocket as any);
+
+      service.connect(mockRequest);
       service.disconnect();
+      service.disconnect();
+
       expect(mockSocket.complete).toHaveBeenCalledTimes(1);
     });
 

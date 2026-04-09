@@ -3,6 +3,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
 import { PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { combineLatest } from 'rxjs';
@@ -29,7 +30,7 @@ interface UserManagerContext {
 @Component({
   selector: 'app-user-manager-page',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule, MatFormFieldModule, MatSelectModule],
+  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule, MatFormFieldModule, MatSelectModule, MatTabsModule],
   templateUrl: './user-manager.page.html',
   styleUrl: './user-manager.page.css',
 })
@@ -69,7 +70,17 @@ export class UserManagerPage implements OnInit {
 
   protected readonly UserRole = UserRole;
   protected readonly currentRole = this.userSession.currentUser()!.role;
+  protected readonly currentUserId = this.userSession.currentUser()!.userId;
   protected readonly activeTenantId = signal<string | null>(null);
+  protected readonly activeTabIndex = signal<number>(0);
+
+  protected readonly showMemberTabs = computed(
+    () => this.currentRole === UserRole.TENANT_ADMIN,
+  );
+
+  protected readonly pageTitle = computed(() =>
+    this.showMemberTabs() ? 'Gestione Utenti' : this.context().title,
+  );
 
   public ngOnInit(): void {
     combineLatest([this.activatedRoute.data, this.activatedRoute.queryParams]).subscribe(
@@ -93,6 +104,7 @@ export class UserManagerPage implements OnInit {
             ? urlTenantId || null
             : currentUserTenant || null;
 
+        this.activeTabIndex.set(0);
         this.activeTenantId.set(resolvedTenantId);
         this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
 
@@ -162,6 +174,13 @@ export class UserManagerPage implements OnInit {
   protected onTenantSelected(tenantId: string): void {
     this.activeTenantId.set(tenantId);
     this.context.update((ctx) => ({ ...ctx, tenantId }));
+    this.refreshUsers();
+  }
+
+  protected onTabChange(index: number): void {
+    this.activeTabIndex.set(index);
+    const role = index === 0 ? UserRole.TENANT_USER : UserRole.TENANT_ADMIN;
+    this.context.update((ctx) => ({ ...ctx, role }));
     this.refreshUsers();
   }
 

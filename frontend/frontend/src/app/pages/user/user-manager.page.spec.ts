@@ -23,6 +23,7 @@ interface UserManagerPageTestApi {
   onDeleteUser: (user: User) => void;
   onPageChange: (event: PageEvent) => void;
   onTenantSelected: (tenantId: string) => void;
+  onTabChange: (index: number) => void;
 }
 
 describe('UserManagerPage', () => {
@@ -239,6 +240,38 @@ describe('UserManagerPage', () => {
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
         UserRole.TENANT_ADMIN,
         'new-tenant-id',
+      );
+    });
+  });
+
+  describe('onTabChange', () => {
+    it('should switch context role to TENANT_USER on tab 0 and refresh users', () => {
+      createComponent();
+      fixture.detectChanges();
+      userServiceMock.retrieveUsers.mockClear();
+
+      testApi.onTabChange(0);
+
+      expect((component as any).activeTabIndex()).toBe(0);
+      expect((component as any).context().role).toBe(UserRole.TENANT_USER);
+      expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
+        UserRole.TENANT_USER,
+        sessionTenantId,
+      );
+    });
+
+    it('should switch context role to TENANT_ADMIN on tab 1 and refresh users', () => {
+      createComponent();
+      fixture.detectChanges();
+      userServiceMock.retrieveUsers.mockClear();
+
+      testApi.onTabChange(1);
+
+      expect((component as any).activeTabIndex()).toBe(1);
+      expect((component as any).context().role).toBe(UserRole.TENANT_ADMIN);
+      expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
+        UserRole.TENANT_ADMIN,
+        sessionTenantId,
       );
     });
   });

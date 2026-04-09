@@ -1,6 +1,6 @@
 <div class="manager-container">
   <div class="manager-header">
-    <h1>{{ context().title }}</h1>
+    <h1>{{ pageTitle() }}</h1>
     <button
       mat-raised-button
       color="primary"
@@ -10,6 +10,17 @@
       <mat-icon>add</mat-icon> Aggiungi Nuovo Utente
     </button>
   </div>
+
+  @if (showMemberTabs()) {
+    <mat-tab-group
+      [selectedIndex]="activeTabIndex()"
+      (selectedIndexChange)="onTabChange($event)"
+      mat-stretch-tabs="false"
+    >
+      <mat-tab label="Tenant User"></mat-tab>
+      <mat-tab label="Tenant Admin"></mat-tab>
+    </mat-tab-group>
+  }
 
   @if (currentRole === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_ADMIN) {
     <div class="tenant-select-bar">
@@ -89,6 +100,7 @@
         [pageIndex]="pageIndex()"
         [limit]="limit()"
         [targetRole]="context().role"
+        [currentUserId]="currentUserId"
         (deleteRequested)="onDeleteUser($event)"
         (pageChange)="onPageChange($event)"
       >
