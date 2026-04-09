@@ -3,6 +3,7 @@ package real_time_data_integration_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
+	httpDto "backend/internal/infra/transport/http/dto"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/tests/helper"
 
@@ -42,13 +44,16 @@ func TestGetRealTimeDataIntegrationErrors(t *testing.T) {
 		t.Fatalf("failed to generate unauthorized tenant admin jwt: %v", err)
 	}
 
+	pathWithJwt := func(path, jwtToken string) string {
+		return path + "?jwt=" + jwtToken
+	}
+
 	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: nil,
 			Name:      "Fallimento: Token JWT mancante",
 			Method:    http.MethodGet,
 			Path:      realTimeDataPath(targetTenantID, targetSensorID),
-			Header:    nil,
 			Body:      nil,
 
 			WantStatusCode:   http.StatusUnauthorized,
@@ -59,10 +64,9 @@ func TestGetRealTimeDataIntegrationErrors(t *testing.T) {
 		{
 			PreSetups: nil,
 			Name:      "Fallimento: UUID uri params non validi",
-			Method:    http.MethodGet,
-			Path:      "/api/v1/tenant_id/invalid-uuid/sensor/invalid-uuid/real_time_data",
-			Header:    authHeader(tenantAdminJWT),
-			Body:      nil,
+			Method: http.MethodGet,
+			Path:   pathWithJwt("/api/v1/tenant/invalid-uuid/sensor/invalid-uuid/real_time_data", tenantAdminJWT),
+			Body:   nil,
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: "",
@@ -73,8 +77,7 @@ func TestGetRealTimeDataIntegrationErrors(t *testing.T) {
 			PreSetups: nil,
 			Name:      "Fallimento: Sensore non trovato nel database",
 			Method:    http.MethodGet,
-			Path:      realTimeDataPath(targetTenantID, targetSensorID),
-			Header:    authHeader(tenantAdminJWT),
+			Path:      pathWithJwt(realTimeDataPath(targetTenantID, uuid.New()), tenantAdminJWT),
 			Body:      nil,
 
 			WantStatusCode:   http.StatusNotFound,
@@ -84,37 +87,20 @@ func TestGetRealTimeDataIntegrationErrors(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupSensorChain(targetTenantID, targetGatewayID, targetSensorID, string(sensorProfile.HEART_RATE), string(sensor.Active)),
+				preSetupSensorChain(
+					t, targetTenantID, targetGatewayID, targetSensorID, string(sensorProfile.HEART_RATE), string(sensor.Active),
+				),
 			},
 			Name:   "Fallimento: Tentativo di accesso da un tenant non autorizzato",
 			Method: http.MethodGet,
-			Path:   realTimeDataPath(targetTenantID, targetSensorID),
-			Header: authHeader(unauthorizedAdminJWT),
+			Path:   pathWithJwt(realTimeDataPath(targetTenantID, targetSensorID), unauthorizedAdminJWT),
 			Body:   nil,
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(sensor.ErrSensorNotFound),
 			ResponseChecks:   nil,
 			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteSensorChain(targetTenantID, targetGatewayID, targetSensorID),
-			},
-		},
-		{
-			PreSetups: []helper.IntegrationTestPreSetup{
-				preSetupSensorChain(targetTenantID, targetGatewayID, targetSensorID, string(sensorProfile.HEART_RATE), string(sensor.Inactive)),
-			},
-			Name:   "Fallimento: Tentativo di recupero stream per sensore disattivato",
-			Method: http.MethodGet,
-			Path:   realTimeDataPath(targetTenantID, targetSensorID),
-			Header: authHeader(tenantAdminJWT),
-			Body:   nil,
-
-			// A inactive sensor (via its status field or a nil gateway tenant mapping) returns ErrSensorNotActive
-			WantStatusCode:   http.StatusNotFound,
-			WantResponseBody: helper.ErrJsonString(sensor.ErrSensorNotActive),
-			ResponseChecks:   nil,
-			PostSetups: []helper.IntegrationTestPostSetup{
-				postSetupDeleteSensorChain(targetTenantID, targetGatewayID, targetSensorID),
+				postSetupDeleteSensorChain(t, targetTenantID, targetGatewayID, targetSensorID),
 			},
 		},
 	}
@@ -129,22 +115,54 @@ func TestGetRealTimeDataIntegrationSuccess(t *testing.T) {
 
 	deps := helper.SetupIntegrationTest(t)
 
-	targetTenantID := uuid.New()
-	targetGatewayID := uuid.New()
-	targetSensorID := uuid.New()
+	t.Run("Super Admin case", func(t *testing.T) {
+		targetTenantID := uuid.New()
+		targetGatewayID := uuid.New()
+		targetSensorID := uuid.New()
 
-	tenantAdminJWT, err := helper.NewTenantAdminJWT(deps, targetTenantID, 1)
-	if err != nil {
-		t.Fatalf("failed to generate tenant admin jwt: %v", err)
-	}
+		superAdminJWT, err := helper.NewSuperAdminJWT(deps, 1)
+		if err != nil {
+			t.Fatalf("failed to generate super admin jwt: %v", err)
+		}
+		executeWSTest(t, deps, superAdminJWT, targetTenantID, targetGatewayID, targetSensorID)
+	})
+
+	t.Run("Tenant Admin case", func(t *testing.T) {
+		targetTenantID := uuid.New()
+		targetGatewayID := uuid.New()
+		targetSensorID := uuid.New()
+
+		tenantAdminJWT, err := helper.NewTenantAdminJWT(deps, targetTenantID, 1)
+		if err != nil {
+			t.Fatalf("failed to generate tenant admin jwt: %v", err)
+		}
+		executeWSTest(t, deps, tenantAdminJWT, targetTenantID, targetGatewayID, targetSensorID)
+	})
+
+	t.Run("Tenant User case", func(t *testing.T) {
+		targetTenantID := uuid.New()
+		targetGatewayID := uuid.New()
+		targetSensorID := uuid.New()
+
+		tenantUserJWT, err := helper.NewTenantUserJWT(deps, targetTenantID, 1)
+		if err != nil {
+			t.Fatalf("failed to generate tenant user jwt: %v", err)
+		}
+		executeWSTest(t, deps, tenantUserJWT, targetTenantID, targetGatewayID, targetSensorID)
+	})
+
+}
+
+func executeWSTest(t *testing.T, deps helper.IntegrationTestDeps, jwt string, targetTenantID, targetGatewayID, targetSensorID uuid.UUID) {
+	t.Helper()
 
 	// 1. Inserimento record DB
-	setupFunc := preSetupSensorChain(targetTenantID, targetGatewayID, targetSensorID, string(sensorProfile.HEART_RATE), string(sensor.Active))
+	setupFunc := preSetupSensorChain(t, targetTenantID, targetGatewayID, targetSensorID, string(sensorProfile.HEART_RATE), string(sensor.Active))
 	if ok := setupFunc(deps); !ok {
 		t.Fatalf("database presetup failed")
 	}
 	t.Cleanup(func() {
-		cleanupFunc := postSetupDeleteSensorChain(targetTenantID, targetGatewayID, targetSensorID)
+		cleanupFunc := postSetupDeleteSensorChain(t, targetTenantID, targetGatewayID, targetSensorID)
 		cleanupFunc(deps)
 	})
 
@@ -152,16 +170,21 @@ func TestGetRealTimeDataIntegrationSuccess(t *testing.T) {
 	server := httptest.NewServer(deps.Router)
 	defer server.Close()
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + realTimeDataPath(targetTenantID, targetSensorID)
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + realTimeDataPath(targetTenantID, targetSensorID) + "?jwt=" + jwt
 
 	// 3. Negoziazione WebSocket
-	header := http.Header{}
-	header.Set("Authorization", "Bearer "+tenantAdminJWT)
-
-	ws, resp, err := websocket.DefaultDialer.Dial(wsURL, header)
+	ws, resp, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
 	if err != nil {
-		t.Fatalf("failed to dial websocket: %v (status: %d)", err, resp.StatusCode)
+		bodyDump := "nessun body"
+		if resp != nil && resp.Body != nil {
+			bytes, _ := io.ReadAll(resp.Body)
+			bodyDump = string(bytes)
+		}
+		// Se fallisce mostrerà "404 page not found" (problema di routing)
+		// o "{"error": "sensor not found"}" (problema di setup DB / foreign key)
+		t.Fatalf("failed to dial websocket: %v (status: %d) | body: %s | URL: %s", err, resp.StatusCode, bodyDump, wsURL)
 	}
+	defer resp.Body.Close()
 	defer ws.Close()
 
 	if resp.StatusCode != http.StatusSwitchingProtocols {
@@ -171,11 +194,8 @@ func TestGetRealTimeDataIntegrationSuccess(t *testing.T) {
 	// 4. Simulazione deterministica del flusso NATS
 	natsSubject := fmt.Sprintf("sensor.%s.%s.%s", targetTenantID.String(), targetGatewayID.String(), targetSensorID.String())
 	targetTimestamp := time.Now().UTC().Format(time.RFC3339Nano)
-	rawPayload := fmt.Sprintf(`{"timestamp":"%s","data":{"bpmValue":82}}`, targetTimestamp)
+	rawPayload := fmt.Sprintf(`{"timestamp":"%s","data":{"BpmValue":82}}`, targetTimestamp)
 
-	// Spawns a background worker that publishes the payload every 10ms.
-	// This completely eliminates the race condition: the exact millisecond
-	// the subscriber is ready, it will catch the next tick's payload.
 	publishDone := make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(10 * time.Millisecond)
@@ -194,7 +214,6 @@ func TestGetRealTimeDataIntegrationSuccess(t *testing.T) {
 	ws.SetReadDeadline(time.Now().Add(3 * time.Second))
 	_, message, err := ws.ReadMessage()
 
-	// Ferma il publisher in background immediatamente dopo la lettura (o il timeout)
 	close(publishDone)
 
 	if err != nil {
@@ -212,11 +231,13 @@ func TestGetRealTimeDataIntegrationSuccess(t *testing.T) {
 	}
 
 	dataBytes, _ := json.Marshal(receivedData.Data)
-	var heartRateMap map[string]interface{}
-	json.Unmarshal(dataBytes, &heartRateMap)
+	var data httpDto.HeartRateData
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		t.Fatalf("expected nil error when unmarshaling data, got %v", err)
+	}
 
-	bpmValue, ok := heartRateMap["bpmValue"].(float64)
-	if !ok || bpmValue != 82 {
-		t.Errorf("expected bpmValue 82, got %v", bpmValue)
+	if data.BpmValue != 82 {
+		t.Errorf("expected bpmValue 82, got %v", data.BpmValue)
 	}
 }

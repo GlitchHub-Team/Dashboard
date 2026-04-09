@@ -76,6 +76,7 @@ func TestController_GetRealTimeData(t *testing.T) {
     expectedCmd := real_time_data.RetrieveRealTimeDataCommand{
         Requester: requester,
         SensorId:  targetSensorId,
+		TenantId: targetTenantId,
     }
 
     mockTimestamp := time.Now()

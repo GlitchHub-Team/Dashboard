@@ -56,11 +56,13 @@ func (c *Controller) GetRealTimeData(ctx *gin.Context) {
 		return
 	}
 	sensorId, _ := uuid.Parse(uriDto.SensorId)
+	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
 	// 3. Esegui comando
 	cmd := RetrieveRealTimeDataCommand{
 		Requester: requester,
 		SensorId:  sensorId,
+		TenantId: tenantId,
 	}
 	// c.log.Sugar().Errorf("err: %v", err)
 

@@ -1,7 +1,6 @@
 package real_time_data
 
 import (
-	"backend/internal/gateway"
 	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
@@ -20,57 +19,56 @@ type RealTimeDataPort interface {
 // Service ------------------------------------------------------------------------------------------------------
 
 type RealTimeDataService struct {
-	sensorWithGatewayPort sensor.GetSensorWithGatewayPort
-	sensorByTenantPort   sensor.GetSensorByTenantPort
-	realTimeDataPort     RealTimeDataPort
+	tenantPort tenant.GetTenantPort
+	sensorByTenantPort sensor.GetSensorByTenantPort
+	realTimeDataPort   RealTimeDataPort
 }
 
 func NewRealTimeDataService(
-	sensorWithTenantPort sensor.GetSensorWithGatewayPort,
+	tenantPort tenant.GetTenantPort,
 	sensorByTenantPort sensor.GetSensorByTenantPort,
 	realTimeDataPort RealTimeDataPort,
 ) *RealTimeDataService {
 	return &RealTimeDataService{
-		sensorWithGatewayPort: sensorWithTenantPort,
-		sensorByTenantPort:   sensorByTenantPort,
-		realTimeDataPort:     realTimeDataPort,
+		tenantPort: tenantPort,
+		sensorByTenantPort: sensorByTenantPort,
+		realTimeDataPort:   realTimeDataPort,
 	}
 }
 
 func (s *RealTimeDataService) RetrieveRealTimeData(cmd RetrieveRealTimeDataCommand) (
 	dataChannel chan RealTimeSample, errChannel chan RealTimeError, err error,
 ) {
-	// 1. Controllo business logic
-	var sensorObj sensor.Sensor
-	var tenantId *uuid.UUID
-
-	// - Super Admin
-	if cmd.Requester.RequesterRole == identity.ROLE_SUPER_ADMIN {
-		var gateway gateway.Gateway
-		sensorObj, gateway, err = s.sensorWithGatewayPort.GetSensorWithGateway(cmd.SensorId)
-		tenantId = gateway.TenantId
-	} else
-	// - Tenant member (controllo integrato di accesso)
-	{
-		var tenant tenant.Tenant
-		sensorObj, tenant, err = s.sensorByTenantPort.GetSensorByTenant(*cmd.Requester.RequesterTenantId, cmd.SensorId)
-		tenantId = &tenant.Id
-	}
-
+	// 1. Ottieni sensore
+	sensorObj, sensorTenantId, err := s.sensorByTenantPort.GetSensorByTenant(cmd.TenantId, cmd.SensorId)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if tenantId == nil {
-		return nil, nil, sensor.ErrSensorNotActive
+	// 2. Ottieni tenant
+	sensorTenant, err := s.tenantPort.GetTenant(*sensorTenantId)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	// 2. Creazione canali
+	// Check accesso
+	// - Super Admin
+	if (cmd.Requester.RequesterRole == identity.ROLE_SUPER_ADMIN && !sensorTenant.CanImpersonate) {
+		return nil, nil, tenant.ErrImpersonationFailed
+	} else
+	// - Tenant Member
+	{
+		if (sensorTenantId == nil) || (cmd.Requester.RequesterTenantId != nil && *cmd.Requester.RequesterTenantId != *sensorTenantId) {
+			return nil, nil, sensor.ErrSensorNotFound
+		}
+	}
+	
+	// 3. Creazione canali
 	dataChannel = make(chan RealTimeSample, 16)
 	errChannel = make(chan RealTimeError, 1)
 
 	dataPort := s.realTimeDataPort
-	err = dataPort.StartDataRetriever(*tenantId, sensorObj, dataChannel, errChannel)
+	err = dataPort.StartDataRetriever(cmd.TenantId, sensorObj, dataChannel, errChannel)
 	if err != nil {
 		return nil, nil, err
 	}

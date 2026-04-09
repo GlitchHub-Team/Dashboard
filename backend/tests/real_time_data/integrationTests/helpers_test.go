@@ -2,65 +2,105 @@ package real_time_data_integration_test
 
 import (
 	"fmt"
-	"net/http"
+	"testing"
 
+	"backend/internal/gateway"
+	"backend/internal/sensor"
+	"backend/internal/tenant"
 	"backend/tests/helper"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-func authHeader(jwt string) http.Header {
-	header := http.Header{}
-	header.Set("Authorization", "Bearer "+jwt)
-	return header
-}
-
-func realTimeDataPath(tenantID uuid.UUID, sensorID uuid.UUID) string {
-	return fmt.Sprintf("/api/v1/tenant_id/%s/sensor/%s/real_time_data", tenantID.String(), sensorID.String())
+func realTimeDataPath(tenantID, sensorID uuid.UUID) string {
+	return fmt.Sprintf("/api/v1/tenant/%s/sensor/%s/real_time_data", tenantID.String(), sensorID.String())
 }
 
 func preSetupSensorChain(
-	tenantID uuid.UUID,
-	gatewayID uuid.UUID,
-	sensorID uuid.UUID,
-	profile string,
-	status string,
+	t *testing.T,
+	tenantId uuid.UUID,
+	gatewayId uuid.UUID,
+	sensorId uuid.UUID,
+
+	sensorProfile string,
+	sensorStatus string,
 ) helper.IntegrationTestPreSetup {
+	t.Helper()
+
 	return func(deps helper.IntegrationTestDeps) bool {
 		db := (*gorm.DB)(deps.CloudDB)
 
-		err := db.Exec(`INSERT INTO tenants (id, name, can_impersonate) VALUES (?, 'RealTime Data Tenant', false)`, tenantID).Error
+		// Crea tenant
+		if tenantId == uuid.Nil {
+			t.Errorf("Cannot setup sensor with nil tenant id")
+			return false
+		}
+		tenantIdStr := tenantId.String()
+		err := db.Save(&tenant.TenantEntity{
+			ID: tenantId.String(),
+			Name: "Test tenant",
+			CanImpersonate: true,
+		}).Error
 		if err != nil {
+			t.Errorf("error creating tenant: %v", err)
 			return false
 		}
 
-		var tID *uuid.UUID
-		if tenantID != uuid.Nil {
-			tID = &tenantID
-		}
-
-		err = db.Exec(`INSERT INTO gateways (id, tenant_id, name, mac_address) VALUES (?, ?, 'RealTime Gateway', 'AA:BB:CC:DD:EE:FF')`, gatewayID, tID).Error
+		// Crea gateway
+		err = db.Save(&gateway.GatewayEntity{
+			ID: gatewayId.String(),
+			Name: "Test gateway",
+			TenantId: &tenantIdStr,
+			Status: string(gateway.GATEWAY_STATUS_ACTIVE),
+			PublicIdentifier: "test-public-identifier",
+		}).Error
 		if err != nil {
+			t.Errorf("error creating tenant: %v", err)
 			return false
 		}
 
-		err = db.Exec(`INSERT INTO sensors (id, gateway_id, profile, status, name) VALUES (?, ?, ?, ?, 'RealTime Sensor')`, sensorID, gatewayID, profile, status).Error
+		// Crea sensore
+		err = db.Save(&sensor.SensorEntity{
+			ID: sensorId.String(),
+			GatewayID: gatewayId.String(),
+			Name: "Test Sensor",
+			Interval: 1000,
+			Profile: sensorProfile,
+			Status: sensorStatus,
+		}).Error
+		if err != nil {
+			t.Errorf("error creating tenant: %v", err)
+			return false
+		}
 
-		return err == nil
+		return true
 	}
 }
 
 func postSetupDeleteSensorChain(
-	tenantID uuid.UUID,
-	gatewayID uuid.UUID,
-	sensorID uuid.UUID,
+	t *testing.T,
+	tenantId uuid.UUID,
+	gatewayId uuid.UUID,
+	sensorId uuid.UUID,
 ) helper.IntegrationTestPostSetup {
+	t.Helper()
 	return func(deps helper.IntegrationTestDeps) {
 		db := (*gorm.DB)(deps.CloudDB)
 
-		db.Exec(`DELETE FROM sensors WHERE id = ?`, sensorID)
-		db.Exec(`DELETE FROM gateways WHERE id = ?`, gatewayID)
-		db.Exec(`DELETE FROM tenants WHERE id = ?`, tenantID)
+		err := db.Where("id = ?", sensorId.String()).Delete(&sensor.SensorEntity{}).Error
+		if err != nil {
+			t.Errorf("cannot delete sensor: %v", err)
+		}
+
+		err = db.Where("id = ?", gatewayId.String()).Delete(&gateway.GatewayEntity{}).Error
+		if err != nil {
+			t.Errorf("cannot delete sensor: %v", err)
+		}
+
+		err = db.Where("id = ?", tenantId.String()).Delete(&tenant.TenantEntity{}).Error
+		if err != nil {
+			t.Errorf("cannot delete sensor: %v", err)
+		}
 	}
 }
