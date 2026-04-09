@@ -56,7 +56,7 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 	}
 
 	if !cmd.CanImpersonate {
-		return Tenant{}, ErrImpersonationFailded
+		return Tenant{}, ErrImpersonationFailed
 	}
 
 	newTenant := Tenant{
@@ -87,7 +87,7 @@ func (service *TenantService) DeleteTenant(cmd DeleteTenantCommand) (Tenant, err
 	}
 
 	if !tenant.CanImpersonate {
-		return Tenant{}, ErrImpersonationFailded
+		return Tenant{}, ErrImpersonationFailed
 	}
 
 	oldTenant, err := service.deleteTenantPort.DeleteTenant(cmd.TenantId)

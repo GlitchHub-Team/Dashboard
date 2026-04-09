@@ -1,8 +1,6 @@
 package tenant
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 )
 
@@ -12,7 +10,6 @@ func TenantEntityToDomain(entity *TenantEntity) (tenant Tenant, err error) {
 	}
 
 	tenantId, err := uuid.Parse(entity.ID)
-	fmt.Printf("aaaaaaa %v", err)
 	if err != nil {
 		return
 	}
