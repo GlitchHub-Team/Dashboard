@@ -63,7 +63,7 @@ export class UserFormDialogComponent {
 
   constructor() {
     if (this.isTenantAdminRole) {
-      this.tenantService.retrieveTenants();
+      this.tenantService.retrieveTenants(false);
     }
   }
 

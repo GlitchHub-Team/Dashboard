@@ -45,7 +45,7 @@ export class LoginFormComponent {
   });
 
   constructor() {
-    this.tenantService.retrieveTenants();
+    this.tenantService.retrieveTenants(true);
   }
 
   protected onSubmit(): void {
