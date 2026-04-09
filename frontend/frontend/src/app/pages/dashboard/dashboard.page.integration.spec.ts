@@ -59,7 +59,7 @@ const mockSensors: Sensor[] = [
   },
 ];
 
-const mockChartRequest: ChartRequest = { sensor: mockSensors[0], chartType: ChartType.HISTORIC };
+const mockChartRequest: ChartRequest = { sensor: mockSensors[0], chartType: ChartType.HISTORIC, tenantId: 'tenant-1' };
 
 const tenantAdminSession: UserSession = {
   userId: '1',
@@ -396,7 +396,7 @@ describe('DashboardPage (Integration)', () => {
       expect(snackBarMock.open).not.toHaveBeenCalled();
 
       gatewayTable.componentInstance.commandRequested.emit(true);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Chiudi', {
         duration: 3000,
       });
     });

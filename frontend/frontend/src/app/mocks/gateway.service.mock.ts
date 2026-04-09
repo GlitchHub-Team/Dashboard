@@ -4,7 +4,6 @@ import { delay, Observable, of, switchMap, throwError, timer } from 'rxjs';
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../models/gateway/gateway-config.model';
 import { PaginatedGatewayResponse } from '../models/gateway/paginated-gateway-response.model';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ApiError } from '../models/api-error.model';
 
 @Injectable({
@@ -28,6 +27,7 @@ export class GatewayApiClientServiceMock {
       name: 'ICU Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-02-icu',
     },
     {
       gateway_id: 'gateway-03',
@@ -35,6 +35,7 @@ export class GatewayApiClientServiceMock {
       name: 'Reparto B Gateway',
       status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-03-repartob',
     },
     {
       gateway_id: 'gateway-04',
@@ -42,6 +43,7 @@ export class GatewayApiClientServiceMock {
       name: 'Reparto C Gateway',
       status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-04-repartoc',
     },
     {
       gateway_id: 'gateway-05',
@@ -49,6 +51,7 @@ export class GatewayApiClientServiceMock {
       name: 'Radiologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-05-radiologia',
     },
     {
       gateway_id: 'gateway-06',
@@ -56,6 +59,7 @@ export class GatewayApiClientServiceMock {
       name: 'Cardiologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-06-cardiologia',
     },
     {
       gateway_id: 'gateway-07',
@@ -63,6 +67,7 @@ export class GatewayApiClientServiceMock {
       name: 'Neurologia Gateway',
       status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-07-neurologia',
     },
     {
       gateway_id: 'gateway-08',
@@ -70,6 +75,7 @@ export class GatewayApiClientServiceMock {
       name: 'Oncologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-08-oncologia',
     },
     {
       gateway_id: 'gateway-09',
@@ -77,6 +83,7 @@ export class GatewayApiClientServiceMock {
       name: 'Pediatria Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-09-pediatria',
     },
     {
       gateway_id: 'gateway-10',
@@ -84,6 +91,7 @@ export class GatewayApiClientServiceMock {
       name: 'Ortopedia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-10-ortopedia',
     },
     {
       gateway_id: 'gateway-11',
@@ -91,6 +99,7 @@ export class GatewayApiClientServiceMock {
       name: 'Dermatologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-11-dermatologia',
     },
     {
       gateway_id: 'gateway-12',
@@ -98,6 +107,7 @@ export class GatewayApiClientServiceMock {
       name: 'Oftalmologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-12-oftalmologia',
     },
     {
       gateway_id: 'gateway-13',
@@ -105,6 +115,7 @@ export class GatewayApiClientServiceMock {
       name: 'ENT Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-13-ent',
     },
     {
       gateway_id: 'gateway-14',
@@ -112,6 +123,7 @@ export class GatewayApiClientServiceMock {
       name: 'Urologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-14-urologia',
     },
     {
       gateway_id: 'gateway-15',
@@ -119,6 +131,7 @@ export class GatewayApiClientServiceMock {
       name: 'Nefrologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-15-nefrologia',
     },
     {
       gateway_id: 'gateway-16',
@@ -126,6 +139,7 @@ export class GatewayApiClientServiceMock {
       name: 'Pneumologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-16-pneumologia',
     },
     {
       gateway_id: 'gateway-17',
@@ -133,6 +147,7 @@ export class GatewayApiClientServiceMock {
       name: 'Gastroenterologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-17-gastro',
     },
     {
       gateway_id: 'gateway-18',
@@ -140,6 +155,7 @@ export class GatewayApiClientServiceMock {
       name: 'Endocrinologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-18-endocrino',
     },
     {
       gateway_id: 'gateway-19',
@@ -147,6 +163,7 @@ export class GatewayApiClientServiceMock {
       name: 'Reumatologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-19-reumatologia',
     },
     {
       gateway_id: 'gateway-20',
@@ -154,6 +171,7 @@ export class GatewayApiClientServiceMock {
       name: 'Ematologia Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-20-ematologia',
     },
     {
       gateway_id: 'gateway-21',
@@ -161,6 +179,7 @@ export class GatewayApiClientServiceMock {
       name: 'Psichiatria Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-21-psichiatria',
     },
     {
       gateway_id: 'gateway-22',
@@ -168,6 +187,7 @@ export class GatewayApiClientServiceMock {
       name: 'Ala Chirurgica Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-22-chirurgica',
     },
     {
       gateway_id: 'gateway-23',
@@ -175,6 +195,7 @@ export class GatewayApiClientServiceMock {
       name: 'Sala di recupero Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-23-recupero',
     },
     {
       gateway_id: 'gateway-24',
@@ -182,6 +203,7 @@ export class GatewayApiClientServiceMock {
       name: 'Farmacia Gateway',
       status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-24-farmacia',
     },
     {
       gateway_id: 'gateway-25',
@@ -189,6 +211,7 @@ export class GatewayApiClientServiceMock {
       name: 'Banca del Sangue Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-25-sangue',
     },
 
     // Tenant 2
@@ -198,6 +221,7 @@ export class GatewayApiClientServiceMock {
       name: 'Pronto soccorso Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-30-prontosoccorso',
     },
     {
       gateway_id: 'gateway-31',
@@ -205,6 +229,7 @@ export class GatewayApiClientServiceMock {
       name: 'Lab Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-31-lab',
     },
     {
       gateway_id: 'gateway-32',
@@ -212,6 +237,7 @@ export class GatewayApiClientServiceMock {
       name: 'Triage Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-32-triage',
     },
     {
       gateway_id: 'gateway-33',
@@ -219,6 +245,7 @@ export class GatewayApiClientServiceMock {
       name: 'Baia delle ambulanze Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-33-ambulanze',
     },
     {
       gateway_id: 'gateway-34',
@@ -226,6 +253,7 @@ export class GatewayApiClientServiceMock {
       name: 'Area di attesa Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-34-attesa',
     },
 
     // Tenant 4
@@ -235,6 +263,7 @@ export class GatewayApiClientServiceMock {
       name: 'Clinic A Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-40-clinica',
     },
   ];
 

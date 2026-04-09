@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>
   <mat-icon>terminal</mat-icon>
-  Comando Gateway
+  Comando Sensore
 </h2>
 
 <mat-dialog-content>
@@ -16,8 +16,8 @@
 
   <form [formGroup]="commandForm" class="dialog-form">
     <mat-form-field appearance="outline">
-      <mat-label>Gateway</mat-label>
-      <input matInput [value]="data.gateway.name" disabled />
+      <mat-label>Sensore</mat-label>
+      <input matInput [value]="data.sensor.name" disabled />
       <mat-icon matSuffix>router</mat-icon>
     </mat-form-field>
 
@@ -32,28 +32,6 @@
         <mat-error>Campo obbligatorio</mat-error>
       }
     </mat-form-field>
-
-    @if (showCommissionFields) {
-      <mat-form-field appearance="outline">
-        <mat-label>Tenant</mat-label>
-        <mat-select formControlName="tenantId">
-          @for (tenant of displayedTenants(); track tenant.id) {
-            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
-          }
-        </mat-select>
-        @if (commandForm.controls.tenantId.invalid && commandForm.controls.tenantId.touched) {
-          <mat-error>Devi indicare il tenant del gateway</mat-error>
-        }
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Token di commission</mat-label>
-        <mat-icon matSuffix>lock</mat-icon>
-        <input matInput formControlName="token" type="text" />
-        @if (commandForm.controls.token.invalid && commandForm.controls.token.touched) {
-          <mat-error>Devi inserire il token di commission</mat-error>
-        }
-      </mat-form-field>
-    }
   </form>
 </mat-dialog-content>
 
@@ -67,3 +45,4 @@
     }
   </button>
 </mat-dialog-actions>
+

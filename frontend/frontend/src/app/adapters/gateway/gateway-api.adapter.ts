@@ -15,6 +15,7 @@ export class GatewayApiAdapter extends GatewayAdapter {
       status: statusMapper.fromBackend(dto.status),
       interval: dto.interval,
       tenantId: dto.tenant_id ?? undefined,
+      publicIdentifier: dto.public_identifier ?? undefined,
     };
   }
 

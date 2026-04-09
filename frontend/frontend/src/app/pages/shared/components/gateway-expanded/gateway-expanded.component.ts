@@ -24,6 +24,7 @@ export class GatewayExpandedComponent {
   public readonly sensorLimit = input<number>(10);
 
   public readonly chartRequested = output<ChartRequest>();
+  public readonly commandRequested = output<boolean>();
   // Emit del gateway associato per darlo al dialog di creazione sensore
   public readonly sensorCreateRequested = output<Gateway>();
   public readonly sensorDeleteRequested = output<Sensor>();

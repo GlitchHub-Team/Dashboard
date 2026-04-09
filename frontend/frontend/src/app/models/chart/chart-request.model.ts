@@ -5,6 +5,7 @@ import { TimeInterval } from './time-interval.model';
 export interface ChartRequest {
   sensor: Sensor;
   chartType: ChartType;
+  tenantId?: string;
   dataPointsCounter?: number;
   timeInterval?: TimeInterval;
 }

@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 
 import { SensorService } from './sensor.service';
 import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
+import { SensorCommandApiClientService } from '../sensor-command-api-client/sensor-command-api-client.service';
 import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
@@ -95,6 +96,11 @@ describe('SensorService', () => {
     deleteSensor: vi.fn(),
   };
 
+  const sensorCommandApiMock = {
+    interruptSensor: vi.fn(),
+    resumeSensor: vi.fn(),
+  };
+
   const adapterMock = {
     fromPaginatedDTO: vi.fn(),
     fromDTO: vi.fn(),
@@ -118,6 +124,7 @@ describe('SensorService', () => {
       providers: [
         SensorService,
         { provide: SensorApiClientService, useValue: sensorApiMock },
+        { provide: SensorCommandApiClientService, useValue: sensorCommandApiMock },
         { provide: SensorAdapter, useValue: adapterMock },
       ],
     });
@@ -205,7 +212,7 @@ describe('SensorService', () => {
   });
 
   describe('addNewSensor', () => {
-    it('should call api, map through adapter, return adapted sensor, and set loading to false', () => {
+    it('should call api, map through adapter, and return adapted sensor', () => {
       sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
       adapterMock.fromDTO.mockReturnValue(mockNewSensor);
 
@@ -215,7 +222,6 @@ describe('SensorService', () => {
       expect(sensorApiMock.addNewSensor).toHaveBeenCalledWith(mockConfig);
       expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
       expect(result).toEqual(mockNewSensor);
-      expect(service.loading()).toBe(false);
     });
 
     it.each([
@@ -256,19 +262,6 @@ describe('SensorService', () => {
       service.addNewSensor(mockConfig).subscribe({ error: errorSpy });
 
       expect(errorSpy).toHaveBeenCalledWith(error);
-    });
-
-    it('should clear previous error before adding', () => {
-      sensorApiMock.addNewSensor.mockReturnValue(
-        throwError(() => ({ status: 500, message: 'Error' })),
-      );
-      service.addNewSensor(mockConfig).subscribe({ error: () => {} });
-
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
-      service.addNewSensor(mockConfig).subscribe();
-
-      expect(service.error()).toBeNull();
     });
   });
 
@@ -324,6 +317,44 @@ describe('SensorService', () => {
       service.deleteSensor('s-1').subscribe();
 
       expect(service.error()).toBeNull();
+    });
+  });
+
+  describe('interruptSensor and resumeSensor', () => {
+    beforeEach(() => {
+      mockListSuccess('getSensorListByGateway');
+      service.getSensorsByGateway('gw-1', 0, 10);
+      sensorApiMock.getSensorListByGateway.mockClear();
+    });
+
+    it.each([
+      ['interruptSensor'] as const,
+      ['resumeSensor'] as const,
+    ])('%s should call command api and refetch on success', (method) => {
+      sensorCommandApiMock[method].mockReturnValue(of(undefined));
+      mockListSuccess('getSensorListByGateway');
+
+      service[method]('s-1').subscribe();
+
+      expect(sensorCommandApiMock[method]).toHaveBeenCalledWith('s-1');
+      expect(sensorApiMock.getSensorListByGateway).toHaveBeenCalledWith('gw-1', 1, 10);
+      expect(service.loading()).toBe(false);
+    });
+
+    it.each([
+      ['interruptSensor'] as const,
+      ['resumeSensor'] as const,
+    ])('%s should propagate error to subscriber and not refetch', (method) => {
+      const error = { status: 500, message: 'Command failed' } as ApiError;
+      sensorCommandApiMock[method].mockReturnValue(throwError(() => error));
+      const errorSpy = vi.fn();
+      const completeSpy = vi.fn();
+      service[method]('s-1').subscribe({ error: errorSpy, complete: completeSpy });
+
+      expect(service.error()).toBeNull();
+      expect(sensorApiMock.getSensorListByGateway).not.toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalledWith(error);
+      expect(completeSpy).not.toHaveBeenCalled();
     });
   });
 

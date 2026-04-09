@@ -1,5 +1,5 @@
 @if (hasMultipleFields()) {
-  <mat-form-field appearance="outline">
+  <mat-form-field appearance="outline" class="field-selector">
     <mat-label>Stai visualizzando</mat-label>
     <mat-select [value]="selectedField()" (selectionChange)="onFieldChange($event.value)">
       @for (field of fields(); track field.key) {

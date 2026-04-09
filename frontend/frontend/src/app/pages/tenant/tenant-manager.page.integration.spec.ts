@@ -250,7 +250,7 @@ describe('TenantManagerPage (Integration)', () => {
       afterClosedSubject.next(true);
 
       expect(tenantServiceMock.removeTenant).toHaveBeenCalledWith('tenant-2');
-      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant eliminato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant eliminato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
@@ -288,7 +288,7 @@ describe('TenantManagerPage (Integration)', () => {
       afterClosedSubject.next(true);
 
       expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledOnce();
-      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant creato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant creato con successo', 'Chiudi', {
         duration: 3000,
       });
     });

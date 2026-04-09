@@ -1,3 +1,8 @@
+.field-selector {
+  overflow: visible !important;
+  padding-top: 8px !important;
+}
+
 :host {
   display: flex;
   flex-direction: column;

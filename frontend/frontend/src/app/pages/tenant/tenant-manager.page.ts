@@ -64,7 +64,7 @@ export class TenantManagerPage implements OnInit {
       )
       .subscribe(() => {
         this.tenantService.retrieveTenants();
-        this.snackBar.open('Tenant creato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Tenant creato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 
@@ -84,7 +84,7 @@ export class TenantManagerPage implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        this.snackBar.open('Tenant eliminato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Tenant eliminato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 

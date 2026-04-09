@@ -102,6 +102,7 @@ describe('DashboardPage (Unit)', () => {
   const mockChartRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-01',
     timeInterval: { from: new Date('2025-01-01'), to: new Date('2025-01-02') },
   };
 
@@ -358,7 +359,7 @@ describe('DashboardPage (Unit)', () => {
         .query(By.directive(StubGatewayTable))
         .triggerEventHandler('commandRequested', value);
       if (shouldCall) {
-        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Close', {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Chiudi', {
           duration: 3000,
         });
       } else {

@@ -66,24 +66,23 @@ export class GatewayCommandsDialog implements OnInit {
   protected get commands(): { value: string; label: string }[] {
     if (this.isDashboardMode) {
       return [
-        { value: 'restart', label: 'Restart' },
-        { value: 'reboot', label: 'Reboot' },
+        { value: 'reset', label: 'Reset' },
+        { value: 'reboot', label: 'Riavvio' },
       ];
     }
 
     if (this.gateway.tenantId) {
       return [
         { value: 'decommission', label: 'Decommission' },
-        { value: 'restart', label: 'Restart' },
-        { value: 'reboot', label: 'Reboot' },
+        { value: 'reset', label: 'Reset' },
+        { value: 'reboot', label: 'Riavvio' },
       ];
     }
 
     return [
       { value: 'commission', label: 'Commission' },
-      { value: 'decommission', label: 'Decommission' },
-      { value: 'restart', label: 'Restart' },
-      { value: 'reboot', label: 'Reboot' },
+      { value: 'reset', label: 'Reset' },
+      { value: 'reboot', label: 'Riavvio' },
     ];
   }
 
@@ -155,7 +154,7 @@ export class GatewayCommandsDialog implements OnInit {
           },
         });
         break;
-      case 'restart':
+      case 'reset':
         this.gatewayService.resetGateway(this.data.gateway.id).subscribe({
           next: () => {
             this.dialogRef.close(true);

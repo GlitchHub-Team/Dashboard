@@ -12,6 +12,7 @@ describe('GatewayApiAdapter', () => {
     status: 'active',
     interval: 60,
     tenant_id: 'tenant-01',
+    public_identifier: 'pub-id-1',
   };
 
   describe('fromDTO', () => {
@@ -22,6 +23,8 @@ describe('GatewayApiAdapter', () => {
       { field: 'interval', dto, expected: 60 },
       { field: 'tenantId', dto, expected: 'tenant-01' },
       { field: 'tenantId', dto: { ...dto, tenant_id: undefined }, expected: undefined },
+      { field: 'publicIdentifier', dto, expected: 'pub-id-1' },
+      { field: 'publicIdentifier', dto: { ...dto, public_identifier: undefined }, expected: undefined },
     ] as const)('should map $field correctly', ({ dto, field, expected }) => {
       expect(adapter.fromDTO(dto)[field]).toEqual(expected);
     });

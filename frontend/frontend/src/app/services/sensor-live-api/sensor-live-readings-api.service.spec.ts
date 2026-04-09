@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
 
@@ -5,6 +6,10 @@ import { environment } from '../../../environments/environment';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { Status } from '../../models/gateway-sensor-status.enum';
+import { ChartRequest } from '../../models/chart/chart-request.model';
+import { ChartType } from '../../models/chart/chart-type.enum';
+import { SensorLiveReadingsApiService } from './sensor-live-readings-api.service';
+import { TokenStorageService } from '../token-storage/token-storage.service';
 
 vi.mock('rxjs/webSocket', () => ({
   webSocket: vi.fn(),
@@ -12,9 +17,11 @@ vi.mock('rxjs/webSocket', () => ({
 }));
 
 describe('SensorLiveReadingsApiService', () => {
-  let service: any;
+  let service: SensorLiveReadingsApiService;
+  let mockTokenService: Partial<TokenStorageService>;
 
   const wsUrl = environment.wsUrl;
+  const mockToken = 'mock-jwt-token';
 
   const mockSensor: Sensor = {
     id: 'sensor-1',
@@ -23,6 +30,12 @@ describe('SensorLiveReadingsApiService', () => {
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
     dataInterval: 60,
     status: Status.ACTIVE,
+  };
+
+  const mockRequest: ChartRequest = {
+    sensor: mockSensor,
+    chartType: ChartType.REALTIME,
+    tenantId: 'tenant-1',
   };
 
   const createMockSocket = () => {
@@ -34,10 +47,21 @@ describe('SensorLiveReadingsApiService', () => {
   };
 
   beforeEach(async () => {
-    vi.resetAllMocks();
     vi.resetModules();
-    const module = await import('./sensor-live-readings-api.service');
-    service = new module.SensorLiveReadingsApiService();
+    vi.clearAllMocks();
+
+    mockTokenService = {
+      getToken: vi.fn().mockReturnValue(mockToken),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        SensorLiveReadingsApiService,
+        { provide: TokenStorageService, useValue: mockTokenService },
+      ],
+    });
+
+    service = TestBed.inject(SensorLiveReadingsApiService);
   });
 
   it('should be created', () => {
@@ -45,28 +69,31 @@ describe('SensorLiveReadingsApiService', () => {
   });
 
   describe('connect', () => {
-    it('should call webSocket with the correct URL and return the socket observable', () => {
+    it('should call webSocket with the correct URL including the token and return the socket observable', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
-      const result = service.connect(mockSensor);
+      const result = service.connect(mockRequest);
 
-      expect(webSocket).toHaveBeenCalledWith(`${wsUrl}/sensor/${mockSensor.id}/real_time_data`);
+      expect(webSocket).toHaveBeenCalledWith(
+        `${wsUrl}tenant/${mockRequest.tenantId}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
+      );
       expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 
-    it('should create a new socket on each call', () => {
+    it('should disconnect the previous socket and create a new one on each call', () => {
       const mockSocket1 = createMockSocket();
       const mockSocket2 = createMockSocket();
       vi.mocked(webSocket)
         .mockReturnValueOnce(mockSocket1 as any)
         .mockReturnValueOnce(mockSocket2 as any);
 
-      service.connect(mockSensor);
-      service.connect(mockSensor);
+      service.connect(mockRequest);
+      service.connect(mockRequest);
 
       expect(webSocket).toHaveBeenCalledTimes(2);
+      expect(mockSocket1.complete).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -75,7 +102,7 @@ describe('SensorLiveReadingsApiService', () => {
       const mockSocket = createMockSocket();
       vi.mocked(webSocket).mockReturnValue(mockSocket as any);
 
-      service.connect(mockSensor);
+      service.connect(mockRequest);
       service.disconnect();
       expect(mockSocket.complete).toHaveBeenCalledTimes(1);
 

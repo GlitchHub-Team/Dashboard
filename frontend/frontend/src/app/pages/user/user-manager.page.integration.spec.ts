@@ -286,7 +286,7 @@ describe('UserManagerPage (Integration)', () => {
 
       expect(userServiceMock.removeUser).toHaveBeenCalledWith(mockUsers[1]);
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
-      expect(snackBarMock.open).toHaveBeenCalledWith('Utente eliminato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Utente eliminato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
@@ -326,7 +326,7 @@ describe('UserManagerPage (Integration)', () => {
       afterClosedSubject.next(true);
 
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(UserRole.TENANT_ADMIN, 'tenant-1');
-      expect(snackBarMock.open).toHaveBeenCalledWith('Utente creato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Utente creato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
