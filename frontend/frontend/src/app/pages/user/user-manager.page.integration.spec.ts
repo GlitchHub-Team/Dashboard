@@ -15,6 +15,7 @@ import { TenantService } from '../../services/tenant/tenant.service';
 import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
+import { Tenant } from '../../models/tenant/tenant.model';
 
 const mockUsers: User[] = [
   {
@@ -78,6 +79,8 @@ function setupTestBed(options: {
   const routerMock = { navigate: vi.fn() };
   const tenantServiceMock = {
     getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: options.canImpersonate ?? true })),
+    retrieveTenants: vi.fn(),
+    tenantList: signal<Tenant[]>([]),
   };
 
   TestBed.configureTestingModule({
@@ -352,10 +355,35 @@ describe('UserManagerPage (Integration)', () => {
       expect(fixture.nativeElement.querySelector('button[mat-raised-button]').disabled).toBe(true);
     });
 
+    it('should hide table, show warning, and disable create button for SUPER_ADMIN with TENANT_ADMIN context and no tenantId', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: {},
+      });
+      fixture.detectChanges();
+
+      expect(getTable(fixture)).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.warning-banner')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('button[mat-raised-button]').disabled).toBe(true);
+    });
+
     it('should show table for TENANT_USER when tenantId is provided', () => {
       const { fixture, userServiceMock } = setupTestBed({
         session: superAdminSession,
         routeContext: tenantUserContext,
+        queryParams: { tenantId: 'tenant-1' },
+      });
+      (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
+      fixture.detectChanges();
+
+      expect(getTable(fixture)).toBeTruthy();
+    });
+
+    it('should show table for TENANT_ADMIN when tenantId is provided via URL', () => {
+      const { fixture, userServiceMock } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
         queryParams: { tenantId: 'tenant-1' },
       });
       (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
@@ -406,6 +434,39 @@ describe('UserManagerPage (Integration)', () => {
       const errorBanner = fixture.nativeElement.querySelector('.error-banner');
       expect(errorBanner).toBeTruthy();
       expect(errorBanner.textContent).toContain('Failed to load users');
+    });
+
+    it('should show tenant dropdown for SUPER_ADMIN with TENANT_ADMIN context', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: {},
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('mat-select')).toBeTruthy();
+    });
+
+    it('should NOT show tenant dropdown for SUPER_ADMIN with TENANT_USER context', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantUserContext,
+        queryParams: {},
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeFalsy();
+    });
+
+    it('should NOT show tenant dropdown for TENANT_ADMIN session', () => {
+      const { fixture } = setupTestBed({
+        session: tenantAdminSession,
+        routeContext: tenantAdminContext,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeFalsy();
     });
 
     describe('Navigation', () => {

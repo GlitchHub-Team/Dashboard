@@ -1,6 +1,8 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { combineLatest } from 'rxjs';
@@ -27,7 +29,7 @@ interface UserManagerContext {
 @Component({
   selector: 'app-user-manager-page',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule],
+  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule, MatFormFieldModule, MatSelectModule],
   templateUrl: './user-manager.page.html',
   styleUrl: './user-manager.page.css',
 })
@@ -52,6 +54,7 @@ export class UserManagerPage implements OnInit {
   protected readonly limit = this.userService.limit;
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
+  protected readonly tenants = this.tenantService.tenantList;
 
   private readonly _dismissedError = signal<string | null>(null);
 
@@ -93,7 +96,13 @@ export class UserManagerPage implements OnInit {
         this.activeTenantId.set(resolvedTenantId);
         this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
 
-        if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
+        if (currentUserRole === UserRole.SUPER_ADMIN && baseContext.role === UserRole.TENANT_ADMIN) {
+          this.tenantService.retrieveTenants(true);
+        }
+
+        const needsTenantId =
+          baseContext.role === UserRole.TENANT_USER || baseContext.role === UserRole.TENANT_ADMIN;
+        if (!needsTenantId || resolvedTenantId) {
           this.refreshUsers();
         }
       },
@@ -150,6 +159,12 @@ export class UserManagerPage implements OnInit {
     this.router.navigate(['/tenant-management']);
   }
 
+  protected onTenantSelected(tenantId: string): void {
+    this.activeTenantId.set(tenantId);
+    this.context.update((ctx) => ({ ...ctx, tenantId }));
+    this.refreshUsers();
+  }
+
   protected onBackToDashboard(): void {
     if (this.activeTenantId()) {
       this.router.navigate(['/dashboard'], {
@@ -160,7 +175,6 @@ export class UserManagerPage implements OnInit {
 
   private refreshUsers(): void {
     const context = this.context();
-    // TODO: Come prendere tutti i tenant admin se endpoint richiede tenantId?
     this.userService.retrieveUsers(context.role, context.tenantId);
   }
 }

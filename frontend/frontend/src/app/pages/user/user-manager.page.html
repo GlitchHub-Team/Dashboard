@@ -5,11 +5,28 @@
       mat-raised-button
       color="primary"
       (click)="onCreateUser()"
-      [disabled]="loading() || (!activeTenantId() && context().role === UserRole.TENANT_USER)"
+      [disabled]="loading() || (!activeTenantId() && (context().role === UserRole.TENANT_USER || (context().role === UserRole.TENANT_ADMIN && currentRole === UserRole.SUPER_ADMIN)))"
     >
       <mat-icon>add</mat-icon> Aggiungi Nuovo Utente
     </button>
   </div>
+
+  @if (currentRole === UserRole.SUPER_ADMIN && context().role === UserRole.TENANT_ADMIN) {
+    <div class="tenant-select-bar">
+      <mat-form-field appearance="outline" class="tenant-select-field">
+        <mat-label>Tenant</mat-label>
+        <mat-select
+          [value]="activeTenantId()"
+          (selectionChange)="onTenantSelected($event.value)"
+          placeholder="Seleziona un Tenant"
+        >
+          @for (tenant of tenants(); track tenant.id) {
+            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  }
 
   @if (activeTenantId() && currentRole === UserRole.SUPER_ADMIN) {
     <div class="info-banner tenant-banner">
@@ -28,6 +45,15 @@
           Torna ai Tenant
         </button>
       </div>
+    </div>
+  }
+  @if (
+    currentRole === UserRole.SUPER_ADMIN &&
+    context().role === UserRole.TENANT_ADMIN &&
+    !activeTenantId()
+  ) {
+    <div class="info-banner warning-banner">
+      <span>Seleziona un tenant per visualizzare i tenant admin.</span>
     </div>
   }
   @if (
@@ -54,7 +80,7 @@
     </div>
   }
 
-  @if (activeTenantId() || context().role !== UserRole.TENANT_USER) {
+  @if (context().role === UserRole.SUPER_ADMIN || activeTenantId()) {
     <div class="manager-content table-container">
       <app-user-table
         [users]="users()"

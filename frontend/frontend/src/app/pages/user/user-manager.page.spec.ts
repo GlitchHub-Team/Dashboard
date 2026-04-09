@@ -16,11 +16,13 @@ import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
 import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
+import { Tenant } from '../../models/tenant/tenant.model';
 
 interface UserManagerPageTestApi {
   onCreateUser: () => void;
   onDeleteUser: (user: User) => void;
   onPageChange: (event: PageEvent) => void;
+  onTenantSelected: (tenantId: string) => void;
 }
 
 describe('UserManagerPage', () => {
@@ -32,7 +34,11 @@ describe('UserManagerPage', () => {
   let dialogMock: { open: ReturnType<typeof vi.fn> };
   let currentUserSignal: WritableSignal<UserSession | null>;
   let activatedRouteMock: { data: Observable<unknown>; queryParams: Observable<unknown> };
-  let tenantServiceMock: { getTenant: ReturnType<typeof vi.fn> };
+  let tenantServiceMock: {
+    getTenant: ReturnType<typeof vi.fn>;
+    retrieveTenants: ReturnType<typeof vi.fn>;
+    tenantList: WritableSignal<Tenant[]>;
+  };
 
   const routeContext = {
     title: 'Test Users',
@@ -86,6 +92,8 @@ describe('UserManagerPage', () => {
 
     tenantServiceMock = {
       getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: true })),
+      retrieveTenants: vi.fn(),
+      tenantList: signal<Tenant[]>([]),
     };
 
     await TestBed.configureTestingModule({
@@ -147,6 +155,7 @@ describe('UserManagerPage', () => {
       fixture.detectChanges();
 
       expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('tenant-from-url');
+      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledWith(true);
       const expectedContext = { ...routeContext, tenantId: 'tenant-from-url' };
       expect((component as any).context()).toEqual(expectedContext);
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
@@ -172,19 +181,17 @@ describe('UserManagerPage', () => {
       expect(routerSpy).toHaveBeenCalledWith(['/user-management/tenant-users']);
     });
 
-    it('should set context for SUPER_ADMIN without tenantId and retrieve users', () => {
+    it('should load tenants but not retrieve users for SUPER_ADMIN with TENANT_ADMIN context and no tenantId', () => {
       currentUserSignal.set({ userId: 'user-1', role: UserRole.SUPER_ADMIN });
       activatedRouteMock.queryParams = of({});
 
       createComponent();
       fixture.detectChanges();
 
+      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledWith(true);
       const expectedContext = { ...routeContext, tenantId: undefined };
       expect((component as any).context()).toEqual(expectedContext);
-      expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
-        expectedContext.role,
-        expectedContext.tenantId,
-      );
+      expect(userServiceMock.retrieveUsers).not.toHaveBeenCalled();
     });
 
     it('should not retrieve users if role is TENANT_USER and no tenantId is resolved', () => {
@@ -212,6 +219,26 @@ describe('UserManagerPage', () => {
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
         UserRole.TENANT_ADMIN,
         sessionTenantId,
+      );
+    });
+  });
+
+  describe('onTenantSelected', () => {
+    it('should update activeTenantId, context.tenantId, and refresh users', () => {
+      currentUserSignal.set({ userId: 'user-1', role: UserRole.SUPER_ADMIN });
+      activatedRouteMock.queryParams = of({});
+
+      createComponent();
+      fixture.detectChanges();
+      userServiceMock.retrieveUsers.mockClear();
+
+      testApi.onTenantSelected('new-tenant-id');
+
+      expect((component as any).activeTenantId()).toBe('new-tenant-id');
+      expect((component as any).context().tenantId).toBe('new-tenant-id');
+      expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
+        UserRole.TENANT_ADMIN,
+        'new-tenant-id',
       );
     });
   });
