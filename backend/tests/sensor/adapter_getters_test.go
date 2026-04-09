@@ -38,7 +38,7 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		{
 			Id:        uuid.MustParse(entityA.ID),
 			Name:      entityA.Name,
-			Interval:  time.Duration(entityA.Interval),
+			Interval:  time.Duration(entityA.Interval) * time.Millisecond,
 			Profile:   sensorProfile.SensorProfile(entityA.Profile),
 			GatewayId: uuid.MustParse(entityA.GatewayID),
 			Status:    sensor.SensorStatus(entityA.Status),
@@ -46,7 +46,7 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		{
 			Id:        uuid.MustParse(entityB.ID),
 			Name:      entityB.Name,
-			Interval:  time.Duration(entityB.Interval),
+			Interval:  time.Duration(entityB.Interval) * time.Millisecond,
 			Profile:   sensorProfile.SensorProfile(entityB.Profile),
 			GatewayId: uuid.MustParse(entityB.GatewayID),
 			Status:    sensor.SensorStatus(entityB.Status),
@@ -173,7 +173,7 @@ func TestDbSensorAdapter_GetSensorById(t *testing.T) {
 	expectedSensor := sensor.Sensor{
 		Id:        uuid.MustParse(entity.ID),
 		Name:      entity.Name,
-		Interval:  time.Duration(entity.Interval),
+		Interval:  time.Duration(entity.Interval) * time.Millisecond,
 		Profile:   sensorProfile.SensorProfile(entity.Profile),
 		GatewayId: uuid.MustParse(entity.GatewayID),
 		Status:    sensor.SensorStatus(entity.Status),
@@ -268,7 +268,7 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		{
 			Id:        uuid.MustParse(entityA.ID),
 			Name:      entityA.Name,
-			Interval:  time.Duration(entityA.Interval),
+			Interval:  time.Duration(entityA.Interval) * time.Millisecond,
 			Profile:   sensorProfile.SensorProfile(entityA.Profile),
 			GatewayId: uuid.MustParse(entityA.GatewayID),
 			Status:    sensor.SensorStatus(entityA.Status),
@@ -276,7 +276,7 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		{
 			Id:        uuid.MustParse(entityB.ID),
 			Name:      entityB.Name,
-			Interval:  time.Duration(entityB.Interval),
+			Interval:  time.Duration(entityB.Interval) * time.Millisecond,
 			Profile:   sensorProfile.SensorProfile(entityB.Profile),
 			GatewayId: uuid.MustParse(entityB.GatewayID),
 			Status:    sensor.SensorStatus(entityB.Status),
