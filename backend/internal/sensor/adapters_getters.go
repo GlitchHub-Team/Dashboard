@@ -86,9 +86,6 @@ func (adapter *DbSensorAdapter) GetSensorByTenant(tenantId, sensorId uuid.UUID) 
 ) {
 	entity, err := adapter.repo.GetSensorByTenant(tenantId.String(), sensorId.String())
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = ErrSensorNotFound
-		}
 		return
 	}
 
@@ -99,20 +96,6 @@ func (adapter *DbSensorAdapter) GetSensorByTenant(tenantId, sensorId uuid.UUID) 
 	sensorTenantId, err = adapter.extractTenantFromSensorEntity(&entity)
 	return
 }
-
-// func (adapter *DbSensorAdapter) GetSensorWithGateway(sensorId uuid.UUID) (Sensor, gateway.Gateway, error) {
-// 	entity, err := adapter.repo.GetSensorWithGateway(sensorId.String())
-// 	if err != nil {
-// 		return Sensor{}, gateway.Gateway{}, err
-// 	}
-
-// 	sensor, err := SensorEntityToDomain(&entity)
-// 	if err != nil {
-// 		return Sensor{}, gateway.Gateway{}, err
-// 	}
-// 	gatewayObj, err := gateway.GatewayEntityToDomain(&entity.Gateway)
-// 	return sensor, gatewayObj, err
-// }
 
 func (adapter *DbSensorAdapter) GetSensorsByTenant(tenantId uuid.UUID, page int, limit int) ([]Sensor, uint, error) {
 	offset, err := pagination.PageLimitToOffset(page, limit)
