@@ -4,9 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 
 import { LoginFormComponent } from './login-form.component';
-import { LoginRequest } from '../../../../models/auth/login-request.model';
 import { TenantService } from '../../../../services/tenant/tenant.service';
-import { UserRole } from '../../../../models/user/user-role.enum';
 
 describe('LoginFormComponent', () => {
   let component: LoginFormComponent;
@@ -35,25 +33,15 @@ describe('LoginFormComponent', () => {
   }
 
   describe('initial state', () => {
-    it('should create with invalid form and default input values', () => {
+    it('should create with invalid form, call retrieveTenants, and render form without progress/error', () => {
       expect(component).toBeTruthy();
       expect(component['loginForm'].valid).toBe(false);
       expect(component.loading()).toBe(false);
       expect(component.generalError()).toBeNull();
-    });
-
-    it('should call retrieveTenants on init', () => {
       expect(tenantServiceMock.retrieveTenants).toHaveBeenCalled();
-    });
-
-    it('should render the form but not the progress bar or error banner', () => {
       expect(fixture.debugElement.query(By.css('form'))).toBeTruthy();
       expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeFalsy();
-    });
-
-    it('should not show the tenant dropdown before a role is selected', () => {
-      expect(component['showTenantDropdown']).toBe(false);
     });
   });
 
@@ -93,77 +81,20 @@ describe('LoginFormComponent', () => {
     });
   });
 
-  describe('role dropdown and tenant visibility', () => {
-    it('should not show tenant dropdown when Super Admin is selected', () => {
-      component['loginForm'].controls.role.setValue(UserRole.SUPER_ADMIN);
-      fixture.detectChanges();
-      expect(component['showTenantDropdown']).toBe(false);
-    });
-
-    it('should show tenant dropdown when Tenant Admin is selected', () => {
-      component['loginForm'].controls.role.setValue(UserRole.TENANT_ADMIN);
-      fixture.detectChanges();
-      expect(component['showTenantDropdown']).toBe(true);
-    });
-
-    it('should show tenant dropdown when Tenant User is selected', () => {
-      component['loginForm'].controls.role.setValue(UserRole.TENANT_USER);
-      fixture.detectChanges();
-      expect(component['showTenantDropdown']).toBe(true);
-    });
-
-    it('should clear tenantId when switching to Super Admin', () => {
-      component['loginForm'].controls.role.setValue(UserRole.TENANT_ADMIN);
-      component['loginForm'].controls.tenantId.setValue('tenant-01');
-      component['loginForm'].controls.role.setValue(UserRole.SUPER_ADMIN);
-      fixture.detectChanges();
-      expect(component['loginForm'].controls.tenantId.value).toBe('');
-    });
-
-    it('should make tenantId not required when Super Admin is selected', () => {
-      component['loginForm'].controls.role.setValue(UserRole.SUPER_ADMIN);
-      fixture.detectChanges();
-      expect(component['loginForm'].controls.tenantId.errors).toBeNull();
-    });
-  });
-
   describe('form validation', () => {
     it.each([
-      ['empty fields', '', '', '' as UserRole],
-      ['email only', 'user@example.com', '', '' as UserRole],
-      ['password only', '', 'secret123', '' as UserRole],
-      ['email and password, no role', 'user@example.com', 'secret123', '' as UserRole],
-      ['invalid email format', 'not-an-email', 'secret123', UserRole.SUPER_ADMIN],
-    ])('should be invalid with %s', (_, email, password, role) => {
+      { label: 'empty fields', email: '', password: '', tenantId: '', expected: false },
+      { label: 'email only', email: 'user@example.com', password: '', tenantId: '', expected: false },
+      { label: 'password only', email: '', password: 'secret123', tenantId: '', expected: false },
+      { label: 'invalid email format', email: 'not-an-email', password: 'secret123', tenantId: '', expected: false },
+      { label: 'email and password without tenantId', email: 'user@example.com', password: 'secret123', tenantId: '', expected: true },
+      { label: 'email and password with tenantId', email: 'user@example.com', password: 'secret123', tenantId: 'tenant-01', expected: true },
+    ])('should be valid=$expected for $label', ({ email, password, tenantId, expected }) => {
       component['loginForm'].controls.email.setValue(email);
       component['loginForm'].controls.password.setValue(password);
-      component['loginForm'].controls.role.setValue(role);
-      expect(component['loginForm'].valid).toBe(false);
-    });
-
-    it('should be valid for Super Admin without tenantId', () => {
-      component['loginForm'].controls.email.setValue('admin@example.com');
-      component['loginForm'].controls.password.setValue('secret123');
-      component['loginForm'].controls.role.setValue(UserRole.SUPER_ADMIN);
+      if (tenantId) component['loginForm'].controls.tenantId.setValue(tenantId);
       fixture.detectChanges();
-      expect(component['loginForm'].valid).toBe(true);
-    });
-
-    it('should be valid for Tenant Admin with email, password, role, and tenantId', () => {
-      component['loginForm'].controls.email.setValue('user@example.com');
-      component['loginForm'].controls.password.setValue('secret123');
-      component['loginForm'].controls.role.setValue(UserRole.TENANT_ADMIN);
-      component['loginForm'].controls.tenantId.setValue('tenant-01');
-      fixture.detectChanges();
-      expect(component['loginForm'].valid).toBe(true);
-    });
-
-    it('should be invalid for Tenant User without tenantId', () => {
-      component['loginForm'].controls.email.setValue('user@example.com');
-      component['loginForm'].controls.password.setValue('secret123');
-      component['loginForm'].controls.role.setValue(UserRole.TENANT_USER);
-      fixture.detectChanges();
-      expect(component['loginForm'].valid).toBe(false);
+      expect(component['loginForm'].valid).toBe(expected);
     });
   });
 
@@ -190,40 +121,17 @@ describe('LoginFormComponent', () => {
   });
 
   describe('onSubmit', () => {
-    it('should emit submitLogin with mapped userRole and no tenantId for Super Admin', () => {
+    it.each([
+      { label: 'without tenantId', email: 'admin@example.com', password: 'secret123', tenantId: undefined as string | undefined, expected: { email: 'admin@example.com', password: 'secret123', tenantId: undefined } },
+      { label: 'with tenantId', email: 'user@example.com', password: 'secret123', tenantId: 'tenant-01', expected: { email: 'user@example.com', password: 'secret123', tenantId: 'tenant-01' } },
+    ])('should emit submitLogin $label', ({ email, password, tenantId, expected }) => {
       const emitSpy = vi.fn();
       component.submitLogin.subscribe(emitSpy);
-
-      component['loginForm'].controls.email.setValue('admin@example.com');
-      component['loginForm'].controls.password.setValue('secret123');
-      component['loginForm'].controls.role.setValue(UserRole.SUPER_ADMIN);
+      component['loginForm'].controls.email.setValue(email);
+      component['loginForm'].controls.password.setValue(password);
+      if (tenantId !== undefined) component['loginForm'].controls.tenantId.setValue(tenantId);
       fixture.detectChanges();
       submitForm();
-
-      const expected: LoginRequest = {
-        email: 'admin@example.com',
-        password: 'secret123',
-        tenantId: undefined,
-      };
-      expect(emitSpy).toHaveBeenCalledWith(expected);
-    });
-
-    it('should emit submitLogin with mapped userRole and tenantId for Tenant Admin', () => {
-      const emitSpy = vi.fn();
-      component.submitLogin.subscribe(emitSpy);
-
-      component['loginForm'].controls.email.setValue('user@example.com');
-      component['loginForm'].controls.password.setValue('secret123');
-      component['loginForm'].controls.role.setValue(UserRole.TENANT_ADMIN);
-      component['loginForm'].controls.tenantId.setValue('tenant-01');
-      fixture.detectChanges();
-      submitForm();
-
-      const expected: LoginRequest = {
-        email: 'user@example.com',
-        password: 'secret123',
-        tenantId: 'tenant-01',
-      };
       expect(emitSpy).toHaveBeenCalledWith(expected);
     });
 
@@ -236,7 +144,6 @@ describe('LoginFormComponent', () => {
       expect(emitSpy).not.toHaveBeenCalled();
       expect(component['loginForm'].controls.email.touched).toBe(true);
       expect(component['loginForm'].controls.password.touched).toBe(true);
-      expect(component['loginForm'].controls.role.touched).toBe(true);
     });
 
     it('should not emit with invalid email format', () => {
@@ -245,7 +152,6 @@ describe('LoginFormComponent', () => {
 
       component['loginForm'].controls.email.setValue('bad-email');
       component['loginForm'].controls.password.setValue('secret123');
-      component['loginForm'].controls.role.setValue(UserRole.SUPER_ADMIN);
       fixture.detectChanges();
       submitForm();
 

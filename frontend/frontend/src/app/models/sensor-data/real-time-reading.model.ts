@@ -1,4 +1,5 @@
 export interface RealTimeReading {
-  datum: number;
-  timestamp: number;
+  timestamp: string;
+  profile: string;
+  data: Record<string, any>;
 }

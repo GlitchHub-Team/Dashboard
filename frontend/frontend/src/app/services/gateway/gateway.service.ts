@@ -39,7 +39,7 @@ export class GatewayService {
     this.setGettingGatewaysState();
 
     this.gatewayApi
-      .getGatewayListByTenant(tenantId, page, limit)
+      .getGatewayListByTenant(tenantId, page + 1, limit)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -63,7 +63,7 @@ export class GatewayService {
     this.setGettingGatewaysState();
 
     this.gatewayApi
-      .getGatewayList(page, limit)
+      .getGatewayList(page + 1, limit)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -91,9 +91,9 @@ export class GatewayService {
       tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete gateway');
+        this._loading.set(false);
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 

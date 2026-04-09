@@ -41,7 +41,7 @@ export class AuthApiClientService {
   public forgotPasswordRequest(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot_password/request`, {
       email: forgotPasswordRequest.email,
-      tenant_id: forgotPasswordRequest.tenantId,
+      ...(forgotPasswordRequest.tenantId ? { tenant_id: forgotPasswordRequest.tenantId } : {}),
     });
   }
 

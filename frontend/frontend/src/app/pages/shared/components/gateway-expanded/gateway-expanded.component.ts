@@ -1,19 +1,19 @@
 import { Component, input, output } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 
-import { DashboardSensorTableComponent } from '../dashboard-sensor-table/dashboard-sensor-table.component';
+import { SensorTableComponent } from '../sensor-table/sensor-table.component';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ActionMode } from '../../../../models/action-mode.model';
 
 @Component({
-  selector: 'app-dashboard-gateway-expanded',
-  imports: [DashboardSensorTableComponent],
-  templateUrl: './dashboard-gateway-expanded.component.html',
-  styleUrl: './dashboard-gateway-expanded.component.css',
+  selector: 'app-gateway-expanded',
+  imports: [SensorTableComponent],
+  templateUrl: './gateway-expanded.component.html',
+  styleUrl: './gateway-expanded.component.css',
 })
-export class DashboardGatewayExpandedComponent {
+export class GatewayExpandedComponent {
   public readonly sensors = input.required<Sensor[]>();
   public readonly gateway = input.required<Gateway>();
   public readonly loading = input<boolean>();
@@ -24,6 +24,7 @@ export class DashboardGatewayExpandedComponent {
   public readonly sensorLimit = input<number>(10);
 
   public readonly chartRequested = output<ChartRequest>();
+  public readonly commandRequested = output<boolean>();
   // Emit del gateway associato per darlo al dialog di creazione sensore
   public readonly sensorCreateRequested = output<Gateway>();
   public readonly sensorDeleteRequested = output<Sensor>();

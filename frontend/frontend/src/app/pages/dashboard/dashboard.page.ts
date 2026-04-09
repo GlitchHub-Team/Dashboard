@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -8,8 +8,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { UserRole } from '../../models/user/user-role.enum';
-import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
@@ -17,8 +17,8 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 @Component({
   selector: 'app-dashboard',
   imports: [
-    DashboardGatewayTableComponent,
-    DashboardSensorTableComponent,
+    GatewayTableComponent,
+    SensorTableComponent,
     ChartContainerComponent,
     MatIcon,
     MatButtonModule,
@@ -52,9 +52,24 @@ export class DashboardPage implements OnInit, OnDestroy {
     () => this.dashboardService.gatewayError() ?? this.dashboardService.sensorError(),
   );
 
-  // Riceve sicuramente il role da app-shell
+  private readonly _dismissedError = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      if (!this.error()) {
+        this._dismissedError.set(null);
+      }
+    });
+  }
+
+  // Riceva sicuramente il role da app-shell
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly UserRole = UserRole;
+
+  protected readonly visibleError = computed(() => {
+    const err = this.error();
+    return err === this._dismissedError() ? null : err;
+  });
 
   // Utilizzato solo quando si fa impersonation di un tenant da SUPER_ADMIN, altrimenti è null e viene ignorato
   protected readonly activeTenantId = signal<string | null>(null);
@@ -76,6 +91,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   protected onBackToTenants(): void {
     this.router.navigate(['/tenant-management']);
+  }
+
+  protected dismissError(): void {
+    this._dismissedError.set(this.error());
   }
 
   protected onGoToTenantUsers(): void {
@@ -104,14 +123,19 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   protected onCommandRequested(result: boolean): void {
     if (result) {
-      this.snackBar.open('Command sent successfully', 'Close', {
+      this.snackBar.open('Comando inviato correttamente', 'Chiudi', {
         duration: 3000,
       });
     }
   }
 
+  // TODO: aggiungere tenantId alla ChartRequest
   protected onChartOpen(request: ChartRequest): void {
-    this.dashboardService.openChart(request);
+    const requestWithTenantId = {
+      ...request,
+      tenantId: this.activeTenantId() ?? this.userSession.currentUser()!.tenantId!,
+    }
+    this.dashboardService.openChart(requestWithTenantId);
   }
 
   protected onChartClosed(): void {

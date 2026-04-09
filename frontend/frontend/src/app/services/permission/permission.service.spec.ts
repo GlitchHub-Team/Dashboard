@@ -22,12 +22,18 @@ describe('PermissionService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('can', () => {
-    it('should return false when role is null', () => {
+  describe('null role guard', () => {
+    it.each([
+      ['can', () => service.can(Permission.DASHBOARD_ACCESS)],
+      ['canAny', () => service.canAny([Permission.DASHBOARD_ACCESS])],
+      ['canAll', () => service.canAll([Permission.DASHBOARD_ACCESS])],
+    ] as [string, () => boolean][])('%s should return false when role is null', (_, call) => {
       userSessionMock.currentUser.mockReturnValue(null);
-      expect(service.can(Permission.DASHBOARD_ACCESS)).toBe(false);
+      expect(call()).toBe(false);
     });
+  });
 
+  describe('can', () => {
     it.each([
       // TENANT_USER
       [UserRole.TENANT_USER, Permission.DASHBOARD_ACCESS, true],
@@ -53,11 +59,6 @@ describe('PermissionService', () => {
   });
 
   describe('canAny', () => {
-    it('should return false when role is null', () => {
-      userSessionMock.currentUser.mockReturnValue(null);
-      expect(service.canAny([Permission.DASHBOARD_ACCESS])).toBe(false);
-    });
-
     it.each([
       [
         UserRole.TENANT_USER,
@@ -85,11 +86,6 @@ describe('PermissionService', () => {
   });
 
   describe('canAll', () => {
-    it('should return false when role is null', () => {
-      userSessionMock.currentUser.mockReturnValue(null);
-      expect(service.canAll([Permission.DASHBOARD_ACCESS])).toBe(false);
-    });
-
     it.each([
       [UserRole.TENANT_USER, [Permission.DASHBOARD_ACCESS], true, 'single granted permission'],
       [UserRole.TENANT_USER, [], true, 'empty array'],

@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Observable, of, delay, throwError, switchMap, timer } from 'rxjs';
 import { UserConfig } from '../models/user/user-config.model';
 import { UserRole } from '../models/user/user-role.enum';
 import { UserBackend } from '../models/user/user-backend.model';
 import { PaginatedUserResponse } from '../models/user/paginated-user-response.model';
 import { userRoleMapper } from '../utils/user-role.utils';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserApiClientMockService {
@@ -48,7 +49,6 @@ export class UserApiClientMockService {
       username: 'viewer',
       email: 'viewer@example.com',
       user_role: 'super_admin',
-      tenant_id: 'tenant-2',
     },
     {
       user_id: 7,
@@ -148,12 +148,21 @@ export class UserApiClientMockService {
     },
   ];
 
+  private readonly shouldFailGetUsers = false;
+  private readonly shouldFailGetUser = false;
+  private readonly shouldFailCreateUser = false;
+  private readonly shouldFailDeleteUser = false;
+
   public getUsers(
     role: UserRole,
-    page = 0,
-    size = 10,
+    page = 1,
+    limit = 10,
     tenantId?: string,
   ): Observable<PaginatedUserResponse<UserBackend>> {
+    if (this.shouldFailGetUsers) {
+      return this.delayedError(400, 'Failed to fetch users');
+    }
+
     const roleString = userRoleMapper.toBackend(role);
     let filteredUsers = [...this.mockUsers];
     if (role) {
@@ -163,11 +172,16 @@ export class UserApiClientMockService {
       filteredUsers = filteredUsers.filter((user) => user.tenant_id === tenantId);
     }
     const total = filteredUsers.length;
-    const users = filteredUsers.slice(page * size, (page + 1) * size);
+    const start = (page - 1) * limit;
+    const users = filteredUsers.slice(start, start + limit);
     return of({ count: users.length, total, users }).pipe(delay(500));
   }
 
   public getUser(id: string, role: UserRole, tenantId?: string): Observable<UserBackend> {
+    if (this.shouldFailGetUser) {
+      return this.delayedError(404, 'User not found');
+    }
+
     const roleString = userRoleMapper.toBackend(role);
     const user = this.mockUsers.find(
       (u) =>
@@ -176,7 +190,7 @@ export class UserApiClientMockService {
         (role === UserRole.SUPER_ADMIN || u.tenant_id === tenantId),
     );
     if (!user) {
-      throw new Error('User not found');
+      return this.delayedError(404, 'User not found');
     }
     return of(user).pipe(delay(500));
   }
@@ -186,6 +200,10 @@ export class UserApiClientMockService {
     role: UserRole,
     tenantId?: string,
   ): Observable<UserBackend> {
+    if (this.shouldFailCreateUser) {
+      return this.delayedError(400, 'Failed to create user');
+    }
+
     const newId = Math.floor(Math.random() * 10000);
 
     const newUser: UserBackend = {
@@ -204,6 +222,10 @@ export class UserApiClientMockService {
   }
 
   public deleteUser(id: string, role: UserRole, tenantId?: string): Observable<void> {
+    if (this.shouldFailDeleteUser) {
+      return this.delayedError(400, 'Failed to delete user');
+    }
+
     const roleString = userRoleMapper.toBackend(role);
     this.mockUsers = this.mockUsers.filter(
       (u) =>
@@ -214,5 +236,9 @@ export class UserApiClientMockService {
         ),
     );
     return of(void 0).pipe(delay(500));
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

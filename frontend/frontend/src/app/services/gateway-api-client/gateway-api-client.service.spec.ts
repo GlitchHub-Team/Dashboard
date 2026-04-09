@@ -57,9 +57,13 @@ describe('GatewayApiClientService', () => {
   });
 
   describe('getGatewayListByTenant', () => {
-    it('should send GET request with correct URL and query params', () => {
+    it('should send GET with correct URL, params, and return a PaginatedResponse', () => {
       service.getGatewayListByTenant('tenant-1', 1, 20).subscribe((response) => {
         expect(response).toEqual(mockPaginatedResponse);
+        expect(response.count).toBe(2);
+        expect(response.total).toBe(10);
+        expect(response.gateways[0].gateway_id).toBe('gw-1');
+        expect(response.gateways[1].gateway_id).toBe('gw-2');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/gateways?page=1&limit=20`);
@@ -68,42 +72,21 @@ describe('GatewayApiClientService', () => {
       expect(req.request.params.get('limit')).toBe('20');
       req.flush(mockPaginatedResponse);
     });
-
-    it('should return a PaginatedResponse of GatewayBackend', () => {
-      service.getGatewayListByTenant('tenant-1', 0, 10).subscribe((response) => {
-        expect(response.count).toBe(2);
-        expect(response.total).toBe(10);
-        expect(response.gateways.length).toBe(2);
-        expect(response.gateways[0].gateway_id).toBe('gw-1');
-        expect(response.gateways[1].gateway_id).toBe('gw-2');
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/tenant/tenant-1/gateways?page=0&limit=10`);
-      req.flush(mockPaginatedResponse);
-    });
   });
 
   describe('getGatewayList', () => {
-    it('should send GET request with correct URL and query params', () => {
+    it('should send GET with correct URL, params, and return a PaginatedResponse', () => {
       service.getGatewayList(0, 10).subscribe((response) => {
         expect(response).toEqual(mockPaginatedResponse);
+        expect(response.count).toBe(2);
+        expect(response.total).toBe(10);
+        expect(response.gateways.length).toBe(2);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateways?page=0&limit=10`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('page')).toBe('0');
       expect(req.request.params.get('limit')).toBe('10');
-      req.flush(mockPaginatedResponse);
-    });
-
-    it('should return a PaginatedResponse of GatewayBackend', () => {
-      service.getGatewayList(2, 25).subscribe((response) => {
-        expect(response.count).toBe(2);
-        expect(response.total).toBe(10);
-        expect(response.gateways.length).toBe(2);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/gateways?page=2&limit=25`);
       req.flush(mockPaginatedResponse);
     });
   });
@@ -122,9 +105,11 @@ describe('GatewayApiClientService', () => {
       interval: 60,
     };
 
-    it('should send POST request with gateway config as body', () => {
+    it('should send POST with gateway config body and return a GatewayBackend', () => {
       service.addNewGateway(mockConfig).subscribe((gateway) => {
         expect(gateway).toEqual(mockResponse);
+        expect(gateway.gateway_id).toBe('gw-3');
+        expect(gateway.name).toBe('New Gateway');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateway`);
@@ -132,33 +117,16 @@ describe('GatewayApiClientService', () => {
       expect(req.request.body).toEqual(mockConfig);
       req.flush(mockResponse);
     });
-
-    it('should return a GatewayBackend', () => {
-      service.addNewGateway(mockConfig).subscribe((gateway) => {
-        expect(gateway.gateway_id).toBe('gw-3');
-        expect(gateway.name).toBe('New Gateway');
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway`);
-      req.flush(mockResponse);
-    });
   });
 
   describe('deleteGateway', () => {
-    it('should send DELETE request with gateway id in the URL', () => {
-      service.deleteGateway('gw-1').subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1`);
-      expect(req.request.method).toBe('DELETE');
-      req.flush(null);
-    });
-
-    it('should return an observable of void', () => {
+    it('should send DELETE with gateway id in URL and complete with void', () => {
       service.deleteGateway('gw-1').subscribe((result) => {
         expect(result).toBeNull();
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1`);
+      expect(req.request.method).toBe('DELETE');
       req.flush(null);
     });
   });

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { GatewayService } from '../../../../services/gateway/gateway.service';
@@ -23,6 +24,7 @@ import { TenantService } from '../../../../services/tenant/tenant.service';
     MatSelectModule,
     MatButtonModule,
     MatIcon,
+    MatProgressSpinner,
   ],
   templateUrl: './gateway-commands.dialog.html',
   styleUrl: './gateway-commands.dialog.css',
@@ -52,7 +54,8 @@ export class GatewayCommandsDialog implements OnInit {
     return this.mode === 'manage';
   }
 
-  protected generalError = '';
+  protected generalError = signal('');
+  protected isSubmitting = signal(false);
 
   protected get showCommissionFields(): boolean {
     return !this.gateway.tenantId && this.commandForm.controls.command.value === 'commission';
@@ -63,24 +66,23 @@ export class GatewayCommandsDialog implements OnInit {
   protected get commands(): { value: string; label: string }[] {
     if (this.isDashboardMode) {
       return [
-        { value: 'restart', label: 'Restart' },
-        { value: 'reboot', label: 'Reboot' },
+        { value: 'reset', label: 'Reset' },
+        { value: 'reboot', label: 'Riavvio' },
       ];
     }
 
     if (this.gateway.tenantId) {
       return [
         { value: 'decommission', label: 'Decommission' },
-        { value: 'restart', label: 'Restart' },
-        { value: 'reboot', label: 'Reboot' },
+        { value: 'reset', label: 'Reset' },
+        { value: 'reboot', label: 'Riavvio' },
       ];
     }
 
     return [
       { value: 'commission', label: 'Commission' },
-      { value: 'decommission', label: 'Decommission' },
-      { value: 'restart', label: 'Restart' },
-      { value: 'reboot', label: 'Reboot' },
+      { value: 'reset', label: 'Reset' },
+      { value: 'reboot', label: 'Riavvio' },
     ];
   }
 
@@ -120,6 +122,9 @@ export class GatewayCommandsDialog implements OnInit {
       return;
     }
 
+    this.isSubmitting.set(true);
+    this.generalError.set('');
+
     switch (command) {
       case 'commission':
         this.gatewayService
@@ -133,8 +138,8 @@ export class GatewayCommandsDialog implements OnInit {
               this.dialogRef.close(true);
             },
             error: (err: ApiError) => {
-              this.generalError = err.message ?? 'Failed to send command';
-              this.dialogRef.close(false);
+              this.generalError.set(err.message ?? 'Failed to send command');
+              this.isSubmitting.set(false);
             },
           });
         break;
@@ -144,19 +149,19 @@ export class GatewayCommandsDialog implements OnInit {
             this.dialogRef.close(true);
           },
           error: (err: ApiError) => {
-            this.generalError = err.message ?? 'Failed to send command';
-            this.dialogRef.close(false);
+            this.generalError.set(err.message ?? 'Failed to send command');
+            this.isSubmitting.set(false);
           },
         });
         break;
-      case 'restart':
+      case 'reset':
         this.gatewayService.resetGateway(this.data.gateway.id).subscribe({
           next: () => {
             this.dialogRef.close(true);
           },
           error: (err: ApiError) => {
-            this.generalError = err.message ?? 'Failed to send command';
-            this.dialogRef.close(false);
+            this.generalError.set(err.message ?? 'Failed to send command');
+            this.isSubmitting.set(false);
           },
         });
         break;
@@ -166,18 +171,23 @@ export class GatewayCommandsDialog implements OnInit {
             this.dialogRef.close(true);
           },
           error: (err: ApiError) => {
-            this.generalError = err.message ?? 'Failed to send command';
-            this.dialogRef.close(false);
+            this.generalError.set(err.message ?? 'Failed to send command');
+            this.isSubmitting.set(false);
           },
         });
         break;
       default:
-        this.generalError = 'Unknown command';
+        this.generalError.set('Unknown command');
+        this.isSubmitting.set(false);
         this.dialogRef.close(false);
     }
   }
 
   protected onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  protected dismissError(): void {
+    this.generalError.set('');
   }
 }

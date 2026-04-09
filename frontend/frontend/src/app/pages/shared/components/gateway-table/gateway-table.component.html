@@ -38,6 +38,21 @@
       </mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="publicKey">
+      <mat-header-cell *matHeaderCellDef>Public Key</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">
+        @if (gateway.publicIdentifier) {
+          <button
+            mat-icon-button
+            matTooltip="Copia Public Key"
+            (click)="copyToClipboard(gateway.publicIdentifier); $event.stopPropagation()"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        }
+      </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="commands">
       <mat-header-cell *matHeaderCellDef>Comandi</mat-header-cell>
       <mat-cell *matCellDef="let gateway">
@@ -68,7 +83,7 @@
     <ng-container matColumnDef="expandedDetail">
       <mat-cell *matCellDef="let gateway" [attr.colspan]="displayedColumns().length">
         @if (isExpanded(gateway)) {
-          <app-dashboard-gateway-expanded
+          <app-gateway-expanded
             [gateway]="gateway"
             [sensors]="sensors()"
             [loading]="sensorLoading()"
@@ -77,6 +92,7 @@
             [sensorPageIndex]="sensorPageIndex()"
             [sensorLimit]="sensorLimit()"
             (chartRequested)="chartRequested.emit($event)"
+            (commandRequested)="commandRequested.emit($event)"
             (sensorDeleteRequested)="sensorDeleteRequested.emit($event)"
             (sensorCreateRequested)="sensorCreateRequested.emit($event)"
             (sensorPageChange)="sensorPageChange.emit($event)"

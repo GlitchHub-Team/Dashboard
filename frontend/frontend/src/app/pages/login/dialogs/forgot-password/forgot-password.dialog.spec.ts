@@ -67,7 +67,7 @@ describe('ForgotPasswordDialog', () => {
   }
 
   describe('initial state', () => {
-    it('should create with invalid form and render title, description, and form', () => {
+    it('should create with invalid form, render title/description/form, no progress bar or error banner', () => {
       expect(component).toBeTruthy();
       expect(component['forgotPasswordForm'].valid).toBe(false);
       expect(fixture.debugElement.query(By.css('form'))).toBeTruthy();
@@ -79,9 +79,6 @@ describe('ForgotPasswordDialog', () => {
       ).toContain(
         'Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.',
       );
-    });
-
-    it('should not render progress bar or error banner', () => {
       expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeFalsy();
     });
@@ -142,20 +139,15 @@ describe('ForgotPasswordDialog', () => {
   });
 
   describe('form validation errors in template', () => {
-    it('should show required error when email is touched and empty', () => {
+    it.each([
+      ['', 'Campo obbligatorio'],
+      ['not-an-email', 'Campo obbligatorio'],
+    ])('should show mat-error when email value is "%s"', (email, expectedError) => {
+      if (email) component['forgotPasswordForm'].controls.email.setValue(email);
       component['forgotPasswordForm'].controls.email.markAsTouched();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        'Campo obbligatorio',
-      );
-    });
-
-    it('should show format error when email is touched with invalid value', () => {
-      component['forgotPasswordForm'].controls.email.setValue('not-an-email');
-      component['forgotPasswordForm'].controls.email.markAsTouched();
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css('mat-error')).nativeElement.textContent).toContain(
-        'Campo obbligatorio',
+        expectedError,
       );
     });
   });
@@ -208,7 +200,7 @@ describe('ForgotPasswordDialog', () => {
       ['', 'Email is required.'],
       ['bad-email', 'Please enter a valid email address.'],
       ['user@example.com', ''],
-    ])('email="%s" → "%s"', (value, expected) => {
+    ])('email="%s" -> "%s"', (value, expected) => {
       component['forgotPasswordForm'].controls.email.setValue(value);
       component['forgotPasswordForm'].controls.email.markAsTouched();
       expect(component['getFieldError']('email', 'Email')).toBe(expected);
@@ -220,21 +212,18 @@ describe('ForgotPasswordDialog', () => {
   });
 
   describe('setupAutoClear', () => {
-    it('should call clearMessages on email input when error exists, but not when error is null', () => {
+    it('should call clearMessages for any field change when error exists, but not when null', () => {
       errorSignal.set('Some error');
       component['forgotPasswordForm'].controls.email.setValue('a');
-      expect(authActionsServiceMock.clearMessages).toHaveBeenCalled();
+      expect(authActionsServiceMock.clearMessages).toHaveBeenCalledTimes(1);
+
+      component['forgotPasswordForm'].controls.tenantId.setValue('tenant-01');
+      expect(authActionsServiceMock.clearMessages).toHaveBeenCalledTimes(2);
 
       authActionsServiceMock.clearMessages.mockClear();
       errorSignal.set(null);
       component['forgotPasswordForm'].controls.email.setValue('b');
       expect(authActionsServiceMock.clearMessages).not.toHaveBeenCalled();
-    });
-
-    it('should call clearMessages on tenantId change when error exists', () => {
-      errorSignal.set('Some error');
-      component['forgotPasswordForm'].controls.tenantId.setValue('tenant-01');
-      expect(authActionsServiceMock.clearMessages).toHaveBeenCalled();
     });
   });
 });

@@ -9,14 +9,15 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TitleCasePipe } from '@angular/common';
 import { UpperCasePipe } from '@angular/common';
 
-import { HistoricChartFiltersDialog } from '../../dialogs/historic-chart-filters/historic-chart-filters.dialog';
+import { HistoricChartFiltersDialog } from '../../../dashboard/dialogs/historic-chart-filters/historic-chart-filters.dialog';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
+import { SensorCommandsDialog } from '../../../dashboard/dialogs/sensor-commands/sensor-commands.dialog';
 
 @Component({
-  selector: 'app-dashboard-sensor-table',
+  selector: 'app-sensor-table',
   imports: [
     MatProgressSpinner,
     MatTableModule,
@@ -27,10 +28,10 @@ import { ActionMode } from '../../../../models/action-mode.model';
     UpperCasePipe,
     MatButtonModule,
   ],
-  templateUrl: './dashboard-sensor-table.component.html',
-  styleUrl: './dashboard-sensor-table.component.css',
+  templateUrl: './sensor-table.component.html',
+  styleUrl: './sensor-table.component.css',
 })
-export class DashboardSensorTableComponent {
+export class SensorTableComponent {
   private readonly dialog = inject(MatDialog);
 
   public readonly sensors = input.required<Sensor[]>();
@@ -42,7 +43,7 @@ export class DashboardSensorTableComponent {
   public readonly limit = input<number>(10);
 
   protected readonly displayedColumns = computed(() => {
-    const base = ['id', 'name', 'profile', 'status'];
+    const base = ['id', 'name', 'profile', 'status', 'commands'];
     switch (this.actionMode()) {
       case 'manage':
         return [...base, 'delete'];
@@ -54,6 +55,7 @@ export class DashboardSensorTableComponent {
   protected readonly ChartType = ChartType;
 
   public readonly chartRequested = output<ChartRequest>();
+  public readonly commandRequested = output<boolean>();
   public readonly deleteRequested = output<Sensor>();
   public readonly createRequested = output<void>();
   public readonly pageChange = output<PageEvent>();
@@ -80,5 +82,17 @@ export class DashboardSensorTableComponent {
 
   protected onPageChange(event: PageEvent): void {
     this.pageChange.emit(event);
+  }
+
+  protected onSendCommand(sensor: Sensor): void {
+    const ref = this.dialog.open(SensorCommandsDialog, {
+      data: { sensor: sensor, mode: this.actionMode() },
+    });
+
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
+      if (result) {
+        this.commandRequested.emit(true);
+      }
+    });
   }
 }

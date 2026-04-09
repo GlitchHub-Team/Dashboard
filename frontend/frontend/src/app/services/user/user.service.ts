@@ -44,7 +44,7 @@ export class UserService {
     this.setGettingUsersState();
 
     this.userApi
-      .getUsers(role, this._pageIndex(), this._limit(), tenantId)
+      .getUsers(role, this._pageIndex() + 1, this._limit(), tenantId)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da UserBackend a User)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -80,9 +80,9 @@ export class UserService {
       tap(() => this.refetchCurrentPage(user.role, user.tenantId)),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete user');
+        this._loading.set(false);
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 

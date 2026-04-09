@@ -50,7 +50,7 @@ export class SensorApiClientService {
       gateway_id: config.gatewayId,
       sensor_name: config.name,
       profile: config.profile,
-      sensor_interval: config.dataInterval,
+      data_interval: config.dataInterval,
     });
   }
 

@@ -12,7 +12,6 @@ export class GatewayCommandApiClientService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}`;
 
-  // TODO: Manca l'invio del commission_token, da dove lo prendo ???
   public commissionGateway(
     gatewayId: string,
     tenantId: string,
@@ -28,11 +27,15 @@ export class GatewayCommandApiClientService {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/decommission`, {});
   }
 
+  // RESET
   public resetGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reset`, {});
   }
 
+  // RIAVVIO
   public rebootGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reboot`, {});
   }
+
+  // TODO: AGGIUNGI INTERROMPI E RIPRENDI
 }

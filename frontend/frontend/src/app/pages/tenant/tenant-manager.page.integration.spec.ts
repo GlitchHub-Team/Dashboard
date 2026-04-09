@@ -11,7 +11,7 @@ import { TenantManagerPage } from './tenant-manager.page';
 import { TenantTableComponent } from './components/tenant-table/tenant-table.component';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TenantFormDialog } from './dialogs/tenant-form/tenant-form.dialog';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { Tenant } from '../../models/tenant/tenant.model';
 
 const mockTenants: Tenant[] = [
@@ -191,11 +191,17 @@ describe('TenantManagerPage (Integration)', () => {
         ['/user-management/tenant-users'],
         { tenantId: 'tenant-1' },
       ],
+      [
+        'dashboard (second tenant)',
+        (f: ComponentFixture<TenantManagerPage>) => getDashboardButtons(f)[1],
+        ['/dashboard'],
+        { tenantId: 'tenant-2' },
+      ],
     ] as const)(
       'should navigate to %s when button is clicked',
       (_label, getBtn, path, queryParams) => {
         const { fixture, tenantServiceMock, routerMock } = setupTestBed();
-        (tenantServiceMock.tenantList as WritableSignal<Tenant[]>).set([mockTenants[0]]);
+        (tenantServiceMock.tenantList as WritableSignal<Tenant[]>).set(mockTenants);
         fixture.detectChanges();
 
         getBtn(fixture).click();
@@ -204,19 +210,6 @@ describe('TenantManagerPage (Integration)', () => {
         expect(routerMock.navigate).toHaveBeenCalledWith(path, { queryParams });
       },
     );
-
-    it('should navigate with correct tenantId for second tenant', () => {
-      const { fixture, tenantServiceMock, routerMock } = setupTestBed();
-      (tenantServiceMock.tenantList as WritableSignal<Tenant[]>).set(mockTenants);
-      fixture.detectChanges();
-
-      getDashboardButtons(fixture)[1].click();
-      fixture.detectChanges();
-
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard'], {
-        queryParams: { tenantId: 'tenant-2' },
-      });
-    });
   });
 
   describe('Table -> Page: Pagination', () => {
@@ -257,7 +250,7 @@ describe('TenantManagerPage (Integration)', () => {
       afterClosedSubject.next(true);
 
       expect(tenantServiceMock.removeTenant).toHaveBeenCalledWith('tenant-2');
-      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant eliminato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant eliminato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
@@ -295,7 +288,7 @@ describe('TenantManagerPage (Integration)', () => {
       afterClosedSubject.next(true);
 
       expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledOnce();
-      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant creato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Tenant creato con successo', 'Chiudi', {
         duration: 3000,
       });
     });

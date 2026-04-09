@@ -11,8 +11,8 @@ import { Observable } from 'rxjs';
 
 import { DashboardPage } from './dashboard.page';
 import { DashboardService } from '../../services/dashboard/dashboard.service';
-import { DashboardGatewayTableComponent } from './components/dashboard-gateway-table/dashboard-gateway-table.component';
-import { DashboardSensorTableComponent } from './components/dashboard-sensor-table/dashboard-sensor-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
+import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
 import { ChartContainerComponent } from './components/chart-container/chart-container.component';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -24,7 +24,7 @@ import { UserSessionService } from '../../services/user-session/user-session.ser
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
 
-@Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
+@Component({ selector: 'app-gateway-table', template: '', standalone: true })
 class StubGatewayTable {
   actionMode = input<string>();
   gateways = input<Gateway[]>();
@@ -45,7 +45,7 @@ class StubGatewayTable {
   sensorPageChange = output<PageEvent>();
 }
 
-@Component({ selector: 'app-dashboard-sensor-table', template: '', standalone: true })
+@Component({ selector: 'app-sensor-table', template: '', standalone: true })
 class StubSensorTable {
   sensors = input<Sensor[]>();
   loading = input<boolean>();
@@ -102,6 +102,7 @@ describe('DashboardPage (Unit)', () => {
   const mockChartRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-01',
     timeInterval: { from: new Date('2025-01-01'), to: new Date('2025-01-02') },
   };
 
@@ -186,8 +187,8 @@ describe('DashboardPage (Unit)', () => {
       .overrideComponent(DashboardPage, {
         remove: {
           imports: [
-            DashboardGatewayTableComponent,
-            DashboardSensorTableComponent,
+            GatewayTableComponent,
+            SensorTableComponent,
             ChartContainerComponent,
           ],
         },
@@ -314,14 +315,16 @@ describe('DashboardPage (Unit)', () => {
   });
 
   describe('chart container', () => {
-    it('should render and pass chartRequest when selectedChart is set', () => {
+    it('should show chart container with chartRequest when set, hide when cleared', () => {
+      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
+
       selectedChartSig.set(mockChartRequest);
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeTruthy();
       expect(getChartContainer().chartRequest()).toEqual(mockChartRequest);
-    });
 
-    it('should not render chart container when selectedChart is null', () => {
+      selectedChartSig.set(null);
+      fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
     });
   });
@@ -348,20 +351,20 @@ describe('DashboardPage (Unit)', () => {
       expect(dashboardServiceMock.changeSensorPage).toHaveBeenCalledWith(1, 10);
     });
 
-    it('should open snackbar when commandRequested emits true', () => {
+    it.each([
+      [true, true] as const,
+      [false, false] as const,
+    ])('commandRequested(%s): snackbar opened = %s', (value, shouldCall) => {
       fixture.debugElement
         .query(By.directive(StubGatewayTable))
-        .triggerEventHandler('commandRequested', true);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Command sent successfully', 'Close', {
-        duration: 3000,
-      });
-    });
-
-    it('should not open snackbar when commandRequested emits false', () => {
-      fixture.debugElement
-        .query(By.directive(StubGatewayTable))
-        .triggerEventHandler('commandRequested', false);
-      expect(snackBarMock.open).not.toHaveBeenCalled();
+        .triggerEventHandler('commandRequested', value);
+      if (shouldCall) {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Chiudi', {
+          duration: 3000,
+        });
+      } else {
+        expect(snackBarMock.open).not.toHaveBeenCalled();
+      }
     });
 
     it('should call openChart on gateway table chartRequested', () => {
@@ -410,18 +413,6 @@ describe('DashboardPage (Unit)', () => {
       expect(fixture.debugElement.query(By.directive(StubGatewayTable))).toBeNull();
     });
 
-    it('should show and hide chart container reactively', () => {
-      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
-
-      selectedChartSig.set(mockChartRequest);
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeTruthy();
-
-      selectedChartSig.set(null);
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.directive(StubChartContainer))).toBeNull();
-    });
-
     it('should show and hide error banner reactively', () => {
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
 
@@ -456,8 +447,8 @@ describe('DashboardPage (Unit)', () => {
         .overrideComponent(DashboardPage, {
           remove: {
             imports: [
-              DashboardGatewayTableComponent,
-              DashboardSensorTableComponent,
+              GatewayTableComponent,
+              SensorTableComponent,
               ChartContainerComponent,
             ],
           },
@@ -470,23 +461,15 @@ describe('DashboardPage (Unit)', () => {
       fixture.detectChanges();
     };
 
-    it('should call loadDashboard with tenantId from queryParams', async () => {
+    it('should call loadDashboard with tenantId from queryParams and set activeTenantId', async () => {
       await setupAsSuperAdmin({ tenantId: 'super-tenant' });
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith('super-tenant');
-    });
-
-    it('should set activeTenantId from queryParams', async () => {
-      await setupAsSuperAdmin({ tenantId: 'super-tenant' });
       expect(component['activeTenantId']()).toBe('super-tenant');
     });
 
-    it('should call loadDashboard with undefined when no tenantId in queryParams', async () => {
+    it('should call loadDashboard with undefined and set activeTenantId to null when no tenantId', async () => {
       await setupAsSuperAdmin({});
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith(undefined);
-    });
-
-    it('should set activeTenantId to null when no tenantId in queryParams', async () => {
-      await setupAsSuperAdmin({});
       expect(component['activeTenantId']()).toBeNull();
     });
   });

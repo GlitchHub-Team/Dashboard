@@ -6,28 +6,27 @@
     </button>
   </div>
 
+  @if (visibleError(); as error) {
+    <div class="error-banner">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button type="button" (click)="dismissError()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
   <div class="user-content table-container">
-    @if (error()) {
-      <div class="error-banner">
-        <span>{{ error() }}</span>
-      </div>
-    }
     <app-tenant-table
       [tenants]="tenants()"
       [loading]="loading() || false"
+      [total]="total()"
+      [pageIndex]="pageIndex()"
+      [limit]="limit()"
+      (pageChange)="onPageChange($event)"
       (dashboardRequested)="onGoToDashboard($event)"
       (deleteRequested)="onDeleteTenant($event)"
-      (tenantUserManagementRequested)="onGoToTenantUserManagement($event)" 
+      (tenantUserManagementRequested)="onGoToTenantUserManagement($event)"
     ></app-tenant-table>
-
-    <mat-paginator
-      [length]="total()"
-      [pageSize]="limit()"
-      [pageIndex]="pageIndex()"
-      [pageSizeOptions]="[5, 10, 25]"
-      (page)="onPageChange($event)"
-      aria-label="Seleziona pagina"
-    >
-    </mat-paginator>
   </div>
 </div>

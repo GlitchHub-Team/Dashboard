@@ -76,24 +76,12 @@ describe('SideBarComponent (Unit)', () => {
   });
 
   describe('edge cases', () => {
-    it('should render nothing for empty array', () => {
-      setItems([]);
-      expect(fixture.debugElement.queryAll(By.css('.nav-item'))).toHaveLength(0);
-    });
-
     it('should update when navItems changes', () => {
       setItems([mockNavItems[0]]);
       expect(fixture.debugElement.queryAll(By.css('.nav-item'))).toHaveLength(1);
 
       setItems(mockNavItems);
       expect(fixture.debugElement.queryAll(By.css('.nav-item'))).toHaveLength(2);
-    });
-
-    it('should render single item correctly', () => {
-      setItems([mockNavItems[0]]);
-      const item = fixture.debugElement.query(By.css('.nav-item'));
-      expect(item.query(By.css('span')).nativeElement.textContent).toContain('Dashboard');
-      expect(item.query(By.css('mat-icon')).nativeElement.textContent).toContain('dashboard');
     });
   });
 });

@@ -1,7 +1,7 @@
 <div class="expanded-content">
   <h2>Sensori del gateway {{ gateway().id }}</h2>
 
-  <app-dashboard-sensor-table
+  <app-sensor-table
     [sensors]="sensors()"
     [loading]="loading()"
     [actionMode]="actionMode()"
@@ -9,9 +9,10 @@
     [pageIndex]="sensorPageIndex()"
     [limit]="sensorLimit()"
     (chartRequested)="chartRequested.emit($event)"
+    (commandRequested)="commandRequested.emit($event)"
     (createRequested)="sensorCreateRequested.emit(gateway())"
     (deleteRequested)="sensorDeleteRequested.emit($event)"
     (pageChange)="sensorPageChange.emit($event)"
   >
-  </app-dashboard-sensor-table>
+  </app-sensor-table>
 </div>

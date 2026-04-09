@@ -7,7 +7,7 @@ describe('TenantApiAdapter', () => {
 
   const dto: TenantBackend = {
     tenant_id: 'tenant-01',
-    name: 'Tenant 1',
+    tenant_name: 'Tenant 1',
     can_impersonate: true,
   };
 

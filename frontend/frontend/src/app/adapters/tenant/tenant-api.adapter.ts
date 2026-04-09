@@ -9,7 +9,7 @@ export class TenantApiAdapter extends TenantAdapter {
   fromDTO(dto: TenantBackend): Tenant {
     return {
       id: dto.tenant_id,
-      name: dto.name,
+      name: dto.tenant_name,
       canImpersonate: dto.can_impersonate,
     };
   }

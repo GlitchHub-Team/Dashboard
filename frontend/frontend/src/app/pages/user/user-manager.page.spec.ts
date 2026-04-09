@@ -14,7 +14,7 @@ import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
 import { UserFormDialogComponent } from './dialogs/user-form/user-form.dialog';
-import { ConfirmDeleteDialog } from '../gateway-sensor/dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 
 interface UserManagerPageTestApi {
   onCreateUser: () => void;
@@ -96,9 +96,20 @@ describe('UserManagerPage', () => {
       .compileComponents();
   });
 
-  it('should create', () => {
+  it('should create, initialize context with session tenantId, and retrieve users on init', () => {
     createComponent();
+    fixture.detectChanges();
+
     expect(component).toBeTruthy();
+    expect((component as any).context()).toEqual({
+      title: 'Test Users',
+      role: UserRole.TENANT_ADMIN,
+      tenantId: sessionTenantId,
+    });
+    expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
+      UserRole.TENANT_ADMIN,
+      sessionTenantId,
+    );
   });
 
   describe('ngOnInit', () => {
@@ -172,11 +183,7 @@ describe('UserManagerPage', () => {
       createComponent();
       fixture.detectChanges();
 
-      expect((component as any).context()).toEqual({
-        title: 'Test Users',
-        role: UserRole.TENANT_ADMIN,
-        tenantId: sessionTenantId,
-      });
+      // covered by the top-level create test; kept as a final sanity check
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
         UserRole.TENANT_ADMIN,
         sessionTenantId,
@@ -199,28 +206,20 @@ describe('UserManagerPage', () => {
       });
     });
 
-    it('should refetch users after create dialog closes with true', () => {
+    it.each([
+      { result: true, shouldRefetch: true },
+      { result: false, shouldRefetch: false },
+    ])('should refetch=$shouldRefetch after dialog closes with $result', ({ result, shouldRefetch }) => {
       createComponent();
       fixture.detectChanges();
-      const callsBefore = (userServiceMock.retrieveUsers as ReturnType<typeof vi.fn>).mock.calls
-        .length;
+      const callsBefore = (userServiceMock.retrieveUsers as ReturnType<typeof vi.fn>).mock.calls.length;
 
       testApi.onCreateUser();
-      afterClosedSubject.next(true);
+      afterClosedSubject.next(result);
 
-      expect(userServiceMock.retrieveUsers).toHaveBeenCalledTimes(callsBefore + 1);
-    });
-
-    it('should not refetch users after create dialog closes with false', () => {
-      createComponent();
-      fixture.detectChanges();
-      const callsBefore = (userServiceMock.retrieveUsers as ReturnType<typeof vi.fn>).mock.calls
-        .length;
-
-      testApi.onCreateUser();
-      afterClosedSubject.next(false);
-
-      expect(userServiceMock.retrieveUsers).toHaveBeenCalledTimes(callsBefore);
+      expect(userServiceMock.retrieveUsers).toHaveBeenCalledTimes(
+        shouldRefetch ? callsBefore + 1 : callsBefore,
+      );
     });
   });
 

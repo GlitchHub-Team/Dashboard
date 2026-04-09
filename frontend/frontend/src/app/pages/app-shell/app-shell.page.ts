@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -27,6 +28,7 @@ export class AppShellPage {
   private readonly tenantService = inject(TenantService);
   private readonly permissionService = inject(PermissionService);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   // Recupera singolarmente i campi dell'utente loggato (ID e ruolo sono sicuro di trovarli),
   // mentre il tenantId potrebbe essere null per i super admin
@@ -70,6 +72,10 @@ export class AppShellPage {
     this.dialog.open(ChangePasswordDialog, {
       width: '800px',
       disableClose: true,
+    }).afterClosed().subscribe((result) => {
+      if (result) {
+        this.snackBar.open('Password modificata con successo', 'Chiudi', { duration: 3000 });
+      }
     });
   }
 }

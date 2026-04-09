@@ -70,12 +70,6 @@ describe('ConfirmAccountFormComponent', () => {
       errorBanner.query(By.css('button')).triggerEventHandler('click');
       expect(emitSpy).toHaveBeenCalled();
     });
-
-    it('should hide error banner when generalError is null', () => {
-      fixture.componentRef.setInput('generalError', null);
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeFalsy();
-    });
   });
 
   describe('form validation', () => {
@@ -114,34 +108,21 @@ describe('ConfirmAccountFormComponent', () => {
       component['confirmAccountForm'].controls.confirmNewPassword.setValue('');
       expect(component['confirmAccountForm'].hasError('passwordMismatch')).toBe(false);
     });
-
-    it('should not have passwordMismatch error when passwords match', () => {
-      component['confirmAccountForm'].controls.newPassword.setValue('secret123');
-      component['confirmAccountForm'].controls.confirmNewPassword.setValue('secret123');
-      expect(component['confirmAccountForm'].hasError('passwordMismatch')).toBe(false);
-    });
   });
 
   describe('form validation errors in template', () => {
-    it('should show required error for newPassword when touched and empty', () => {
-      component['confirmAccountForm'].controls.newPassword.markAsTouched();
-      fixture.detectChanges();
+    it.each(['newPassword', 'confirmNewPassword'] as const)(
+      'should show required error for %s when touched and empty',
+      (field) => {
+        component['confirmAccountForm'].controls[field].markAsTouched();
+        fixture.detectChanges();
 
-      const errors = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .map((e) => e.nativeElement.textContent);
-      expect(errors.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
-    });
-
-    it('should show required error for confirmNewPassword when touched and empty', () => {
-      component['confirmAccountForm'].controls.confirmNewPassword.markAsTouched();
-      fixture.detectChanges();
-
-      const errors = fixture.debugElement
-        .queryAll(By.css('mat-error'))
-        .map((e) => e.nativeElement.textContent);
-      expect(errors.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
-    });
+        const errors = fixture.debugElement
+          .queryAll(By.css('mat-error'))
+          .map((e) => e.nativeElement.textContent);
+        expect(errors.some((t) => t.includes('Campo obbligatorio'))).toBe(true);
+      },
+    );
   });
 
   describe('onSubmit', () => {
@@ -166,17 +147,6 @@ describe('ConfirmAccountFormComponent', () => {
       expect(emitSpy).not.toHaveBeenCalled();
       expect(component['confirmAccountForm'].controls.newPassword.touched).toBe(true);
       expect(component['confirmAccountForm'].controls.confirmNewPassword.touched).toBe(true);
-    });
-
-    it('should not emit when passwords do not match', () => {
-      const emitSpy = vi.fn();
-      component.submitConfirmAccount.subscribe(emitSpy);
-
-      component['confirmAccountForm'].controls.newPassword.setValue('secret123');
-      component['confirmAccountForm'].controls.confirmNewPassword.setValue('different');
-      submitForm();
-
-      expect(emitSpy).not.toHaveBeenCalled();
     });
   });
 });

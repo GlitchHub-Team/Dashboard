@@ -11,9 +11,9 @@ describe('SensorApiAdapter', () => {
     sensor_id: 'sensor-1',
     gateway_id: 'gw-1',
     sensor_name: 'Heart Rate Sensor',
-    status: 'attivo',
+    status: 'active',
     profile: 'heart_rate_service',
-    sensor_interval: 1000,
+    data_interval: 1000,
   };
 
   describe('fromDTO', () => {
@@ -31,7 +31,7 @@ describe('SensorApiAdapter', () => {
     it.each([
       ['heart_rate', SensorProfiles.HEART_RATE_SERVICE],
       ['pulse_oximeter', SensorProfiles.PULSE_OXIMETER_SERVICE],
-      ['custom_ecg', SensorProfiles.CUSTOM_ECG_SERVICE],
+      ['ecg_custom', SensorProfiles.CUSTOM_ECG_SERVICE],
       ['health_thermometer', SensorProfiles.HEALTH_THERMOMETER_SERVICE],
       ['environmental_sensing', SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE],
     ])('should map profile "%s" correctly', (backendProfile, expected) => {
@@ -44,7 +44,7 @@ describe('SensorApiAdapter', () => {
       const response = {
         count: 2,
         total: 10,
-        sensors: [dto, { ...dto, sensor_id: 'sensor-2', status: 'inattivo' }],
+        sensors: [dto, { ...dto, sensor_id: 'sensor-2', status: 'inactive' }],
       };
 
       const result = adapter.fromPaginatedDTO(response);

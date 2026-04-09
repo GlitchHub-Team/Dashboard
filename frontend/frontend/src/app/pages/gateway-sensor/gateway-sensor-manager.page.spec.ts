@@ -8,9 +8,9 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
 import { GatewaySensorManagerPage } from './gateway-sensor-manager.page';
-import { DashboardGatewayTableComponent } from '../dashboard/components/dashboard-gateway-table/dashboard-gateway-table.component';
+import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
 import { GatewaySensorManagerService } from '../../services/gateway-sensor-manager/gateway-sensor-manager.service';
-import { ConfirmDeleteDialog } from './dialogs/confirm-delete/confirm-delete.dialog';
+import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-delete.dialog';
 import { CreateGatewayDialog } from './dialogs/create-gateway/create-gateway.dialog';
 import { CreateSensorDialog } from './dialogs/create-sensor/create-sensor.dialog';
 import { Gateway } from '../../models/gateway/gateway.model';
@@ -19,7 +19,7 @@ import { Status } from '../../models/gateway-sensor-status.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { ActionMode } from '../../models/action-mode.model';
 
-@Component({ selector: 'app-dashboard-gateway-table', template: '', standalone: true })
+@Component({ selector: 'app-gateway-table', template: '', standalone: true })
 class StubGatewayTable {
   actionMode = input<ActionMode>();
   gateways = input<Gateway[]>();
@@ -109,7 +109,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       ],
     })
       .overrideComponent(GatewaySensorManagerPage, {
-        remove: { imports: [DashboardGatewayTableComponent] },
+        remove: { imports: [GatewayTableComponent] },
         add: { imports: [StubGatewayTable] },
       })
       .compileComponents();
@@ -154,6 +154,16 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
 
       gatewayErrorSig.set(null);
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
+    });
+
+    it('should dismiss the error when dismiss button is clicked', () => {
+      gatewayErrorSig.set('Gateway failed');
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+
+      fixture.debugElement.query(By.css('.error-banner button')).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeNull();
     });
@@ -232,7 +242,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
       getTable().triggerEventHandler('gatewayCreateRequested');
       expect(dialogMock.open).toHaveBeenCalledWith(CreateGatewayDialog);
       expect(managerServiceMock.refreshGateways).toHaveBeenCalledOnce();
-      expect(snackBarMock.open).toHaveBeenCalledWith('Gateway creato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Gateway creato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
@@ -256,7 +266,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
         },
       });
       expect(managerServiceMock.deleteGateway).toHaveBeenCalledWith(mockGateway);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Gateway eliminato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Gateway eliminato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
@@ -277,7 +287,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
         data: { id: 'gw-1', name: 'Gateway 1' },
       });
       expect(managerServiceMock.refreshSensors).toHaveBeenCalledWith('gw-1');
-      expect(snackBarMock.open).toHaveBeenCalledWith('Sensore creato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Sensore creato con successo', 'Chiudi', {
         duration: 3000,
       });
     });
@@ -301,7 +311,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
         },
       });
       expect(managerServiceMock.deleteSensor).toHaveBeenCalledWith(mockSensor);
-      expect(snackBarMock.open).toHaveBeenCalledWith('Sensore eliminato con successo', 'Close', {
+      expect(snackBarMock.open).toHaveBeenCalledWith('Sensore eliminato con successo', 'Chiudi', {
         duration: 3000,
       });
     });

@@ -1,14 +1,18 @@
+// services/sensor-chart/sensor-chart.service.ts
 import { inject, Injectable, signal } from '@angular/core';
 import { retry, Subscription, timer } from 'rxjs';
 
 import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
 import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
+import { SensorAdapterFactory } from '../../adapters/sensor-adapter.factory';
 import { SensorHistoricAdapter } from '../../adapters/sensor-historic/sensor-historic.adapter';
 import { SensorLiveReadingAdapter } from '../../adapters/sensor-live/sensor-live-reading.adapter';
 import { SensorReading } from '../../models/sensor-data/sensor-reading.model';
+import { FieldDescriptor } from '../../models/sensor-data/field-descriptor.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { ApiError } from '../../models/api-error.model';
+import { SENSOR_MAX_LIVE_READINGS } from '../../models/chart/sensor-visible-points.model';
 
 @Injectable({
   providedIn: 'root',
@@ -16,16 +20,18 @@ import { ApiError } from '../../models/api-error.model';
 export class SensorChartService {
   private readonly historicService = inject(SensorHistoricApiService);
   private readonly liveReadingsService = inject(SensorLiveReadingsApiService);
-  private readonly historicAdapter = inject(SensorHistoricAdapter);
-  private readonly liveReadingsAdapter = inject(SensorLiveReadingAdapter);
+  private readonly adapterFactory = inject(SensorAdapterFactory);
 
-  private readonly MAX_LIVE_READINGS = 50;
+  private historicAdapter: SensorHistoricAdapter | null = null;
+  private liveAdapter: SensorLiveReadingAdapter | null = null;
+  private maxLiveReadings = 50;
+
   private subscription: Subscription | null = null;
 
   private readonly _historicReadings = signal<SensorReading[]>([]);
   private readonly _liveReadings = signal<SensorReading[]>([]);
+  private readonly _fields = signal<FieldDescriptor[]>([]);
   private readonly _loading = signal(false);
-  // Status scelti in maniera arbitraria
   private readonly _connectionStatus = signal<
     'connected' | 'connecting' | 'disconnected' | 'reconnecting'
   >('disconnected');
@@ -33,6 +39,7 @@ export class SensorChartService {
 
   public readonly historicReadings = this._historicReadings.asReadonly();
   public readonly liveReadings = this._liveReadings.asReadonly();
+  public readonly fields = this._fields.asReadonly();
   public readonly loading = this._loading.asReadonly();
   public readonly connectionStatus = this._connectionStatus.asReadonly();
   public readonly error = this._error.asReadonly();
@@ -41,13 +48,17 @@ export class SensorChartService {
     this.reset();
 
     if (req.chartType === ChartType.HISTORIC) {
+      this.historicAdapter = this.adapterFactory.createHistoricAdapter(req.sensor.profile);
+      this._fields.set(this.historicAdapter.fields);
       this.startHistoricChart(req);
     } else {
+      this.liveAdapter = this.adapterFactory.createLiveAdapter(req.sensor.profile);
+      this._fields.set(this.liveAdapter.fields);
+      this.maxLiveReadings = SENSOR_MAX_LIVE_READINGS[req.sensor.profile] ?? 50;
       this.startLiveReadingsChart(req);
     }
   }
 
-  // Cleanup di tutte le connessioni/grafici
   public stopChart(): void {
     this.subscription?.unsubscribe();
     this.subscription = null;
@@ -60,8 +71,7 @@ export class SensorChartService {
 
     this.subscription = this.historicService.getHistoricData(req).subscribe({
       next: (response) => {
-        // Adapting della response al formato utilizzato dal grafico
-        const historicData = this.historicAdapter.fromResponse(response);
+        const historicData = this.historicAdapter!.fromResponse(response);
         this._historicReadings.set(historicData.readings);
       },
       error: (err: ApiError) => {
@@ -76,9 +86,8 @@ export class SensorChartService {
     this._connectionStatus.set('connecting');
 
     this.subscription = this.liveReadingsService
-      .connect(req.sensor)
+      .connect(req)
       .pipe(
-        // Se cade la connessione, ritenta 3 volte con 3s di delay di riconnettersi
         retry({
           count: 3,
           delay: (_, retryCount) => {
@@ -89,16 +98,14 @@ export class SensorChartService {
         }),
       )
       .subscribe({
-        // Ogni volta che arriva una nuova lettura, la adatta e la aggiunge alla lista di quelle visualizzate
         next: (raw) => {
           this._connectionStatus.set('connected');
           this._error.set(null);
-          const reading = this.liveReadingsAdapter.fromDTO(raw);
-          this._liveReadings.update((readings) => {
-            // Mantiene solo le ultime MAX_LIVE_READINGS letture per evitare di sovraccaricare il grafico
-            const updated = [...readings, reading];
-            return updated.length > this.MAX_LIVE_READINGS
-              ? updated.slice(updated.length - this.MAX_LIVE_READINGS)
+          const readings = this.liveAdapter!.fromDTO(raw);
+          this._liveReadings.update((current) => {
+            const updated = [...current, ...readings];
+            return updated.length > this.maxLiveReadings
+              ? updated.slice(updated.length - this.maxLiveReadings)
               : updated;
           });
         },
@@ -116,8 +123,11 @@ export class SensorChartService {
     this.stopChart();
     this._historicReadings.set([]);
     this._liveReadings.set([]);
+    this._fields.set([]);
     this._loading.set(false);
     this._connectionStatus.set('disconnected');
     this._error.set(null);
+    this.historicAdapter = null;
+    this.liveAdapter = null;
   }
 }

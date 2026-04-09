@@ -10,10 +10,12 @@ import (
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
+	"backend/internal/tenant"
 	"backend/internal/user"
 
 	httpMiddlewares "backend/internal/infra/transport/http/middlewares"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -32,6 +34,7 @@ func NewGinEngine(
 	userController *user.Controller,
 	authController *auth.Controller,
 	sensorController *sensor.Controller,
+	tenantController *tenant.Controller,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -47,6 +50,16 @@ func NewGinEngine(
 	} else {
 		log.Warn("Cannot register name func!")
 	}
+
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{config.AppURL},
+		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}
+
+	router.Use(cors.New(corsConfig))
 
 	public := router.Group("/api/v1")
 
@@ -121,6 +134,14 @@ func NewGinEngine(
 			"/tenant/:tenant_id/sensor/:sensor_id/real_time_data",
 			realTimeDataController.GetRealTimeData,
 		)
+	}
+	
+	// Tenant
+	{
+		private.POST("/tenant", tenantController.CreateTenant)
+		private.DELETE("/tenant/:tenant_id", tenantController.DeleteTenant)
+		private.GET("/tenants", tenantController.GetTenants)
+		private.GET("/tenant/:tenant_id", tenantController.GetTenant)
 	}
 
 	return router

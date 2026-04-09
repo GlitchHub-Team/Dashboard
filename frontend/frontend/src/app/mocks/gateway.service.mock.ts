@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { delay, Observable, of, throwError } from 'rxjs';
+import { delay, Observable, of, switchMap, throwError, timer } from 'rxjs';
 
 import { GatewayBackend } from '../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../models/gateway/gateway-config.model';
 import { PaginatedGatewayResponse } from '../models/gateway/paginated-gateway-response.model';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ApiError } from '../models/api-error.model';
 
 @Injectable({
   providedIn: 'root',
@@ -16,7 +16,7 @@ export class GatewayApiClientServiceMock {
       gateway_id: 'gateway-01',
       tenant_id: undefined,
       name: 'Lobby Principale Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
     },
 
@@ -25,169 +25,193 @@ export class GatewayApiClientServiceMock {
       gateway_id: 'gateway-02',
       tenant_id: 'tenant-1',
       name: 'ICU Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-02-icu',
     },
     {
       gateway_id: 'gateway-03',
       tenant_id: 'tenant-1',
       name: 'Reparto B Gateway',
-      status: 'inattivo',
+      status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-03-repartob',
     },
     {
       gateway_id: 'gateway-04',
       tenant_id: 'tenant-1',
       name: 'Reparto C Gateway',
-      status: 'inattivo',
+      status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-04-repartoc',
     },
     {
       gateway_id: 'gateway-05',
       tenant_id: 'tenant-1',
       name: 'Radiologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-05-radiologia',
     },
     {
       gateway_id: 'gateway-06',
       tenant_id: 'tenant-1',
       name: 'Cardiologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-06-cardiologia',
     },
     {
       gateway_id: 'gateway-07',
       tenant_id: 'tenant-1',
       name: 'Neurologia Gateway',
-      status: 'inattivo',
+      status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-07-neurologia',
     },
     {
       gateway_id: 'gateway-08',
       tenant_id: 'tenant-1',
       name: 'Oncologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-08-oncologia',
     },
     {
       gateway_id: 'gateway-09',
       tenant_id: 'tenant-1',
       name: 'Pediatria Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-09-pediatria',
     },
     {
       gateway_id: 'gateway-10',
       tenant_id: 'tenant-1',
       name: 'Ortopedia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-10-ortopedia',
     },
     {
       gateway_id: 'gateway-11',
       tenant_id: 'tenant-1',
       name: 'Dermatologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-11-dermatologia',
     },
     {
       gateway_id: 'gateway-12',
       tenant_id: 'tenant-1',
       name: 'Oftalmologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-12-oftalmologia',
     },
     {
       gateway_id: 'gateway-13',
       tenant_id: 'tenant-1',
       name: 'ENT Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-13-ent',
     },
     {
       gateway_id: 'gateway-14',
       tenant_id: 'tenant-1',
       name: 'Urologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-14-urologia',
     },
     {
       gateway_id: 'gateway-15',
       tenant_id: 'tenant-1',
       name: 'Nefrologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-15-nefrologia',
     },
     {
       gateway_id: 'gateway-16',
       tenant_id: 'tenant-1',
       name: 'Pneumologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-16-pneumologia',
     },
     {
       gateway_id: 'gateway-17',
       tenant_id: 'tenant-1',
       name: 'Gastroenterologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-17-gastro',
     },
     {
       gateway_id: 'gateway-18',
       tenant_id: 'tenant-1',
       name: 'Endocrinologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-18-endocrino',
     },
     {
       gateway_id: 'gateway-19',
       tenant_id: 'tenant-1',
       name: 'Reumatologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-19-reumatologia',
     },
     {
       gateway_id: 'gateway-20',
       tenant_id: 'tenant-1',
       name: 'Ematologia Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-20-ematologia',
     },
     {
       gateway_id: 'gateway-21',
       tenant_id: 'tenant-1',
       name: 'Psichiatria Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-21-psichiatria',
     },
     {
       gateway_id: 'gateway-22',
       tenant_id: 'tenant-1',
       name: 'Ala Chirurgica Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-22-chirurgica',
     },
     {
       gateway_id: 'gateway-23',
       tenant_id: 'tenant-1',
       name: 'Sala di recupero Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-23-recupero',
     },
     {
       gateway_id: 'gateway-24',
       tenant_id: 'tenant-1',
       name: 'Farmacia Gateway',
-      status: 'inattivo',
+      status: 'inactive',
       interval: 60,
+      public_identifier: 'pk-gateway-24-farmacia',
     },
     {
       gateway_id: 'gateway-25',
       tenant_id: 'tenant-1',
       name: 'Banca del Sangue Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-25-sangue',
     },
 
     // Tenant 2
@@ -195,36 +219,41 @@ export class GatewayApiClientServiceMock {
       gateway_id: 'gateway-30',
       tenant_id: 'tenant-2',
       name: 'Pronto soccorso Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-30-prontosoccorso',
     },
     {
       gateway_id: 'gateway-31',
       tenant_id: 'tenant-2',
       name: 'Lab Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-31-lab',
     },
     {
       gateway_id: 'gateway-32',
       tenant_id: 'tenant-2',
       name: 'Triage Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-32-triage',
     },
     {
       gateway_id: 'gateway-33',
       tenant_id: 'tenant-2',
       name: 'Baia delle ambulanze Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-33-ambulanze',
     },
     {
       gateway_id: 'gateway-34',
       tenant_id: 'tenant-2',
       name: 'Area di attesa Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-34-attesa',
     },
 
     // Tenant 4
@@ -232,27 +261,24 @@ export class GatewayApiClientServiceMock {
       gateway_id: 'gateway-40',
       tenant_id: 'tenant-4',
       name: 'Clinic A Gateway',
-      status: 'attivo',
+      status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-40-clinica',
     },
   ];
+
+  private readonly shouldFailGetGatewayListByTenant = false;
+  private readonly shouldFailGetGatewayList = false;
+  private readonly shouldFailAddNewGateway = false;
+  private readonly shouldFailDeleteGateway = false;
 
   public getGatewayListByTenant(
     tenantId: string,
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetGatewayListByTenant) {
+      return this.delayedError(400, 'Failed to fetch gateways by tenant');
     }
 
     const filtered = this.mockGateways.filter((g) => g.tenant_id === tenantId);
@@ -263,40 +289,23 @@ export class GatewayApiClientServiceMock {
     page: number,
     limit: number,
   ): Observable<PaginatedGatewayResponse<GatewayBackend>> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailGetGatewayList) {
+      return this.delayedError(400, 'Failed to fetch gateways');
     }
+
     return of(this.paginate(this.mockGateways, page, limit)).pipe(delay(800));
   }
 
   public addNewGateway(config: GatewayConfig): Observable<GatewayBackend> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailAddNewGateway) {
+      return this.delayedError(400, 'Failed to create gateway');
     }
 
     const newGateway: GatewayBackend = {
       gateway_id: `gateway-${Date.now()}`,
       tenant_id: undefined,
       name: config.name,
-      status: 'attivo',
+      status: 'active',
       interval: config.interval,
     };
 
@@ -305,26 +314,14 @@ export class GatewayApiClientServiceMock {
   }
 
   public deleteGateway(gatewayId: string): Observable<void> {
-    const shouldFail = false;
-
-    if (shouldFail) {
-      return throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            statusText: 'Bad Request',
-            error: { error: 'tenant already exists' },
-          }),
-      ).pipe(delay(500));
+    if (this.shouldFailDeleteGateway) {
+      return this.delayedError(400, 'Failed to delete gateway');
     }
 
     const index = this.mockGateways.findIndex((g) => g.gateway_id === gatewayId);
 
     if (index === -1) {
-      return throwError(() => ({
-        status: 404,
-        message: `Gateway ${gatewayId} not found`,
-      })).pipe(delay(400));
+      return this.delayedError(404, `Gateway ${gatewayId} not found`);
     }
 
     this.mockGateways.splice(index, 1);
@@ -332,7 +329,7 @@ export class GatewayApiClientServiceMock {
   }
 
   private paginate<T>(items: T[], page: number, limit: number): PaginatedGatewayResponse<T> {
-    const start = page * limit;
+    const start = (page - 1) * limit;
     const gateways = items.slice(start, start + limit);
 
     return {
@@ -340,5 +337,9 @@ export class GatewayApiClientServiceMock {
       total: items.length,
       gateways,
     };
+  }
+
+  private delayedError(status: number, message: string): Observable<never> {
+    return timer(500).pipe(switchMap(() => throwError(() => ({ status, message }) as ApiError)));
   }
 }

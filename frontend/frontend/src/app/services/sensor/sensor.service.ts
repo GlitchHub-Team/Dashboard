@@ -6,12 +6,14 @@ import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { ApiError } from '../../models/api-error.model';
+import { SensorCommandApiClientService } from '../sensor-command-api-client/sensor-command-api-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SensorService {
   private readonly sensorApi = inject(SensorApiClientService);
+  private readonly sensorCommandApi = inject(SensorCommandApiClientService);
   private readonly adapter = inject(SensorAdapter);
 
   private readonly _sensorList = signal<Sensor[]>([]);
@@ -39,7 +41,7 @@ export class SensorService {
     this.setGettingSensorsState();
 
     this.sensorApi
-      .getSensorListByGateway(gatewayId, page, limit)
+      .getSensorListByGateway(gatewayId, page + 1, limit)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -64,7 +66,7 @@ export class SensorService {
     this.setGettingSensorsState();
 
     this.sensorApi
-      .getSensorListByTenant(tenantId, page, limit)
+      .getSensorListByTenant(tenantId, page + 1, limit)
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -92,9 +94,21 @@ export class SensorService {
       tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete sensor');
+        this._loading.set(false);
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
+    );
+  }
+
+  public interruptSensor(sensorId: string): Observable<void> {
+    return this.sensorCommandApi.interruptSensor(sensorId).pipe(
+      tap(() => this.refetchCurrentPage()),
+    );
+  }
+
+  public resumeSensor(sensorId: string): Observable<void> {
+    return this.sensorCommandApi.resumeSensor(sensorId).pipe(
+      tap(() => this.refetchCurrentPage()),
     );
   }
 

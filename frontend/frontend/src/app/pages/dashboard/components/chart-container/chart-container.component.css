@@ -36,17 +36,14 @@ mat-card-header {
   background-color: #fff3e0;
   color: #e65100;
 }
-
 .status-connected {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
-
 .status-disconnected {
   background-color: #f5f5f5;
   color: #757575;
 }
-
 .status-error {
   background-color: #ffebee;
   color: #c62828;
@@ -55,6 +52,14 @@ mat-card-header {
 mat-card-content {
   height: 800px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+app-historic-chart,
+app-real-time-chart {
+  flex: 1;
+  min-height: 0;
 }
 
 .chart-error {

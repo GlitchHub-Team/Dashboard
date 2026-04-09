@@ -4,5 +4,5 @@ export interface SensorBackend {
   sensor_name: string;
   status: string;
   profile: string;
-  sensor_interval: number;
+  data_interval: number;
 }

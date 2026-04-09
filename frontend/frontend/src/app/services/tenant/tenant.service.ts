@@ -47,7 +47,7 @@ export class TenantService {
     this.setGettingTenantsState();
 
     this.tenantApi
-      .getTenants(this.pageIndex(), this.limit())
+      .getTenants(this.pageIndex() + 1, this.limit())
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
         map((response) => this.adapter.fromPaginatedDTO(response)),
@@ -82,9 +82,9 @@ export class TenantService {
       tap(() => this.refetchCurrentPage()),
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to delete tenant');
+        this._loading.set(false);
         return EMPTY;
       }),
-      finalize(() => this._loading.set(false)),
     );
   }
 

@@ -3,9 +3,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
+import { signal } from '@angular/core';
 
 import { GatewayCommandsDialog } from './gateway-commands.dialog';
 import { GatewayService } from '../../../../services/gateway/gateway.service';
+import { TenantService } from '../../../../services/tenant/tenant.service';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Status } from '../../../../models/gateway-sensor-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
@@ -18,7 +20,7 @@ const COMMAND_CASES: [
 ][] = [
   ['commission', 'commissionGateway', ['gw-1', 'tenant-1', 'commission-token']],
   ['decommission', 'decommissionGateway', ['gw-1']],
-  ['restart', 'resetGateway', ['gw-1']],
+  ['reset', 'resetGateway', ['gw-1']],
   ['reboot', 'rebootGateway', ['gw-1']],
 ];
 
@@ -67,12 +69,18 @@ describe('GatewayCommandsDialog (Unit)', () => {
       rebootGateway: vi.fn(),
     };
 
+    const tenantServiceMock = {
+      tenantList: signal([]),
+      retrieveTenants: vi.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [GatewayCommandsDialog],
       providers: [
         { provide: MatDialogRef, useValue: dialogRefMock },
-        { provide: MAT_DIALOG_DATA, useValue: { gateway: mockGateway } },
+        { provide: MAT_DIALOG_DATA, useValue: { gateway: mockGateway, mode: 'manage' } },
         { provide: GatewayService, useValue: gatewayServiceMock },
+        { provide: TenantService, useValue: tenantServiceMock },
       ],
     }).compileComponents();
 
@@ -140,15 +148,15 @@ describe('GatewayCommandsDialog (Unit)', () => {
     );
 
     it.each(COMMAND_CASES)(
-      '%s: should set generalError and close with false on error',
+      '%s: should set generalError and keep dialog open on error',
       (command, method) => {
         gatewayServiceMock[method].mockReturnValue(
           throwError(() => ({ message: `${command} failed` }) as ApiError),
         );
         selectCommand(command);
         sendBtn().nativeElement.click();
-        expect(component['generalError']).toBe(`${command} failed`);
-        expect(dialogRefMock.close).toHaveBeenCalledWith(false);
+        expect(component['generalError']()).toBe(`${command} failed`);
+        expect(dialogRefMock.close).not.toHaveBeenCalled();
       },
     );
 
@@ -158,7 +166,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
       );
       selectCommand('commission');
       sendBtn().nativeElement.click();
-      expect(component['generalError']).toBe('Failed to send command');
+      expect(component['generalError']()).toBe('Failed to send command');
     });
   });
 });

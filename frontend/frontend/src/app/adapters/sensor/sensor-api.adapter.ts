@@ -15,7 +15,7 @@ export class SensorApiAdapter extends SensorAdapter {
       name: dto.sensor_name,
       status: statusMapper.fromBackend(dto.status),
       profile: sensorProfilesMapper.fromBackend(dto.profile),
-      dataInterval: dto.sensor_interval,
+      dataInterval: dto.data_interval,
     };
   }
 
