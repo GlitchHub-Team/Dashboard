@@ -36,6 +36,19 @@
       <mat-cell *matCellDef="let sensor">{{ sensor.status | uppercase }}</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="commands">
+      <mat-header-cell *matHeaderCellDef>Comandi</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">
+        <button
+          mat-icon-button
+          matTooltip="Send Command"
+          (click)="onSendCommand(sensor); $event.stopPropagation()"
+        >
+          <mat-icon>terminal</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef>Grafici</mat-header-cell>
       <mat-cell *matCellDef="let sensor">

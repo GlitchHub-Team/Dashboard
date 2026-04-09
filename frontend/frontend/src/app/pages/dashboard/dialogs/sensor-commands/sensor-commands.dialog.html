@@ -1,0 +1,48 @@
+<h2 mat-dialog-title>
+  <mat-icon>terminal</mat-icon>
+  Comando Sensore
+</h2>
+
+<mat-dialog-content>
+  @if (generalError(); as error) {
+    <div class="error-banner">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button type="button" (click)="dismissError()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
+  <form [formGroup]="commandForm" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Sensore</mat-label>
+      <input matInput [value]="data.sensor.name" disabled />
+      <mat-icon matSuffix>router</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Comando</mat-label>
+      <mat-select formControlName="command">
+        @for (option of commands; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+      @if (commandForm.controls.command.hasError('required')) {
+        <mat-error>Campo obbligatorio</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting()">Annulla</button>
+  <button mat-raised-button color="primary" [disabled]="commandForm.invalid || isSubmitting()" (click)="onConfirm()">
+    @if (isSubmitting()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      Invia
+    }
+  </button>
+</mat-dialog-actions>
+

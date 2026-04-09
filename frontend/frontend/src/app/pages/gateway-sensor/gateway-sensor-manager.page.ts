@@ -79,6 +79,14 @@ export class GatewaySensorManagerPage implements OnInit {
     this.managerService.changeSensorPage(event.pageIndex, event.pageSize);
   }
 
+  protected onCommandRequested(result: boolean): void {
+    if (result) {
+      this.snackBar.open('Comando inviato correttamente', 'Chiudi', {
+        duration: 3000,
+      });
+    }
+  }
+
   protected onCreateGateway(): void {
     this.dialog
       .open(CreateGatewayDialog)

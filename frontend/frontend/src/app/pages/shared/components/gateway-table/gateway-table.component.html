@@ -92,6 +92,7 @@
             [sensorPageIndex]="sensorPageIndex()"
             [sensorLimit]="sensorLimit()"
             (chartRequested)="chartRequested.emit($event)"
+            (commandRequested)="commandRequested.emit($event)"
             (sensorDeleteRequested)="sensorDeleteRequested.emit($event)"
             (sensorCreateRequested)="sensorCreateRequested.emit($event)"
             (sensorPageChange)="sensorPageChange.emit($event)"
