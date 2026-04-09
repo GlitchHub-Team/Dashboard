@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"backend/internal/infra/database/pagination"
 	"backend/internal/sensor"
@@ -33,7 +34,24 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		Status:    string(sensor.Inactive),
 	}
 
-	expectedSensors := []sensor.Sensor{entityA.ToSensor(), entityB.ToSensor()}
+	expectedSensors := []sensor.Sensor{
+		{
+			Id: uuid.MustParse(entityA.ID),
+			Name: entityA.Name,
+			Interval: time.Duration(entityA.Interval),
+			Profile: sensorProfile.SensorProfile(entityA.Profile),
+			GatewayId: uuid.MustParse(entityA.GatewayID),
+			Status: sensor.SensorStatus(entityA.Status),
+		},
+		{
+			Id: uuid.MustParse(entityB.ID),
+			Name: entityB.Name,
+			Interval: time.Duration(entityB.Interval),
+			Profile: sensorProfile.SensorProfile(entityB.Profile),
+			GatewayId: uuid.MustParse(entityB.GatewayID),
+			Status: sensor.SensorStatus(entityB.Status),
+		},
+	}
 	expectedCount := uint(2)
 
 	stepGetSensorsByGatewayNeverCalled := func(mockBundle dbSensorAdapterMocks) *gomock.Call {
@@ -152,7 +170,14 @@ func TestDbSensorAdapter_GetSensorById(t *testing.T) {
 		Status:    string(sensor.Active),
 	}
 
-	expectedSensor := entity.ToSensor()
+	expectedSensor := sensor.Sensor{
+		Id: uuid.MustParse(entity.ID),
+		Name: entity.Name,
+		Interval: time.Duration(entity.Interval),
+		Profile: sensorProfile.SensorProfile(entity.Profile),
+		GatewayId: uuid.MustParse(entity.GatewayID),
+		Status: sensor.SensorStatus(entity.Status),
+	}
 
 	mockGetSensorByIdErr := errors.New("unexpected error getting sensor by id")
 	stepGetSensorByIdErr := func(mockBundle dbSensorAdapterMocks) *gomock.Call {
@@ -239,7 +264,24 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		Status:    string(sensor.Inactive),
 	}
 
-	expectedSensors := []sensor.Sensor{entityA.ToSensor(), entityB.ToSensor()}
+	expectedSensors := []sensor.Sensor{
+		{
+			Id: uuid.MustParse(entityA.ID),
+			Name: entityA.Name,
+			Interval: time.Duration(entityA.Interval),
+			Profile: sensorProfile.SensorProfile(entityA.Profile),
+			GatewayId: uuid.MustParse(entityA.GatewayID),
+			Status: sensor.SensorStatus(entityA.Status),
+		},
+		{
+			Id: uuid.MustParse(entityB.ID),
+			Name: entityB.Name,
+			Interval: time.Duration(entityB.Interval),
+			Profile: sensorProfile.SensorProfile(entityB.Profile),
+			GatewayId: uuid.MustParse(entityB.GatewayID),
+			Status: sensor.SensorStatus(entityB.Status),
+		},
+	}
 	expectedCount := uint(2)
 
 	stepGetSensorsByTenantNeverCalled := func(mockBundle dbSensorAdapterMocks) *gomock.Call {

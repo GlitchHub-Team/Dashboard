@@ -12,7 +12,6 @@ package mocks
 import (
 	gateway "backend/internal/gateway"
 	sensor "backend/internal/sensor"
-	tenant "backend/internal/tenant"
 	reflect "reflect"
 
 	uuid "github.com/google/uuid"
@@ -44,11 +43,11 @@ func (m *MockGetSensorByTenantPort) EXPECT() *MockGetSensorByTenantPortMockRecor
 }
 
 // GetSensorByTenant mocks base method.
-func (m *MockGetSensorByTenantPort) GetSensorByTenant(tenantId, sensorId uuid.UUID) (sensor.Sensor, tenant.Tenant, error) {
+func (m *MockGetSensorByTenantPort) GetSensorByTenant(tenantId, sensorId uuid.UUID) (sensor.Sensor, *uuid.UUID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSensorByTenant", tenantId, sensorId)
 	ret0, _ := ret[0].(sensor.Sensor)
-	ret1, _ := ret[1].(tenant.Tenant)
+	ret1, _ := ret[1].(*uuid.UUID)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
