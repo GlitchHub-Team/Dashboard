@@ -1,10 +1,11 @@
 package historical_data
 
 import (
-	sensorProfile "backend/internal/sensor/profile"
 	"encoding/json"
 	"errors"
 	"time"
+
+	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/google/uuid"
 )

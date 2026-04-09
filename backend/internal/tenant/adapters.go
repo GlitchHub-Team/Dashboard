@@ -1,8 +1,9 @@
 package tenant
 
 import (
-	"backend/internal/infra/database"
 	"errors"
+
+	"backend/internal/infra/database"
 
 	"github.com/google/uuid"
 )

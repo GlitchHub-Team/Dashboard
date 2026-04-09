@@ -1,10 +1,11 @@
 package sensor
 
 import (
+	"errors"
+
 	"backend/internal/gateway"
 	"backend/internal/infra/database"
 	"backend/internal/infra/database/pagination"
-	"errors"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

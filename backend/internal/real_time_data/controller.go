@@ -62,7 +62,7 @@ func (c *Controller) GetRealTimeData(ctx *gin.Context) {
 	cmd := RetrieveRealTimeDataCommand{
 		Requester: requester,
 		SensorId:  sensorId,
-		TenantId: tenantId,
+		TenantId:  tenantId,
 	}
 	// c.log.Sugar().Errorf("err: %v", err)
 
@@ -133,7 +133,7 @@ func (c *Controller) startClientListener(conn *websocket.Conn, errorChannel chan
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {
 			// TODO: togliere messaggio di DEBUG
-			c.log.Sugar().Debugf("[startClientListener] Client websocket disconesso: %v", conn.NetConn().RemoteAddr()) 
+			c.log.Sugar().Debugf("[startClientListener] Client websocket disconesso: %v", conn.NetConn().RemoteAddr())
 			errorChannel <- NewErrClientDisconnected()
 			break
 		}

@@ -50,10 +50,8 @@ func DecodeSensorProfileData(profile sensorProfile.SensorProfile, raw json.RawMe
 
 func decodeSensorProfileData[T any](raw json.RawMessage) (T, error) {
 	var decoded T
-	fmt.Printf(">>>>>>>>>>>> %s <<<<<<<<<<<<<<< \n", string(raw))
 	if err := json.Unmarshal(raw, &decoded); err != nil {
 		return decoded, fmt.Errorf("cannot decode sensor profile data for %v: %w", reflect.TypeFor[T](), err)
 	}
-	fmt.Printf(">>>>>>>>>>>> %#v <<<<<<<<<<<<<<< \n", (decoded))
 	return decoded, nil
 }

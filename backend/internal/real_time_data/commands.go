@@ -8,6 +8,6 @@ import (
 
 type RetrieveRealTimeDataCommand struct {
 	Requester identity.Requester
-	SensorId uuid.UUID
-	TenantId uuid.UUID
+	SensorId  uuid.UUID
+	TenantId  uuid.UUID
 }

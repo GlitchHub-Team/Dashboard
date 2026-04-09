@@ -38,8 +38,8 @@ func preSetupSensorChain(
 		}
 		tenantIdStr := tenantId.String()
 		err := db.Save(&tenant.TenantEntity{
-			ID: tenantId.String(),
-			Name: "Test tenant",
+			ID:             tenantId.String(),
+			Name:           "Test tenant",
 			CanImpersonate: true,
 		}).Error
 		if err != nil {
@@ -49,10 +49,10 @@ func preSetupSensorChain(
 
 		// Crea gateway
 		err = db.Save(&gateway.GatewayEntity{
-			ID: gatewayId.String(),
-			Name: "Test gateway",
-			TenantId: &tenantIdStr,
-			Status: string(gateway.GATEWAY_STATUS_ACTIVE),
+			ID:               gatewayId.String(),
+			Name:             "Test gateway",
+			TenantId:         &tenantIdStr,
+			Status:           string(gateway.GATEWAY_STATUS_ACTIVE),
 			PublicIdentifier: "test-public-identifier",
 		}).Error
 		if err != nil {
@@ -62,12 +62,12 @@ func preSetupSensorChain(
 
 		// Crea sensore
 		err = db.Save(&sensor.SensorEntity{
-			ID: sensorId.String(),
+			ID:        sensorId.String(),
 			GatewayID: gatewayId.String(),
-			Name: "Test Sensor",
-			Interval: 1000,
-			Profile: sensorProfile,
-			Status: sensorStatus,
+			Name:      "Test Sensor",
+			Interval:  1000,
+			Profile:   sensorProfile,
+			Status:    sensorStatus,
 		}).Error
 		if err != nil {
 			t.Errorf("error creating tenant: %v", err)

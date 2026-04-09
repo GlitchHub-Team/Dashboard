@@ -19,7 +19,7 @@ type RealTimeDataPort interface {
 // Service ------------------------------------------------------------------------------------------------------
 
 type RealTimeDataService struct {
-	tenantPort tenant.GetTenantPort
+	tenantPort         tenant.GetTenantPort
 	sensorByTenantPort sensor.GetSensorByTenantPort
 	realTimeDataPort   RealTimeDataPort
 }
@@ -30,7 +30,7 @@ func NewRealTimeDataService(
 	realTimeDataPort RealTimeDataPort,
 ) *RealTimeDataService {
 	return &RealTimeDataService{
-		tenantPort: tenantPort,
+		tenantPort:         tenantPort,
 		sensorByTenantPort: sensorByTenantPort,
 		realTimeDataPort:   realTimeDataPort,
 	}
@@ -53,7 +53,7 @@ func (s *RealTimeDataService) RetrieveRealTimeData(cmd RetrieveRealTimeDataComma
 
 	// Check accesso
 	// - Super Admin
-	if (cmd.Requester.RequesterRole == identity.ROLE_SUPER_ADMIN && !sensorTenant.CanImpersonate) {
+	if cmd.Requester.RequesterRole == identity.ROLE_SUPER_ADMIN && !sensorTenant.CanImpersonate {
 		return nil, nil, tenant.ErrImpersonationFailed
 	} else
 	// - Tenant Member
@@ -62,7 +62,7 @@ func (s *RealTimeDataService) RetrieveRealTimeData(cmd RetrieveRealTimeDataComma
 			return nil, nil, sensor.ErrSensorNotFound
 		}
 	}
-	
+
 	// 3. Creazione canali
 	dataChannel = make(chan RealTimeSample, 16)
 	errChannel = make(chan RealTimeError, 1)

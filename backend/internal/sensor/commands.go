@@ -3,8 +3,8 @@ package sensor
 import (
 	"time"
 
-	"backend/internal/shared/identity"
 	profile "backend/internal/sensor/profile"
+	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
 )

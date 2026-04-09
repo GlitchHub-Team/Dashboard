@@ -39,7 +39,7 @@ func (adapter *RealTimeDataNATSAdapter) StartDataRetriever(
 		return
 	}
 
-	go adapter.reader.StartSubscriber(subject, sensor.Profile, dataChan, errorChan)
+	go adapter.reader.StartSubscriber(subject, sensor.Profile, dataChan, errorChan) //nolint:errcheck
 
 	return
 }

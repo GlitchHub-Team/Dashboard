@@ -35,7 +35,6 @@ func (reader *concreteRealTimeDataNATSReader) StartSubscriber(
 ) error {
 	sub, err := reader.nc.Subscribe(subject, func(msg *nats.Msg) {
 		sample, err := MapNATSRawToDomain(profile, msg.Data)
-
 		if err != nil {
 			errorChannel <- NewErrMappingError(err)
 			return
@@ -50,7 +49,7 @@ func (reader *concreteRealTimeDataNATSReader) StartSubscriber(
 	}
 
 loop:
-	for _ = range errorChannel { 
+	for range errorChannel {
 		break loop
 	}
 

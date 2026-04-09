@@ -2,10 +2,10 @@ package sensor
 
 import (
 	"time"
+
 	profile "backend/internal/sensor/profile"
 	"github.com/google/uuid"
 )
-
 
 type SensorStatus string
 

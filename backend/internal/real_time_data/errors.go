@@ -4,5 +4,7 @@ import (
 	"errors"
 )
 
-var ErrClientDisconnected = errors.New("client disconnected")
-var ErrMappingError = errors.New("mapping error")
+var (
+	ErrClientDisconnected = errors.New("client disconnected")
+	ErrMappingError       = errors.New("mapping error")
+)

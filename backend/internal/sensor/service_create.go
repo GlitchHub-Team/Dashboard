@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"backend/internal/gateway"
-	"backend/internal/shared/identity"
 	profile "backend/internal/sensor/profile"
+	"backend/internal/shared/identity"
 	"github.com/google/uuid"
 )
 

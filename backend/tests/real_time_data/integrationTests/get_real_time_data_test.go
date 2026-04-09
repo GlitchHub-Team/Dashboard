@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	httpDto "backend/internal/infra/transport/http/dto"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
-	httpDto "backend/internal/infra/transport/http/dto"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/tests/helper"
 
@@ -64,9 +64,9 @@ func TestGetRealTimeDataIntegrationErrors(t *testing.T) {
 		{
 			PreSetups: nil,
 			Name:      "Fallimento: UUID uri params non validi",
-			Method: http.MethodGet,
-			Path:   pathWithJwt("/api/v1/tenant/invalid-uuid/sensor/invalid-uuid/real_time_data", tenantAdminJWT),
-			Body:   nil,
+			Method:    http.MethodGet,
+			Path:      pathWithJwt("/api/v1/tenant/invalid-uuid/sensor/invalid-uuid/real_time_data", tenantAdminJWT),
+			Body:      nil,
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: "",
@@ -150,7 +150,6 @@ func TestGetRealTimeDataIntegrationSuccess(t *testing.T) {
 		}
 		executeWSTest(t, deps, tenantUserJWT, targetTenantID, targetGatewayID, targetSensorID)
 	})
-
 }
 
 func executeWSTest(t *testing.T, deps helper.IntegrationTestDeps, jwt string, targetTenantID, targetGatewayID, targetSensorID uuid.UUID) {
@@ -184,8 +183,8 @@ func executeWSTest(t *testing.T, deps helper.IntegrationTestDeps, jwt string, ta
 		// o "{"error": "sensor not found"}" (problema di setup DB / foreign key)
 		t.Fatalf("failed to dial websocket: %v (status: %d) | body: %s | URL: %s", err, resp.StatusCode, bodyDump, wsURL)
 	}
-	defer resp.Body.Close()
-	defer ws.Close()
+	defer resp.Body.Close() //nolint:errcheck
+	defer ws.Close()        //nolint:errcheck
 
 	if resp.StatusCode != http.StatusSwitchingProtocols {
 		t.Fatalf("expected HTTP 101 Switching Protocols, got %d", resp.StatusCode)
@@ -211,7 +210,10 @@ func executeWSTest(t *testing.T, deps helper.IntegrationTestDeps, jwt string, ta
 	}()
 
 	// 5. Lettura bloccante con timeout
-	ws.SetReadDeadline(time.Now().Add(3 * time.Second))
+	err = ws.SetReadDeadline(time.Now().Add(3 * time.Second))
+	if err != nil {
+		t.Fatalf("cannot set deadline for mock NATS publisher: %v", err)
+	}
 	_, message, err := ws.ReadMessage()
 
 	close(publishDone)

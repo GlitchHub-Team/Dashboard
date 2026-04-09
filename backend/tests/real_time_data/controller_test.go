@@ -1,104 +1,104 @@
 package real_time_data_test
 
 import (
-    "encoding/json"
-    "errors"
-    "io"
-    "net/http"
-    "net/http/httptest"
-    "strings"
-    "testing"
-    "time"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
 
-    "github.com/gin-gonic/gin"
-    "github.com/google/uuid"
-    "github.com/gorilla/websocket"
-    "go.uber.org/mock/gomock"
-    "go.uber.org/zap/zaptest"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
+	"go.uber.org/mock/gomock"
+	"go.uber.org/zap/zaptest"
 
-    "backend/internal/infra/transport/http/dto"
-    "backend/internal/real_time_data"
-    "backend/internal/sensor"
-    sensorProfile "backend/internal/sensor/profile"
-    "backend/internal/shared/identity"
-    "backend/tests/real_time_data/mocks"
+	"backend/internal/infra/transport/http/dto"
+	"backend/internal/real_time_data"
+	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
+	"backend/internal/shared/identity"
+	"backend/tests/real_time_data/mocks"
 )
 
 func setupTestServer(t *testing.T, controller *real_time_data.Controller, requester *identity.Requester) *httptest.Server {
-    t.Helper()
-    gin.SetMode(gin.TestMode)
-    engine := gin.New()
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
 
-    engine.Use(func(ctx *gin.Context) {
-        if requester != nil {
-            ctx.Set("requester", *requester)
-        }
-        ctx.Next()
-    })
+	engine.Use(func(ctx *gin.Context) {
+		if requester != nil {
+			ctx.Set("requester", *requester)
+		}
+		ctx.Next()
+	})
 
-    engine.GET("/api/v1/tenant_id/:tenant_id/sensor/:sensor_id/real_time_data", controller.GetRealTimeData)
-    return httptest.NewServer(engine)
+	engine.GET("/api/v1/tenant_id/:tenant_id/sensor/:sensor_id/real_time_data", controller.GetRealTimeData)
+	return httptest.NewServer(engine)
 }
 
 func parseHTTPResponseError(t *testing.T, resp *http.Response) string {
-    t.Helper()
-    bodyBytes, err := io.ReadAll(resp.Body)
-    if err != nil {
-        t.Fatalf("failed to read response body: %v", err)
-    }
+	t.Helper()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
 
-    var response map[string]interface{}
-    if err := json.Unmarshal(bodyBytes, &response); err != nil {
-        t.Fatalf("failed to unmarshal error response: %v", err)
-    }
+	var response map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &response); err != nil {
+		t.Fatalf("failed to unmarshal error response: %v", err)
+	}
 
-    errStr, ok := response["error"].(string)
-    if !ok {
-        t.Fatalf("response does not contain 'error' string field: %s", string(bodyBytes))
-    }
-    return errStr
+	errStr, ok := response["error"].(string)
+	if !ok {
+		t.Fatalf("response does not contain 'error' string field: %s", string(bodyBytes))
+	}
+	return errStr
 }
 
 func buildURL(baseURL string, tenantId, sensorId string) string {
-    return baseURL + "/api/v1/tenant_id/" + tenantId + "/sensor/" + sensorId + "/real_time_data"
+	return baseURL + "/api/v1/tenant_id/" + tenantId + "/sensor/" + sensorId + "/real_time_data"
 }
 
 func TestController_GetRealTimeData(t *testing.T) {
-    targetSensorId := uuid.New()
-    targetTenantId := uuid.New()
+	targetSensorId := uuid.New()
+	targetTenantId := uuid.New()
 
-    requester := identity.Requester{
-        RequesterUserId:   1,
-        RequesterTenantId: &targetTenantId,
-        RequesterRole:     identity.ROLE_TENANT_ADMIN,
-    }
+	requester := identity.Requester{
+		RequesterUserId:   1,
+		RequesterTenantId: &targetTenantId,
+		RequesterRole:     identity.ROLE_TENANT_ADMIN,
+	}
 
-    expectedCmd := real_time_data.RetrieveRealTimeDataCommand{
-        Requester: requester,
-        SensorId:  targetSensorId,
-		TenantId: targetTenantId,
-    }
+	expectedCmd := real_time_data.RetrieveRealTimeDataCommand{
+		Requester: requester,
+		SensorId:  targetSensorId,
+		TenantId:  targetTenantId,
+	}
 
-    mockTimestamp := time.Now()
-    mockSample := &real_time_data.HeartRateSample{
-        BaseSample: real_time_data.BaseSample{
-            Profile:   sensorProfile.HEART_RATE,
-            Timestamp: mockTimestamp,
-        },
-        Data: real_time_data.HeartRateSampleData{
-            BpmValue: 75,
-        },
-    }
+	mockTimestamp := time.Now()
+	mockSample := &real_time_data.HeartRateSample{
+		BaseSample: real_time_data.BaseSample{
+			Profile:   sensorProfile.HEART_RATE,
+			Timestamp: mockTimestamp,
+		},
+		Data: real_time_data.HeartRateSampleData{
+			BpmValue: 75,
+		},
+	}
 
 	type testCase struct {
-		name string
-		setupFunc func(*mocks.MockGetRealTimeDataUseCase) *gomock.Call
-		targetTenantId string
-		targetSensorId string
-		requester *identity.Requester
+		name               string
+		setupFunc          func(*mocks.MockGetRealTimeDataUseCase) *gomock.Call
+		targetTenantId     string
+		targetSensorId     string
+		requester          *identity.Requester
 		expectedStatusCode int
-		expectedErrString string
-		checkWS bool
+		expectedErrString  string
+		checkWS            bool
 	}
 
 	genericErr := errors.New("database connection timeout")
@@ -124,26 +124,26 @@ func TestController_GetRealTimeData(t *testing.T) {
 					}).
 					Times(1)
 			},
-			targetTenantId: targetTenantId.String(),
-			targetSensorId: targetSensorId.String(),
-			requester: &requester,
+			targetTenantId:     targetTenantId.String(),
+			targetSensorId:     targetSensorId.String(),
+			requester:          &requester,
 			expectedStatusCode: http.StatusSwitchingProtocols,
-			checkWS: true,
+			checkWS:            true,
 		},
 		{
-			name: "Fail: Requester not found in context yields 401",
-			setupFunc: nil,
-			targetTenantId: targetTenantId.String(),
-			targetSensorId: targetSensorId.String(),
-			requester: nil,
+			name:               "Fail: Requester not found in context yields 401",
+			setupFunc:          nil,
+			targetTenantId:     targetTenantId.String(),
+			targetSensorId:     targetSensorId.String(),
+			requester:          nil,
 			expectedStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name: "Fail: URI binding fails yields 400",
-			setupFunc: nil,
-			targetTenantId: "invalid-uuid",
-			targetSensorId: "invalid-uuid",
-			requester: &requester,
+			name:               "Fail: URI binding fails yields 400",
+			setupFunc:          nil,
+			targetTenantId:     "invalid-uuid",
+			targetSensorId:     "invalid-uuid",
+			requester:          &requester,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
@@ -154,37 +154,37 @@ func TestController_GetRealTimeData(t *testing.T) {
 					Return(nil, nil, sensor.ErrSensorNotFound).
 					Times(1)
 			},
-			targetTenantId: targetTenantId.String(),
-			targetSensorId: targetSensorId.String(),
-			requester: &requester,
+			targetTenantId:     targetTenantId.String(),
+			targetSensorId:     targetSensorId.String(),
+			requester:          &requester,
 			expectedStatusCode: http.StatusNotFound,
-			expectedErrString: sensor.ErrSensorNotFound.Error(),
+			expectedErrString:  sensor.ErrSensorNotFound.Error(),
 		},
 		{
 			name: "Fail: UseCase returns generic error yields 500",
-			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call  {
+			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call {
 				return mockUC.EXPECT().
 					RetrieveRealTimeData(gomock.Eq(expectedCmd)).
 					Return(nil, nil, genericErr).
 					Times(1)
 			},
-			targetTenantId: targetTenantId.String(),
-			targetSensorId: targetSensorId.String(),
-			requester: &requester,
+			targetTenantId:     targetTenantId.String(),
+			targetSensorId:     targetSensorId.String(),
+			requester:          &requester,
 			expectedStatusCode: http.StatusInternalServerError,
-			expectedErrString: genericErr.Error(),
+			expectedErrString:  genericErr.Error(),
 		},
 		{
 			name: "Fail: WS upgrade fails yields 400",
-			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call  {
+			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call {
 				return mockUC.EXPECT().
 					RetrieveRealTimeData(gomock.Eq(expectedCmd)).
 					Return(make(chan real_time_data.RealTimeSample), make(chan real_time_data.RealTimeError), nil).
 					Times(1)
 			},
-			targetTenantId: targetTenantId.String(),
-			targetSensorId: targetSensorId.String(),
-			requester: &requester,
+			targetTenantId:     targetTenantId.String(),
+			targetSensorId:     targetSensorId.String(),
+			requester:          &requester,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 	}
@@ -192,7 +192,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockController := gomock.NewController(t)
-        
+
 			mockUC := mocks.NewMockGetRealTimeDataUseCase(mockController)
 			if tc.setupFunc != nil {
 				tc.setupFunc(mockUC)
@@ -204,7 +204,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 			defer server.Close()
 
 			httpEndpoint := buildURL(server.URL, tc.targetTenantId, tc.targetSensorId)
-			
+
 			if tc.checkWS {
 				wsURL := "ws" + strings.TrimPrefix(httpEndpoint, "http")
 
@@ -217,8 +217,8 @@ func TestController_GetRealTimeData(t *testing.T) {
 					}
 					t.Fatalf("expected no error dialing websocket, got %v. Response body: %s", err, string(body))
 				}
-				defer resp.Body.Close()
-				defer ws.Close()
+				defer resp.Body.Close() //nolint:errcheck
+				defer ws.Close()        //nolint:errcheck
 
 				// b. Check status code
 				if resp.StatusCode != http.StatusSwitchingProtocols {
@@ -270,11 +270,11 @@ func TestController_GetRealTimeData(t *testing.T) {
 				}
 
 			} else {
-				resp, err := http.Get(httpEndpoint)
+				resp, err := http.Get(httpEndpoint) //nolint:noctx
 				if err != nil {
 					t.Fatalf("expected no error making request, got %v", err)
 				}
-				defer resp.Body.Close()
+				defer resp.Body.Close() //nolint:errcheck
 
 				if resp.StatusCode != tc.expectedStatusCode {
 					t.Errorf("expected status %d, got %d", tc.expectedStatusCode, resp.StatusCode)
@@ -285,7 +285,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 					if errStr != tc.expectedErrString {
 						t.Errorf("expected error %q, got %q", tc.expectedErrString, errStr)
 					}
-				} 
+				}
 			}
 		})
 	}

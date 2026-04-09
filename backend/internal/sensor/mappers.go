@@ -1,11 +1,12 @@
 package sensor
 
 import (
+	"time"
+
 	profile "backend/internal/sensor/profile"
 
-	"github.com/google/uuid"
-	"time"
 	"backend/internal/gateway"
+	"github.com/google/uuid"
 )
 
 func DomainToSensorEntity(s Sensor) *SensorEntity {
@@ -21,7 +22,7 @@ func DomainToSensorEntity(s Sensor) *SensorEntity {
 
 func SensorEntityToDomain(entity *SensorEntity) (sensor Sensor, err error) {
 	if entity == nil {
-		return 
+		return
 	}
 
 	sensorId, err := uuid.Parse(entity.ID)
@@ -37,13 +38,11 @@ func SensorEntityToDomain(entity *SensorEntity) (sensor Sensor, err error) {
 	}
 
 	return Sensor{
-		Id: sensorId,
-		Name: entity.Name,
-		Interval: time.Duration(entity.Interval),
-		Profile: profile.SensorProfile(entity.Profile),
+		Id:        sensorId,
+		Name:      entity.Name,
+		Interval:  time.Duration(entity.Interval),
+		Profile:   profile.SensorProfile(entity.Profile),
 		GatewayId: gatewayId,
-		Status: SensorStatus(entity.Status),
+		Status:    SensorStatus(entity.Status),
 	}, nil
-
-
 }

@@ -56,7 +56,6 @@ func (repo *sensorPostgreRepository) GetSensorByTenant(tenantId, sensorId string
 		Joins("INNER JOIN tenants on tenants.id = ?", tenantId).
 		Find(&sensorEntity, "sensors.id = ?", sensorId).
 		Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return SensorEntity{}, ErrSensorNotFound
@@ -73,7 +72,6 @@ func (repo *sensorPostgreRepository) GetSensorWithGateway(sensorId string) (Sens
 		Joins("Gateway").
 		Find(&sensorEntity, "sensors.id = ?", sensorId).
 		Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return SensorEntity{}, ErrSensorNotFound

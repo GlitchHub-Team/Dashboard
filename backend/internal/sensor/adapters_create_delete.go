@@ -2,6 +2,7 @@ package sensor
 
 import (
 	"time"
+
 	profile "backend/internal/sensor/profile"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -40,10 +41,10 @@ var (
 )
 
 func (adapter *DbSensorAdapter) CreateSensor(
-	sensorId uuid.UUID, 
-	gatewayId uuid.UUID, 
-	name string, 
-	interval time.Duration, 
+	sensorId uuid.UUID,
+	gatewayId uuid.UUID,
+	name string,
+	interval time.Duration,
 	profile profile.SensorProfile,
 ) (Sensor, error) {
 	entity := &SensorEntity{
@@ -77,9 +78,9 @@ func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error)
 }
 
 func (adapter *SendCmdAdapter) SendCreateSensorCmd(
-	sensorId uuid.UUID, 
-	gatewayId uuid.UUID, 
-	interval time.Duration, 
+	sensorId uuid.UUID,
+	gatewayId uuid.UUID,
+	interval time.Duration,
 	profile profile.SensorProfile,
 ) error {
 	cmd := &CreateSensorCmdEntity{

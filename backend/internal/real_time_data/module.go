@@ -17,7 +17,7 @@ var Module = fx.Module(
 			NewRealTimeDataService,
 			fx.As(new(GetRealTimeDataUseCase)),
 		),
-		
+
 		// Outbound port
 		fx.Annotate(
 			NewRealTimeDataNATSAdapter,

@@ -29,17 +29,17 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 		Status:    sensor.Active,
 	}
 
-    expectedTenant_CanImpersonate := tenant.Tenant{
-        Id: targetTenantId,
-        CanImpersonate: true,
-    }
+	expectedTenant_CanImpersonate := tenant.Tenant{
+		Id:             targetTenantId,
+		CanImpersonate: true,
+	}
 
-    expectedTenant_CannotImpersonate := tenant.Tenant{
-        Id: targetTenantId,
-        CanImpersonate: false,
-    }
+	expectedTenant_CannotImpersonate := tenant.Tenant{
+		Id:             targetTenantId,
+		CanImpersonate: false,
+	}
 
-    // Requester 
+	// Requester
 
 	requesterSuperAdmin := identity.Requester{
 		RequesterUserId:   uint(1),
@@ -53,13 +53,13 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 		RequesterRole:     identity.ROLE_TENANT_USER,
 	}
 
-    requesterTenantMember_Unauth := identity.Requester{
+	requesterTenantMember_Unauth := identity.Requester{
 		RequesterUserId:   uint(2),
 		RequesterTenantId: &otherTenantId,
 		RequesterRole:     identity.ROLE_TENANT_USER,
 	}
 
-    // Command
+	// Command
 
 	cmdSuperAdmin := real_time_data.RetrieveRealTimeDataCommand{
 		Requester: requesterSuperAdmin,
@@ -73,7 +73,7 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 		TenantId:  targetTenantId,
 	}
 
-    cmdTenantMember_Unauthorized := real_time_data.RetrieveRealTimeDataCommand{
+	cmdTenantMember_Unauthorized := real_time_data.RetrieveRealTimeDataCommand{
 		Requester: requesterTenantMember_Unauth,
 		SensorId:  targetSensorId,
 		TenantId:  targetTenantId,
@@ -115,30 +115,30 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 	stepGetTenantOk_CanImpersonate := func(
 		mockTenantPort *tenantMocks.MockGetTenantPort, mockSensorByTenant *sensorMocks.MockGetSensorByTenantPort, mockRealTimeData *mocks.MockRealTimeDataPort,
 	) *gomock.Call {
-        return mockTenantPort.EXPECT().
-            GetTenant(targetTenantId).
-            Return(expectedTenant_CanImpersonate, nil).
-            Times(1)
-    }
+		return mockTenantPort.EXPECT().
+			GetTenant(targetTenantId).
+			Return(expectedTenant_CanImpersonate, nil).
+			Times(1)
+	}
 
-    stepGetTenantOk_CannotImpersonate := func(
+	stepGetTenantOk_CannotImpersonate := func(
 		mockTenantPort *tenantMocks.MockGetTenantPort, mockSensorByTenant *sensorMocks.MockGetSensorByTenantPort, mockRealTimeData *mocks.MockRealTimeDataPort,
 	) *gomock.Call {
-        return mockTenantPort.EXPECT().
-            GetTenant(targetTenantId).
-            Return(expectedTenant_CannotImpersonate, nil).
-            Times(1)
-    }
+		return mockTenantPort.EXPECT().
+			GetTenant(targetTenantId).
+			Return(expectedTenant_CannotImpersonate, nil).
+			Times(1)
+	}
 
-    errMockStepGetTenant := errors.New("unexpected error getting tenant")
-    stepGetTenantFail := func(
+	errMockStepGetTenant := errors.New("unexpected error getting tenant")
+	stepGetTenantFail := func(
 		mockTenantPort *tenantMocks.MockGetTenantPort, mockSensorByTenant *sensorMocks.MockGetSensorByTenantPort, mockRealTimeData *mocks.MockRealTimeDataPort,
 	) *gomock.Call {
-        return mockTenantPort.EXPECT().
-            GetTenant(targetTenantId).
-            Return(tenant.Tenant{}, errMockStepGetTenant).
-            Times(1)
-    }
+		return mockTenantPort.EXPECT().
+			GetTenant(targetTenantId).
+			Return(tenant.Tenant{}, errMockStepGetTenant).
+			Times(1)
+	}
 
 	// Step: Start Data Retriever ---------------------------------------------------------------------
 	stepStartDataRetrieverOk := func(
@@ -150,13 +150,13 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 			Times(1)
 	}
 
-    stepStartDataRetrieverNeverCalled := func(
+	stepStartDataRetrieverNeverCalled := func(
 		mockTenantPort *tenantMocks.MockGetTenantPort, mockSensorByTenant *sensorMocks.MockGetSensorByTenantPort, mockRealTimeData *mocks.MockRealTimeDataPort,
 	) *gomock.Call {
-        return mockRealTimeData.EXPECT().
-            StartDataRetriever(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-            Times(0)
-    }
+		return mockRealTimeData.EXPECT().
+			StartDataRetriever(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(0)
+	}
 
 	errMockRetriever := errors.New("failed to connect to nats")
 	stepStartDataRetrieverError := func(
@@ -174,7 +174,7 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 			input: cmdSuperAdmin,
 			setupSteps: []mockSetupFunc{
 				stepGetSensorByTenantOk,
-                stepGetTenantOk_CanImpersonate,
+				stepGetTenantOk_CanImpersonate,
 				stepStartDataRetrieverOk,
 			},
 			expectedError: nil,
@@ -184,13 +184,13 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 			input: cmdTenantMember_Authorized,
 			setupSteps: []mockSetupFunc{
 				stepGetSensorByTenantOk,
-                stepGetTenantOk_CanImpersonate,  // NOTA: impersonazione irrilevante
+				stepGetTenantOk_CanImpersonate, // NOTA: impersonazione irrilevante
 				stepStartDataRetrieverOk,
 			},
 			expectedError: nil,
 		},
 
-        // Step 1: get sensor
+		// Step 1: get sensor
 		{
 			name:  "Fail: sensor not found",
 			input: cmdTenantMember_Authorized, // NOTA: non importa requester role, basta che sia autorizzato
@@ -199,47 +199,47 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 			},
 			expectedError: sensor.ErrSensorNotFound,
 		},
-        
-        // Step 2: get tenant
-        {
+
+		// Step 2: get tenant
+		{
 			name:  "Fail: unexpected error getting tenant",
 			input: cmdTenantMember_Authorized, // NOTA: non importa requester
 			setupSteps: []mockSetupFunc{
 				stepGetSensorByTenantOk,
-                stepGetTenantFail,
+				stepGetTenantFail,
 			},
 			expectedError: errMockStepGetTenant,
 		},
 
-        // Check accesso
-        {
+		// Check accesso
+		{
 			name:  "(Super Admin) Fail: cannot impersonate tenant",
 			input: cmdSuperAdmin,
 			setupSteps: []mockSetupFunc{
 				stepGetSensorByTenantOk,
-                stepGetTenantOk_CannotImpersonate,
+				stepGetTenantOk_CannotImpersonate,
 				stepStartDataRetrieverNeverCalled,
 			},
 			expectedError: tenant.ErrImpersonationFailed,
 		},
-        {
+		{
 			name:  "(Tenant Admin) Fail: accesso non autorizzato",
 			input: cmdTenantMember_Unauthorized,
 			setupSteps: []mockSetupFunc{
 				stepGetSensorByTenantOk,
-                stepGetTenantOk_CanImpersonate,
+				stepGetTenantOk_CanImpersonate,
 				stepStartDataRetrieverNeverCalled,
 			},
 			expectedError: sensor.ErrSensorNotFound,
 		},
 
-        // Step 3: creazione canali
+		// Step 3: creazione canali
 		{
 			name:  "Fail: unexpected error starting data retriever",
 			input: cmdTenantMember_Authorized, // NOTA: non importa requester role
 			setupSteps: []mockSetupFunc{
 				stepGetSensorByTenantOk,
-                stepGetTenantOk_CanImpersonate,
+				stepGetTenantOk_CanImpersonate,
 				stepStartDataRetrieverError,
 			},
 			expectedError: errMockRetriever,
@@ -269,7 +269,7 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 			}
 
 			service := real_time_data.NewRealTimeDataService(
-                mockTenantPort,
+				mockTenantPort,
 				mockSensorByTenant,
 				mockRealTimeData,
 			)

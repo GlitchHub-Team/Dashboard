@@ -49,7 +49,7 @@ func MapNATSRawToDomain(profile sensorProfile.SensorProfile, raw json.RawMessage
 			Data: EnvironmentalSensingSampleData{
 				Temperature: dto.Data.TemperatureValue,
 				Humidity:    dto.Data.HumidityValue,
-				Pressure: dto.Data.PressureValue,
+				Pressure:    dto.Data.PressureValue,
 			},
 		}, nil
 
@@ -122,8 +122,8 @@ func MapDomainToWSDto(sample RealTimeSample) RealTimeSampleOutDTO {
 
 		jsonData = httpDto.EnvironmentalSensingData{
 			TemperatureValue: typedData.Temperature,
-			HumidityValue: typedData.Humidity,
-			PressureValue: typedData.Pressure,
+			HumidityValue:    typedData.Humidity,
+			PressureValue:    typedData.Pressure,
 		}
 
 	case sensorProfile.HEALTH_THERMOMETER:
@@ -141,7 +141,7 @@ func MapDomainToWSDto(sample RealTimeSample) RealTimeSampleOutDTO {
 	case sensorProfile.PULSE_OXIMETER:
 		typedData := sampleData.(PulseOximeterSampleData)
 		jsonData = httpDto.PulseOximeterData{
-			Spo2Value: typedData.Spo2,
+			Spo2Value:      typedData.Spo2,
 			PulseRateValue: typedData.PulseRate,
 		}
 	}
@@ -152,4 +152,3 @@ func MapDomainToWSDto(sample RealTimeSample) RealTimeSampleOutDTO {
 		Data:           jsonData,
 	}
 }
-

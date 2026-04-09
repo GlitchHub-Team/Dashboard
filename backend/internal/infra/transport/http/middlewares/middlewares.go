@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 
 	"backend/internal/shared/crypto"
@@ -77,8 +76,6 @@ Tale token poi può essere inserito nella prossima richiesta websocket come quer
 */
 func (authz *AuthzMiddleware) RequireAuthTokenInQuery(ctx *gin.Context) {
 	tokenString := ctx.Query("jwt")
-
-	fmt.Printf("tok: %v\n", tokenString)
 
 	if tokenString == "" {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
