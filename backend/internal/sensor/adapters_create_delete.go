@@ -58,7 +58,9 @@ func (adapter *DbSensorAdapter) CreateSensor(
 		adapter.log.Error("Failed to create sensor", zap.Error(err))
 		return Sensor{}, err
 	}
-	return entity.ToSensor(), nil
+
+	sensor, err := SensorEntityToDomain(entity)
+	return sensor, err
 }
 
 func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error) {
@@ -70,7 +72,8 @@ func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error)
 		adapter.log.Error("Failed to delete sensor", zap.Error(err))
 		return Sensor{}, err
 	}
-	return entity.ToSensor(), nil
+	sensor, err := SensorEntityToDomain(entity)
+	return sensor, err
 }
 
 func (adapter *SendCmdAdapter) SendCreateSensorCmd(

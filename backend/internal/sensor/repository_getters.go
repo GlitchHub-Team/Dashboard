@@ -54,8 +54,7 @@ func (repo *sensorPostgreRepository) GetSensorByTenant(tenantId, sensorId string
 	err := db.
 		Joins("Gateway").
 		Joins("INNER JOIN tenants on tenants.id = ?", tenantId).
-		Where("id = ?", sensorId).
-		First(&sensorEntity).
+		Find(&sensorEntity, "sensors.id = ?", sensorId).
 		Error
 
 	if err != nil {

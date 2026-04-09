@@ -2,12 +2,13 @@ package sensor
 
 import (
 	"backend/internal/gateway"
+	"backend/internal/infra/database"
 	"backend/internal/infra/database/pagination"
-	"backend/internal/tenant"
+	"errors"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
-
 
 //go:generate mockgen -destination=../../tests/sensor/mocks/ports_getters.go -package=mocks . GetSensorByTenantPort,GetSensorWithGatewayPort
 
@@ -17,7 +18,9 @@ type GetSensorByTenantPort interface {
 		sul Repository di associazione del sensore al tenant, ritornando ErrSensorNotFound in caso il sensore non sia trovato
 		oppure non sia associato al tenant specificato.
 	*/
-	GetSensorByTenant(tenantId, sensorId uuid.UUID) (Sensor, tenant.Tenant, error)
+	GetSensorByTenant(tenantId, sensorId uuid.UUID) (
+		sensor Sensor, sensorTenantId *uuid.UUID, err error,
+	)
 }
 
 type GetSensorWithGatewayPort interface {
@@ -47,11 +50,10 @@ func (adapter *DbSensorAdapter) GetSensorsByGatewayId(gatewayId uuid.UUID, page 
 		return nil, 0, err
 	}
 
-	sensors := make([]Sensor, len(entities))
-	for i, entity := range entities {
-		sensors[i] = entity.ToSensor()
+	sensors, err := database.MapEntityListToDomain(entities, SensorEntityToDomain)
+	if err != nil {
+		return nil, 0, err
 	}
-
 	return sensors, count, nil
 }
 
@@ -61,40 +63,48 @@ func (adapter *DbSensorAdapter) GetSensorById(sensorId uuid.UUID) (Sensor, error
 		return Sensor{}, err
 	}
 
-	return entity.ToSensor(), nil
+	sensor, err := SensorEntityToDomain(&entity)
+	return sensor, err
 }
 
-func (adapter *DbSensorAdapter) extractTenantFromSensorEntity(entity *SensorEntity) (tenant.Tenant, error) {
+func (adapter *DbSensorAdapter) extractTenantFromSensorEntity(entity *SensorEntity) (
+	sensorTenantId *uuid.UUID, err error,
+) {
 	if entity == nil {
-		return tenant.Tenant{}, ErrSensorNotFound
+		return nil, ErrSensorNotFound
 	}
 
-	tenantEntity := entity.Gateway.Tenant
-	if tenantEntity == nil {
-		return tenant.Tenant{}, nil
+	if entity.Gateway.TenantId == nil {
+		return nil, nil
 	}
 
-	tenantObj, err := tenant.TenantEntityToDomain(tenantEntity)
-	if err != nil {
-		return tenant.Tenant{}, err
-	}
+	tenantId, err := uuid.Parse(*entity.Gateway.TenantId)
+	sensorTenantId = &tenantId
 
-	return tenantObj, nil
+	return
 }
 
 /*
 Implementazione di GetSensorByTenantPort.GetSensorByTenant().
 Vedere commento nell'interfaccia per ulteriori dettagli.
 */
-func (adapter *DbSensorAdapter) GetSensorByTenant(tenantId, sensorId uuid.UUID) (Sensor, tenant.Tenant, error) {
+func (adapter *DbSensorAdapter) GetSensorByTenant(tenantId, sensorId uuid.UUID) (
+	sensor Sensor, sensorTenantId *uuid.UUID, err error,
+) {
 	entity, err := adapter.repo.GetSensorByTenant(tenantId.String(), sensorId.String())
 	if err != nil {
-		return Sensor{}, tenant.Tenant{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = ErrSensorNotFound
+		}
+		return
 	}
 
-	sensor := entity.ToSensor()
-	tenantObj, err := adapter.extractTenantFromSensorEntity(&entity)
-	return sensor, tenantObj, err
+	sensor, err = SensorEntityToDomain(&entity)
+	if err != nil {
+		return
+	}
+	sensorTenantId, err = adapter.extractTenantFromSensorEntity(&entity)
+	return
 }
 
 func (adapter *DbSensorAdapter) GetSensorWithGateway(sensorId uuid.UUID) (Sensor, gateway.Gateway, error) {
@@ -103,7 +113,10 @@ func (adapter *DbSensorAdapter) GetSensorWithGateway(sensorId uuid.UUID) (Sensor
 		return Sensor{}, gateway.Gateway{}, err
 	}
 
-	sensor := entity.ToSensor()
+	sensor, err := SensorEntityToDomain(&entity)
+	if err != nil {
+		return Sensor{}, gateway.Gateway{}, err
+	}
 	gatewayObj, err := gateway.GatewayEntityToDomain(&entity.Gateway)
 	return sensor, gatewayObj, err
 }
@@ -119,10 +132,9 @@ func (adapter *DbSensorAdapter) GetSensorsByTenant(tenantId uuid.UUID, page int,
 		return nil, 0, err
 	}
 
-	sensors := make([]Sensor, len(entities))
-	for i, entity := range entities {
-		sensors[i] = entity.ToSensor()
+	sensors, err := database.MapEntityListToDomain(entities, SensorEntityToDomain)
+	if err != nil {
+		return nil, 0, err
 	}
-
 	return sensors, count, nil
 }

@@ -5,9 +5,7 @@ import (
 
 	"backend/internal/gateway"
 	clouddb "backend/internal/infra/database/cloud_db/connection"
-	profile "backend/internal/sensor/profile"
 
-	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 )
@@ -25,9 +23,9 @@ const (
 
 type DatabaseRepository interface {
 	CreateSensor(entity *SensorEntity) error
-	
+
 	DeleteSensor(entity *SensorEntity) error
-	
+
 	UpdateSensor(sensorId string, status string) error
 
 	GetSensorById(sensorId string) (SensorEntity, error)
@@ -113,25 +111,3 @@ type ResumeSensorCmdEntity struct {
 }
 
 func (SensorEntity) TableName() string { return "sensors" }
-
-func FromSensor(s Sensor) *SensorEntity {
-	entity := &SensorEntity{}
-	entity.ID = s.Id.String()
-	entity.GatewayID = s.GatewayId.String()
-	entity.Name = s.Name
-	entity.Interval = s.Interval.Milliseconds()
-	entity.Profile = string(s.Profile)
-	entity.Status = string(s.Status)
-	return entity
-}
-
-func (entity *SensorEntity) ToSensor() Sensor {
-	return Sensor{
-		Id:        uuid.MustParse(entity.ID),
-		GatewayId: uuid.MustParse(entity.GatewayID),
-		Name:      entity.Name,
-		Interval:  time.Duration(entity.Interval) * time.Millisecond,
-		Profile:   profile.SensorProfile(entity.Profile),
-		Status:    SensorStatus(entity.Status),
-	}
-}
