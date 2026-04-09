@@ -98,21 +98,6 @@ func (mr *MockDatabaseRepositoryMockRecorder) GetSensorByTenant(tenantId, sensor
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSensorByTenant", reflect.TypeOf((*MockDatabaseRepository)(nil).GetSensorByTenant), tenantId, sensorId)
 }
 
-// GetSensorWithGateway mocks base method.
-func (m *MockDatabaseRepository) GetSensorWithGateway(sensorId string) (sensor.SensorEntity, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSensorWithGateway", sensorId)
-	ret0, _ := ret[0].(sensor.SensorEntity)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSensorWithGateway indicates an expected call of GetSensorWithGateway.
-func (mr *MockDatabaseRepositoryMockRecorder) GetSensorWithGateway(sensorId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSensorWithGateway", reflect.TypeOf((*MockDatabaseRepository)(nil).GetSensorWithGateway), sensorId)
-}
-
 // GetSensorsByGatewayId mocks base method.
 func (m *MockDatabaseRepository) GetSensorsByGatewayId(gatewayId string, offset, limit int) ([]sensor.SensorEntity, uint, error) {
 	m.ctrl.T.Helper()

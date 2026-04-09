@@ -3,7 +3,7 @@ package sensor
 import (
 	"errors"
 
-	"backend/internal/gateway"
+	// "backend/internal/gateway"
 	"backend/internal/infra/database"
 	"backend/internal/infra/database/pagination"
 
@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//go:generate mockgen -destination=../../tests/sensor/mocks/ports_getters.go -package=mocks . GetSensorByTenantPort,GetSensorWithGatewayPort
+//go:generate mockgen -destination=../../tests/sensor/mocks/ports_getters.go -package=mocks . GetSensorByTenantPort
 
 type GetSensorByTenantPort interface {
 	/*
@@ -22,14 +22,6 @@ type GetSensorByTenantPort interface {
 	GetSensorByTenant(tenantId, sensorId uuid.UUID) (
 		sensor Sensor, sensorTenantId *uuid.UUID, err error,
 	)
-}
-
-type GetSensorWithGatewayPort interface {
-	/*
-		Ritorna il sensore con ID sensorId e, se esiste, il tenant associato. Se il sensore non è associato ad alcun
-		tenant allora tenant è == tenant.Tenant{} (zero-value dello struct)
-	*/
-	GetSensorWithGateway(sensorId uuid.UUID) (sensor Sensor, gateway gateway.Gateway, err error)
 }
 
 // Compile-time checks
@@ -108,19 +100,19 @@ func (adapter *DbSensorAdapter) GetSensorByTenant(tenantId, sensorId uuid.UUID) 
 	return
 }
 
-func (adapter *DbSensorAdapter) GetSensorWithGateway(sensorId uuid.UUID) (Sensor, gateway.Gateway, error) {
-	entity, err := adapter.repo.GetSensorWithGateway(sensorId.String())
-	if err != nil {
-		return Sensor{}, gateway.Gateway{}, err
-	}
+// func (adapter *DbSensorAdapter) GetSensorWithGateway(sensorId uuid.UUID) (Sensor, gateway.Gateway, error) {
+// 	entity, err := adapter.repo.GetSensorWithGateway(sensorId.String())
+// 	if err != nil {
+// 		return Sensor{}, gateway.Gateway{}, err
+// 	}
 
-	sensor, err := SensorEntityToDomain(&entity)
-	if err != nil {
-		return Sensor{}, gateway.Gateway{}, err
-	}
-	gatewayObj, err := gateway.GatewayEntityToDomain(&entity.Gateway)
-	return sensor, gatewayObj, err
-}
+// 	sensor, err := SensorEntityToDomain(&entity)
+// 	if err != nil {
+// 		return Sensor{}, gateway.Gateway{}, err
+// 	}
+// 	gatewayObj, err := gateway.GatewayEntityToDomain(&entity.Gateway)
+// 	return sensor, gatewayObj, err
+// }
 
 func (adapter *DbSensorAdapter) GetSensorsByTenant(tenantId uuid.UUID, page int, limit int) ([]Sensor, uint, error) {
 	offset, err := pagination.PageLimitToOffset(page, limit)

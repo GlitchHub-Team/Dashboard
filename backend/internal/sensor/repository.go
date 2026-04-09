@@ -30,7 +30,6 @@ type DatabaseRepository interface {
 
 	GetSensorById(sensorId string) (SensorEntity, error)
 	GetSensorByTenant(tenantId, sensorId string) (SensorEntity, error)
-	GetSensorWithGateway(sensorId string) (SensorEntity, error)
 	GetSensorsByGatewayId(gatewayId string, offset int, limit int) ([]SensorEntity, uint, error)
 	GetSensorsByTenantId(tenantId string, offset int, limit int) ([]SensorEntity, uint, error)
 }
