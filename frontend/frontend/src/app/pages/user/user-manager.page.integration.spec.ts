@@ -11,6 +11,7 @@ import { UserManagerPage } from './user-manager.page';
 import { UserTableComponent } from './components/user-table/user-table.component';
 import { UserService } from '../../services/user/user.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
@@ -66,6 +67,7 @@ function setupTestBed(options: {
   session: UserSession;
   routeContext: { title: string; role: UserRole };
   queryParams?: Record<string, string>;
+  canImpersonate?: boolean;
 }) {
   const afterClosedSubject = new Subject<unknown>();
   const userServiceMock = createUserServiceMock();
@@ -74,6 +76,9 @@ function setupTestBed(options: {
   };
   const snackBarMock = { open: vi.fn() };
   const routerMock = { navigate: vi.fn() };
+  const tenantServiceMock = {
+    getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: options.canImpersonate ?? true })),
+  };
 
   TestBed.configureTestingModule({
     imports: [UserManagerPage, UserTableComponent],
@@ -88,13 +93,14 @@ function setupTestBed(options: {
         },
       },
       { provide: Router, useValue: routerMock },
+      { provide: TenantService, useValue: tenantServiceMock },
     ],
   })
     .overrideProvider(MatDialog, { useValue: dialogMock })
     .overrideProvider(MatSnackBar, { useValue: snackBarMock });
 
   const fixture = TestBed.createComponent(UserManagerPage);
-  return { fixture, userServiceMock, dialogMock, snackBarMock, routerMock, afterClosedSubject };
+  return { fixture, userServiceMock, dialogMock, snackBarMock, routerMock, afterClosedSubject, tenantServiceMock };
 }
 
 function getTable(fixture: ComponentFixture<UserManagerPage>) {
@@ -440,6 +446,18 @@ describe('UserManagerPage (Integration)', () => {
           expect(routerMock.navigate).toHaveBeenCalledWith(...expectedArgs);
         },
       );
+
+      it('should navigate to /user-management/tenant-users when tenant canImpersonate is false', () => {
+        const { fixture, routerMock } = setupTestBed({
+          session: superAdminSession,
+          routeContext: tenantAdminContext,
+          queryParams: { tenantId: 'restricted-tenant' },
+          canImpersonate: false,
+        });
+        fixture.detectChanges();
+
+        expect(routerMock.navigate).toHaveBeenCalledWith(['/user-management/tenant-users']);
+      });
     });
   });
 });

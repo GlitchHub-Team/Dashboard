@@ -43,10 +43,10 @@ export class TenantService {
     );
   }
 
-  public retrieveTenants(forLogin: boolean): void {
+  public retrieveTenants(needAll: boolean): void {
     this.setGettingTenantsState();
 
-    if (forLogin) {
+    if (needAll) {
       this.tenantApi
         .getTenants(this.pageIndex() + 1, 100)
         .pipe(

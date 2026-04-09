@@ -8,6 +8,7 @@ import { Observable, of, Subject } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UserSessionService } from '../../services/user-session/user-session.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { UserManagerPage } from './user-manager.page';
 import { UserService } from '../../services/user/user.service';
 import { User } from '../../models/user/user.model';
@@ -31,6 +32,7 @@ describe('UserManagerPage', () => {
   let dialogMock: { open: ReturnType<typeof vi.fn> };
   let currentUserSignal: WritableSignal<UserSession | null>;
   let activatedRouteMock: { data: Observable<unknown>; queryParams: Observable<unknown> };
+  let tenantServiceMock: { getTenant: ReturnType<typeof vi.fn> };
 
   const routeContext = {
     title: 'Test Users',
@@ -82,6 +84,10 @@ describe('UserManagerPage', () => {
       queryParams: of({}),
     };
 
+    tenantServiceMock = {
+      getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: true })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [UserManagerPage],
       providers: [
@@ -89,6 +95,7 @@ describe('UserManagerPage', () => {
         { provide: UserSessionService, useValue: { currentUser: currentUserSignal } },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: TenantService, useValue: tenantServiceMock },
       ],
     })
       .overrideProvider(MatDialog, { useValue: dialogMock })
@@ -139,12 +146,30 @@ describe('UserManagerPage', () => {
       createComponent();
       fixture.detectChanges();
 
+      expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('tenant-from-url');
       const expectedContext = { ...routeContext, tenantId: 'tenant-from-url' };
       expect((component as any).context()).toEqual(expectedContext);
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
         expectedContext.role,
         expectedContext.tenantId,
       );
+    });
+
+    it('should navigate to /user-management/tenant-users when tenant canImpersonate is false', () => {
+      const routerSpy = vi.fn();
+      TestBed.overrideProvider(Router, { useValue: { navigate: routerSpy } });
+
+      tenantServiceMock.getTenant.mockReturnValue(
+        of({ id: 'restricted', name: 'Restricted', canImpersonate: false }),
+      );
+      currentUserSignal.set({ userId: 'user-1', role: UserRole.SUPER_ADMIN });
+      activatedRouteMock.queryParams = of({ tenantId: 'restricted-tenant' });
+
+      createComponent();
+      fixture.detectChanges();
+
+      expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('restricted-tenant');
+      expect(routerSpy).toHaveBeenCalledWith(['/user-management/tenant-users']);
     });
 
     it('should set context for SUPER_ADMIN without tenantId and retrieve users', () => {

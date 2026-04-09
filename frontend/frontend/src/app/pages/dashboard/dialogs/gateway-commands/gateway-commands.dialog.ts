@@ -93,7 +93,7 @@ export class GatewayCommandsDialog implements OnInit {
   });
 
   ngOnInit(): void {
-    this.tenantService.retrieveTenants(false);
+    this.tenantService.retrieveTenants(true);
     this.commandForm.controls.command.valueChanges.subscribe((command) => {
       const tenantIdCtrl = this.commandForm.controls.tenantId;
       const tokenCtrl = this.commandForm.controls.token;

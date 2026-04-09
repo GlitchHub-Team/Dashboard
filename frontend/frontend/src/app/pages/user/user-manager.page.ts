@@ -16,6 +16,7 @@ import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-de
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
+import { TenantService } from '../../services/tenant/tenant.service';
 
 interface UserManagerContext {
   title: string;
@@ -32,6 +33,7 @@ interface UserManagerContext {
 })
 export class UserManagerPage implements OnInit {
   private readonly userService = inject(UserService);
+  private readonly tenantService = inject(TenantService);
   private readonly userSession = inject(UserSessionService);
   private readonly dialog = inject(MatDialog);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -73,6 +75,15 @@ export class UserManagerPage implements OnInit {
         const urlTenantId = params['tenantId'];
         const currentUserRole = this.currentRole;
         const currentUserTenant = this.userSession.currentUser()?.tenantId;
+
+        if (urlTenantId) {
+          this.tenantService.getTenant(urlTenantId).subscribe((tenant) => {
+            if (!tenant.canImpersonate) {
+              this.router.navigate(['/user-management/tenant-users']);
+              return;
+            }
+          });
+        }
 
         const resolvedTenantId =
           currentUserRole === UserRole.SUPER_ADMIN
@@ -149,6 +160,7 @@ export class UserManagerPage implements OnInit {
 
   private refreshUsers(): void {
     const context = this.context();
+    // TODO: Come prendere tutti i tenant admin se endpoint richiede tenantId?
     this.userService.retrieveUsers(context.role, context.tenantId);
   }
 }

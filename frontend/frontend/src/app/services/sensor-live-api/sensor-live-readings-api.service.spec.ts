@@ -76,7 +76,7 @@ describe('SensorLiveReadingsApiService', () => {
       const result = service.connect(mockRequest);
 
       expect(webSocket).toHaveBeenCalledWith(
-        `${wsUrl}tenant/${mockRequest.tenantId}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
+        `${wsUrl}/tenant/${mockRequest.tenantId}/sensor/${mockSensor.id}/real_time_data?jwt=${mockToken}`,
       );
       expect(mockSocket.pipe).toHaveBeenCalled();
       expect(result).toBeDefined();
