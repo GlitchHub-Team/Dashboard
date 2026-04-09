@@ -23,7 +23,7 @@ export class SensorLiveReadingsApiService {
     this.disconnect();
 
     const params = new HttpParams().set('jwt', this.tokenService.getToken() ?? '');
-    const url = `${this.apiUrl}tenant/${req.tenantId}/sensor/${req.sensor.id}/real_time_data?${params.toString()}`;
+    const url = `${this.apiUrl}/tenant/${req.tenantId}/sensor/${req.sensor.id}/real_time_data?${params.toString()}`;
 
     this.socket$ = webSocket<RealTimeReading>(url);
     return this.socket$.pipe(takeUntil(this.disconnect$));
