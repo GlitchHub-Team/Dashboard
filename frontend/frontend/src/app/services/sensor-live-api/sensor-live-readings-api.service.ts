@@ -18,14 +18,13 @@ export class SensorLiveReadingsApiService {
   private socket$: WebSocketSubject<RealTimeReading> | null = null;
   private readonly disconnect$ = new Subject<void>();
 
-  // Connette al WS e ritorna l'Observable per recuperare le letture
   public connect(req: ChartRequest): Observable<RealTimeReading> {
     this.disconnect();
 
     const params = new HttpParams().set('jwt', this.tokenService.getToken() ?? '');
-    const url = `${this.apiUrl}tenant/${req.tenantId}/sensor/${req.sensor.id}/real_time_data?${params.toString()}`;
+    const url = `${this.apiUrl}/tenant/${req.tenantId}/sensor/${req.sensor.id}/real_time_data?${params.toString()}`;
 
-    this.socket$ = webSocket<RealTimeReading>(url);
+    this.socket$ = this.createWebSocket(url);
     return this.socket$.pipe(takeUntil(this.disconnect$));
   }
 
@@ -35,5 +34,9 @@ export class SensorLiveReadingsApiService {
       this.socket$.complete();
       this.socket$ = null;
     }
+  }
+
+  private createWebSocket(url: string): WebSocketSubject<RealTimeReading> {
+    return webSocket<RealTimeReading>(url);
   }
 }

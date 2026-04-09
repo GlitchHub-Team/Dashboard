@@ -28,12 +28,10 @@ export class AuthActionsService {
   public readonly passwordChangeResult = this._passwordChangeResult.asReadonly();
 
   // Manda la mail per il reset della password (quindi utente non loggato)
-  public forgotPassword(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
+  public forgotPassword(req: ForgotPasswordRequest): Observable<void> {
     this.setLoadingState();
 
-    console.log('Forgot password request:', forgotPasswordRequest);
-
-    return this.authApiClient.forgotPasswordRequest(forgotPasswordRequest).pipe(
+    return this.authApiClient.forgotPasswordRequest(req).pipe(
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to send reset email');
         return EMPTY;
@@ -43,11 +41,11 @@ export class AuthActionsService {
   }
 
   // Cambia la password (utente loggato)
-  public confirmPasswordChange(data: PasswordChange): Observable<void> {
+  public confirmPasswordChange(req: PasswordChange): Observable<void> {
     this.setLoadingState();
     this._passwordChangeResult.set(null);
 
-    return this.authApiClient.confirmPasswordChange(data).pipe(
+    return this.authApiClient.confirmPasswordChange(req).pipe(
       tap(() => this._passwordChangeResult.set(true)),
       catchError((err: ApiError) => {
         this._passwordChangeResult.set(false);

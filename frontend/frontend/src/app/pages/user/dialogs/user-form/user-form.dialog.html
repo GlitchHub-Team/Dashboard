@@ -29,17 +29,24 @@
     </mat-form-field>
 
     @if (data.role === UserRole.TENANT_ADMIN) {
-      <mat-form-field appearance="outline" class="w-100">
-        <mat-label>Tenant</mat-label>
-        <mat-select formControlName="tenantId" required>
-          @for (tenant of tenantList(); track tenant.id) {
-            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+      @if (isTenantIdLocked) {
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Tenant</mat-label>
+          <input matInput [value]="lockedTenantName() ?? data.tenantId" disabled />
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Tenant</mat-label>
+          <mat-select formControlName="tenantId" required>
+            @for (tenant of tenantList(); track tenant.id) {
+              <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.tenantId.hasError('required')) {
+            <mat-error>Campo obbligatorio</mat-error>
           }
-        </mat-select>
-        @if (form.controls.tenantId.hasError('required')) {
-          <mat-error>Campo obbligatorio</mat-error>
-        }
-      </mat-form-field>
+        </mat-form-field>
+      }
     }
   </form>
 </mat-dialog-content>

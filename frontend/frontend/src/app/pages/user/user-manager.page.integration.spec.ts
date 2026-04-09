@@ -11,9 +11,11 @@ import { UserManagerPage } from './user-manager.page';
 import { UserTableComponent } from './components/user-table/user-table.component';
 import { UserService } from '../../services/user/user.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
+import { Tenant } from '../../models/tenant/tenant.model';
 
 const mockUsers: User[] = [
   {
@@ -66,6 +68,7 @@ function setupTestBed(options: {
   session: UserSession;
   routeContext: { title: string; role: UserRole };
   queryParams?: Record<string, string>;
+  canImpersonate?: boolean;
 }) {
   const afterClosedSubject = new Subject<unknown>();
   const userServiceMock = createUserServiceMock();
@@ -74,6 +77,11 @@ function setupTestBed(options: {
   };
   const snackBarMock = { open: vi.fn() };
   const routerMock = { navigate: vi.fn() };
+  const tenantServiceMock = {
+    getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: options.canImpersonate ?? true })),
+    retrieveTenants: vi.fn(),
+    tenantList: signal<Tenant[]>([]),
+  };
 
   TestBed.configureTestingModule({
     imports: [UserManagerPage, UserTableComponent],
@@ -88,13 +96,14 @@ function setupTestBed(options: {
         },
       },
       { provide: Router, useValue: routerMock },
+      { provide: TenantService, useValue: tenantServiceMock },
     ],
   })
     .overrideProvider(MatDialog, { useValue: dialogMock })
     .overrideProvider(MatSnackBar, { useValue: snackBarMock });
 
   const fixture = TestBed.createComponent(UserManagerPage);
-  return { fixture, userServiceMock, dialogMock, snackBarMock, routerMock, afterClosedSubject };
+  return { fixture, userServiceMock, dialogMock, snackBarMock, routerMock, afterClosedSubject, tenantServiceMock };
 }
 
 function getTable(fixture: ComponentFixture<UserManagerPage>) {
@@ -215,7 +224,7 @@ describe('UserManagerPage (Integration)', () => {
         routeContext: tenantAdminContext,
       });
 
-      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[0]]);
+      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[1]]);
       fixture.detectChanges();
 
       getDeleteButtons(fixture)[0].click();
@@ -226,7 +235,7 @@ describe('UserManagerPage (Integration)', () => {
         expect.objectContaining({
           data: {
             title: 'Elimina Utente',
-            message: 'Sei sicuro di voler eliminare "alice@test.com"?',
+            message: 'Sei sicuro di voler eliminare "bob@test.com"?',
           },
         }),
       );
@@ -269,7 +278,7 @@ describe('UserManagerPage (Integration)', () => {
       fixture.detectChanges();
       userServiceMock.retrieveUsers.mockClear();
 
-      getDeleteButtons(fixture)[1].click();
+      getDeleteButtons(fixture)[0].click();
       fixture.detectChanges();
 
       expect(dialogMock.open).toHaveBeenCalledWith(
@@ -297,7 +306,7 @@ describe('UserManagerPage (Integration)', () => {
         routeContext: tenantAdminContext,
       });
 
-      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[0]]);
+      (userServiceMock.userList as WritableSignal<User[]>).set([mockUsers[1]]);
       fixture.detectChanges();
       userServiceMock.retrieveUsers.mockClear();
 
@@ -346,10 +355,35 @@ describe('UserManagerPage (Integration)', () => {
       expect(fixture.nativeElement.querySelector('button[mat-raised-button]').disabled).toBe(true);
     });
 
+    it('should hide table, show warning, and disable create button for SUPER_ADMIN with TENANT_ADMIN context and no tenantId', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: {},
+      });
+      fixture.detectChanges();
+
+      expect(getTable(fixture)).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.warning-banner')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('button[mat-raised-button]').disabled).toBe(true);
+    });
+
     it('should show table for TENANT_USER when tenantId is provided', () => {
       const { fixture, userServiceMock } = setupTestBed({
         session: superAdminSession,
         routeContext: tenantUserContext,
+        queryParams: { tenantId: 'tenant-1' },
+      });
+      (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
+      fixture.detectChanges();
+
+      expect(getTable(fixture)).toBeTruthy();
+    });
+
+    it('should show table for TENANT_ADMIN when tenantId is provided via URL', () => {
+      const { fixture, userServiceMock } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
         queryParams: { tenantId: 'tenant-1' },
       });
       (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
@@ -402,6 +436,74 @@ describe('UserManagerPage (Integration)', () => {
       expect(errorBanner.textContent).toContain('Failed to load users');
     });
 
+    it('should show tenant dropdown for SUPER_ADMIN with TENANT_ADMIN context', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: {},
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('mat-select')).toBeTruthy();
+    });
+
+    it('should NOT show tenant dropdown for SUPER_ADMIN with TENANT_USER context', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantUserContext,
+        queryParams: {},
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeFalsy();
+    });
+
+    it('should NOT show tenant dropdown for TENANT_ADMIN session', () => {
+      const { fixture } = setupTestBed({
+        session: tenantAdminSession,
+        routeContext: tenantAdminContext,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-select-bar')).toBeFalsy();
+    });
+
+    it('should show tab group for TENANT_ADMIN session', () => {
+      const { fixture } = setupTestBed({
+        session: tenantAdminSession,
+        routeContext: tenantAdminContext,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-tab-group')).toBeTruthy();
+    });
+
+    it('should NOT show tab group for SUPER_ADMIN session', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: { tenantId: 'tenant-1' },
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-tab-group')).toBeFalsy();
+    });
+
+    it('should hide the delete button for the current user\'s row', () => {
+      const { fixture, userServiceMock } = setupTestBed({
+        session: tenantAdminSession,
+        routeContext: tenantAdminContext,
+      });
+      // mockUsers[0] has id='1' which matches tenantAdminSession.userId='1'
+      (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
+      fixture.detectChanges();
+
+      const deleteButtons = getDeleteButtons(fixture);
+      // alice (id='1') has no button; bob and charlie do
+      expect(deleteButtons.length).toBe(mockUsers.length - 1);
+    });
+
     describe('Navigation', () => {
       it.each([
         [
@@ -440,6 +542,18 @@ describe('UserManagerPage (Integration)', () => {
           expect(routerMock.navigate).toHaveBeenCalledWith(...expectedArgs);
         },
       );
+
+      it('should navigate to /user-management/tenant-users when tenant canImpersonate is false', () => {
+        const { fixture, routerMock } = setupTestBed({
+          session: superAdminSession,
+          routeContext: tenantAdminContext,
+          queryParams: { tenantId: 'restricted-tenant' },
+          canImpersonate: false,
+        });
+        fixture.detectChanges();
+
+        expect(routerMock.navigate).toHaveBeenCalledWith(['/user-management/tenant-users']);
+      });
     });
   });
 });

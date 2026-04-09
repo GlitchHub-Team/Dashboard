@@ -31,6 +31,7 @@ export class UserTableComponent {
   public readonly deleteRequested = output<User>();
   public readonly pageChange = output<PageEvent>();
   public readonly targetRole = input<UserRole>();
+  public readonly currentUserId = input<string>();
 
   protected readonly displayedColumns = computed(() => {
     const cols: string[] = ['username', 'email'];

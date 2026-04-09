@@ -47,7 +47,7 @@ export class ForgotPasswordDialog {
   protected readonly generalError = this.authActionsService.error;
 
   constructor() {
-    this.tenantService.retrieveTenants();
+    this.tenantService.retrieveTenants(true);
     this.setupAutoClear();
   }
 
