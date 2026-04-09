@@ -14,20 +14,20 @@ export class GatewayApiClientServiceMock {
     // Uncommissioned
     {
       gateway_id: 'gateway-01',
-      tenant_id: undefined,
+      tenant_id: 'tenant-1',
       name: 'Lobby Principale Gateway',
       status: 'active',
       interval: 60,
+      public_identifier: 'pk-gateway-01-lobby',
     },
 
     // Tenant 1
     {
       gateway_id: 'gateway-02',
-      tenant_id: 'tenant-1',
+      tenant_id: undefined,
       name: 'ICU Gateway',
       status: 'active',
       interval: 60,
-      public_identifier: 'pk-gateway-02-icu',
     },
     {
       gateway_id: 'gateway-03',

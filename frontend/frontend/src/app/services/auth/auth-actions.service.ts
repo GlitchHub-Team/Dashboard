@@ -31,8 +31,6 @@ export class AuthActionsService {
   public forgotPassword(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
     this.setLoadingState();
 
-    console.log('Forgot password request:', forgotPasswordRequest);
-
     return this.authApiClient.forgotPasswordRequest(forgotPasswordRequest).pipe(
       catchError((err: ApiError) => {
         this._error.set(err.message ?? 'Failed to send reset email');
