@@ -5,10 +5,8 @@ import (
 	"time"
 
 	transportHttp "backend/internal/infra/transport/http"
-	"backend/internal/infra/transport/http/dto"
 	transportWs "backend/internal/infra/transport/ws"
 	"backend/internal/sensor"
-	"backend/internal/shared/identity"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,9 +14,11 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=../../tests/real_time_data/mocks/use_case.go -package=mocks . GetRealTimeDataUseCase
+
 type GetRealTimeDataUseCase interface {
 	RetrieveRealTimeData(cmd RetrieveRealTimeDataCommand) (
-		dataChannel chan RealTimeRawSample, errorChannel chan RealTimeError, err error,
+		dataChannel chan RealTimeSample, errorChannel chan RealTimeError, err error,
 	)
 }
 
@@ -39,16 +39,10 @@ func NewController(
 
 func (c *Controller) GetRealTimeData(ctx *gin.Context) {
 	// 1. Estrai requester
-	// requester, err := transportHttp.ExtractRequester(ctx)
-	// if err != nil {
-	// 	transportHttp.RequestUnauthorized(ctx, err)
-	// 	c.log.Sugar().Errorf("err: %v", err)
-	// 	return
-	// }
-	requester := identity.Requester{
-		RequesterUserId:   uint(1),
-		RequesterTenantId: nil,
-		RequesterRole:     identity.ROLE_SUPER_ADMIN,
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		transportHttp.RequestUnauthorized(ctx, err)
+		return
 	}
 
 	// 2. URI binding
@@ -72,7 +66,7 @@ func (c *Controller) GetRealTimeData(ctx *gin.Context) {
 
 	dataChannel, errChannel, err := c.getRealTimeDataUseCase.RetrieveRealTimeData(cmd)
 	if err != nil {
-		if errors.Is(err, sensor.ErrSensorNotFound) {
+		if errors.Is(err, sensor.ErrSensorNotFound) || errors.Is(err, sensor.ErrSensorNotActive) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
@@ -82,7 +76,7 @@ func (c *Controller) GetRealTimeData(ctx *gin.Context) {
 
 	webSocketConn, err := transportWs.Upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		transportHttp.RequestServerError(ctx, err)
+		// NOTA: gorilla aggiunge già 400 Bad Request qui
 		return
 	}
 
@@ -95,8 +89,9 @@ loop:
 		select {
 		case sample := <-dataChannel:
 
-			c.log.Sugar().Debugf("profile: %v", sample.Profile)
-			dataDto, err := dto.DecodeSensorProfileData(sample.Profile, sample.Data)
+			c.log.Sugar().Debugf("profile: %v", sample.GetProfile())
+
+			dataDto := MapDomainToWSDto(sample)
 			if err != nil {
 				c.log.Error(
 					"Cannot decode sensor profile data",
@@ -118,9 +113,8 @@ loop:
 				)
 				continue
 			}
-			
-			c.log.Sugar().Debugf("Sent sample @ %v", sample.Timestamp)
 
+			c.log.Sugar().Debugf("Sent sample @ %v", sample.GetTimestamp())
 
 		case err := <-errChannel:
 			if !errors.Is(err, ErrClientDisconnected) {
@@ -136,8 +130,9 @@ loop:
 func (c *Controller) startClientListener(conn *websocket.Conn, errorChannel chan RealTimeError) {
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {
-			c.log.Sugar().Debugf("[startClientListener] Client websocket disconesso: %v", conn.NetConn().RemoteAddr()) // TODO: DEBUG
-			errorChannel <- NewErrClientDisconnected(time.Now())
+			// TODO: togliere messaggio di DEBUG
+			c.log.Sugar().Debugf("[startClientListener] Client websocket disconesso: %v", conn.NetConn().RemoteAddr()) 
+			errorChannel <- NewErrClientDisconnected()
 			break
 		}
 	}

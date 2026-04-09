@@ -8,6 +8,9 @@ import (
 	"github.com/google/uuid"
 )
 
+
+//go:generate mockgen -destination=../../tests/sensor/mocks/ports_getters.go -package=mocks . GetSensorByTenantPort,GetSensorWithGatewayPort
+
 type GetSensorByTenantPort interface {
 	/*
 		Ritorna al sensore con ID sensorId associato al tenant con ID tenantId. Questa funzione applica nativamente il controllo

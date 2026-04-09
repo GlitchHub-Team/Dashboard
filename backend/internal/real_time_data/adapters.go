@@ -22,7 +22,6 @@ func NewRealTimeDataNATSAdapter(
 	}
 }
 
-
 func (adapter *RealTimeDataNATSAdapter) getSubject(tenantId, gatewayId, sensorId uuid.UUID) (string, error) {
 	if tenantId == uuid.Nil {
 		return "", sensor.ErrSensorNotFound
@@ -33,7 +32,7 @@ func (adapter *RealTimeDataNATSAdapter) getSubject(tenantId, gatewayId, sensorId
 
 func (adapter *RealTimeDataNATSAdapter) StartDataRetriever(
 	tenantId uuid.UUID, sensor sensor.Sensor,
-	dataChan chan RealTimeRawSample, errorChan chan RealTimeError,
+	dataChan chan RealTimeSample, errorChan chan RealTimeError,
 ) (err error) {
 	subject, err := adapter.getSubject(tenantId, sensor.GatewayId, sensor.Id)
 	if err != nil {

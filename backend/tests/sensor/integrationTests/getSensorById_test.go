@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
 	"backend/tests/helper/integration"
@@ -231,7 +232,7 @@ func checkGetSensorResponseMatchesExpected(
 	expectedGatewayID string,
 	expectedName string,
 	expectedInterval int64,
-	expectedProfile sensor.SensorProfile,
+	expectedProfile sensorProfile.SensorProfile,
 	expectedStatus sensor.SensorStatus,
 ) helper.IntegrationTestCheck {
 	return func(w *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {

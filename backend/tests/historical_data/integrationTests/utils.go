@@ -10,7 +10,7 @@ import (
 	"time"
 
 	transportDto "backend/internal/infra/transport/http/dto"
-	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/tenant"
 	"backend/tests/helper"
 
@@ -146,7 +146,7 @@ func checkHistoricalDataResponse(
 		}
 
 		switch expected.Profile {
-		case string(sensor.HEART_RATE):
+		case string(sensorProfile.HEART_RATE):
 			var decoded transportDto.HeartRateData
 			if err := json.Unmarshal(sample.Data, &decoded); err != nil {
 				return false

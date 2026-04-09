@@ -14,8 +14,6 @@ import (
 	clouddb "backend/internal/infra/database/cloud_db/connection"
 )
 
-type DB any // TODO: solo per test
-
 // per il commissionig // risoista  requst replay,
 
 // type gatewayEntity struct{}
@@ -27,9 +25,9 @@ type GatewayEntity struct {
 	Name     string  `gorm:"type:varchar(255);not null"`
 	TenantId *string `gorm:"type:uuid;index"`
 	// il modo giusto per fare il fk per assurdo
-	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Status           string         `gorm:"type:varchar(50);not null"`
-	PublicIdentifier string         `gorm:"type:varchar(255)"`
+	Tenant           *tenant.TenantEntity `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Status           string               `gorm:"type:varchar(50);not null"`
+	PublicIdentifier string               `gorm:"type:varchar(255)"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -71,10 +69,10 @@ func GatewayEntityToDomain(entity *GatewayEntity) (Gateway, error) {
 	}
 
 	return Gateway{
-		Id: gatewayId,
-		Name: entity.Name,
+		Id:       gatewayId,
+		Name:     entity.Name,
 		TenantId: tenantId,
-		Status: GatewayStatus(entity.Status),
+		Status:   GatewayStatus(entity.Status),
 		// IntervalLimit: entity.,
 	}, nil
 }

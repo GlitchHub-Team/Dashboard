@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/helper"
@@ -21,7 +22,7 @@ type expectedTenantSensor struct {
 	GatewayID string
 	Name      string
 	Interval  int64
-	Profile   sensor.SensorProfile
+	Profile   sensorProfile.SensorProfile
 	Status    sensor.SensorStatus
 }
 

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"backend/internal/historical_data"
-	"backend/internal/tenant"
 	sensorProfile "backend/internal/sensor/profile"
+	"backend/internal/tenant"
 	"backend/tests/helper"
 
 	"github.com/google/uuid"
@@ -18,9 +18,9 @@ func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 	// Questo package ha una profondita diversa dagli altri integration test,
 	// quindi i path delle credenziali condivise vanno riallineati esplicitamente.
 
-	t.Setenv("DASHBOARD_CREDS_PATH", "backend/dashboard.creds")
-	t.Setenv("TEST_CREDS_PATH", "backend/admin_test.creds")
-	t.Setenv("CA_PEM_PATH", "backend/ca.pem")
+	t.Setenv("DASHBOARD_CREDS_PATH", "dashboard.creds")
+	t.Setenv("TEST_CREDS_PATH", "admin_test.creds")
+	t.Setenv("CA_PEM_PATH", "ca.pem")
 
 	deps := helper.SetupIntegrationTest(t)
 	tenantIDOne := uuid.New()

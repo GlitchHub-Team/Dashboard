@@ -1,19 +1,17 @@
 package real_time_data
 
 import (
-	"encoding/json"
-	"fmt"
-	"time"
-
 	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/nats-io/nats.go"
 )
 
+//go:generate mockgen -destination=../../tests/real_time_data/mocks/nats_reader.go -package=mocks . RealTimeDataNATSReader
+
 type RealTimeDataNATSReader interface {
 	StartSubscriber(
 		subject string, profile sensorProfile.SensorProfile,
-		receivingChannel chan RealTimeRawSample, errorChannel chan RealTimeError,
+		receivingChannel chan RealTimeSample, errorChannel chan RealTimeError,
 	) error
 }
 
@@ -32,14 +30,15 @@ func newConcreteRealTimeDataNATSReader(nc *nats.Conn) *concreteRealTimeDataNATSR
 func (reader *concreteRealTimeDataNATSReader) StartSubscriber(
 	subject string,
 	profile sensorProfile.SensorProfile,
-	receivingChannel chan RealTimeRawSample,
+	receivingChannel chan RealTimeSample,
 	errorChannel chan RealTimeError,
 ) error {
 	sub, err := reader.nc.Subscribe(subject, func(msg *nats.Msg) {
-		sample := RealTimeRawSample{
-			Profile:   profile,
-			Data:      msg.Data,
-			Timestamp: time.Now(),
+		sample, err := MapNATSRawToDomain(profile, msg.Data)
+
+		if err != nil {
+			errorChannel <- NewErrMappingError(err)
+			return
 		}
 
 		receivingChannel <- sample
@@ -51,35 +50,9 @@ func (reader *concreteRealTimeDataNATSReader) StartSubscriber(
 	}
 
 loop:
-	for err := range errorChannel {
-		fmt.Printf("[concreteRealTimeDataNATSReader] Interrupting (%v)", err)
+	for _ = range errorChannel { 
 		break loop
 	}
 
 	return nil
-}
-
-// TODO: funzione di test da eliminare prima o poi!!
-func mockDataGenerator(
-	receivingChannel chan RealTimeRawSample,
-	errChannel chan RealTimeError,
-) {
-	t := time.NewTicker(500 * time.Millisecond)
-
-loop:
-	for {
-		select {
-		case <-t.C:
-			b := ([]byte)("\"ok\"")
-			receivingChannel <- RealTimeRawSample{
-				Data:      json.RawMessage(b),
-				Timestamp: time.Now(),
-			}
-			fmt.Printf("[mockDataGenerator] Generated @ %v\n", time.Now())
-
-		case <-errChannel:
-			fmt.Println("[mockDataGenerator] Interrupting")
-			break loop
-		}
-	}
 }

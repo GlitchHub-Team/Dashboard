@@ -53,6 +53,9 @@ func NewGinEngine(
 	private := router.Group("/api/v1")
 	private.Use(authzMiddleware.RequireAuthToken)
 
+	websocketPrivate := router.Group("/api/v1")
+	websocketPrivate.Use(authzMiddleware.RequireAuthTokenInQuery)
+
 	// Auth
 	{
 		// Session
@@ -105,7 +108,6 @@ func NewGinEngine(
 	}
 
 	// Historical data
-	// TODO: in teoria il dato del tenant_id non serve nell'URL... da parlarne con Hoss 
 	{
 		private.GET(
 			"/tenant/:tenant_id/sensor/:sensor_id/historical_data",
@@ -115,8 +117,7 @@ func NewGinEngine(
 
 	// Real time data
 	{
-		// TODO: cambiare da public a private (in qualche modo)
-		public.GET(
+		websocketPrivate.GET(
 			"/tenant/:tenant_id/sensor/:sensor_id/real_time_data",
 			realTimeDataController.GetRealTimeData,
 		)

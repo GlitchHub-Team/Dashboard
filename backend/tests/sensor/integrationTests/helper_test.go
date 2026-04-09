@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/gateway"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	sharedCrypto "backend/internal/shared/crypto"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
@@ -86,7 +87,7 @@ func preSetupCreateSensor(
 	gatewayID string,
 	name string,
 	intervalMs int64,
-	profile sensor.SensorProfile,
+	profile sensorProfile.SensorProfile,
 	status sensor.SensorStatus,
 ) helper.IntegrationTestPreSetup {
 	return func(deps helper.IntegrationTestDeps) bool {

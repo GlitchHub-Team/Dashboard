@@ -9,9 +9,11 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate mockgen -destination=../../tests/real_time_data/mocks/ports.go -package=mocks . RealTimeDataPort
+
 type RealTimeDataPort interface {
 	StartDataRetriever(
-		tenantId uuid.UUID, sensor sensor.Sensor, dataChan chan RealTimeRawSample, errorChan chan RealTimeError,
+		tenantId uuid.UUID, sensor sensor.Sensor, dataChan chan RealTimeSample, errorChan chan RealTimeError,
 	) error
 }
 
@@ -36,7 +38,7 @@ func NewRealTimeDataService(
 }
 
 func (s *RealTimeDataService) RetrieveRealTimeData(cmd RetrieveRealTimeDataCommand) (
-	dataChannel chan RealTimeRawSample, errChannel chan RealTimeError, err error,
+	dataChannel chan RealTimeSample, errChannel chan RealTimeError, err error,
 ) {
 	// 1. Controllo business logic
 	var sensorObj sensor.Sensor
@@ -64,8 +66,8 @@ func (s *RealTimeDataService) RetrieveRealTimeData(cmd RetrieveRealTimeDataComma
 	}
 
 	// 2. Creazione canali
-	dataChannel = make(chan RealTimeRawSample, 1024)
-	errChannel = make(chan RealTimeError, 1024)
+	dataChannel = make(chan RealTimeSample, 16)
+	errChannel = make(chan RealTimeError, 1)
 
 	dataPort := s.realTimeDataPort
 	err = dataPort.StartDataRetriever(*tenantId, sensorObj, dataChannel, errChannel)

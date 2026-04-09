@@ -300,7 +300,7 @@ func TestController_CreateTenantUser(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -558,7 +558,7 @@ func TestController_CreateTenantAdmin(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -1047,7 +1047,7 @@ func TestController_DeleteTenantUser(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -1279,7 +1279,7 @@ func TestController_DeleteTenantAdmin(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -1710,7 +1710,7 @@ func TestController_GetTenantUser(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -1944,7 +1944,7 @@ func TestController_GetTenantAdmin(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -2408,7 +2408,7 @@ func TestController_GetTenantUsers(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},
@@ -2654,7 +2654,7 @@ func TestController_GetTenantAdmins(t *testing.T) {
 			expectedResponse: gin.H{
 				"error": "invalid format",
 				"fields": gin.H{
-					"tenant_id": "uuid4",
+					"tenant_id": "uuid",
 				},
 			},
 		},

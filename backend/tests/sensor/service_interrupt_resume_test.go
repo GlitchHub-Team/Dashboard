@@ -22,7 +22,7 @@ type interruptResumeServiceMocks struct {
 	sendResumeCmdPort       *mocks.MockSendResumeCmdPort
 	getSensorByIdPort       *mocks.MockGetSensorByIdPort
 	getGatewayPort          *gatewayMocks.MockGetGatewayPort
-	updatedSensorStatusPort *mocks.MockUpdatedSensorStatusPort
+	updatedSensorStatusPort *mocks.MockUpdateSensorStatusPort
 }
 
 type mockSetupFunc_InterruptResumeService = helper.ServiceMockSetupFunc[interruptResumeServiceMocks]
@@ -41,7 +41,7 @@ func setupInterruptSensorService(
 				sendResumeCmdPort:       mocks.NewMockSendResumeCmdPort(ctrl),
 				getSensorByIdPort:       mocks.NewMockGetSensorByIdPort(ctrl),
 				getGatewayPort:          gatewayMocks.NewMockGetGatewayPort(ctrl),
-				updatedSensorStatusPort: mocks.NewMockUpdatedSensorStatusPort(ctrl),
+				updatedSensorStatusPort: mocks.NewMockUpdateSensorStatusPort(ctrl),
 			}
 		},
 		setupSteps,
@@ -70,7 +70,7 @@ func setupResumeSensorService(
 				sendResumeCmdPort:       mocks.NewMockSendResumeCmdPort(ctrl),
 				getSensorByIdPort:       mocks.NewMockGetSensorByIdPort(ctrl),
 				getGatewayPort:          gatewayMocks.NewMockGetGatewayPort(ctrl),
-				updatedSensorStatusPort: mocks.NewMockUpdatedSensorStatusPort(ctrl),
+				updatedSensorStatusPort: mocks.NewMockUpdateSensorStatusPort(ctrl),
 			}
 		},
 		setupSteps,

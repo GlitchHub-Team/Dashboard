@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	"backend/tests/helper"
 	"backend/tests/helper/integration"

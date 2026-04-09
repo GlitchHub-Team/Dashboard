@@ -1,13 +1,18 @@
 package tenant
 
-import "github.com/google/uuid"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 func TenantEntityToDomain(entity *TenantEntity) (tenant Tenant, err error) {
-	if entity == nil {
+	if entity == nil || entity.ID == "" {
 		return
 	}
 
 	tenantId, err := uuid.Parse(entity.ID)
+	fmt.Printf("aaaaaaa %v", err)
 	if err != nil {
 		return
 	}
