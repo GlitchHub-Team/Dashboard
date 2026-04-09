@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"backend/internal/infra/database"
 	dbPackage "backend/internal/infra/database"
 	"backend/internal/shared/config"
 
@@ -101,7 +100,7 @@ func SetCloudDbLifecycle(
                     )
                 }
 
-				err = database.SeverDropDatabase(log, db, targetDBName, "Cloud DB test")
+				err = dbPackage.SeverDropDatabase(log, db, targetDBName, "Cloud DB test")
 				if err != nil {
 					return err
 				}

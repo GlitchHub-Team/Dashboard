@@ -7,7 +7,6 @@ import (
 
 	"backend/internal/shared/config"
 
-	"backend/internal/infra/database"
 	dbPackage "backend/internal/infra/database"
 
 	"go.uber.org/fx"
@@ -90,7 +89,7 @@ func SetSensorDbLifecycle(
 					)
 				}
 
-				err = database.SeverDropDatabase(log, db, targetDBName, "Cloud DB test")
+				err = dbPackage.SeverDropDatabase(log, db, targetDBName, "Cloud DB test")
 				if err != nil {
 					return err
 				}
