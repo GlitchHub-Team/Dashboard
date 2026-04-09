@@ -135,7 +135,7 @@ func NewGinEngine(
 			realTimeDataController.GetRealTimeData,
 		)
 	}
-	
+
 	// Tenant
 	{
 		private.POST("/tenant", tenantController.CreateTenant)
