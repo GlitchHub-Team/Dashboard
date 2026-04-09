@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/shared/config"
 
+	"backend/internal/infra/database"
 	dbPackage "backend/internal/infra/database"
 
 	"go.uber.org/fx"
@@ -56,6 +57,8 @@ func SetSensorDbLifecycle(
 	log *zap.Logger,
 	cfg *config.Config,
 ) {
+	targetDBName := cfg.SensorDBName
+
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			log.Info("Start Sensor DB")
@@ -82,24 +85,18 @@ func SetSensorDbLifecycle(
 							" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
 							" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
 							" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
-						cfg.SensorDBName,
-						cfg.SensorDBName,
+						targetDBName,
+						targetDBName,
 					)
 				}
 
-				// NOTA: devo usare goroutine perché l'hook impone dei limiti temporali stretti
-				go (func() {
-					err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.SensorDBName)).Error
-					if err != nil {
-						log.Sugar().Errorf("Impossibile eliminare Sensor DB di test %v: %v", cfg.SensorDBName, err)
-						return
-					}
+				err = database.SeverDropDatabase(log, db, targetDBName, "Cloud DB test")
+				if err != nil {
+					return err
+				}
+            }
 
-					log.Info("Eliminato Sensor DB di test", zap.String("name", cfg.SensorDBName))
-				})()
-			}
-
-			return nil
+            return nil
 		},
 	})
 }

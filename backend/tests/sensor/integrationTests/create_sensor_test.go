@@ -214,7 +214,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: "\"sensor_id\"",
 			ResponseChecks: []helper.IntegrationTestCheck{
-				checkResponseMatchesDBAndCommand(&successCmd),
+				checkResponseMatchesDBAndCommand(t, &successCmd),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -228,11 +228,14 @@ func TestCreateSensorIntegration(t *testing.T) {
 }
 
 func checkResponseMatchesDBAndCommand(
+	t *testing.T,
 	cmd *sensor.CreateSensorCmdEntity,
 ) helper.IntegrationTestCheck {
+	t.Helper()
 	return func(w *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
 		var resp createSensorResponse
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+			t.Errorf("errore unmarshaling: %v", err)
 			return false
 		}
 
@@ -244,26 +247,32 @@ func checkResponseMatchesDBAndCommand(
 		db := (*gorm.DB)(deps.CloudDB)
 		var dbSensor sensor.SensorEntity
 		if err := db.Where("id = ?", resp.SensorID).First(&dbSensor).Error; err != nil {
+			t.Errorf("errore db get: %v", err)
 			return false
 		}
 
 		if resp.SensorID != dbSensor.ID || resp.GatewayID != dbSensor.GatewayID {
+			t.Errorf("sensor id o gateway id sbagliato")
 			return false
 		}
 
 		if resp.Profile != dbSensor.Profile || resp.SensorName != dbSensor.Name || resp.Status != dbSensor.Status {
+			t.Errorf("sensor profile o sensor name o sensor status sbagliato")
 			return false
 		}
 
 		if interval != dbSensor.Interval {
+			t.Errorf("intervallo sbagliato\nresp: %#v\ndb:%#v", resp, dbSensor)
 			return false
 		}
 
 		if cmd.SensorId == "" || cmd.SensorId != dbSensor.ID || cmd.GatewayId != dbSensor.GatewayID {
+			t.Errorf("comando sbagliato")
 			return false
 		}
 
 		if cmd.Interval != dbSensor.Interval || cmd.Profile != dbSensor.Profile {
+			t.Errorf("intervallo o profilo sbagliato")
 			return false
 		}
 

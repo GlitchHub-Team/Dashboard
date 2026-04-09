@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/infra/database"
 	dbPackage "backend/internal/infra/database"
 	"backend/internal/shared/config"
 
@@ -58,55 +59,57 @@ func NewCloudDbConnection(
 }
 
 func SetCloudDbLifecycle(
-	lc fx.Lifecycle,
-	log *zap.Logger,
-	cfg *config.Config,
+    lc fx.Lifecycle,
+    log *zap.Logger,
+    cfg *config.Config,
 ) {
-	lc.Append(fx.Hook{
-		OnStart: func(context.Context) error {
-			log.Info("Start Cloud DB")
-			return nil
-		},
-		OnStop: func(context.Context) error {
-			log.Info("Stop Cloud DB", zap.Bool("isTest", cfg.CloudDBTest))
+    targetDBName := cfg.CloudDBName
 
-			// Se modalità di test, allora elimina database perché non serve più.
-			if cfg.CloudDBTest {
-				db, err := dbPackage.NewPostgresEngineConnection(
-					cfg.CloudDBHost,
-					int(cfg.CloudDBPort),
-					cfg.CloudDBUser,
-					cfg.CloudDBPassword,
-				)
+    lc.Append(fx.Hook{
+        OnStart: func(context.Context) error {
+            log.Info("Start Cloud DB")
+            return nil
+        },
+        OnStop: func(context.Context) error {
+            log.Info("Stop Cloud DB", zap.Bool("isTest", cfg.CloudDBTest))
+
+            if cfg.CloudDBTest {
+                db, err := dbPackage.NewPostgresEngineConnection(
+                    cfg.CloudDBHost,
+                    int(cfg.CloudDBPort),
+                    cfg.CloudDBUser,
+                    cfg.CloudDBPassword,
+                )
+                if err != nil {
+                    return fmt.Errorf("impossibile eliminare Cloud DB di test: %v", err)
+                }
+
+                defer func() {
+                    if engineDb, err := db.DB(); err == nil {
+                        _ = engineDb.Close()
+                    }
+                }()
+
+                if targetDBName[:5] != "test_" {
+                    return fmt.Errorf( //nolint:staticcheck
+                        "/!\\ ATTENZIONE: è stata attivata la modalità di test su Cloud DB (cfg.CloudDbTest == true),"+
+                            " ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
+                            " Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
+                            " Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
+                        targetDBName,
+                        targetDBName,
+                    )
+                }
+
+				err = database.SeverDropDatabase(log, db, targetDBName, "Cloud DB test")
 				if err != nil {
-					return fmt.Errorf("impossibile eliminare Cloud DB di test: %v", err)
+					return err
 				}
+            }
 
-				if cfg.CloudDBName[:5] != "test_" {
-					return fmt.Errorf( //nolint:staticcheck
-						"/!\\ ATTENZIONE: è stata attivata la modalità di test su Cloud DB (cfg.CloudDbTest == true),"+
-							" ma cfg.CloudDbName == \"%v\" (non inizia con 'test_')."+
-							" Se questo errore viene mostrato, probabilmente cfg.CloudDbTest è stato impostato a true per errore."+
-							" Per evitare eliminazioni sgradevoli, il database %v non verrà eliminato.",
-						cfg.CloudDBName,
-						cfg.CloudDBName,
-					)
-				}
-
-				// NOTA: bisogna usare goroutine perché l'hook impone dei limiti temporali stretti
-				go (func() {
-					err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.CloudDBName)).Error
-					if err != nil {
-						log.Sugar().Errorf("impossibile eliminare Cloud DB di test %v: %v", cfg.CloudDBName, err)
-						return
-					}
-					log.Info("Eliminato cloud db di test", zap.String("name", cfg.CloudDBName))
-				})()
-			}
-
-			return nil
-		},
-	})
+            return nil
+        },
+    })
 }
 
 func WithTenantSchema(tenantId string, table dbPackage.Tabler) func(*gorm.DB) *gorm.DB {

@@ -40,7 +40,7 @@ func SensorEntityToDomain(entity *SensorEntity) (sensor Sensor, err error) {
 	return Sensor{
 		Id:        sensorId,
 		Name:      entity.Name,
-		Interval:  time.Duration(entity.Interval),
+		Interval:  time.Duration(entity.Interval) * time.Millisecond,
 		Profile:   profile.SensorProfile(entity.Profile),
 		GatewayId: gatewayId,
 		Status:    SensorStatus(entity.Status),
