@@ -27,11 +27,7 @@ type GatewayEntity struct {
 	Interval         int64          `gorm:"not null"`
 	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Status           string         `gorm:"type:varchar(50);not null"`
-<<<<<<< issue-130
-	PublicIdentifier string         `gorm:"type:varchar(255)"`
-=======
 	PublicIdentifier *string        `gorm:"type:varchar(255)"`
->>>>>>> main
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -48,15 +44,6 @@ func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) 
 		log: log,
 		db:  db,
 	}
-}
-
-type GatewayRepository interface {
-	SaveGateway(entity *GatewayEntity) error
-	DeleteGateway(entity *GatewayEntity) error
-	GetGatewayById(gatewayId string) (Gateway, error)
-	GetGatewaysByTenantId(tenantId string) ([]Gateway, error)
-	GetAllGateways() ([]Gateway, error)
-	CreateGateway(entity *GatewayEntity) (Gateway, error)
 }
 
 // methods ============================================================================================
@@ -85,10 +72,7 @@ func GatewayEntityToDomain(entity *GatewayEntity) (Gateway, error) {
 		Id:               gatewayId,
 		Name:             entity.Name,
 		TenantId:         tenantId,
-<<<<<<< issue-130
-=======
 		IntervalLimit:    time.Duration(entity.Interval) * time.Millisecond,
->>>>>>> main
 		Status:           GatewayStatus(entity.Status),
 		PublicIdentifier: entity.PublicIdentifier,
 	}, nil
@@ -225,15 +209,13 @@ func (repo *gatewayPostgreRepository) GetAllGateways(offset int, limit int) ([]G
 	return entities, uint(totalCount), nil
 }
 
-<<<<<<< issue-130
 type GatewayRepository interface {
-	SaveGateway(gateway Gateway) error
-	DeleteGateway(gateway Gateway) error
+	SaveGateway(entity *GatewayEntity) error
+	CreateGateway(entity *GatewayEntity) (Gateway, error)
+	DeleteGateway(entity *GatewayEntity) error
 	GetGatewayById(gatewayId string) (GatewayEntity, error)
 	GetGatewaysByTenantId(tenantId string, offset int, limit int) ([]GatewayEntity, uint, error)
 	GetAllGateways(offset int, limit int) ([]GatewayEntity, uint, error)
 	GetGatewayByTenantID(tenantId string, gatewayId string) (GatewayEntity, error)
 }
-=======
 var _ GatewayRepository = (*gatewayPostgreRepository)(nil)
->>>>>>> main

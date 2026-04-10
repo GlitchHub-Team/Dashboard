@@ -27,7 +27,7 @@ func NewGetSensorsByGatewayIdService(getSensorsByGatewayIdPort GetSensorsByGatew
 
 func (s *GetSensorsByGatewayIdService) GetSensorsByGateway(cmd GetSensorsByGatewayCommand) ([]Sensor, uint, error) {
 	// Controllo che il gateway esista
-	gat, err := s.getGatewayPort.GetById(cmd.GatewayId.String())
+	gat, err := s.getGatewayPort.GetById(cmd.GatewayId)
 	if err != nil {
 		return nil, 0, err
 	}

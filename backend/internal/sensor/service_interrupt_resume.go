@@ -60,7 +60,7 @@ func (s *InterruptSensorService) InterruptSensor(cmd InterruptSensorCommand) err
 	}
 
 	// Controllo che il gateway esista
-	gat, err := s.getGatewayPort.GetById(sensor.GatewayId.String())
+	gat, err := s.getGatewayPort.GetById(sensor.GatewayId)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (s *ResumeSensorService) ResumeSensor(cmd ResumeSensorCommand) error {
 	}
 
 	// Controllo che il gateway esista
-	gat, err := s.getGatewayPort.GetById(sensor.GatewayId.String())
+	gat, err := s.getGatewayPort.GetById(sensor.GatewayId)
 	if err != nil {
 		return err
 	}

@@ -8,26 +8,16 @@ import (
 type createGatewayDTO struct {
 	dto.GatewayNameField
 	dto.GatewayIntervalField
-<<<<<<< issue-130
-}
-
-type deleteGatewayDTO struct {
-	dto.GatewayIdField
-=======
->>>>>>> main
 }
 
 type getGatewayByIdDTO struct {
 	dto.GatewayIdField
 }
 
-<<<<<<< issue-130
 type getGatewayListDTO struct {
 	dto.Pagination
 }
 
-=======
->>>>>>> main
 type getGatewaysByTenantDTO struct {
 	dto.TenantIdField
 	Page  int
@@ -37,12 +27,6 @@ type getGatewaysByTenantDTO struct {
 type commissionGatewayDTO struct {
 	dto.TenantIdField
 	dto.CommissionTokenField
-<<<<<<< issue-130
-}
-
-type interruptGatewayDTO struct {
-	dto.GatewayIdField
-=======
 }
 
 // Response
@@ -57,7 +41,6 @@ type gatewayResponseDTO struct {
 
 type gatewayCommandResponseDTO struct {
 	Result string `json:"result"`
->>>>>>> main
 }
 
 type createGatewayCommandPayloadDTO struct {
@@ -75,16 +58,8 @@ type commissionGatewayCommandPayloadDTO struct {
 	CommissionToken string `json:"commissionedToken"`
 }
 
-<<<<<<< issue-130
 // Response
-type gatewayResponseDTO struct {
-	dto.GatewayIdField
-	dto.GatewayNameField
-	dto.TenantIdField
-	Status   GatewayStatus `json:"status"`
-	Interval int64         `json:"interval"`
-	PublicIdentifier *string       `json:"publicIdentifier"`
-}
+
 type gatewayListResponseDTO struct {
 	dto.ListInfo
 	Gateways []gatewayResponseDTO `json:"gateways"`
@@ -95,15 +70,10 @@ type commissionGatewayResponseDTO struct {
 	dto.TenantNameField
 }
 
-type gatewayCommandResponseDTO struct {
-	Result string `json:"result"`
-}
-
 type getGatewayBodyDTO struct {
 	Page  int
 	Limit int
 }
-=======
 type decommissionGatewayCommandPayloadDTO struct {
 	GatewayId string `json:"gatewayId"`
 }
@@ -123,4 +93,3 @@ type resetGatewayCommandPayloadDTO struct {
 type rebootGatewayCommandPayloadDTO struct {
 	GatewayId string `json:"gatewayId"`
 }
->>>>>>> main

@@ -10,13 +10,6 @@ type GatewayNameField struct {
 
 type CommissionTokenField struct {
 	CommissionToken string `uri:"commission_token" form:"commission_token" json:"commission_token" binding:"required"`
-<<<<<<< issue-130
-=======
-}
-
-type GatewayIntervalField struct {
-	Interval int64 `uri:"interval" form:"interval" json:"interval" binding:"required,gt=0"`
->>>>>>> main
 }
 
 type GatewayIntervalField struct {

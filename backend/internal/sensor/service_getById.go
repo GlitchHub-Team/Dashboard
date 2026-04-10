@@ -35,7 +35,7 @@ func (s *GetSensorByIdService) GetSensorById(cmd GetSensorCommand) (Sensor, erro
 		return Sensor{}, ErrSensorNotFound
 	}
 
-	gat, err := s.getGatewayPort.GetById(sensor.GatewayId.String())
+	gat, err := s.getGatewayPort.GetById(sensor.GatewayId)
 	if err != nil {
 		return Sensor{}, err
 	}

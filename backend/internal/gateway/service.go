@@ -1,15 +1,8 @@
 package gateway
 
 import (
-<<<<<<< issue-130
-	"crypto/rand"
-	"encoding/base64"
-
-	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 
-=======
->>>>>>> main
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -17,18 +10,10 @@ import (
 // Use Cases ------------------------------------------------------------------------------------------
 
 type GatewayManagementService struct {
-<<<<<<< issue-130
-	log               *zap.Logger
-	saveGatewayPort   SaveGatewayPort
-	removeGatewayPort RemoveGatewayPort
-	getGatewayPort    GetGatewayPort
-	getGatewaysPort   GetGatewaysPort
-	getTenantPort     tenant.GetTenantPort
-=======
 	log             *zap.Logger
 	getGatewayPort  GetGatewayPort
 	getGatewaysPort GetGatewaysPort
->>>>>>> main
+	getTenantPort   tenant.GetTenantPort
 }
 
 func NewGatewayManagementService(
@@ -38,68 +23,11 @@ func NewGatewayManagementService(
 	getTenantPort tenant.GetTenantPort,
 ) *GatewayManagementService {
 	return &GatewayManagementService{
-<<<<<<< issue-130
-		log:               log,
-		saveGatewayPort:   savePort,
-		removeGatewayPort: removePort,
-		getGatewayPort:    getPort,
-		getGatewaysPort:   getManyPort,
-		getTenantPort:     getTenantPort,
-	}
-}
-
-func GenerateGatewaySecret() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(b), nil
-}
-
-// TODO: perché non viene salvato l'interval limit???
-func (s *GatewayManagementService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
-	if !command.IsSuperAdmin() {
-		return Gateway{}, identity.ErrUnauthorizedAccess
-	}
-
-	secret, err := GenerateGatewaySecret()
-	if err != nil {
-		return Gateway{}, err
-	}
-
-	s.log.Info("Created gateway with name " + command.Name)
-
-	gateway := Gateway{
-		Id:               uuid.New(),
-		Name:             command.Name,
-		Status:           GATEWAY_STATUS_ACTIVE,
-		PublicIdentifier: command.PublicIdentifier,
-		SigningSecret:    secret,
-	}
-
-	_, err = s.saveGatewayPort.Save(gateway)
-	if err != nil {
-		return Gateway{}, err
-=======
 		log:             log,
 		getGatewayPort:  getPort,
 		getGatewaysPort: getManyPort,
->>>>>>> main
+		getTenantPort:   getTenantPort,
 	}
-}
-
-func (s *GatewayManagementService) GetGateway(command GetGatewayByIdCommand) (Gateway, error) {
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
-	if err != nil {
-		return Gateway{}, err
-	}
-
-	if gw.IsZero() {
-		return Gateway{}, ErrGatewayNotFound
-	}
-
-<<<<<<< issue-130
-	return oldGateway, nil
 }
 
 /*  =================================   */
@@ -112,12 +40,6 @@ func (s *GatewayManagementService) GetGateway(command GetGatewayByIdCommand) (Ga
 
 	if !command.IsSuperAdmin() {
 		return Gateway{}, ErrUnauthorizedAccess
-=======
-	if !command.IsSuperAdmin() {
-		if command.RequesterTenantId == nil || !gw.BelongsToTenant(*command.RequesterTenantId) {
-			return Gateway{}, ErrUnauthorizedAccess
-		}
->>>>>>> main
 	}
 
 	return gw, nil
