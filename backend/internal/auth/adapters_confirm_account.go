@@ -70,13 +70,15 @@ func (adapter *ConfirmTokenPgAdapter) NewConfirmAccountToken(user user.User) (
 	if err != nil {
 		return "", err
 	}
+	expiry := adapter.tokenGenerator.ExpiryFromNow()
 
 	// 2. Save token
 	switch user.Role {
 	case identity.ROLE_SUPER_ADMIN:
 		entity := SuperAdminConfirmTokenEntity{
-			Token:  rawToken,
-			UserId: user.Id,
+			Token:     rawToken,
+			UserId:    user.Id,
+			ExpiresAt: expiry,
 		}
 		err = adapter.superAdminRepo.SaveToken(&entity)
 		if err != nil {
@@ -86,9 +88,10 @@ func (adapter *ConfirmTokenPgAdapter) NewConfirmAccountToken(user user.User) (
 	case identity.ROLE_TENANT_ADMIN, identity.ROLE_TENANT_USER:
 		tenantIdString := user.TenantId.String()
 		entity := TenantConfirmTokenEntity{
-			Token:    rawToken,
-			TenantId: tenantIdString,
-			UserId:   user.Id,
+			Token:     rawToken,
+			TenantId:  tenantIdString,
+			UserId:    user.Id,
+			ExpiresAt: expiry,
 		}
 		err = adapter.tenantMemberRepo.SaveToken(&entity)
 		if err != nil {

@@ -1,7 +1,7 @@
 package dto
 
 type GatewayIdField struct {
-	GatewayId string `uri:"gateway_id" form:"gateway_id" json:"gateway_id" binding:"uuid4,required"`
+	GatewayId string `uri:"gateway_id" form:"gateway_id" json:"gateway_id" binding:"uuid,required"`
 }
 
 type GatewayNameField struct {

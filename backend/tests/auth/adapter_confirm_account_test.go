@@ -94,6 +94,8 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 	expectedRawToken := "raw-token"
 	expectedHashedToken := "hashed-token"
 
+	expectedExpiry := time.Now().Add(time.Hour)
+
 	// Step 1: generate token
 	step1GenerateTokenOk := func(
 		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantConfirmTokenRepository, superAdminRepo *mocks.MockSuperAdminConfirmTokenRepository,
@@ -111,6 +113,16 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 		return tokenGenerator.EXPECT().
 			GenerateToken().
 			Return("", "", errMockStep1).
+			Times(1)
+	}
+
+	// Step 1.1: generate expiry
+	step1_1GenerateExpiryOk := func(
+		hasher *cryptoMocks.MockSecretHasher, tokenGenerator *cryptoMocks.MockSecurityTokenGenerator, tenantMemberRepo *mocks.MockTenantConfirmTokenRepository, superAdminRepo *mocks.MockSuperAdminConfirmTokenRepository,
+	) *gomock.Call {
+		return tokenGenerator.EXPECT().
+			ExpiryFromNow().
+			Return(expectedExpiry).
 			Times(1)
 	}
 
@@ -189,6 +201,7 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 			inputUser: invalidUser,
 			setupSteps: []mockSetupFunc_confirmAccountTokenPgAdapter{
 				step1GenerateTokenOk,
+				step1_1GenerateExpiryOk,
 				step2SaveTokenNeverCalled_Tenant,
 				step2SaveTokenNeverCalled_SuperAdmin,
 			},
@@ -203,6 +216,7 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 			inputUser: superAdminUser,
 			setupSteps: []mockSetupFunc_confirmAccountTokenPgAdapter{
 				step1GenerateTokenOk,
+				step1_1GenerateExpiryOk,
 				step2SaveTokenOk_SuperAdmin,
 				step2SaveTokenNeverCalled_Tenant,
 			},
@@ -216,6 +230,7 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 			inputUser: superAdminUser,
 			setupSteps: []mockSetupFunc_confirmAccountTokenPgAdapter{
 				step1GenerateTokenOk,
+				step1_1GenerateExpiryOk,
 				step2SaveTokenError_SuperAdmin,
 				step2SaveTokenNeverCalled_Tenant,
 			},
@@ -230,6 +245,7 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 			inputUser: tenantMemberUser,
 			setupSteps: []mockSetupFunc_confirmAccountTokenPgAdapter{
 				step1GenerateTokenOk,
+				step1_1GenerateExpiryOk,
 				step2SaveTokenOk_Tenant,
 				step2SaveTokenNeverCalled_SuperAdmin,
 			},
@@ -243,6 +259,7 @@ func TestConfirmAccountTokenPgAdapter_NewConfirmAccountToken(t *testing.T) {
 			inputUser: tenantMemberUser,
 			setupSteps: []mockSetupFunc_confirmAccountTokenPgAdapter{
 				step1GenerateTokenOk,
+				step1_1GenerateExpiryOk,
 				step2SaveTokenError_Tenant,
 				step2SaveTokenNeverCalled_SuperAdmin,
 			},

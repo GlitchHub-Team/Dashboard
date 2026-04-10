@@ -622,7 +622,7 @@ func TestAuthController_ConfirmAccount(t *testing.T) {
 			},
 		},
 		{
-			Name:     "404 Not Found (step 2): Token not found (obfuscated)",
+			Name:     "404 Not Found (step 2): Token not found",
 			Method:   "POST",
 			Url:      baseUrl,
 			InputDto: validPayload,
@@ -635,7 +635,7 @@ func TestAuthController_ConfirmAccount(t *testing.T) {
 			},
 		},
 		{
-			Name:     "404 Not Found (step 2): Token expired (obfuscated)",
+			Name:     "404 Not Found (step 2): Token expired",
 			Method:   "POST",
 			Url:      baseUrl,
 			InputDto: validPayload,
@@ -644,7 +644,7 @@ func TestAuthController_ConfirmAccount(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedResponse: gin.H{
-				"error": auth.ErrTokenNotFound.Error(),
+				"error": auth.ErrTokenExpired.Error(),
 			},
 		},
 		{

@@ -127,12 +127,13 @@ func (controller *Controller) LoginUser(ctx *gin.Context) {
 	if err != nil {
 		if errors.Is(err, identity.ErrUnknownRole) {
 			transportHttp.RequestError(ctx, err)
-			return
-		} else if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrWrongCredentials) {
+		} else if errors.Is(err, user.ErrUserNotFound) || errors.Is(err, ErrWrongCredentials) {
+			transportHttp.RequestNotFound(ctx, ErrWrongCredentials)
+		} else if errors.Is(err, ErrAccountNotConfirmed) {
 			transportHttp.RequestNotFound(ctx, err)
-			return
+		} else {
+			transportHttp.RequestServerError(ctx, err)
 		}
-		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
@@ -229,7 +230,7 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 			return
 		}
 		if errors.Is(err, ErrTokenNotFound) || errors.Is(err, ErrTokenExpired) {
-			transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
 		transportHttp.RequestServerError(ctx, err)
@@ -338,7 +339,7 @@ func (controller *Controller) ConfirmForgotPasswordToken(ctx *gin.Context) {
 		NewPassword: bodyDto.NewPassword,
 	})
 	if err != nil {
-		if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrTokenNotFound) {
+		if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrTokenNotFound) || errors.Is(err, ErrTokenExpired) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
 		}

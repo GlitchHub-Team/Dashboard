@@ -19,7 +19,7 @@ import (
 func TestCreateSuperAdminIntegration(t *testing.T) {
 	deps := helper.SetupIntegrationTest(t)
 
-	// create a fresh tenant UUID v4 for tests to satisfy binding uuid4
+	// create a fresh tenant UUID v4 for tests to satisfy binding uuid
 	tenantID := uuid.New()
 	// missingTenantId := uuid.New()
 
