@@ -27,13 +27,26 @@ type GetGatewayByIdCommand struct {
 
 type GetGatewayListCommand struct {
 	Page int
-	Size int
+	Limit int
 }
 
 type GetGatewaysByTenantCommand struct {
 	TenantId uuid.UUID
-	// Page     int
-	// Size     int
+	Page     int
+	Limit    int
+	identity.Requester
+}
+
+type GetGatewayByTenantIDCommand struct {
+	TenantId  uuid.UUID
+	GatewayId uuid.UUID
+	identity.Requester
+}
+
+type GetAllGatewaysCommand struct {
+	identity.Requester
+	Page  int
+	Limit int
 }
 
 type CommissionGatewayCommand struct {

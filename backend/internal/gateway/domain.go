@@ -1,6 +1,8 @@
 package gateway
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -9,20 +11,16 @@ type GatewayStatus string
 const (
 	GATEWAY_STATUS_ACTIVE         GatewayStatus = "active"
 	GATEWAY_STATUS_INACTIVE       GatewayStatus = "inactive"
-	GATEWAY_STATUS_COMMISSIONED   GatewayStatus = "commissioned"
 	GATEWAY_STATUS_DECOMMISSIONED GatewayStatus = "decommissioned"
-	GATEWAY_STATUS_INTERRUPTED    GatewayStatus = "interrupted"
 )
 
 type Gateway struct {
-	Id       uuid.UUID
-	Name     string
-	TenantId *uuid.UUID
-	// Sensors	map[uuid.UUID]sensor.Sensor
+	Id               uuid.UUID
+	Name             string
+	TenantId         *uuid.UUID
 	Status           GatewayStatus
-	IntervalLimit    int64
-	SigningSecret    string
-	PublicIdentifier string
+	IntervalLimit    time.Duration
+	PublicIdentifier *string
 }
 
 func (g Gateway) IsZero() bool {

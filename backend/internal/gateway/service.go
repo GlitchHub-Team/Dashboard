@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 
 	"backend/internal/shared/identity"
+	"backend/internal/tenant"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -18,6 +19,7 @@ type GatewayManagementService struct {
 	removeGatewayPort RemoveGatewayPort
 	getGatewayPort    GetGatewayPort
 	getGatewaysPort   GetGatewaysPort
+	getTenantPort     tenant.GetTenantPort
 }
 
 func NewGatewayManagementService(
@@ -26,6 +28,7 @@ func NewGatewayManagementService(
 	removePort RemoveGatewayPort,
 	getPort GetGatewayPort,
 	getManyPort GetGatewaysPort,
+	getTenantPort tenant.GetTenantPort,
 ) *GatewayManagementService {
 	return &GatewayManagementService{
 		log:               log,
@@ -33,6 +36,7 @@ func NewGatewayManagementService(
 		removeGatewayPort: removePort,
 		getGatewayPort:    getPort,
 		getGatewaysPort:   getManyPort,
+		getTenantPort:     getTenantPort,
 	}
 }
 
@@ -86,49 +90,88 @@ func (s *GatewayManagementService) DeleteGateway(command DeleteGatewayCommand) (
 	return oldGateway, nil
 }
 
+/*  =================================   */
+
 func (s *GatewayManagementService) GetGateway(command GetGatewayByIdCommand) (Gateway, error) {
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	if !command.IsSuperAdmin() && !gw.BelongsToTenant(*gw.TenantId) {
+	if !command.IsSuperAdmin() {
 		return Gateway{}, ErrUnauthorizedAccess
 	}
 
 	return gw, nil
 }
 
-func (s *GatewayManagementService) GetAllGateways() ([]Gateway, error) {
-	gat, err := s.getGatewaysPort.GetAll()
+func (s *GatewayManagementService) GetAllGateways(command GetAllGatewaysCommand) ([]Gateway, uint, error) {
+	gw, count, err := s.getGatewaysPort.GetAll(command.Page, command.Limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	if gat == nil {
-		return nil, ErrGatewayNotFound
+	if gw == nil {
+		return nil, 0, ErrGatewayNotFound
 	}
 
-	return gat, nil
+	if !command.IsSuperAdmin() {
+		return nil, 0, ErrUnauthorizedAccess
+	}
+
+	return gw, count, nil
 }
 
-func (s *GatewayManagementService) GetGatewaysByTenant(command GetGatewaysByTenantCommand) ([]Gateway, error) {
+func (s *GatewayManagementService) GetGatewaysByTenant(command GetGatewaysByTenantCommand) ([]Gateway, uint, error) {
 	if command.TenantId == uuid.Nil {
-		return nil, ErrGatewayNotFound
+		return nil, 0, ErrGatewayNotFound
 	}
 
-	tenantGateways, err := s.getGatewaysPort.GetByTenantId(command.TenantId.String())
+	tenantFound, err := s.getTenantPort.GetTenant(command.TenantId)
+
+	if tenantFound.IsZero() {
+		return nil, 0, tenant.ErrTenantNotFound
+	}
+
+	superAdminAccess := command.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+
+	if !superAdminAccess && !command.Requester.CanTenantAdminAccess(command.TenantId) {
+		return nil, 0, ErrUnauthorizedAccess
+	}
+
+	tenantGateways, count, err := s.getGatewaysPort.GetByTenantId(command.TenantId, command.Page, command.Limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if tenantGateways == nil {
-		return nil, ErrGatewayNotFound
+		return nil, 0, ErrGatewayNotFound
 	}
 
-	return tenantGateways, nil
+	return tenantGateways, count, nil
 }
 
-func (s *GatewayManagementService) GetGatewayById(command GetGatewayByIdCommand) (Gateway, error) {
-	return s.getGatewayPort.GetById(command.GatewayId.String())
+func (s *GatewayManagementService) GetGatewayByTenantId(command GetGatewayByTenantIDCommand) (Gateway, error) {
+	gw, err := s.getGatewayPort.GetGatewayByTenantID(command.GatewayId, command.TenantId)
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	if gw.IsZero() {
+		return Gateway{}, ErrGatewayNotFound
+	}
+
+	tenantFound, err := s.getTenantPort.GetTenant(command.TenantId)
+
+	if tenantFound.IsZero() {
+		return Gateway{}, tenant.ErrTenantNotFound
+	}
+
+	superAdminAccess := command.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+
+	if !superAdminAccess && !command.Requester.CanTenantAdminAccess(command.TenantId) {
+		return Gateway{}, ErrUnauthorizedAccess
+	}
+
+	return gw, nil
 }

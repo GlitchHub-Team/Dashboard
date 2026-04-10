@@ -7,6 +7,7 @@ import (
 // Request
 type createGatewayDTO struct {
 	dto.GatewayNameField
+	dto.GatewayIntervalField
 }
 
 type deleteGatewayDTO struct {
@@ -17,24 +18,21 @@ type getGatewayByIdDTO struct {
 	dto.GatewayIdField
 }
 
-/*
-	type getGatewayListDTO struct {
-		dto.Pagination
-	}
-*/
+type getGatewayListDTO struct {
+	dto.Pagination
+}
+
 type getGatewaysByTenantDTO struct {
 	dto.TenantIdField
-	dto.Pagination
+	Page  int
+	Limit int
 }
 
 type commissionGatewayDTO struct {
 	dto.TenantIdField
-	dto.GatewayIdField
-	dto.GatewayCertificateField
+	dto.CommissionTokenField
 }
-type decommissionGatewayDTO struct {
-	dto.GatewayIdField
-}
+
 type interruptGatewayDTO struct {
 	dto.GatewayIdField
 }
@@ -51,30 +49,43 @@ type rebootGatewayDTO struct {
 	dto.GatewayIdField
 }
 
-type setGatewayIntervalLimitDTO struct {
-	dto.GatewayIdField
-	IntervalLimit int `uri:"interval_limit" form:"interval_limit" json:"interval_limit" binding:"required"`
-}
-
 // Response
 type gatewayResponseDTO struct {
 	dto.GatewayIdField
 	dto.GatewayNameField
 	dto.TenantIdField
-	Status           GatewayStatus `json:"status"`
-	Interval         int64         `json:"interval"`
-	PublicIdentifier string        `json:"publicIdentifier,omitempty"`
+	Status   GatewayStatus `json:"status"`
+	Interval int64         `json:"interval"`
 }
 
-/*
+type AllGatewayResponseDTO struct {
+	dto.GatewayIdField
+	dto.GatewayNameField
+	dto.TenantIdField
+	Status           GatewayStatus `json:"status"`
+	Interval         int64         `json:"interval"`
+	PublicIdentifier *string       `json:"publicIdentifier"`
+}
 type gatewayListResponseDTO struct {
 	dto.ListInfo
 	Gateways []gatewayResponseDTO `json:"gateways"`
 }
 
+type gatewayAllResponseDTO struct {
+	dto.ListInfo
+	Gateways []AllGatewayResponseDTO `json:"gateways"`
+}
+
 type commissionGatewayResponseDTO struct {
 	dto.TenantIdField
 	dto.TenantNameField
-	dto.GatewayCertificateField
 }
-*/
+
+type gatewayCommandResponseDTO struct {
+	Result string `json:"result"`
+}
+
+type getGatewayBodyDTO struct {
+	Page  int
+	Limit int
+}

@@ -1,6 +1,9 @@
 package gateway
 
 import (
+	"backend/internal/infra/database"
+	"backend/internal/infra/database/pagination"
+
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -20,12 +23,13 @@ type RemoveGatewayPort interface {
 }
 
 type GetGatewayPort interface {
-	GetById(gatewayId string) (Gateway, error)
+	GetById(gatewayId uuid.UUID) (Gateway, error)
+	GetGatewayByTenantID(tenantId uuid.UUID, gatewayId uuid.UUID) (Gateway, error)
 }
 
 type GetGatewaysPort interface {
-	GetByTenantId(tenantId string) ([]Gateway, error)
-	GetAll() ([]Gateway, error)
+	GetByTenantId(tenantId uuid.UUID, page int, limit int) ([]Gateway, uint, error)
+	GetAll(page int, limit int) ([]Gateway, uint, error)
 }
 
 func NewGatewayPostgreAdapter(repository GatewayRepository, log *zap.Logger) *GatewayPostgreAdapter {
@@ -56,39 +60,57 @@ func (a *GatewayPostgreAdapter) Remove(gatewayId uuid.UUID) (Gateway, error) {
 	return existing, nil
 }
 
-// TODO: fix hexagonal sbagliato
-func (a *GatewayPostgreAdapter) GetById(gatewayId string) (Gateway, error) {
-	entity, err := a.repo.GetGatewayById(gatewayId)
+/*   ================================   */
+
+func (a *GatewayPostgreAdapter) GetById(gatewayId uuid.UUID) (Gateway, error) {
+	entity, err := a.repo.GetGatewayById(gatewayId.String())
 	if err != nil {
 		return Gateway{}, err
 	}
-	return entity, nil
+
+	gw, err := GatewayEntityToDomain(&entity)
+
+	return gw, nil
 }
 
-// TODO: fix hexagonal sbagliato
-func (a *GatewayPostgreAdapter) GetByTenantId(tenantId string) ([]Gateway, error) {
-	gateways, err := a.repo.GetGatewaysByTenantId(tenantId)
+func (a *GatewayPostgreAdapter) GetGatewayByTenantID(tenantId uuid.UUID, gatewayId uuid.UUID) (Gateway, error) {
+	entity, err := a.repo.GetGatewayByTenantID(tenantId.String(), gatewayId.String())
 	if err != nil {
-		return nil, err
+		return Gateway{}, err
 	}
-	// gateways := make([]Gateway, len(entities))
-	// for i := range entities {
-	// 	gateways[i] = entities[i].ToGateway()
-	// }
-	return gateways, nil
+
+	gw, err := GatewayEntityToDomain(&entity)
+
+	return gw, nil
 }
 
-// TODO: fix hexagonal sbagliato
-func (a *GatewayPostgreAdapter) GetAll() ([]Gateway, error) {
-	gateways, err := a.repo.GetAllGateways()
+func (a *GatewayPostgreAdapter) GetByTenantId(tenantId uuid.UUID, page int, limit int) ([]Gateway, uint, error) {
+	offset, err := pagination.PageLimitToOffset(page, limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	// gateways := make([]Gateway, len(entities))
-	// for i := range entities {
-	// 	gateways[i] = entities[i].ToGateway()
-	// }
-	return gateways, nil
+
+	gateways, count, err := a.repo.GetGatewaysByTenantId(tenantId.String(), offset, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	gws, err := database.MapEntityListToDomain(gateways, GatewayEntityToDomain)
+
+	return gws, count, nil
+}
+
+func (a *GatewayPostgreAdapter) GetAll(page int, limit int) ([]Gateway, uint, error) {
+	offset, err := pagination.PageLimitToOffset(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	gateways, count, err := a.repo.GetAllGateways(offset, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	gws, err := database.MapEntityListToDomain(gateways, GatewayEntityToDomain)
+	return gws, count, nil
 }
 
 var (

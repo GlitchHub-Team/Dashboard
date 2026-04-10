@@ -26,7 +26,7 @@ func NewTenantPostgreAdapter(repository *TenantPostgreRepository) (
 	DeleteTenantPort,
 	GetTenantPort,
 	GetTenantsPort,
-	GetTenantByUserPort,
+	GetTenantByIdPort,
 ) {
 	adapter := &TenantPostgreAdapter{repo: repository}
 	return adapter, adapter, adapter, adapter, adapter
@@ -82,8 +82,8 @@ type GetTenantsPort interface {
 	GetAllTenants() ([]Tenant, error)
 }
 
-type GetTenantByUserPort interface {
-	GetTenantByUser(userId uuid.UUID) (Tenant, error)
+type GetTenantByIdPort interface {
+	GetTenantById(tenantId uuid.UUID) (Tenant, error)
 }
 
 func (adapter *TenantPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, error) {
@@ -123,8 +123,8 @@ func (adapter *TenantPostgreAdapter) GetAllTenants() ([]Tenant, error) {
 	return tenants, err
 }
 
-func (adapter *TenantPostgreAdapter) GetTenantByUser(userId uuid.UUID) (Tenant, error) {
-	entity, err := adapter.repo.GetTenantByUser(userId.String())
+func (adapter *TenantPostgreAdapter) GetTenantById(tenantId uuid.UUID) (Tenant, error) {
+	entity, err := adapter.repo.GetTenantById(tenantId.String())
 	if err != nil {
 		return Tenant{}, err
 	}
@@ -139,4 +139,5 @@ var (
 	_ DeleteTenantPort = (*TenantPostgreAdapter)(nil)
 	_ GetTenantPort    = (*TenantPostgreAdapter)(nil)
 	_ GetTenantsPort   = (*TenantPostgreAdapter)(nil)
+	_ GetTenantByIdPort = (*TenantPostgreAdapter)(nil)
 )

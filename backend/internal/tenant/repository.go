@@ -105,11 +105,11 @@ func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) error {
 	return err
 }
 
-func (repo *TenantPostgreRepository) GetTenantByUser(userId string) (*TenantEntity, error) {
+func (repo *TenantPostgreRepository) GetTenantById(tenantId string) (*TenantEntity, error) {
 	var tenant TenantEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
-		Where("id = ?", userId).
+		Where("id = ?", tenantId).
 		Find(&tenant).
 		Error
 	return &tenant, err

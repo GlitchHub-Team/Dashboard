@@ -14,12 +14,12 @@ import (
 )
 
 type Controller struct {
-	log                    *zap.Logger
-	createTenantUseCase    CreateTenantUseCase
-	deleteTenantUseCase    DeleteTenantUseCase
-	getTenantUseCase       GetTenantUseCase
-	getTenantListUseCase   GetTenantListUseCase
-	getTenantByUserUseCase GetTenantByUserUseCase
+	log                  *zap.Logger
+	createTenantUseCase  CreateTenantUseCase
+	deleteTenantUseCase  DeleteTenantUseCase
+	getTenantUseCase     GetTenantUseCase
+	getTenantListUseCase GetTenantListUseCase
+	getTenantByIdUseCase GetTenantByIdUseCase
 }
 
 func NewTenantController(
@@ -28,15 +28,15 @@ func NewTenantController(
 	deleteTenantUseCase DeleteTenantUseCase,
 	getTenantUseCase GetTenantUseCase,
 	getTenantListUseCase GetTenantListUseCase,
-	getTenantByUserUseCase GetTenantByUserUseCase,
+	getTenantByIdUseCase GetTenantByIdUseCase,
 ) *Controller {
 	return &Controller{
-		log:                    log,
-		createTenantUseCase:    createTenantUseCase,
-		deleteTenantUseCase:    deleteTenantUseCase,
-		getTenantUseCase:       getTenantUseCase,
-		getTenantListUseCase:   getTenantListUseCase,
-		getTenantByUserUseCase: getTenantByUserUseCase,
+		log:                  log,
+		createTenantUseCase:  createTenantUseCase,
+		deleteTenantUseCase:  deleteTenantUseCase,
+		getTenantUseCase:     getTenantUseCase,
+		getTenantListUseCase: getTenantListUseCase,
+		getTenantByIdUseCase: getTenantByIdUseCase,
 	}
 }
 
@@ -96,7 +96,13 @@ func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 		return
 	}
 
-	tenantId, _ := uuid.Parse(bodyDto.TenantId)
+	tenantIdParam := ctx.Param("tenant_Id")
+	tenantId, err := uuid.Parse(tenantIdParam)
+	
+	if err != nil {
+		transportHttp.RequestError(ctx, fmt.Errorf("invalid tenant ID"))
+		return
+	}
 
 	cmd := DeleteTenantCommand{
 		Requester: requester,
@@ -200,10 +206,10 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responseDtos)
 }
 
-// GET TENANT BY USER =================================================================================
+// GET TENANT BY ID =================================================================================
 // non usare :)
-func (controller *Controller) GetTenantByUser(ctx *gin.Context) {
-	var cmd GetTenantByUserCommand
+func (controller *Controller) GetTenantById(ctx *gin.Context) {
+	var cmd GetTenantByIdCommand
 
 	if err := ctx.ShouldBindJSON(&cmd); err != nil {
 		controller.log.Error("Error binding JSON", zap.Error(err))
@@ -211,7 +217,7 @@ func (controller *Controller) GetTenantByUser(ctx *gin.Context) {
 		return
 	}
 
-	tenant, err := controller.getTenantByUserUseCase.GetTenantByUser(cmd)
+	tenant, err := controller.getTenantByIdUseCase.GetTenantById(cmd)
 	if err != nil {
 		controller.log.Error("Error getting tenant by user", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to get tenant by user"))

@@ -2,7 +2,7 @@ package tenant
 
 import "github.com/google/uuid"
 
-//go:generate mockgen -destination=../../tests/tenant/mocks/use_cases_crud.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetTenantByUserUseCase
+//go:generate mockgen -destination=../../tests/tenant/mocks/use_cases_crud.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetTenantByIdUseCase
 
 type CreateTenantPort interface {
 	CreateTenant(tenant Tenant) (Tenant, error)
@@ -23,8 +23,8 @@ type GetTenantListUseCase interface {
 	GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error)
 }
 
-type GetTenantByUserUseCase interface {
-	GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error)
+type GetTenantByIdUseCase interface {
+	GetTenantById(cmd GetTenantByIdCommand) (Tenant, error)
 }
 
 type TenantService struct {
@@ -32,7 +32,7 @@ type TenantService struct {
 	deleteTenantPort    DeleteTenantPort
 	getTenantPort       GetTenantPort
 	getTenantsPort      GetTenantsPort
-	getTenantByUserPort GetTenantByUserPort
+	getTenantByIdPort GetTenantByIdPort
 }
 
 func NewCreateTenantService(
@@ -40,14 +40,14 @@ func NewCreateTenantService(
 	deleteTenantPort DeleteTenantPort,
 	getTenantPort GetTenantPort,
 	getTenantsPort GetTenantsPort,
-	getTenantByUserPort GetTenantByUserPort,
-) (CreateTenantUseCase, DeleteTenantUseCase, GetTenantUseCase, GetTenantListUseCase, GetTenantByUserUseCase) {
+	getTenantByIdPort GetTenantByIdPort,
+) (CreateTenantUseCase, DeleteTenantUseCase, GetTenantUseCase, GetTenantListUseCase, GetTenantByIdUseCase) {
 	service := &TenantService{
 		createTenantPort:    createTenantPort,
 		deleteTenantPort:    deleteTenantPort,
 		getTenantPort:       getTenantPort,
 		getTenantsPort:      getTenantsPort,
-		getTenantByUserPort: getTenantByUserPort,
+		getTenantByIdPort: getTenantByIdPort,
 	}
 	return service, service, service, service, service
 }
@@ -122,8 +122,8 @@ func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant,
 	return tenants, total, nil
 }
 
-func (service *TenantService) GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error) {
-	tenant, err := service.getTenantByUserPort.GetTenantByUser(cmd.UserId)
+func (service *TenantService) GetTenantById(cmd GetTenantByIdCommand) (Tenant, error) {
+	tenant, err := service.getTenantByIdPort.GetTenantById(cmd.TenantId)
 	if err != nil {
 		return Tenant{}, err
 	}
