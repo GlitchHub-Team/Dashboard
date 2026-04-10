@@ -11,9 +11,11 @@ import (
 
 type TenantEntity struct {
 	ID             string `gorm:"size:36"`
-	Name           string `gorm:"size:256"`
+	Name           string `gorm:"index:,unique;size:256"`
 	CanImpersonate bool
 }
+
+func (TenantEntity) TableName() string { return "tenants" }
 
 /*
 NOTA: Interfaccia locale che deve rispecchiare "backend/internal/infra/database/cloud_db/migrate".Migrator
@@ -46,8 +48,7 @@ func (repo *TenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, 
 	var entity *TenantEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
-		Where("id = ?", tenantId).
-		Find(&entity).
+		First(&entity, "id = ?", tenantId).
 		Error
 	return entity, err
 }
@@ -84,32 +85,43 @@ func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
 	return tenants, nil
 }
 
-func (repo *TenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
+func (repo *TenantPostgreRepository) SaveTenant(entity *TenantEntity) error {
 	db := (*gorm.DB)(repo.db)
 
-	err := repo.migrator.MigrateTenantSchema(tenant.ID, false)
+	err := repo.migrator.MigrateTenantSchema(entity.ID, false)
 	if err != nil {
 		return err
 	}
 
-	return db.Save(tenant).Error
+	return db.Save(entity).Error
 }
 
-func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) error {
+/*
+Elimina tenant, rappresentato da entity. E' importante che entity.ID != ""
+*/
+func (repo *TenantPostgreRepository) DeleteTenant(entity *TenantEntity) (err error) {
 	db := (*gorm.DB)(repo.db)
-	err := db.
+	result := db.
 		Clauses(clause.Returning{}).
-		Delete(tenant).
-		Error
+		Delete(entity, "id = ?", entity.ID)
+	err = result.Error
+	if err != nil {
+		return
+	}
 
-	return err
+	if result.RowsAffected == 0 {
+		err = ErrTenantNotFound
+		return
+	}
+
+	return
 }
 
-func (repo *TenantPostgreRepository) GetTenantById(tenantId string) (*TenantEntity, error) {
+func (repo *TenantPostgreRepository) GetTenantByUser(userId string) (*TenantEntity, error) {
 	var tenant TenantEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
-		Where("id = ?", tenantId).
+		Where("id = ?", userId).
 		Find(&tenant).
 		Error
 	return &tenant, err
