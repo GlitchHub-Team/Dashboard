@@ -94,7 +94,7 @@ func (s *GatewayManagementService) GetGatewaysByTenant(command GetGatewaysByTena
 	return tenantGateways, count, nil
 }
 
-func (s *GatewayManagementService) GetGatewayByTenantId(command GetGatewayByTenantIDCommand) (Gateway, error) {
+func (s *GatewayManagementService) GetGatewayByTenantID(command GetGatewayByTenantIDCommand) (Gateway, error) {
 	gw, err := s.getGatewayPort.GetGatewayByTenantID(command.GatewayId, command.TenantId)
 	if err != nil {
 		return Gateway{}, err
@@ -123,7 +123,8 @@ func (s *GatewayManagementService) GetGatewayByTenantId(command GetGatewayByTena
 }
 
 var (
-	_ GetGatewayUseCase          = (*GatewayManagementService)(nil)
-	_ GetAllGatewaysUseCase      = (*GatewayManagementService)(nil)
-	_ GetGatewaysByTenantUseCase = (*GatewayManagementService)(nil)
+	_ GetGatewayUseCase           = (*GatewayManagementService)(nil)
+	_ GetAllGatewaysUseCase       = (*GatewayManagementService)(nil)
+	_ GetGatewaysByTenantUseCase  = (*GatewayManagementService)(nil)
+	_ GetGatewayByTenantIDUseCase = (*GatewayManagementService)(nil)
 )
