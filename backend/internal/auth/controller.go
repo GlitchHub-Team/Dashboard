@@ -127,12 +127,13 @@ func (controller *Controller) LoginUser(ctx *gin.Context) {
 	if err != nil {
 		if errors.Is(err, identity.ErrUnknownRole) {
 			transportHttp.RequestError(ctx, err)
-			return
-		} else if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrWrongCredentials) {
+		} else if errors.Is(err, user.ErrUserNotFound) || errors.Is(err, ErrWrongCredentials) {
+			transportHttp.RequestNotFound(ctx, ErrWrongCredentials)
+		} else if errors.Is(err, ErrAccountNotConfirmed) {
 			transportHttp.RequestNotFound(ctx, err)
-			return
+		} else {
+			transportHttp.RequestServerError(ctx, err)
 		}
-		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 

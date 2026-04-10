@@ -142,7 +142,7 @@ func (repo *tenantMemberPgRepository) GetTenantMember(tenantId string, by UserRe
 	err = db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantMemberEntity{})).
 		Where(where, params...).
-		Find(tenantMember).
+		First(tenantMember).
 		Error
 
 	tenantMember.TenantId = tenantId

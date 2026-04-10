@@ -19,7 +19,7 @@ import (
 func TestCreateTenantAdminIntegration(t *testing.T) {
 	deps := helper.SetupIntegrationTest(t)
 
-	// create a fresh tenant UUID v4 for tests to satisfy binding uuid4
+	// create a fresh tenant UUID v4 for tests to satisfy binding uuid
 	tenantID := uuid.New()
 	tenant2ID := uuid.New()
 	missingTenantId := uuid.New()
@@ -190,7 +190,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			PreSetups: nil,
 			Name:      "Fail: Tenant not found",
 			Method:    http.MethodPost,
-			// use a valid uuid4 that does NOT exist in tenants table
+			// use a valid uuid that does NOT exist in tenants table
 			Path:   "/api/v1/tenant/" + uuid.New().String() + "/tenant_admin",
 			Header: integration.AuthHeader(superAdminJWT),
 			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "nt@t.test"}, UsernameField: dto.UsernameField{Username: "NT"}}),

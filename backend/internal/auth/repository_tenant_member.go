@@ -92,7 +92,7 @@ func (repo *tenantConfirmTokenPgRepository) GetToken(tenantId string, tokenStrin
 	err = db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	entity.TenantId = tenantId
 
@@ -107,7 +107,7 @@ func (repo *tenantConfirmTokenPgRepository) GetTokenWithUser(tenantId string, to
 	err = db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
 		Where("token = ?", tokenString).
-		Find(entity).
+		First(entity).
 		Error
 	entity.TenantId = tenantId
 
@@ -117,7 +117,7 @@ func (repo *tenantConfirmTokenPgRepository) GetTokenWithUser(tenantId string, to
 
 	err = db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &user.TenantMemberEntity{})).
-		Find(&entity.TenantMember, entity.UserId).
+		First(&entity.TenantMember, entity.UserId).
 		Error
 
 	entity.TenantMember.TenantId = tenantId
@@ -204,7 +204,7 @@ func (repo *tenantPasswordTokenPgRepository) GetToken(tenantId string, tokenStri
 	err := db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantPasswordTokenEntity{})).
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	entity.TenantId = tenantId
 
@@ -218,7 +218,7 @@ func (repo *tenantPasswordTokenPgRepository) GetTokenWithUser(tenantId string, t
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantPasswordTokenEntity{})).
 		Preload("TenantMember").
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	entity.TenantId = tenantId
 
@@ -229,7 +229,7 @@ func (repo *tenantPasswordTokenPgRepository) GetTokenWithUser(tenantId string, t
 	tenantMember := user.TenantMemberEntity{}
 	err = db.
 		Scopes(clouddb.WithTenantSchema(tenantId, &user.TenantMemberEntity{})).
-		Find(&tenantMember, entity.UserId).
+		First(&tenantMember, entity.UserId).
 		Error
 	entity.TenantMember = tenantMember
 	entity.TenantMember.TenantId = tenantId

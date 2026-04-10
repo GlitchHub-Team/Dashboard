@@ -89,7 +89,7 @@ func (repo *superAdminPgRepository) GetSuperAdmin(by UserRepositoryGetUserBy) (*
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Where(where, params...).
-		Find(&tenantMember).
+		First(&tenantMember).
 		Error
 	return tenantMember, err
 }

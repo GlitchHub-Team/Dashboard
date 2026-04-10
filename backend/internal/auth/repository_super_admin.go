@@ -73,7 +73,7 @@ func (repo *superAdminConfirmTokenPgRepository) GetToken(tokenString string) (
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	return
 }
@@ -85,14 +85,14 @@ func (repo *superAdminConfirmTokenPgRepository) GetTokenWithUser(tokenString str
 	err = db.
 		Preload("SuperAdmin").
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	if err != nil {
 		return
 	}
 
 	err = db.
-		Find(&entity.SuperAdmin, entity.UserId).
+		First(&entity.SuperAdmin, entity.UserId).
 		Error
 
 	return
@@ -163,7 +163,7 @@ func (repo *superAdminPasswordTokenPgRepository) GetToken(tokenString string) (
 	db := (*gorm.DB)(repo.db)
 	err = db.
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	return
 }
@@ -175,14 +175,14 @@ func (repo *superAdminPasswordTokenPgRepository) GetTokenWithUser(tokenString st
 	err = db.
 		Preload("SuperAdmin").
 		Where("token = ?", tokenString).
-		Find(&entity).
+		First(&entity).
 		Error
 	if err != nil {
 		return
 	}
 
 	err = db.
-		Find(&entity.SuperAdmin, entity.UserId).
+		First(&entity.SuperAdmin, entity.UserId).
 		Error
 
 	return
