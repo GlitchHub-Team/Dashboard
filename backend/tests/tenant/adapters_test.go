@@ -175,7 +175,7 @@ func TestTenantPostgreAdapter_DeleteTenant(t *testing.T) {
 		CanImpersonate: true,
 	}
 	targetDeleteEntity := &tenant.TenantEntity{
-		ID:             targetTenantId.String(),
+		ID: targetTenantId.String(),
 	}
 	expectedTenant := tenant.Tenant{
 		Id:             targetTenantId,
@@ -231,7 +231,7 @@ func TestTenantPostgreAdapter_DeleteTenant(t *testing.T) {
 				stepDeleteFail_NotFound,
 			},
 			expectedTenant: tenant.Tenant{},
-			expectedError: tenant.ErrTenantNotFound,
+			expectedError:  tenant.ErrTenantNotFound,
 		},
 		{
 			name: "Fail: delete tenant returns unexpected error",

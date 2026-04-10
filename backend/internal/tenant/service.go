@@ -25,12 +25,11 @@ type GetTenantsPort interface {
 	GetAllTenants() ([]Tenant, error)
 }
 
-
 type TenantService struct {
-	createTenantPort    CreateTenantPort
-	deleteTenantPort    DeleteTenantPort
-	getTenantPort       GetTenantPort
-	getTenantsPort      GetTenantsPort
+	createTenantPort CreateTenantPort
+	deleteTenantPort DeleteTenantPort
+	getTenantPort    GetTenantPort
+	getTenantsPort   GetTenantsPort
 }
 
 func NewCreateTenantService(
@@ -40,15 +39,15 @@ func NewCreateTenantService(
 	getTenantsPort GetTenantsPort,
 ) *TenantService {
 	return &TenantService{
-		createTenantPort:    createTenantPort,
-		deleteTenantPort:    deleteTenantPort,
-		getTenantPort:       getTenantPort,
-		getTenantsPort:      getTenantsPort,
+		createTenantPort: createTenantPort,
+		deleteTenantPort: deleteTenantPort,
+		getTenantPort:    getTenantPort,
+		getTenantsPort:   getTenantsPort,
 	}
 }
 
 /*
-	Crea un tenant come specificato in cmd
+Crea un tenant come specificato in cmd
 */
 func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, error) {
 	if !cmd.IsSuperAdmin() {
@@ -72,7 +71,7 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 }
 
 /*
-	Elimina un tenant come specificato in cmd
+Elimina un tenant come specificato in cmd
 */
 func (service *TenantService) DeleteTenant(cmd DeleteTenantCommand) (Tenant, error) {
 	if !cmd.IsSuperAdmin() {
@@ -92,7 +91,7 @@ func (service *TenantService) DeleteTenant(cmd DeleteTenantCommand) (Tenant, err
 }
 
 /*
-	Ottiene un tenant per TenantId come specificato in cmd
+Ottiene un tenant per TenantId come specificato in cmd
 */
 func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 	tenant, err := service.getTenantPort.GetTenant(cmd.TenantId)
@@ -112,14 +111,14 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 }
 
 /*
-	Ottiene la lista NON PAGINATA di tutti i tenant presenti
+Ottiene la lista NON PAGINATA di tutti i tenant presenti
 */
 func (service *TenantService) GetAllTenants() ([]Tenant, error) {
 	return service.getTenantsPort.GetAllTenants()
 }
 
 /*
-	Ottiene la lista paginata dei tenant come specificato in cmd
+Ottiene la lista paginata dei tenant come specificato in cmd
 */
 func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error) {
 	if !cmd.IsSuperAdmin() {
@@ -133,7 +132,6 @@ func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant,
 
 	return tenants, total, nil
 }
-
 
 // Compile-time checks
 var (

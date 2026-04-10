@@ -35,7 +35,7 @@ type GetTenantListUseCase interface {
 }
 
 type Controller struct {
-	log                  *zap.Logger
+	log *zap.Logger
 
 	createTenantUseCase  CreateTenantUseCase
 	deleteTenantUseCase  DeleteTenantUseCase

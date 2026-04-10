@@ -17,7 +17,7 @@ var Module = fx.Module(
 			fx.As(new(GetTenantListUseCase)),
 			fx.As(new(GetAllTenantsUseCase)),
 		),
-		
+
 		fx.Annotate(
 			NewTenantPostgreAdapter,
 			fx.As(new(CreateTenantPort)),
@@ -25,7 +25,7 @@ var Module = fx.Module(
 			fx.As(new(GetTenantPort)),
 			fx.As(new(GetTenantsPort)),
 		),
-		
+
 		fx.Annotate(
 			NewTenantPostgreRepository,
 			fx.As(new(TenantRepository)),

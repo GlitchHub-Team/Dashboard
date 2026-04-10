@@ -523,7 +523,6 @@ func TestService_GetTenantList(t *testing.T) {
 			Times(0)
 	}
 
-
 	cases := []testCase{
 		{
 			name:  "(Super Admin) Success",
