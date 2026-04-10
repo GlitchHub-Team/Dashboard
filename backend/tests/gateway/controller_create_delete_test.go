@@ -132,6 +132,7 @@ func TestGatewayController_CreateGateway(t *testing.T) {
 				nil,
 				nil,
 				nil,
+				nil,
 			)
 
 			helper.ExecuteControllerTest(t, tc, "POST", "/gateway", controller.CreateGateway)
@@ -262,6 +263,7 @@ func TestGatewayController_DeleteGateway(t *testing.T) {
 				nil,
 				nil,
 				mockUseCase,
+				nil,
 				nil,
 				nil,
 				nil,

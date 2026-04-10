@@ -144,7 +144,7 @@ func TestService_GetSensorById(t *testing.T) {
 	newStepGatewayOk := func(gat gateway.Gateway) mockSetupFunc_GetSensorByIdService {
 		return func(mockBundle getSensorByIdServiceMocks) *gomock.Call {
 			return mockBundle.getGatewayPort.EXPECT().
-				GetById(foundSensor.GatewayId.String()).
+				GetById(foundSensor.GatewayId).
 				Return(gat, nil).
 				Times(1)
 		}
@@ -153,7 +153,7 @@ func TestService_GetSensorById(t *testing.T) {
 	newStepGatewayErr := func(expectedErr error) mockSetupFunc_GetSensorByIdService {
 		return func(mockBundle getSensorByIdServiceMocks) *gomock.Call {
 			return mockBundle.getGatewayPort.EXPECT().
-				GetById(foundSensor.GatewayId.String()).
+				GetById(foundSensor.GatewayId).
 				Return(gateway.Gateway{}, expectedErr).
 				Times(1)
 		}
@@ -162,7 +162,7 @@ func TestService_GetSensorById(t *testing.T) {
 	newStepGatewayNotFound := func() mockSetupFunc_GetSensorByIdService {
 		return func(mockBundle getSensorByIdServiceMocks) *gomock.Call {
 			return mockBundle.getGatewayPort.EXPECT().
-				GetById(foundSensor.GatewayId.String()).
+				GetById(foundSensor.GatewayId).
 				Return(gateway.Gateway{}, nil).
 				Times(1)
 		}

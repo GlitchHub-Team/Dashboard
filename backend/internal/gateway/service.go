@@ -68,14 +68,17 @@ func (s *GatewayManagementService) GetGatewaysByTenant(command GetGatewaysByTena
 	}
 
 	tenantFound, err := s.getTenantPort.GetTenant(command.TenantId)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	if tenantFound.IsZero() {
 		return nil, 0, tenant.ErrTenantNotFound
 	}
 
-	superAdminAccess := command.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+	superAdminAccess := command.IsSuperAdmin() && tenantFound.CanImpersonate
 
-	if !superAdminAccess && !command.Requester.CanTenantAdminAccess(command.TenantId) {
+	if !superAdminAccess && !command.CanTenantAdminAccess(command.TenantId) {
 		return nil, 0, ErrUnauthorizedAccess
 	}
 
@@ -102,14 +105,17 @@ func (s *GatewayManagementService) GetGatewayByTenantId(command GetGatewayByTena
 	}
 
 	tenantFound, err := s.getTenantPort.GetTenant(command.TenantId)
+	if err != nil {
+		return Gateway{}, err
+	}
 
 	if tenantFound.IsZero() {
 		return Gateway{}, tenant.ErrTenantNotFound
 	}
 
-	superAdminAccess := command.Requester.IsSuperAdmin() && tenantFound.CanImpersonate
+	superAdminAccess := command.IsSuperAdmin() && tenantFound.CanImpersonate
 
-	if !superAdminAccess && !command.Requester.CanTenantAdminAccess(command.TenantId) {
+	if !superAdminAccess && !command.CanTenantAdminAccess(command.TenantId) {
 		return Gateway{}, ErrUnauthorizedAccess
 	}
 

@@ -10,18 +10,8 @@ type createGatewayDTO struct {
 	dto.GatewayIntervalField
 }
 
-type getGatewayByIdDTO struct {
-	dto.GatewayIdField
-}
-
 type getGatewayListDTO struct {
 	dto.Pagination
-}
-
-type getGatewaysByTenantDTO struct {
-	dto.TenantIdField
-	Page  int
-	Limit int
 }
 
 type commissionGatewayDTO struct {
@@ -65,15 +55,6 @@ type gatewayListResponseDTO struct {
 	Gateways []gatewayResponseDTO `json:"gateways"`
 }
 
-type commissionGatewayResponseDTO struct {
-	dto.TenantIdField
-	dto.TenantNameField
-}
-
-type getGatewayBodyDTO struct {
-	Page  int
-	Limit int
-}
 type decommissionGatewayCommandPayloadDTO struct {
 	GatewayId string `json:"gatewayId"`
 }

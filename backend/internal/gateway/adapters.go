@@ -106,6 +106,9 @@ func (a *GatewayPostgreAdapter) GetById(gatewayId uuid.UUID) (Gateway, error) {
 	}
 
 	gw, err := GatewayEntityToDomain(&entity)
+	if err != nil {
+		return Gateway{}, err
+	}
 
 	return gw, nil
 }
@@ -117,6 +120,9 @@ func (a *GatewayPostgreAdapter) GetGatewayByTenantID(tenantId uuid.UUID, gateway
 	}
 
 	gw, err := GatewayEntityToDomain(&entity)
+	if err != nil {
+		return Gateway{}, err
+	}
 
 	return gw, nil
 }
@@ -132,6 +138,9 @@ func (a *GatewayPostgreAdapter) GetByTenantId(tenantId uuid.UUID, page int, limi
 		return nil, 0, err
 	}
 	gws, err := database.MapEntityListToDomain(gateways, GatewayEntityToDomain)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	return gws, count, nil
 }
@@ -147,6 +156,9 @@ func (a *GatewayPostgreAdapter) GetAll(page int, limit int) ([]Gateway, uint, er
 		return nil, 0, err
 	}
 	gws, err := database.MapEntityListToDomain(gateways, GatewayEntityToDomain)
+	if err != nil {
+		return nil, 0, err
+	}
 	return gws, count, nil
 }
 

@@ -218,4 +218,5 @@ type GatewayRepository interface {
 	GetAllGateways(offset int, limit int) ([]GatewayEntity, uint, error)
 	GetGatewayByTenantID(tenantId string, gatewayId string) (GatewayEntity, error)
 }
+
 var _ GatewayRepository = (*gatewayPostgreRepository)(nil)

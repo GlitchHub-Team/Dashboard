@@ -70,25 +70,26 @@ func (mr *MockGatewayRepositoryMockRecorder) DeleteGateway(entity any) *gomock.C
 }
 
 // GetAllGateways mocks base method.
-func (m *MockGatewayRepository) GetAllGateways() ([]gateway.Gateway, error) {
+func (m *MockGatewayRepository) GetAllGateways(offset, limit int) ([]gateway.GatewayEntity, uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllGateways")
-	ret0, _ := ret[0].([]gateway.Gateway)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "GetAllGateways", offset, limit)
+	ret0, _ := ret[0].([]gateway.GatewayEntity)
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetAllGateways indicates an expected call of GetAllGateways.
-func (mr *MockGatewayRepositoryMockRecorder) GetAllGateways() *gomock.Call {
+func (mr *MockGatewayRepositoryMockRecorder) GetAllGateways(offset, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGateways", reflect.TypeOf((*MockGatewayRepository)(nil).GetAllGateways))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGateways", reflect.TypeOf((*MockGatewayRepository)(nil).GetAllGateways), offset, limit)
 }
 
 // GetGatewayById mocks base method.
-func (m *MockGatewayRepository) GetGatewayById(gatewayId string) (gateway.Gateway, error) {
+func (m *MockGatewayRepository) GetGatewayById(gatewayId string) (gateway.GatewayEntity, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGatewayById", gatewayId)
-	ret0, _ := ret[0].(gateway.Gateway)
+	ret0, _ := ret[0].(gateway.GatewayEntity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -99,19 +100,35 @@ func (mr *MockGatewayRepositoryMockRecorder) GetGatewayById(gatewayId any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGatewayById", reflect.TypeOf((*MockGatewayRepository)(nil).GetGatewayById), gatewayId)
 }
 
-// GetGatewaysByTenantId mocks base method.
-func (m *MockGatewayRepository) GetGatewaysByTenantId(tenantId string) ([]gateway.Gateway, error) {
+// GetGatewayByTenantID mocks base method.
+func (m *MockGatewayRepository) GetGatewayByTenantID(tenantId, gatewayId string) (gateway.GatewayEntity, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGatewaysByTenantId", tenantId)
-	ret0, _ := ret[0].([]gateway.Gateway)
+	ret := m.ctrl.Call(m, "GetGatewayByTenantID", tenantId, gatewayId)
+	ret0, _ := ret[0].(gateway.GatewayEntity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetGatewaysByTenantId indicates an expected call of GetGatewaysByTenantId.
-func (mr *MockGatewayRepositoryMockRecorder) GetGatewaysByTenantId(tenantId any) *gomock.Call {
+// GetGatewayByTenantID indicates an expected call of GetGatewayByTenantID.
+func (mr *MockGatewayRepositoryMockRecorder) GetGatewayByTenantID(tenantId, gatewayId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGatewaysByTenantId", reflect.TypeOf((*MockGatewayRepository)(nil).GetGatewaysByTenantId), tenantId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGatewayByTenantID", reflect.TypeOf((*MockGatewayRepository)(nil).GetGatewayByTenantID), tenantId, gatewayId)
+}
+
+// GetGatewaysByTenantId mocks base method.
+func (m *MockGatewayRepository) GetGatewaysByTenantId(tenantId string, offset, limit int) ([]gateway.GatewayEntity, uint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGatewaysByTenantId", tenantId, offset, limit)
+	ret0, _ := ret[0].([]gateway.GatewayEntity)
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGatewaysByTenantId indicates an expected call of GetGatewaysByTenantId.
+func (mr *MockGatewayRepositoryMockRecorder) GetGatewaysByTenantId(tenantId, offset, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGatewaysByTenantId", reflect.TypeOf((*MockGatewayRepository)(nil).GetGatewaysByTenantId), tenantId, offset, limit)
 }
 
 // SaveGateway mocks base method.

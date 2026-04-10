@@ -125,7 +125,7 @@ func TestService_GetSensorsByGateway(t *testing.T) {
 			getGatewayPort *gatewayMocks.MockGetGatewayPort,
 		) *gomock.Call {
 			return getGatewayPort.EXPECT().
-				GetById(cmd.GatewayId.String()).
+				GetById(cmd.GatewayId).
 				Return(foundGateway, nil).
 				Times(1)
 		}
@@ -137,7 +137,7 @@ func TestService_GetSensorsByGateway(t *testing.T) {
 			getGatewayPort *gatewayMocks.MockGetGatewayPort,
 		) *gomock.Call {
 			return getGatewayPort.EXPECT().
-				GetById(cmd.GatewayId.String()).
+				GetById(cmd.GatewayId).
 				Return(gateway.Gateway{}, expectedErr).
 				Times(1)
 		}
@@ -149,7 +149,7 @@ func TestService_GetSensorsByGateway(t *testing.T) {
 			getGatewayPort *gatewayMocks.MockGetGatewayPort,
 		) *gomock.Call {
 			return getGatewayPort.EXPECT().
-				GetById(cmd.GatewayId.String()).
+				GetById(cmd.GatewayId).
 				Return(gateway.Gateway{}, nil).
 				Times(1)
 		}

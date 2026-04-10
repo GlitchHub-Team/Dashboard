@@ -24,8 +24,13 @@ type mockGetGatewayPort struct {
 	calledGetByT bool
 }
 
-func (m *mockGetGatewayPort) GetById(id string) (gateway.Gateway, error) {
+func (m *mockGetGatewayPort) GetById(id uuid.UUID) (gateway.Gateway, error) {
 	m.calledGetBy = true
+	return m.result, m.err
+}
+
+func (m *mockGetGatewayPort) GetGatewayByTenantID(tenantId uuid.UUID, gatewayId uuid.UUID) (gateway.Gateway, error) {
+	m.calledGetByT = true
 	return m.result, m.err
 }
 

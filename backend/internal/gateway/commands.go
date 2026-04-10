@@ -25,7 +25,7 @@ type GetGatewayByIdCommand struct {
 }
 
 type GetGatewayListCommand struct {
-	Page int
+	Page  int
 	Limit int
 }
 

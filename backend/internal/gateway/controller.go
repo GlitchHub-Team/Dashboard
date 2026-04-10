@@ -67,18 +67,18 @@ type RebootGatewayUseCase interface {
 type GatewayController struct {
 	log *zap.Logger
 
-	createGatewayUseCase           CreateGatewayUseCase
-	deleteGatewayUseCase           DeleteGatewayUseCase
-	getAllGatewaysUseCase          GetAllGatewaysUseCase
-	getGatewaysByTenantUseCase     GetGatewaysByTenantUseCase
-	commissionGatewayUseCase       CommissionGatewayUseCase
-	decommissionGatewayUseCase     DecommissionGatewayUseCase
-	interruptGatewayUseCase        InterruptGatewayUseCase
-	resumeGatewayUseCase           ResumeGatewayUseCase
-	resetGatewayUseCase            ResetGatewayUseCase
-	rebootGatewayUseCase           RebootGatewayUseCase
-	getGatewayUseCase              GetGatewayUseCase
-	getGatewayByTenantIDUseCase    GetGatewayByTenantIDUseCase
+	createGatewayUseCase        CreateGatewayUseCase
+	deleteGatewayUseCase        DeleteGatewayUseCase
+	getAllGatewaysUseCase       GetAllGatewaysUseCase
+	getGatewaysByTenantUseCase  GetGatewaysByTenantUseCase
+	commissionGatewayUseCase    CommissionGatewayUseCase
+	decommissionGatewayUseCase  DecommissionGatewayUseCase
+	interruptGatewayUseCase     InterruptGatewayUseCase
+	resumeGatewayUseCase        ResumeGatewayUseCase
+	resetGatewayUseCase         ResetGatewayUseCase
+	rebootGatewayUseCase        RebootGatewayUseCase
+	getGatewayUseCase           GetGatewayUseCase
+	getGatewayByTenantIDUseCase GetGatewayByTenantIDUseCase
 }
 
 func NewGatewayController(
@@ -519,11 +519,6 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 
 	if err != nil {
 		transportHttp.RequestError(ctx, err)
-		return
-	}
-
-	if err != nil {
-		transportHttp.RequestError(ctx, nil)
 		return
 	}
 
