@@ -9,5 +9,5 @@ type TenantIdField_NotRequired struct {
 }
 
 type TenantNameField struct {
-	TenantName string `uri:"name" form:"name" json:"name" binding:"required"`
+	TenantName string `uri:"tenant_name" form:"tenant_name" json:"tenant_name" binding:"required"`
 }
