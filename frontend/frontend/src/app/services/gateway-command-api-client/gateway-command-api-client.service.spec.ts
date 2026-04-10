@@ -63,6 +63,8 @@ describe('GatewayCommandApiClientService', () => {
       ['decommissionGateway', 'decommission'] as const,
       ['resetGateway', 'reset'] as const,
       ['rebootGateway', 'reboot'] as const,
+      ['interruptGateway', 'interrupt'] as const,
+      ['resumeGateway', 'resume'] as const,
     ])('%s should POST empty body to /gateway/gw-1/%s and return void', (method, path) => {
       service[method]('gw-1').subscribe((result) => {
         expect(result).toBeNull();

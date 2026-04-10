@@ -15,13 +15,15 @@ import { Tenant } from '../../../../models/tenant/tenant.model';
 // Mappa tipo di comando agli args che il form ritorna
 const COMMAND_CASES: [
   string,
-  'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway',
+  'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway' | 'interruptGateway' | 'resumeGateway',
   string[],
 ][] = [
   ['commission', 'commissionGateway', ['gw-1', 'tenant-1', 'commission-token']],
   ['decommission', 'decommissionGateway', ['gw-1']],
   ['reset', 'resetGateway', ['gw-1']],
   ['reboot', 'rebootGateway', ['gw-1']],
+  ['interrupt', 'interruptGateway', ['gw-1']],
+  ['resume', 'resumeGateway', ['gw-1']],
 ];
 
 describe('GatewayCommandsDialog (Unit)', () => {
@@ -34,6 +36,8 @@ describe('GatewayCommandsDialog (Unit)', () => {
     decommissionGateway: ReturnType<typeof vi.fn>;
     resetGateway: ReturnType<typeof vi.fn>;
     rebootGateway: ReturnType<typeof vi.fn>;
+    interruptGateway: ReturnType<typeof vi.fn>;
+    resumeGateway: ReturnType<typeof vi.fn>;
   };
 
   const mockTenants: Tenant[] = [
@@ -74,6 +78,8 @@ describe('GatewayCommandsDialog (Unit)', () => {
       decommissionGateway: vi.fn(),
       resetGateway: vi.fn(),
       rebootGateway: vi.fn(),
+      interruptGateway: vi.fn(),
+      resumeGateway: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -134,6 +140,27 @@ describe('GatewayCommandsDialog (Unit)', () => {
       for (const [, method] of COMMAND_CASES) {
         expect(gatewayServiceMock[method]).not.toHaveBeenCalled();
       }
+    });
+  });
+
+  describe('commands getter', () => {
+    it('should return commission/reset/reboot for DECOMMISSIONED gateway in manage mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], gateway: { ...mockGateway, status: GatewayStatus.DECOMMISSIONED } };
+      expect(component['commands'].map((c) => c.value)).toEqual(['commission', 'reset', 'reboot']);
+    });
+
+    it('should return decommission/reset/reboot/interrupt for ACTIVE gateway in manage mode', () => {
+      expect(component['commands'].map((c) => c.value)).toEqual(['decommission', 'reset', 'reboot', 'interrupt']);
+    });
+
+    it('should return decommission/reset/reboot/resume for INACTIVE gateway in manage mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], gateway: { ...mockGateway, status: GatewayStatus.INACTIVE } };
+      expect(component['commands'].map((c) => c.value)).toEqual(['decommission', 'reset', 'reboot', 'resume']);
+    });
+
+    it('should return reset/reboot in dashboard mode regardless of status', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], mode: 'dashboard' };
+      expect(component['commands'].map((c) => c.value)).toEqual(['reset', 'reboot']);
     });
   });
 
@@ -200,6 +227,8 @@ describe('GatewayCommandsDialog - getAllTenants error', () => {
       decommissionGateway: vi.fn(),
       resetGateway: vi.fn(),
       rebootGateway: vi.fn(),
+      interruptGateway: vi.fn(),
+      resumeGateway: vi.fn(),
     };
 
     await TestBed.configureTestingModule({

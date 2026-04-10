@@ -10,6 +10,8 @@ export class GatewayCommandApiClientMockService {
   private readonly shouldFailDecommission = false;
   private readonly shouldFailReset = false;
   private readonly shouldFailReboot = false;
+  private readonly shouldFailInterrupt = false;
+  private readonly shouldFailResume = false;
 
   private readonly mockGateway: GatewayBackend = {
     gateway_id: 'gateway-01',
@@ -43,6 +45,20 @@ export class GatewayCommandApiClientMockService {
   public rebootGateway(_gatewayId: string): Observable<void> {
     if (this.shouldFailReboot) {
       return this.delayedError(400, 'Failed to reboot gateway');
+    }
+    return of(void 0).pipe(delay(500));
+  }
+
+  public interruptGateway(_gatewayId: string): Observable<void> {
+    if (this.shouldFailInterrupt) {
+      return this.delayedError(400, 'Failed to interrupt gateway');
+    }
+    return of(void 0).pipe(delay(500));
+  }
+
+  public resumeGateway(_gatewayId: string): Observable<void> {
+    if (this.shouldFailResume) {
+      return this.delayedError(400, 'Failed to resume gateway');
     }
     return of(void 0).pipe(delay(500));
   }

@@ -14,6 +14,7 @@ import { ApiError } from '../../../../models/api-error.model';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { Tenant } from '../../../../models/tenant/tenant.model';
+import { GatewayStatus } from '../../../../models/gateway-status.enum';
 
 @Component({
   selector: 'app-gateway-commands',
@@ -59,11 +60,10 @@ export class GatewayCommandsDialog implements OnInit {
   protected isSubmitting = signal(false);
 
   protected get showCommissionFields(): boolean {
-    return !this.gateway.tenantId && this.commandForm.controls.command.value === 'commission';
+    return this.gateway.status === GatewayStatus.DECOMMISSIONED && this.commandForm.controls.command.value === 'commission';
   }
 
   // TENANT ADMIN NON FA NIENTE
-  // Se gateway non commissionato, allora posso solo fare commission/reboot
   protected get commands(): { value: string; label: string }[] {
     if (this.isDashboardMode) {
       return [
@@ -72,19 +72,28 @@ export class GatewayCommandsDialog implements OnInit {
       ];
     }
 
-    if (this.gateway.tenantId) {
-      return [
-        { value: 'decommission', label: 'Decommission' },
-        { value: 'reset', label: 'Reset' },
-        { value: 'reboot', label: 'Riavvio' },
-      ];
+    switch (this.gateway.status) {
+      case GatewayStatus.DECOMMISSIONED:
+        return [
+          { value: 'commission', label: 'Commission' },
+          { value: 'reset', label: 'Reset' },
+          { value: 'reboot', label: 'Riavvio' },
+        ];
+      case GatewayStatus.ACTIVE:
+        return [
+          { value: 'decommission', label: 'Decommission' },
+          { value: 'reset', label: 'Reset' },
+          { value: 'reboot', label: 'Riavvio' },
+          { value: 'interrupt', label: 'Interrompi' },
+        ];
+      case GatewayStatus.INACTIVE:
+        return [
+          { value: 'decommission', label: 'Decommission' },
+          { value: 'reset', label: 'Reset' },
+          { value: 'reboot', label: 'Riavvio' },
+          { value: 'resume', label: 'Riprendi' },
+        ];
     }
-
-    return [
-      { value: 'commission', label: 'Commission' },
-      { value: 'reset', label: 'Reset' },
-      { value: 'reboot', label: 'Riavvio' },
-    ];
   }
 
   protected readonly commandForm = this.formBuilder.nonNullable.group({
@@ -102,7 +111,7 @@ export class GatewayCommandsDialog implements OnInit {
     this.commandForm.controls.command.valueChanges.subscribe((command) => {
       const tenantIdCtrl = this.commandForm.controls.tenantId;
       const tokenCtrl = this.commandForm.controls.token;
-      if (!this.gateway.tenantId && command === 'commission') {
+      if (this.gateway.status === GatewayStatus.DECOMMISSIONED && command === 'commission') {
         tenantIdCtrl.addValidators(Validators.required);
         tokenCtrl.addValidators(Validators.required);
       } else {
@@ -172,6 +181,28 @@ export class GatewayCommandsDialog implements OnInit {
         break;
       case 'reboot':
         this.gatewayService.rebootGateway(this.data.gateway.id).subscribe({
+          next: () => {
+            this.dialogRef.close(true);
+          },
+          error: (err: ApiError) => {
+            this.generalError.set(err.message ?? 'Failed to send command');
+            this.isSubmitting.set(false);
+          },
+        });
+        break;
+      case 'interrupt':
+        this.gatewayService.interruptGateway(this.data.gateway.id).subscribe({
+          next: () => {
+            this.dialogRef.close(true);
+          },
+          error: (err: ApiError) => {
+            this.generalError.set(err.message ?? 'Failed to send command');
+            this.isSubmitting.set(false);
+          },
+        });
+        break;
+      case 'resume':
+        this.gatewayService.resumeGateway(this.data.gateway.id).subscribe({
           next: () => {
             this.dialogRef.close(true);
           },

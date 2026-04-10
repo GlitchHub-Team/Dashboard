@@ -9,6 +9,7 @@ import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
 import { GatewayStatus } from '../../models/gateway-status.enum';
+import { GatewayCommandApiClientService } from '../gateway-command-api-client/gateway-command-api-client.service';
 
 describe('GatewayService', () => {
   let service: GatewayService;
@@ -67,6 +68,15 @@ describe('GatewayService', () => {
   };
   const mockConfig: GatewayConfig = { name: 'New Gateway', interval: 60 };
 
+  const gatewayCommandApiMock = {
+    commissionGateway: vi.fn(),
+    decommissionGateway: vi.fn(),
+    resetGateway: vi.fn(),
+    rebootGateway: vi.fn(),
+    interruptGateway: vi.fn(),
+    resumeGateway: vi.fn(),
+  };
+
   const gatewayApiMock = {
     getGatewayListByTenant: vi.fn(),
     getGatewayList: vi.fn(),
@@ -101,6 +111,7 @@ describe('GatewayService', () => {
       providers: [
         GatewayService,
         { provide: GatewayApiClientService, useValue: gatewayApiMock },
+        { provide: GatewayCommandApiClientService, useValue: gatewayCommandApiMock },
         { provide: GatewayAdapter, useValue: adapterMock },
       ],
     });
@@ -335,6 +346,106 @@ describe('GatewayService', () => {
       expect(nextSpy).not.toHaveBeenCalled();
       expect(errorSpy).not.toHaveBeenCalled();
       expect(completeSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('commissionGateway', () => {
+    beforeEach(() => {
+      mockTenantSuccess();
+      service.getGatewaysByTenant('tenant-1', 0, 10);
+    });
+
+    it('should call command API, map through adapter, refetch, and return adapted gateway', () => {
+      gatewayApiMock.getGatewayListByTenant.mockClear();
+      gatewayCommandApiMock.commissionGateway.mockReturnValue(of(mockNewBackend));
+      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
+      mockTenantSuccess();
+
+      let result: Gateway | undefined;
+      service.commissionGateway('gw-3', 'tenant-1', 'token').subscribe((gw) => (result = gw));
+
+      expect(gatewayCommandApiMock.commissionGateway).toHaveBeenCalledWith('gw-3', 'tenant-1', 'token');
+      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
+      expect(result).toEqual(mockNewGateway);
+      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalled();
+    });
+
+    it('should propagate errors without refetching', () => {
+      gatewayApiMock.getGatewayListByTenant.mockClear();
+      const error = { status: 500, message: 'Commission failed' };
+      gatewayCommandApiMock.commissionGateway.mockReturnValue(throwError(() => error));
+
+      const errorSpy = vi.fn();
+      service.commissionGateway('gw-3', 'tenant-1', 'token').subscribe({ error: errorSpy });
+
+      expect(errorSpy).toHaveBeenCalledWith(error);
+      expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('decommissionGateway / interruptGateway / resumeGateway', () => {
+    type RefetchMethod = 'decommissionGateway' | 'interruptGateway' | 'resumeGateway';
+
+    beforeEach(() => {
+      mockTenantSuccess();
+      service.getGatewaysByTenant('tenant-1', 0, 10);
+    });
+
+    it.each<[RefetchMethod]>([
+      ['decommissionGateway'],
+      ['interruptGateway'],
+      ['resumeGateway'],
+    ])('%s should call command API and refetch current page on success', (method) => {
+      gatewayApiMock.getGatewayListByTenant.mockClear();
+      gatewayCommandApiMock[method].mockReturnValue(of(void 0));
+      mockTenantSuccess();
+
+      service[method]('gw-1').subscribe();
+
+      expect(gatewayCommandApiMock[method]).toHaveBeenCalledWith('gw-1');
+      expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalled();
+    });
+
+    it.each<[RefetchMethod]>([
+      ['decommissionGateway'],
+      ['interruptGateway'],
+      ['resumeGateway'],
+    ])('%s should propagate errors without refetching', (method) => {
+      gatewayApiMock.getGatewayListByTenant.mockClear();
+      const error = { status: 500, message: `${method} failed` };
+      gatewayCommandApiMock[method].mockReturnValue(throwError(() => error));
+
+      const errorSpy = vi.fn();
+      service[method]('gw-1').subscribe({ error: errorSpy });
+
+      expect(errorSpy).toHaveBeenCalledWith(error);
+      expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetGateway / rebootGateway', () => {
+    type SimpleMethod = 'resetGateway' | 'rebootGateway';
+
+    it.each<[SimpleMethod]>([
+      ['resetGateway'],
+      ['rebootGateway'],
+    ])('%s should delegate to command API and return void', (method) => {
+      gatewayCommandApiMock[method].mockReturnValue(of(void 0));
+      let completed = false;
+      service[method]('gw-1').subscribe({ complete: () => (completed = true) });
+      expect(gatewayCommandApiMock[method]).toHaveBeenCalledWith('gw-1');
+      expect(completed).toBe(true);
+    });
+
+    it.each<[SimpleMethod]>([
+      ['resetGateway'],
+      ['rebootGateway'],
+    ])('%s should propagate errors from the command API', (method) => {
+      const error = { status: 500, message: `${method} failed` };
+      gatewayCommandApiMock[method].mockReturnValue(throwError(() => error));
+      const errorSpy = vi.fn();
+      service[method]('gw-1').subscribe({ error: errorSpy });
+      expect(errorSpy).toHaveBeenCalledWith(error);
     });
   });
 
