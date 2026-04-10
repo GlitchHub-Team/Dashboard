@@ -56,24 +56,11 @@ type gatewayResponseDTO struct {
 	dto.TenantIdField
 	Status   GatewayStatus `json:"status"`
 	Interval int64         `json:"interval"`
-}
-
-type AllGatewayResponseDTO struct {
-	dto.GatewayIdField
-	dto.GatewayNameField
-	dto.TenantIdField
-	Status           GatewayStatus `json:"status"`
-	Interval         int64         `json:"interval"`
 	PublicIdentifier *string       `json:"publicIdentifier"`
 }
 type gatewayListResponseDTO struct {
 	dto.ListInfo
 	Gateways []gatewayResponseDTO `json:"gateways"`
-}
-
-type gatewayAllResponseDTO struct {
-	dto.ListInfo
-	Gateways []AllGatewayResponseDTO `json:"gateways"`
 }
 
 type commissionGatewayResponseDTO struct {

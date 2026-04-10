@@ -625,15 +625,15 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 		return
 	}
 
-	responseDtos := make([]gatewayAllResponseDTO, len(gateways))
+	responseDtos := make([]gatewayListResponseDTO, len(gateways))
 
 	for i, gateway := range gateways {
-		responseDtos[i] = gatewayAllResponseDTO{
+		responseDtos[i] = gatewayListResponseDTO{
 			ListInfo: dto.ListInfo{
 				Total: count,
 				Count: uint(queryDto.Page),
 			},
-			Gateways: []AllGatewayResponseDTO{
+			Gateways: []gatewayResponseDTO{
 				{
 					GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 					GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
@@ -715,6 +715,7 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 					TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
 					Status:           gateway.Status,
 					Interval:         gateway.IntervalLimit.Milliseconds(),
+					PublicIdentifier: gateway.PublicIdentifier,
 				},
 			},
 		}
@@ -762,6 +763,7 @@ func (controller *GatewayController) GetGateway(ctx *gin.Context) {
 		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
 		Status:           gateway.Status,
 		Interval:         gateway.IntervalLimit.Milliseconds(),
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -814,6 +816,7 @@ func (controller *GatewayController) GetGatewayByTenantID(ctx *gin.Context) {
 		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
 		Status:           gateway.Status,
 		Interval:         gateway.IntervalLimit.Milliseconds(),
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
