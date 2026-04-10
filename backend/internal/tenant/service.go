@@ -123,6 +123,10 @@ func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant,
 		return nil, err
 	}
 
+	if tenants == nil {
+		tenants = make([]Tenant, 0)
+	}
+
 	// for _, tenant := range tenants {
 	// 	if !tenant.CanImpersonate {
 	// 		return nil, ErrUnauthorized
