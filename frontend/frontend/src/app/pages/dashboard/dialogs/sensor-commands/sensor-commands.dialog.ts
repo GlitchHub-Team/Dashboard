@@ -11,7 +11,7 @@ import { SensorService } from '../../../../services/sensor/sensor.service';
 import { ApiError } from '../../../../models/api-error.model';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
@@ -39,7 +39,7 @@ export class SensorCommandsDialog {
   protected isSubmitting = signal(false);
 
   protected readonly commands: { value: string; label: string }[] =
-    this.data.sensor.status === Status.ACTIVE
+    this.data.sensor.status === SensorStatus.ACTIVE
       ? [{ value: 'interrupt', label: 'Interrompi' }]
       : [{ value: 'resume', label: 'Riprendi' }];
 

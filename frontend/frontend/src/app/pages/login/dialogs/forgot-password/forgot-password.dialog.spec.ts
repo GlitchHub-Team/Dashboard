@@ -3,12 +3,14 @@ import { NO_ERRORS_SCHEMA, signal, WritableSignal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
-import { of, EMPTY } from 'rxjs';
+import { of, EMPTY, throwError } from 'rxjs';
 
 import { ForgotPasswordDialog } from './forgot-password.dialog';
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { ForgotPasswordRequest } from '../../../../models/auth/forgot-password-request.model';
+import { Tenant } from '../../../../models/tenant/tenant.model';
+import { ApiError } from '../../../../models/api-error.model';
 
 describe('ForgotPasswordDialog', () => {
   let component: ForgotPasswordDialog;
@@ -22,17 +24,23 @@ describe('ForgotPasswordDialog', () => {
     error: ReturnType<WritableSignal<string | null>['asReadonly']>;
   };
 
-  const dialogRefMock = { close: vi.fn() };
+  let dialogRefMock: { close: ReturnType<typeof vi.fn> };
+  let tenantServiceMock: { getAllTenants: ReturnType<typeof vi.fn> };
 
-  const tenantServiceMock = {
-    retrieveTenants: vi.fn(),
-    tenantList: signal([]).asReadonly(),
-  };
+  const mockTenants: Tenant[] = [
+    { id: 'tenant-01', name: 'Tenant 1', canImpersonate: false },
+    { id: 'tenant-02', name: 'Tenant 2', canImpersonate: true },
+  ];
 
   beforeEach(async () => {
     vi.resetAllMocks();
     errorSignal = signal<string | null>(null);
     loadingSignal = signal(false);
+
+    dialogRefMock = { close: vi.fn() };
+    tenantServiceMock = {
+      getAllTenants: vi.fn().mockReturnValue(of(mockTenants)),
+    };
 
     authActionsServiceMock = {
       forgotPassword: vi.fn(),
@@ -83,9 +91,12 @@ describe('ForgotPasswordDialog', () => {
       expect(fixture.debugElement.query(By.css('.error-banner'))).toBeFalsy();
     });
 
-    it('should call retrieveTenants on init', () => {
-      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalled();
+    it('should call getAllTenants on init and populate displayedTenants', () => {
+      expect(tenantServiceMock.getAllTenants).toHaveBeenCalled();
+      expect(component['displayedTenants']()).toEqual(mockTenants);
+      expect(component['tenantLoadingError']()).toBeNull();
     });
+
   });
 
   describe('loading state', () => {
@@ -225,5 +236,40 @@ describe('ForgotPasswordDialog', () => {
       component['forgotPasswordForm'].controls.email.setValue('b');
       expect(authActionsServiceMock.clearMessages).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('ForgotPasswordDialog - getAllTenants error', () => {
+  it.each([
+    [{ status: 500, message: 'Server error' } as ApiError, 'Server error'],
+    [{ status: 500 } as ApiError, 'Failed to fetch tenants'],
+  ])('should set tenantLoadingError when getAllTenants fails', async (error, expected) => {
+    const errorSignalLocal = signal<string | null>(null);
+    const loadingSignalLocal = signal(false);
+    const errorAuthActionsServiceMock = {
+      forgotPassword: vi.fn(),
+      clearMessages: vi.fn(),
+      loading: loadingSignalLocal.asReadonly(),
+      error: errorSignalLocal.asReadonly(),
+    };
+    const errorDialogRefMock = { close: vi.fn() };
+    const errorTenantServiceMock = { getAllTenants: vi.fn().mockReturnValue(throwError(() => error)) };
+
+    await TestBed.configureTestingModule({
+      imports: [ForgotPasswordDialog, ReactiveFormsModule],
+      providers: [
+        { provide: AuthActionsService, useValue: errorAuthActionsServiceMock },
+        { provide: MatDialogRef, useValue: errorDialogRefMock },
+        { provide: TenantService, useValue: errorTenantServiceMock },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
+
+    const errorFixture = TestBed.createComponent(ForgotPasswordDialog);
+    const errorComponent = errorFixture.componentInstance;
+    errorFixture.detectChanges();
+
+    expect(errorComponent['tenantLoadingError']()).toBe(expected);
+    expect(errorComponent['displayedTenants']()).toEqual([]);
   });
 });

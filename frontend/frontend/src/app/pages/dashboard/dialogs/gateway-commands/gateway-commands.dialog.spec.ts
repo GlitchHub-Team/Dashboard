@@ -3,43 +3,53 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
-import { signal } from '@angular/core';
 
 import { GatewayCommandsDialog } from './gateway-commands.dialog';
 import { GatewayService } from '../../../../services/gateway/gateway.service';
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { GatewayStatus } from '../../../../models/gateway-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
+import { Tenant } from '../../../../models/tenant/tenant.model';
 
 // Mappa tipo di comando agli args che il form ritorna
 const COMMAND_CASES: [
   string,
-  'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway',
+  'commissionGateway' | 'decommissionGateway' | 'resetGateway' | 'rebootGateway' | 'interruptGateway' | 'resumeGateway',
   string[],
 ][] = [
   ['commission', 'commissionGateway', ['gw-1', 'tenant-1', 'commission-token']],
   ['decommission', 'decommissionGateway', ['gw-1']],
   ['reset', 'resetGateway', ['gw-1']],
   ['reboot', 'rebootGateway', ['gw-1']],
+  ['interrupt', 'interruptGateway', ['gw-1']],
+  ['resume', 'resumeGateway', ['gw-1']],
 ];
 
 describe('GatewayCommandsDialog (Unit)', () => {
   let fixture: ComponentFixture<GatewayCommandsDialog>;
   let component: GatewayCommandsDialog;
   let dialogRefMock: { close: ReturnType<typeof vi.fn> };
+  let tenantServiceMock: { getAllTenants: ReturnType<typeof vi.fn> };
   let gatewayServiceMock: {
     commissionGateway: ReturnType<typeof vi.fn>;
     decommissionGateway: ReturnType<typeof vi.fn>;
     resetGateway: ReturnType<typeof vi.fn>;
     rebootGateway: ReturnType<typeof vi.fn>;
+    interruptGateway: ReturnType<typeof vi.fn>;
+    resumeGateway: ReturnType<typeof vi.fn>;
   };
+
+  const mockTenants: Tenant[] = [
+    { id: 'tenant-01', name: 'Tenant 1', canImpersonate: false },
+    { id: 'tenant-02', name: 'Tenant 2', canImpersonate: true },
+  ];
 
   const mockGateway: Gateway = {
     id: 'gw-1',
     tenantId: undefined,
     name: 'Main Lobby Gateway',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   };
 
@@ -62,16 +72,14 @@ describe('GatewayCommandsDialog (Unit)', () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     dialogRefMock = { close: vi.fn() };
+    tenantServiceMock = { getAllTenants: vi.fn().mockReturnValue(of(mockTenants)) };
     gatewayServiceMock = {
       commissionGateway: vi.fn(),
       decommissionGateway: vi.fn(),
       resetGateway: vi.fn(),
       rebootGateway: vi.fn(),
-    };
-
-    const tenantServiceMock = {
-      tenantList: signal([]),
-      retrieveTenants: vi.fn(),
+      interruptGateway: vi.fn(),
+      resumeGateway: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -87,6 +95,13 @@ describe('GatewayCommandsDialog (Unit)', () => {
     fixture = TestBed.createComponent(GatewayCommandsDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  describe('ngOnInit', () => {
+    it('should call getAllTenants and populate displayedTenants signal', () => {
+      expect(component['displayedTenants']()).toEqual(mockTenants);
+    });
+
   });
 
   describe('initial state', () => {
@@ -125,6 +140,27 @@ describe('GatewayCommandsDialog (Unit)', () => {
       for (const [, method] of COMMAND_CASES) {
         expect(gatewayServiceMock[method]).not.toHaveBeenCalled();
       }
+    });
+  });
+
+  describe('commands getter', () => {
+    it('should return commission/reset/reboot for DECOMMISSIONED gateway in manage mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], gateway: { ...mockGateway, status: GatewayStatus.DECOMMISSIONED } };
+      expect(component['commands'].map((c) => c.value)).toEqual(['commission', 'reset', 'reboot']);
+    });
+
+    it('should return decommission/reset/reboot/interrupt for ACTIVE gateway in manage mode', () => {
+      expect(component['commands'].map((c) => c.value)).toEqual(['decommission', 'reset', 'reboot', 'interrupt']);
+    });
+
+    it('should return decommission/reset/reboot/resume for INACTIVE gateway in manage mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], gateway: { ...mockGateway, status: GatewayStatus.INACTIVE } };
+      expect(component['commands'].map((c) => c.value)).toEqual(['decommission', 'reset', 'reboot', 'resume']);
+    });
+
+    it('should return reset/reboot in dashboard mode regardless of status', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], mode: 'dashboard' };
+      expect(component['commands'].map((c) => c.value)).toEqual(['reset', 'reboot']);
     });
   });
 
@@ -168,5 +204,48 @@ describe('GatewayCommandsDialog (Unit)', () => {
       sendBtn().nativeElement.click();
       expect(component['generalError']()).toBe('Failed to send command');
     });
+  });
+});
+
+describe('GatewayCommandsDialog - getAllTenants error', () => {
+  const mockGatewayForError: Gateway = {
+    id: 'gw-1',
+    tenantId: undefined,
+    name: 'Main Lobby Gateway',
+    status: GatewayStatus.ACTIVE,
+    interval: 60,
+  };
+
+  it.each([
+    [{ status: 500, message: 'Server error' } as ApiError, 'Server error'],
+    [{ status: 500 } as ApiError, 'Failed to fetch tenants'],
+  ])('should set generalError when getAllTenants fails', async (error, expected) => {
+    const errorTenantServiceMock = { getAllTenants: vi.fn().mockReturnValue(throwError(() => error)) };
+    const errorDialogRefMock = { close: vi.fn() };
+    const errorGatewayServiceMock = {
+      commissionGateway: vi.fn(),
+      decommissionGateway: vi.fn(),
+      resetGateway: vi.fn(),
+      rebootGateway: vi.fn(),
+      interruptGateway: vi.fn(),
+      resumeGateway: vi.fn(),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [GatewayCommandsDialog],
+      providers: [
+        { provide: MatDialogRef, useValue: errorDialogRefMock },
+        { provide: MAT_DIALOG_DATA, useValue: { gateway: mockGatewayForError, mode: 'manage' } },
+        { provide: GatewayService, useValue: errorGatewayServiceMock },
+        { provide: TenantService, useValue: errorTenantServiceMock },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(GatewayCommandsDialog);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component['generalError']()).toBe(expected);
+    expect(component['displayedTenants']()).toEqual([]);
   });
 });

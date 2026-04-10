@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SensorApiAdapter } from './sensor-api.adapter';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 
 describe('SensorApiAdapter', () => {
@@ -21,7 +21,7 @@ describe('SensorApiAdapter', () => {
       { field: 'id', expected: 'sensor-1' },
       { field: 'gatewayId', expected: 'gw-1' },
       { field: 'name', expected: 'Heart Rate Sensor' },
-      { field: 'status', expected: Status.ACTIVE },
+      { field: 'status', expected: SensorStatus.ACTIVE },
       { field: 'profile', expected: SensorProfiles.HEART_RATE_SERVICE },
       { field: 'dataInterval', expected: 1000 },
     ] as const)('should map $field correctly', ({ field, expected }) => {
@@ -53,7 +53,7 @@ describe('SensorApiAdapter', () => {
       expect(result.total).toBe(10);
       expect(result.sensors).toHaveLength(2);
       expect(result.sensors[0].id).toBe('sensor-1');
-      expect(result.sensors[1].status).toBe(Status.INACTIVE);
+      expect(result.sensors[1].status).toBe(SensorStatus.INACTIVE);
     });
 
     it('should handle empty array', () => {

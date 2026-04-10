@@ -1,10 +1,10 @@
-import { Status } from '../gateway-sensor-status.enum';
+import { GatewayStatus } from '../gateway-status.enum';
 
 export interface Gateway {
   id: string;
   tenantId?: string;
   name: string;
-  status: Status;
+  status: GatewayStatus;
   interval: number;
   publicIdentifier?: string;
 }

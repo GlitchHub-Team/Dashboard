@@ -14,6 +14,7 @@ import { UserAdapter } from './adapters/user/user.adapter';
 import { UserApiAdapter } from './adapters/user/user-api.adapter';
 import { TenantApiAdapter } from './adapters/tenant/tenant-api.adapter';
 import { TenantAdapter } from './adapters/tenant/tenant.adapter';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
@@ -24,5 +25,5 @@ export const appConfig: ApplicationConfig = {
     { provide: SensorAdapter, useClass: SensorApiAdapter },
     { provide: UserAdapter, useClass: UserApiAdapter },
     { provide: TenantAdapter, useClass: TenantApiAdapter },
-],
+  ],
 };

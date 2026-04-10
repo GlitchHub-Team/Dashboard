@@ -9,7 +9,8 @@ import { GatewayTableComponent } from './gateway-table.component';
 import { GatewayExpandedComponent } from '../gateway-expanded/gateway-expanded.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
+import { GatewayStatus } from '../../../../models/gateway-status.enum';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
@@ -39,7 +40,7 @@ describe('GatewayTableComponent (Unit)', () => {
       id: 'gw-1',
       tenantId: 'tenant-1',
       name: 'Gateway Alpha',
-      status: Status.ACTIVE,
+      status: GatewayStatus.ACTIVE,
       interval: 60,
       publicIdentifier: 'pk-gw-1',
     },
@@ -47,7 +48,7 @@ describe('GatewayTableComponent (Unit)', () => {
       id: 'gw-2',
       tenantId: undefined,
       name: 'Gateway Beta',
-      status: Status.INACTIVE,
+      status: GatewayStatus.INACTIVE,
       interval: 120,
     },
   ];
@@ -58,7 +59,7 @@ describe('GatewayTableComponent (Unit)', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-      status: Status.ACTIVE,
+      status: SensorStatus.ACTIVE,
       dataInterval: 60,
     },
   ];

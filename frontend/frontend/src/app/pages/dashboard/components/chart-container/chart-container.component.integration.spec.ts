@@ -12,7 +12,7 @@ import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorReading } from '../../../../models/sensor-data/sensor-reading.model';
 import { FieldDescriptor } from '../../../../models/sensor-data/field-descriptor.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
@@ -22,7 +22,7 @@ const mockSensor: Sensor = {
   gatewayId: 'gw-1',
   name: 'Temperature',
   profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-  status: Status.ACTIVE,
+  status: SensorStatus.ACTIVE,
   dataInterval: 30,
 };
 

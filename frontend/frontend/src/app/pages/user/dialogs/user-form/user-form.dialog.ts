@@ -14,6 +14,7 @@ import { TenantService } from '../../../../services/tenant/tenant.service';
 import { UserConfig } from '../../../../models/user/user-config.model';
 import { UserService } from '../../../../services/user/user.service';
 import { ApiError } from '../../../../models/api-error.model';
+import { Tenant } from '../../../../models/tenant/tenant.model';
 
 export interface UserFormDialogData {
   role: UserRole;
@@ -44,7 +45,7 @@ export class UserFormDialogComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly data = inject<UserFormDialogData>(MAT_DIALOG_DATA);
-  protected readonly tenantList = this.tenantService.tenantList;
+  protected readonly tenantList = signal<Tenant[]>([]);
   protected readonly UserRole = UserRole;
 
   // Indica se sto creando Tenant Admin?
@@ -76,7 +77,10 @@ export class UserFormDialogComponent {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((tenant) => this.lockedTenantName.set(tenant.name));
       } else {
-        this.tenantService.retrieveTenants(true);
+        this.tenantService.getAllTenants().subscribe({
+          next: (tenants) => this.tenantList.set(tenants),
+          error: (err: ApiError) => this.generalError.set(err.message ?? 'Failed to fetch tenants'),
+        });
       }
     }
   }

@@ -37,8 +37,7 @@ describe('UserManagerPage', () => {
   let activatedRouteMock: { data: Observable<unknown>; queryParams: Observable<unknown> };
   let tenantServiceMock: {
     getTenant: ReturnType<typeof vi.fn>;
-    retrieveTenants: ReturnType<typeof vi.fn>;
-    tenantList: WritableSignal<Tenant[]>;
+    getAllTenants: ReturnType<typeof vi.fn>;
   };
 
   const routeContext = {
@@ -93,8 +92,7 @@ describe('UserManagerPage', () => {
 
     tenantServiceMock = {
       getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: true })),
-      retrieveTenants: vi.fn(),
-      tenantList: signal<Tenant[]>([]),
+      getAllTenants: vi.fn().mockReturnValue(of([])),
     };
 
     await TestBed.configureTestingModule({
@@ -156,7 +154,7 @@ describe('UserManagerPage', () => {
       fixture.detectChanges();
 
       expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('tenant-from-url');
-      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledWith(true);
+      expect(tenantServiceMock.getAllTenants).toHaveBeenCalled();
       const expectedContext = { ...routeContext, tenantId: 'tenant-from-url' };
       expect((component as any).context()).toEqual(expectedContext);
       expect(userServiceMock.retrieveUsers).toHaveBeenCalledWith(
@@ -189,7 +187,7 @@ describe('UserManagerPage', () => {
       createComponent();
       fixture.detectChanges();
 
-      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledWith(true);
+      expect(tenantServiceMock.getAllTenants).toHaveBeenCalled();
       const expectedContext = { ...routeContext, tenantId: undefined };
       expect((component as any).context()).toEqual(expectedContext);
       expect(userServiceMock.retrieveUsers).not.toHaveBeenCalled();

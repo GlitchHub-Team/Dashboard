@@ -13,7 +13,7 @@ import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { SensorReading } from '../../../../models/sensor-data/sensor-reading.model';
 import { FieldDescriptor } from '../../../../models/sensor-data/field-descriptor.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 
 @Component({ selector: 'app-historic-chart', template: '', standalone: true })
 class StubHistoricChart {
@@ -48,7 +48,7 @@ describe('ChartContainerComponent (Unit)', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 1000,
   };
 

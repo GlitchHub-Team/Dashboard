@@ -76,6 +76,20 @@ describe('TenantApiClientService', () => {
     });
   });
 
+  describe('getAllTenants', () => {
+    it('should send GET request to fetch all tenants', () => {
+      const allTenants = paginatedTenantResponse.tenants;
+
+      service.getAllTenants().subscribe((tenants) => {
+        expect(tenants).toEqual(allTenants);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/all_tenants`);
+      expect(req.request.method).toBe('GET');
+      req.flush(allTenants);
+    });
+  });
+
   describe('createTenant', () => {
     it('should send POST request with tenant config as body', () => {
       service.createTenant(tenantConfig).subscribe((tenant) => {

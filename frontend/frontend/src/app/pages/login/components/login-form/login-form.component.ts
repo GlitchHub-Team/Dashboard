@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,6 +9,8 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { LoginRequest } from '../../../../models/auth/login-request.model';
 import { TenantService } from '../../../../services/tenant/tenant.service';
+import { Tenant } from '../../../../models/tenant/tenant.model';
+import { ApiError } from '../../../../models/api-error.model';
 
 @Component({
   selector: 'app-login-form',
@@ -36,7 +38,8 @@ export class LoginFormComponent {
   public forgotPassword = output<void>();
   public dismissError = output<void>();
 
-  protected readonly displayedTenants = this.tenantService.tenantList;
+  protected readonly displayedTenants = signal<Tenant[]>([]);
+  protected readonly tenantLoadingError = signal<string | null>(null);
 
   protected loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -45,7 +48,10 @@ export class LoginFormComponent {
   });
 
   constructor() {
-    this.tenantService.retrieveTenants(true);
+    this.tenantService.getAllTenants().subscribe({
+      next: (tenants) => this.displayedTenants.set(tenants),
+      error: (err: ApiError) => this.tenantLoadingError.set(err.message ?? 'Failed to fetch tenants'),
+    });
   }
 
   protected onSubmit(): void {

@@ -32,8 +32,7 @@ function setupTestBed() {
   const routerMock = { navigate: vi.fn() };
   const dialogMock = { open: vi.fn() };
   const tenantServiceMock = {
-    retrieveTenants: vi.fn(),
-    tenantList: signal<Tenant[]>(mockTenants),
+    getAllTenants: vi.fn().mockReturnValue(of(mockTenants)),
   };
 
   TestBed.configureTestingModule({
@@ -97,11 +96,11 @@ describe('LoginPage (Integration)', () => {
       expect(fixture.nativeElement.querySelector('.error-banner')).toBeFalsy();
     });
 
-    it('should call retrieveTenants on init', () => {
+    it('should call getAllTenants on init', () => {
       const { fixture, tenantServiceMock } = setupTestBed();
       fixture.detectChanges();
 
-      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalled();
+      expect(tenantServiceMock.getAllTenants).toHaveBeenCalled();
     });
   });
 

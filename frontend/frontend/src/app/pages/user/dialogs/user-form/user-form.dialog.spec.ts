@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal, WritableSignal } from '@angular/core';
+import { WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
@@ -9,6 +9,7 @@ import { UserFormDialogComponent, UserFormDialogData } from './user-form.dialog'
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { UserService } from '../../../../services/user/user.service';
 import { UserRole } from '../../../../models/user/user-role.enum';
+import { Tenant } from '../../../../models/tenant/tenant.model';
 import { ApiError } from '../../../../models/api-error.model';
 
 interface UserFormDialogTestApi {
@@ -16,6 +17,7 @@ interface UserFormDialogTestApi {
   isSubmitting: WritableSignal<boolean>;
   generalError: WritableSignal<string>;
   lockedTenantName: WritableSignal<string | null>;
+  tenantList: WritableSignal<Tenant[]>;
   isTenantIdLocked: boolean;
   onSave: () => void;
   onCancel: () => void;
@@ -29,9 +31,8 @@ describe('UserFormDialogComponent', () => {
 
   let dialogRefMock: { close: ReturnType<typeof vi.fn> };
   let tenantServiceMock: {
-    retrieveTenants: ReturnType<typeof vi.fn>;
+    getAllTenants: ReturnType<typeof vi.fn>;
     getTenant: ReturnType<typeof vi.fn>;
-    tenantList: ReturnType<ReturnType<typeof signal>['asReadonly']>;
   };
   let userServiceMock: { addNewUser: ReturnType<typeof vi.fn> };
 
@@ -61,9 +62,8 @@ describe('UserFormDialogComponent', () => {
     vi.clearAllMocks();
     dialogRefMock = { close: vi.fn() };
     tenantServiceMock = {
-      retrieveTenants: vi.fn(),
+      getAllTenants: vi.fn().mockReturnValue(of(tenantList)),
       getTenant: vi.fn().mockReturnValue(of({ id: 'tenant-1', name: 'Tenant One', canImpersonate: true })),
-      tenantList: signal(tenantList).asReadonly(),
     };
     userServiceMock = { addNewUser: vi.fn() };
   });
@@ -81,9 +81,20 @@ describe('UserFormDialogComponent', () => {
     it.each([
       [UserRole.TENANT_USER, 0],
       [UserRole.TENANT_ADMIN, 1],
-    ])('should call retrieveTenants %i time(s) for role %s when no tenantId provided', async (role, expectedCalls) => {
+    ])('should call getAllTenants %i time(s) for role %s when no tenantId provided', async (role, expectedCalls) => {
       await createComponent({ role });
-      expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledTimes(expectedCalls);
+      expect(tenantServiceMock.getAllTenants).toHaveBeenCalledTimes(expectedCalls);
+    });
+
+    it.each([
+      [{ status: 500, message: 'Server error' } as ApiError, 'Server error'],
+      [{ status: 500 } as ApiError, 'Failed to fetch tenants'],
+    ])('should set generalError when getAllTenants fails for TENANT_ADMIN', async (error, expected) => {
+      tenantServiceMock.getAllTenants.mockReturnValue(throwError(() => error));
+      await createComponent({ role: UserRole.TENANT_ADMIN });
+
+      expect(testApi.generalError()).toBe(expected);
+      expect(testApi.tenantList()).toEqual([]);
     });
 
     describe('locked tenantId (TENANT_ADMIN with tenantId pre-set)', () => {
@@ -91,7 +102,7 @@ describe('UserFormDialogComponent', () => {
         await createComponent({ role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' });
 
         expect(testApi.form.controls.tenantId.value).toBe('tenant-1');
-        expect(tenantServiceMock.retrieveTenants).not.toHaveBeenCalled();
+        expect(tenantServiceMock.getAllTenants).not.toHaveBeenCalled();
       });
 
       it('should call getTenant to resolve the tenant name', async () => {
