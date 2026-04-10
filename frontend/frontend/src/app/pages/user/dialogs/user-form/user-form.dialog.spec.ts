@@ -15,6 +15,8 @@ interface UserFormDialogTestApi {
   form: UserFormDialogComponent['form'];
   isSubmitting: WritableSignal<boolean>;
   generalError: WritableSignal<string>;
+  lockedTenantName: WritableSignal<string | null>;
+  isTenantIdLocked: boolean;
   onSave: () => void;
   onCancel: () => void;
   dismissError: () => void;
@@ -28,6 +30,7 @@ describe('UserFormDialogComponent', () => {
   let dialogRefMock: { close: ReturnType<typeof vi.fn> };
   let tenantServiceMock: {
     retrieveTenants: ReturnType<typeof vi.fn>;
+    getTenant: ReturnType<typeof vi.fn>;
     tenantList: ReturnType<ReturnType<typeof signal>['asReadonly']>;
   };
   let userServiceMock: { addNewUser: ReturnType<typeof vi.fn> };
@@ -59,6 +62,7 @@ describe('UserFormDialogComponent', () => {
     dialogRefMock = { close: vi.fn() };
     tenantServiceMock = {
       retrieveTenants: vi.fn(),
+      getTenant: vi.fn().mockReturnValue(of({ id: 'tenant-1', name: 'Tenant One', canImpersonate: true })),
       tenantList: signal(tenantList).asReadonly(),
     };
     userServiceMock = { addNewUser: vi.fn() };
@@ -77,9 +81,37 @@ describe('UserFormDialogComponent', () => {
     it.each([
       [UserRole.TENANT_USER, 0],
       [UserRole.TENANT_ADMIN, 1],
-    ])('should call retrieveTenants %i time(s) for role %s', async (role, expectedCalls) => {
+    ])('should call retrieveTenants %i time(s) for role %s when no tenantId provided', async (role, expectedCalls) => {
       await createComponent({ role });
       expect(tenantServiceMock.retrieveTenants).toHaveBeenCalledTimes(expectedCalls);
+    });
+
+    describe('locked tenantId (TENANT_ADMIN with tenantId pre-set)', () => {
+      it('should pre-fill tenantId form control and NOT call retrieveTenants', async () => {
+        await createComponent({ role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' });
+
+        expect(testApi.form.controls.tenantId.value).toBe('tenant-1');
+        expect(tenantServiceMock.retrieveTenants).not.toHaveBeenCalled();
+      });
+
+      it('should call getTenant to resolve the tenant name', async () => {
+        await createComponent({ role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' });
+
+        expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('tenant-1');
+        expect(testApi.lockedTenantName()).toBe('Tenant One');
+      });
+
+      it('should expose isTenantIdLocked as true', async () => {
+        await createComponent({ role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' });
+
+        expect(testApi.isTenantIdLocked).toBe(true);
+      });
+
+      it('should expose isTenantIdLocked as false when tenantId is absent', async () => {
+        await createComponent({ role: UserRole.TENANT_ADMIN });
+
+        expect(testApi.isTenantIdLocked).toBe(false);
+      });
     });
   });
 
@@ -141,6 +173,12 @@ describe('UserFormDialogComponent', () => {
         data: { role: UserRole.TENANT_ADMIN } as UserFormDialogData,
         formValue: { username: 'admin', email: 'admin@example.com', tenantId: 'tenant-2' },
         expectedArgs: [{ username: 'admin', email: 'admin@example.com' }, UserRole.TENANT_ADMIN, 'tenant-2'],
+      },
+      {
+        label: 'TENANT_ADMIN: locked tenantId pre-filled from data',
+        data: { role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' } as UserFormDialogData,
+        formValue: { username: 'admin', email: 'admin@example.com', tenantId: 'tenant-1' },
+        expectedArgs: [{ username: 'admin', email: 'admin@example.com' }, UserRole.TENANT_ADMIN, 'tenant-1'],
       },
     ])('should call service with correct config and close dialog ($label)', async ({ data, formValue, expectedArgs }) => {
       await createComponent(data);
@@ -211,7 +249,7 @@ describe('UserFormDialogComponent', () => {
     it.each([
       [UserRole.TENANT_USER, false],
       [UserRole.TENANT_ADMIN, true],
-    ])('should render tenant select: %s for role %s', async (role, shouldRender) => {
+    ])('should render tenant select: %s for role %s when no tenantId provided', async (role, shouldRender) => {
       await createComponent({ role });
       const select = fixture.debugElement.query(By.css('mat-select[formControlName="tenantId"]'));
       if (shouldRender) {
@@ -219,6 +257,23 @@ describe('UserFormDialogComponent', () => {
       } else {
         expect(select).toBeNull();
       }
+    });
+
+    it('should render a disabled input (not mat-select) when tenantId is locked', async () => {
+      await createComponent({ role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' });
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('mat-select[formControlName="tenantId"]'))).toBeNull();
+      const disabledInput = fixture.debugElement.query(By.css('input[disabled]'));
+      expect(disabledInput).toBeTruthy();
+    });
+
+    it('should show tenant name in locked input once resolved', async () => {
+      await createComponent({ role: UserRole.TENANT_ADMIN, tenantId: 'tenant-1' });
+      fixture.detectChanges();
+
+      const disabledInput: HTMLInputElement = fixture.debugElement.query(By.css('input[disabled]')).nativeElement;
+      expect(disabledInput.value).toBe('Tenant One');
     });
 
     it('should render add title', async () => {

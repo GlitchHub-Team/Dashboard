@@ -1,6 +1,9 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
 import { PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { combineLatest } from 'rxjs';
@@ -16,6 +19,7 @@ import { ConfirmDeleteDialog } from '../shared/dialogs/confirm-delete/confirm-de
 import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
+import { TenantService } from '../../services/tenant/tenant.service';
 
 interface UserManagerContext {
   title: string;
@@ -26,12 +30,13 @@ interface UserManagerContext {
 @Component({
   selector: 'app-user-manager-page',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule],
+  imports: [MatButtonModule, MatDialogModule, UserTableComponent, MatIconModule, MatFormFieldModule, MatSelectModule, MatTabsModule],
   templateUrl: './user-manager.page.html',
   styleUrl: './user-manager.page.css',
 })
 export class UserManagerPage implements OnInit {
   private readonly userService = inject(UserService);
+  private readonly tenantService = inject(TenantService);
   private readonly userSession = inject(UserSessionService);
   private readonly dialog = inject(MatDialog);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -50,6 +55,7 @@ export class UserManagerPage implements OnInit {
   protected readonly limit = this.userService.limit;
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
+  protected readonly tenants = this.tenantService.tenantList;
 
   private readonly _dismissedError = signal<string | null>(null);
 
@@ -64,7 +70,17 @@ export class UserManagerPage implements OnInit {
 
   protected readonly UserRole = UserRole;
   protected readonly currentRole = this.userSession.currentUser()!.role;
+  protected readonly currentUserId = this.userSession.currentUser()!.userId;
   protected readonly activeTenantId = signal<string | null>(null);
+  protected readonly activeTabIndex = signal<number>(0);
+
+  protected readonly showMemberTabs = computed(
+    () => this.currentRole === UserRole.TENANT_ADMIN,
+  );
+
+  protected readonly pageTitle = computed(() =>
+    this.showMemberTabs() ? 'Gestione Utenti' : this.context().title,
+  );
 
   public ngOnInit(): void {
     combineLatest([this.activatedRoute.data, this.activatedRoute.queryParams]).subscribe(
@@ -74,15 +90,31 @@ export class UserManagerPage implements OnInit {
         const currentUserRole = this.currentRole;
         const currentUserTenant = this.userSession.currentUser()?.tenantId;
 
+        if (urlTenantId) {
+          this.tenantService.getTenant(urlTenantId).subscribe((tenant) => {
+            if (!tenant.canImpersonate) {
+              this.router.navigate(['/user-management/tenant-users']);
+              return;
+            }
+          });
+        }
+
         const resolvedTenantId =
           currentUserRole === UserRole.SUPER_ADMIN
             ? urlTenantId || null
             : currentUserTenant || null;
 
+        this.activeTabIndex.set(0);
         this.activeTenantId.set(resolvedTenantId);
         this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
 
-        if (resolvedTenantId || baseContext.role !== UserRole.TENANT_USER) {
+        if (currentUserRole === UserRole.SUPER_ADMIN && baseContext.role === UserRole.TENANT_ADMIN) {
+          this.tenantService.retrieveTenants(true);
+        }
+
+        const needsTenantId =
+          baseContext.role === UserRole.TENANT_USER || baseContext.role === UserRole.TENANT_ADMIN;
+        if (!needsTenantId || resolvedTenantId) {
           this.refreshUsers();
         }
       },
@@ -137,6 +169,19 @@ export class UserManagerPage implements OnInit {
 
   protected onBackToTenants(): void {
     this.router.navigate(['/tenant-management']);
+  }
+
+  protected onTenantSelected(tenantId: string): void {
+    this.activeTenantId.set(tenantId);
+    this.context.update((ctx) => ({ ...ctx, tenantId }));
+    this.refreshUsers();
+  }
+
+  protected onTabChange(index: number): void {
+    this.activeTabIndex.set(index);
+    const role = index === 0 ? UserRole.TENANT_USER : UserRole.TENANT_ADMIN;
+    this.context.update((ctx) => ({ ...ctx, role }));
+    this.refreshUsers();
   }
 
   protected onBackToDashboard(): void {

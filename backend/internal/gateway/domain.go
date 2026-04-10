@@ -7,8 +7,11 @@ import (
 type GatewayStatus string
 
 const (
-	GATEWAY_STATUS_ACTIVE   GatewayStatus = "active"
-	GATEWAY_STATUS_INACTIVE GatewayStatus = "inactive"
+	GATEWAY_STATUS_ACTIVE         GatewayStatus = "active"
+	GATEWAY_STATUS_INACTIVE       GatewayStatus = "inactive"
+	GATEWAY_STATUS_COMMISSIONED   GatewayStatus = "commissioned"
+	GATEWAY_STATUS_DECOMMISSIONED GatewayStatus = "decommissioned"
+	GATEWAY_STATUS_INTERRUPTED    GatewayStatus = "interrupted"
 )
 
 type Gateway struct {
@@ -18,6 +21,7 @@ type Gateway struct {
 	// Sensors	map[uuid.UUID]sensor.Sensor
 	Status           GatewayStatus
 	IntervalLimit    int64
+	SigningSecret    string
 	PublicIdentifier string
 }
 

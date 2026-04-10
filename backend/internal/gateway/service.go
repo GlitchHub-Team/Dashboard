@@ -1,6 +1,9 @@
 package gateway
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+
 	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
@@ -9,72 +12,36 @@ import (
 
 // Use Cases ------------------------------------------------------------------------------------------
 
-type CreateGatewayPort interface {
-	CreateGateway(command CreateGatewayCommand) (Gateway, error)
+type GatewayManagementService struct {
+	log               *zap.Logger
+	saveGatewayPort   SaveGatewayPort
+	removeGatewayPort RemoveGatewayPort
+	getGatewayPort    GetGatewayPort
+	getGatewaysPort   GetGatewaysPort
 }
 
-type DeleteGatewayPort interface {
-	DeleteGateway(command DeleteGatewayCommand) error
-}
-
-type GetGatewaysPort interface {
-	GetByTenantId(tenantId string) ([]Gateway, error)
-	GetAll() ([]Gateway, error)
-}
-
-type GetAllGateways interface {
-	GetAllGateways() ([]Gateway, error)
-}
-
-//  Costruttore Globale -------------------------------------------------------------------------------
-
-func NewCreateGatewayService(log *zap.Logger, saveGatewayPort SaveGatewayPort) *CreateGatewayService {
-	return &CreateGatewayService{log: log, saveGatewayPort: saveGatewayPort}
-}
-
-func NewDeleteGatewayService(removeGatewayPort RemoveGatewayPort) *DeleteGatewayService {
-	return &DeleteGatewayService{removeGatewayPort: removeGatewayPort}
-}
-
-func NewGetGatewayService(getGatewayPort GetGatewayPort) *GetGatewayService {
-	return &GetGatewayService{getGatewayPort: getGatewayPort}
-}
-
-func NewGetAllGatewaysService(getGatewaysPort GetGatewaysPort) *GetGatewayListService {
-	return &GetGatewayListService{getGatewaysPort: getGatewaysPort}
-}
-
-func NewGetGatewaysByTenantService(getGatewaysPort GetGatewaysPort) *GetGatewaysByTenantService {
-	return &GetGatewaysByTenantService{getGatewaysPort: getGatewaysPort}
-}
-
-func NewGatewayServices(
+func NewGatewayManagementService(
 	log *zap.Logger,
-	saveGatewayPort SaveGatewayPort,
-	removeGatewayPort RemoveGatewayPort,
-	getGatewayPort GetGatewayPort,
-	getGatewaysPort GetGatewaysPort,
-) (
-	CreateGatewayUseCase,
-	DeleteGatewayUseCase,
-	GetGatewayUseCase,
-	GetAllGateways,
-	GetGatewaysByTenantUseCase,
-) {
-	createSvc := &CreateGatewayService{log: log, saveGatewayPort: saveGatewayPort}
-	deleteSvc := &DeleteGatewayService{removeGatewayPort: removeGatewayPort}
-	getSvc := &GetGatewayService{getGatewayPort: getGatewayPort}
-	getListSvc := &GetGatewayListService{getGatewaysPort: getGatewaysPort}
-	getByTenantSvc := &GetGatewaysByTenantService{getGatewaysPort: getGatewaysPort}
-
-	return createSvc, deleteSvc, getSvc, getListSvc, getByTenantSvc
+	savePort SaveGatewayPort,
+	removePort RemoveGatewayPort,
+	getPort GetGatewayPort,
+	getManyPort GetGatewaysPort,
+) *GatewayManagementService {
+	return &GatewayManagementService{
+		log:               log,
+		saveGatewayPort:   savePort,
+		removeGatewayPort: removePort,
+		getGatewayPort:    getPort,
+		getGatewaysPort:   getManyPort,
+	}
 }
 
-// CreateGatewayService -------------------------------------------------------------------------------
-
-type CreateGatewayService struct {
-	log             *zap.Logger
-	saveGatewayPort SaveGatewayPort
+func GenerateGatewaySecret() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 // TODO: perché non viene salvato l'interval limit???
@@ -83,30 +50,30 @@ func (s *CreateGatewayService) CreateGateway(command CreateGatewayCommand) (Gate
 		return Gateway{}, identity.ErrUnauthorizedAccess
 	}
 
-	s.log.Info("Created gateway with name " + command.Name)
-
-	gateway := Gateway{
-		Id:     uuid.New(),
-		Name:   command.Name,
-		Status: GATEWAY_STATUS_ACTIVE,
-	}
-
-	_, err := s.saveGatewayPort.Save(gateway)
+	secret, err := GenerateGatewaySecret()
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	// return gateway, nil
-	return Gateway{}, nil
+	s.log.Info("Created gateway with name " + command.Name)
+
+	gateway := Gateway{
+		Id:               uuid.New(),
+		Name:             command.Name,
+		Status:           GATEWAY_STATUS_ACTIVE,
+		PublicIdentifier: command.PublicIdentifier,
+		SigningSecret:    secret,
+	}
+
+	_, err = s.saveGatewayPort.Save(gateway)
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	return gateway, nil
 }
 
-// DeleteGatewayService -------------------------------------------------------------------------------
-
-type DeleteGatewayService struct {
-	removeGatewayPort RemoveGatewayPort
-}
-
-func (s *DeleteGatewayService) DeleteGateway(command DeleteGatewayCommand) (Gateway, error) {
+func (s *GatewayManagementService) DeleteGateway(command DeleteGatewayCommand) (Gateway, error) {
 	oldGateway, err := s.removeGatewayPort.Remove(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
@@ -119,20 +86,20 @@ func (s *DeleteGatewayService) DeleteGateway(command DeleteGatewayCommand) (Gate
 	return oldGateway, nil
 }
 
-type GetGatewayService struct {
-	getGatewayPort GetGatewayPort
+func (s *GatewayManagementService) GetGateway(command GetGatewayByIdCommand) (Gateway, error) {
+	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	if !command.IsSuperAdmin() && !gw.BelongsToTenant(*gw.TenantId) {
+		return Gateway{}, ErrUnauthorizedAccess
+	}
+
+	return gw, nil
 }
 
-func (s *GetGatewayService) GetGateway(command GetGatewayByIdCommand) (Gateway, error) {
-	return s.getGatewayPort.GetById(command.GatewayId.String())
-}
-
-// GetGatewayListService ------------------------------------------------------------------------------
-type GetGatewayListService struct {
-	getGatewaysPort GetGatewaysPort
-}
-
-func (s *GetGatewayListService) GetAllGateways() ([]Gateway, error) {
+func (s *GatewayManagementService) GetAllGateways() ([]Gateway, error) {
 	gat, err := s.getGatewaysPort.GetAll()
 	if err != nil {
 		return nil, err
@@ -145,12 +112,7 @@ func (s *GetGatewayListService) GetAllGateways() ([]Gateway, error) {
 	return gat, nil
 }
 
-// GetGatewaysByTenantService -------------------------------------------------------------------------
-type GetGatewaysByTenantService struct {
-	getGatewaysPort GetGatewaysPort
-}
-
-func (s *GetGatewaysByTenantService) GetGatewaysByTenant(command GetGatewaysByTenantCommand) ([]Gateway, error) {
+func (s *GatewayManagementService) GetGatewaysByTenant(command GetGatewaysByTenantCommand) ([]Gateway, error) {
 	if command.TenantId == uuid.Nil {
 		return nil, ErrGatewayNotFound
 	}
@@ -167,11 +129,6 @@ func (s *GetGatewaysByTenantService) GetGatewaysByTenant(command GetGatewaysByTe
 	return tenantGateways, nil
 }
 
-var (
-	_ CreateGatewayUseCase = (*CreateGatewayService)(nil)
-	_ DeleteGatewayUseCase = (*DeleteGatewayService)(nil)
-	_ GetGatewayUseCase    = (*GetGatewayService)(nil)
-	_ GetAllGateways       = (*GetGatewayListService)(nil)
-
-	_ GetGatewaysByTenantUseCase = (*GetGatewaysByTenantService)(nil)
-)
+func (s *GatewayManagementService) GetGatewayById(command GetGatewayByIdCommand) (Gateway, error) {
+	return s.getGatewayPort.GetById(command.GatewayId.String())
+}

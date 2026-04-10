@@ -52,20 +52,22 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef>Grafici</mat-header-cell>
       <mat-cell *matCellDef="let sensor">
-        <button
-          mat-icon-button
-          matTooltip="Historic Chart"
-          (click)="onViewChart(sensor, ChartType.HISTORIC)"
-        >
-          <mat-icon>query_stats</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          matTooltip="Real-time Chart"
-          (click)="onViewChart(sensor, ChartType.REALTIME)"
-        >
-          <mat-icon>ssid_chart</mat-icon>
-        </button>
+        @if (sensor.status !== Status.INACTIVE) {
+          <button
+            mat-icon-button
+            matTooltip="Historic Chart"
+            (click)="onViewChart(sensor, ChartType.HISTORIC)"
+          >
+            <mat-icon>query_stats</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            matTooltip="Real-time Chart"
+            (click)="onViewChart(sensor, ChartType.REALTIME)"
+          >
+            <mat-icon>ssid_chart</mat-icon>
+          </button>
+        }
       </mat-cell>
     </ng-container>
 

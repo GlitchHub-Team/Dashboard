@@ -47,6 +47,20 @@
   gap: 0.5rem;
 }
 
+.tenant-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tenant-select-field {
+  min-width: 280px;
+}
+
+.tab-switcher {
+  margin-bottom: -1rem;
+}
+
 .error-banner {
   display: flex;
   align-items: center;

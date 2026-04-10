@@ -14,6 +14,7 @@ import { ChartContainerComponent } from './components/chart-container/chart-cont
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
 import { SensorChartService } from '../../services/sensor-chart/sensor-chart.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { UserRole } from '../../models/user/user-role.enum';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
@@ -109,13 +110,16 @@ function createChartServiceMock() {
   };
 }
 
-function setupTestBed(options: { session: UserSession; queryParams?: Record<string, string> }) {
+function setupTestBed(options: { session: UserSession; queryParams?: Record<string, string>; canImpersonate?: boolean }) {
   const queryParamsSubject = new BehaviorSubject<Record<string, string>>(options.queryParams ?? {});
   const dashboardServiceMock = createDashboardServiceMock();
   const chartServiceMock = createChartServiceMock();
   const dialogMock = { open: vi.fn().mockReturnValue({ afterClosed: () => of(undefined) }) };
   const snackBarMock = { open: vi.fn() };
   const routerMock = { navigate: vi.fn() };
+  const tenantServiceMock = {
+    getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: options.canImpersonate ?? true })),
+  };
 
   TestBed.configureTestingModule({
     imports: [
@@ -130,6 +134,7 @@ function setupTestBed(options: { session: UserSession; queryParams?: Record<stri
       { provide: SensorChartService, useValue: chartServiceMock },
       { provide: Router, useValue: routerMock },
       { provide: ActivatedRoute, useValue: { queryParams: queryParamsSubject.asObservable() } },
+      { provide: TenantService, useValue: tenantServiceMock },
     ],
   })
     .overrideProvider(MatDialog, { useValue: dialogMock })
@@ -144,6 +149,7 @@ function setupTestBed(options: { session: UserSession; queryParams?: Record<stri
     snackBarMock,
     routerMock,
     queryParamsSubject,
+    tenantServiceMock,
   };
 }
 
@@ -184,13 +190,30 @@ describe('DashboardPage (Integration)', () => {
       ['with tenantId from queryParams', { tenantId: 'tenant-from-url' }, 'tenant-from-url'],
       ['without tenantId', {}, undefined],
     ] as const)('should call loadDashboard for SUPER_ADMIN %s', (_label, queryParams, expected) => {
-      const { fixture, dashboardServiceMock } = setupTestBed({
+      const { fixture, dashboardServiceMock, tenantServiceMock } = setupTestBed({
         session: superAdminSession,
         queryParams,
       });
       fixture.detectChanges();
 
+      if (expected) {
+        expect(tenantServiceMock.getTenant).toHaveBeenCalledWith(expected);
+      } else {
+        expect(tenantServiceMock.getTenant).not.toHaveBeenCalled();
+      }
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith(expected);
+    });
+
+    it('should navigate to /dashboard and not load when tenant canImpersonate is false', () => {
+      const { fixture, dashboardServiceMock, routerMock } = setupTestBed({
+        session: superAdminSession,
+        queryParams: { tenantId: 'restricted-tenant' },
+        canImpersonate: false,
+      });
+      fixture.detectChanges();
+
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
+      expect(dashboardServiceMock.loadDashboard).not.toHaveBeenCalled();
     });
 
     it('should call closeChart on destroy', () => {

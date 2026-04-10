@@ -48,7 +48,7 @@ export class TenantManagerPage implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.tenantService.retrieveTenants();
+    this.tenantService.retrieveTenants(false);
   }
 
   protected onCreateTenant(): void {
@@ -63,7 +63,7 @@ export class TenantManagerPage implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        this.tenantService.retrieveTenants();
+        this.tenantService.retrieveTenants(false);
         this.snackBar.open('Tenant creato con successo', 'Chiudi', { duration: 3000 });
       });
   }

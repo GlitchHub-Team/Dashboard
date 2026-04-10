@@ -9,7 +9,7 @@ import (
 // Create --------------------------------------------------------------------------
 type CreateTenantDTO struct {
 	dto.TenantNameField
-	CanImpersonate bool `json:"canimpersonate"`
+	CanImpersonate bool `json:"can_impersonate"`
 }
 
 // Delete --------------------------------------------------------------------------
@@ -35,7 +35,7 @@ type GetTenantByUserDTO struct {
 type TenantResponseDTO struct {
 	dto.TenantIdField
 	dto.TenantNameField
-	CanImpersonate bool `json:"canimpersonate"`
+	CanImpersonate bool `json:"can_impersonate"`
 }
 
 func NewTenantResponseDTO(tenant Tenant) TenantResponseDTO {

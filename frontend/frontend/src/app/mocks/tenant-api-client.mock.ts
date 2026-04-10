@@ -20,6 +20,12 @@ export class TenantApiClientMockService {
     { tenant_id: 'tenant-4', tenant_name: 'Tenant 4', can_impersonate: true },
     { tenant_id: 'tenant-5', tenant_name: 'Tenant 5', can_impersonate: false },
     { tenant_id: 'tenant-6', tenant_name: 'Tenant 6', can_impersonate: true },
+    { tenant_id: 'tenant-7', tenant_name: 'Tenant 7', can_impersonate: true },
+    { tenant_id: 'tenant-8', tenant_name: 'Tenant 8', can_impersonate: false },
+    { tenant_id: 'tenant-9', tenant_name: 'Tenant 9', can_impersonate: true },
+    { tenant_id: 'tenant-10', tenant_name: 'Tenant 10', can_impersonate: true },
+    { tenant_id: 'tenant-11', tenant_name: 'Tenant 11', can_impersonate: false },
+    { tenant_id: 'tenant-12', tenant_name: 'Tenant 12', can_impersonate: true },
   ];
 
   public getTenant(id: string): Observable<TenantBackend> {

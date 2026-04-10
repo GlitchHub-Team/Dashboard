@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { UserSessionService } from '../../services/user-session/user-session.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { UserRole } from '../../models/user/user-role.enum';
 import { GatewayTableComponent } from '../shared/components/gateway-table/gateway-table.component';
 import { SensorTableComponent } from '../shared/components/sensor-table/sensor-table.component';
@@ -28,6 +29,7 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 })
 export class DashboardPage implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
+  private readonly tenantService = inject(TenantService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -80,8 +82,19 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (this.currentRole === UserRole.SUPER_ADMIN) {
       this.route.queryParams.subscribe((params) => {
         const tenantId: string | undefined = params['tenantId'];
-        this.activeTenantId.set(tenantId ?? null);
-        this.dashboardService.loadDashboard(tenantId);
+        if (tenantId) {
+          this.tenantService.getTenant(tenantId).subscribe((tenant) => {
+            if (!tenant.canImpersonate) {
+              this.router.navigate(['/dashboard']);
+              return;
+            }
+            this.activeTenantId.set(tenantId);
+            this.dashboardService.loadDashboard(tenantId);
+          });
+        } else {
+          this.activeTenantId.set(null);
+          this.dashboardService.loadDashboard(undefined);
+        }
       });
     } else {
       const tenantId = this.userSession.currentUser()?.tenantId;

@@ -52,6 +52,11 @@ export class UserFormDialogComponent {
     return this.data.role === UserRole.TENANT_ADMIN;
   }
 
+  // tenantId già noto (TENANT_ADMIN che crea, o SUPER_ADMIN dopo aver selezionato il tenant)
+  protected get isTenantIdLocked(): boolean {
+    return this.isTenantAdminRole && !!this.data.tenantId;
+  }
+
   protected readonly form = this.formBuilder.nonNullable.group({
     username: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
@@ -60,10 +65,19 @@ export class UserFormDialogComponent {
 
   protected readonly isSubmitting = signal(false);
   protected readonly generalError = signal('');
+  protected readonly lockedTenantName = signal<string | null>(null);
 
   constructor() {
     if (this.isTenantAdminRole) {
-      this.tenantService.retrieveTenants();
+      if (this.data.tenantId) {
+        this.form.controls.tenantId.setValue(this.data.tenantId);
+        this.tenantService
+          .getTenant(this.data.tenantId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((tenant) => this.lockedTenantName.set(tenant.name));
+      } else {
+        this.tenantService.retrieveTenants(true);
+      }
     }
   }
 
