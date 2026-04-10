@@ -78,8 +78,8 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 	switch user.Role {
 	case identity.ROLE_SUPER_ADMIN:
 		entity := SuperAdminPasswordTokenEntity{
-			Token:  rawToken,
-			UserId: user.Id,
+			Token:     rawToken,
+			UserId:    user.Id,
 			ExpiresAt: expiry,
 		}
 		err = adapter.superAdminRepo.SaveToken(&entity)
@@ -90,9 +90,9 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 	case identity.ROLE_TENANT_ADMIN, identity.ROLE_TENANT_USER:
 		tenantIdString := user.TenantId.String()
 		entity := TenantPasswordTokenEntity{
-			Token:    rawToken,
-			TenantId: tenantIdString,
-			UserId:   user.Id,
+			Token:     rawToken,
+			TenantId:  tenantIdString,
+			UserId:    user.Id,
 			ExpiresAt: expiry,
 		}
 		err = adapter.tenantMemberRepo.SaveToken(&entity)
