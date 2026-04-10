@@ -7,7 +7,7 @@ import { SensorReading } from '../../../../../../models/sensor-data/sensor-readi
 import { FieldDescriptor } from '../../../../../../models/sensor-data/field-descriptor.model';
 import { Sensor } from '../../../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../../../models/sensor/sensor-profiles.enum';
-import { Status } from '../../../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../../../models/sensor-status.enum';
 import { SENSOR_VISIBLE_POINTS } from '../../../../../../models/chart/sensor-visible-points.model';
 
 function createSensor(overrides: Partial<Sensor> = {}): Sensor {
@@ -16,7 +16,7 @@ function createSensor(overrides: Partial<Sensor> = {}): Sensor {
     gatewayId: 'gw-1',
     name: 'Test Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 1000,
     ...overrides,
   };

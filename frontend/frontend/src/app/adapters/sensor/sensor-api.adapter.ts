@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { SensorAdapter } from './sensor.adapter';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { statusMapper } from '../../utils/status.utils';
+import { sensorStatusMapper } from '../../utils/sensor-status.utils';
 import { sensorProfilesMapper } from '../../utils/sensor-profile.utils';
 import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 
@@ -13,7 +13,7 @@ export class SensorApiAdapter extends SensorAdapter {
       id: dto.sensor_id,
       gatewayId: dto.gateway_id,
       name: dto.sensor_name,
-      status: statusMapper.fromBackend(dto.status),
+      status: sensorStatusMapper.fromBackend(dto.status),
       profile: sensorProfilesMapper.fromBackend(dto.profile),
       dataInterval: dto.data_interval,
     };

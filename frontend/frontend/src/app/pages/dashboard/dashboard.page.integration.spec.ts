@@ -20,7 +20,8 @@ import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { UserSession } from '../../models/auth/user-session.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
+import { GatewayStatus } from '../../models/gateway-status.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../models/chart/chart-type.enum';
 
@@ -29,14 +30,14 @@ const mockGateways: Gateway[] = [
     id: 'gw-1',
     tenantId: 'tenant-1',
     name: 'Gateway Alpha',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   },
   {
     id: 'gw-2',
     tenantId: 'tenant-1',
     name: 'Gateway Beta',
-    status: Status.INACTIVE,
+    status: GatewayStatus.INACTIVE,
     interval: 120,
   },
 ];
@@ -47,7 +48,7 @@ const mockSensors: Sensor[] = [
     gatewayId: 'gw-1',
     name: 'Temperature',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 30,
   },
   {
@@ -55,7 +56,7 @@ const mockSensors: Sensor[] = [
     gatewayId: 'gw-1',
     name: 'Humidity',
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 30,
   },
 ];

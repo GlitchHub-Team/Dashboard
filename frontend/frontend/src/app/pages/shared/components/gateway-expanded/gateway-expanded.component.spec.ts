@@ -7,7 +7,8 @@ import { GatewayExpandedComponent } from './gateway-expanded.component';
 import { SensorTableComponent } from '../sensor-table/sensor-table.component';
 import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
+import { GatewayStatus } from '../../../../models/gateway-status.enum';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
@@ -35,7 +36,7 @@ describe('GatewayExpandedComponent (Unit)', () => {
     id: 'gw-1',
     tenantId: 'tenant-1',
     name: 'Gateway Alpha',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   };
   const mockSensors: Sensor[] = [
@@ -44,7 +45,7 @@ describe('GatewayExpandedComponent (Unit)', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-      status: Status.ACTIVE,
+      status: SensorStatus.ACTIVE,
       dataInterval: 60,
     },
     {
@@ -52,7 +53,7 @@ describe('GatewayExpandedComponent (Unit)', () => {
       gatewayId: 'gw-1',
       name: 'Humidity',
       profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
-      status: Status.INACTIVE,
+      status: SensorStatus.INACTIVE,
       dataInterval: 120,
     },
   ];

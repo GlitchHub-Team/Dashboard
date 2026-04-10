@@ -6,7 +6,8 @@ import { GatewaySensorManagerService } from './gateway-sensor-manager.service';
 import { GatewayService } from '../gateway/gateway.service';
 import { SensorService } from '../sensor/sensor.service';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
+import { GatewayStatus } from '../../models/gateway-status.enum';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { signal } from '@angular/core';
@@ -26,7 +27,7 @@ describe('GatewaySensorManagerService', () => {
     id: 'gw-1',
     tenantId: 'tenant-01',
     name: 'Gateway 1',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   };
 
@@ -34,7 +35,7 @@ describe('GatewaySensorManagerService', () => {
     id: 'gw-2',
     tenantId: 'tenant-01',
     name: 'Gateway 2',
-    status: Status.INACTIVE,
+    status: GatewayStatus.INACTIVE,
     interval: 120,
   };
 
@@ -42,7 +43,7 @@ describe('GatewaySensorManagerService', () => {
     id: 'sensor-1',
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     profile: SensorProfiles.HEART_RATE_SERVICE,
     dataInterval: 1000,
   };

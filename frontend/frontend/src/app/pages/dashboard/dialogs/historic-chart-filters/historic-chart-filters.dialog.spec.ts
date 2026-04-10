@@ -6,7 +6,7 @@ import { By } from '@angular/platform-browser';
 import { HistoricChartFiltersDialog } from './historic-chart-filters.dialog';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 
 describe('HistoricChartFiltersDialog (Unit)', () => {
@@ -20,7 +20,7 @@ describe('HistoricChartFiltersDialog (Unit)', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 1000,
   };
 

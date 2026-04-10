@@ -9,7 +9,7 @@ import { GatewayCommandsDialog } from './gateway-commands.dialog';
 import { GatewayService } from '../../../../services/gateway/gateway.service';
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { Gateway } from '../../../../models/gateway/gateway.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { GatewayStatus } from '../../../../models/gateway-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
 
 // Mappa tipo di comando agli args che il form ritorna
@@ -39,7 +39,7 @@ describe('GatewayCommandsDialog (Unit)', () => {
     id: 'gw-1',
     tenantId: undefined,
     name: 'Main Lobby Gateway',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   };
 

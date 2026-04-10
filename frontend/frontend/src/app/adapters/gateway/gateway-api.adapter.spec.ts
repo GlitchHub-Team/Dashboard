@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GatewayApiAdapter } from './gateway-api.adapter';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { GatewayStatus } from '../../models/gateway-status.enum';
 
 describe('GatewayApiAdapter', () => {
   const adapter = new GatewayApiAdapter();
@@ -19,7 +19,7 @@ describe('GatewayApiAdapter', () => {
     it.each([
       { field: 'id', dto, expected: 'gw-1' },
       { field: 'name', dto, expected: 'Gateway 1' },
-      { field: 'status', dto, expected: Status.ACTIVE },
+      { field: 'status', dto, expected: GatewayStatus.ACTIVE },
       { field: 'interval', dto, expected: 60 },
       { field: 'tenantId', dto, expected: 'tenant-01' },
       { field: 'tenantId', dto: { ...dto, tenant_id: undefined }, expected: undefined },
@@ -35,7 +35,7 @@ describe('GatewayApiAdapter', () => {
       const response = {
         count: 2,
         total: 10,
-        gateways: [dto, { ...dto, gateway_id: 'gw-2', status: 'inattivo', tenant_id: undefined }],
+        gateways: [dto, { ...dto, gateway_id: 'gw-2', status: 'inactive', tenant_id: undefined }],
       };
 
       const result = adapter.fromPaginatedDTO(response);
@@ -45,7 +45,7 @@ describe('GatewayApiAdapter', () => {
       expect(result.gateways).toHaveLength(2);
       expect(result.gateways[0].id).toBe('gw-1');
       expect(result.gateways[1].id).toBe('gw-2');
-      expect(result.gateways[1].status).toBe(Status.INACTIVE);
+      expect(result.gateways[1].status).toBe(GatewayStatus.INACTIVE);
       expect(result.gateways[1].tenantId).toBeUndefined();
     });
 

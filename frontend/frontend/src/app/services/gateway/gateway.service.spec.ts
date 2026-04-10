@@ -8,14 +8,14 @@ import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { GatewayStatus } from '../../models/gateway-status.enum';
 
 describe('GatewayService', () => {
   let service: GatewayService;
 
   const mockGateways: Gateway[] = [
-    { id: 'gw-1', tenantId: 'tenant-1', name: 'Gateway 1', status: Status.ACTIVE, interval: 60 },
-    { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway 2', status: Status.INACTIVE, interval: 60 },
+    { id: 'gw-1', tenantId: 'tenant-1', name: 'Gateway 1', status: GatewayStatus.ACTIVE, interval: 60 },
+    { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway 2', status: GatewayStatus.INACTIVE, interval: 60 },
   ];
 
   const mockBackendResponse: PaginatedGatewayResponse<GatewayBackend> = {
@@ -62,7 +62,7 @@ describe('GatewayService', () => {
     id: 'gw-3',
     name: 'New Gateway',
     tenantId: 'tenant-1',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   };
   const mockConfig: GatewayConfig = { name: 'New Gateway', interval: 60 };

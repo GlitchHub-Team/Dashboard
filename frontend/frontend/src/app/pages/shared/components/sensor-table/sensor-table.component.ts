@@ -15,7 +15,7 @@ import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { SensorCommandsDialog } from '../../../dashboard/dialogs/sensor-commands/sensor-commands.dialog';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 
 @Component({
   selector: 'app-sensor-table',
@@ -54,7 +54,7 @@ export class SensorTableComponent {
   });
 
   protected readonly ChartType = ChartType;
-  protected readonly Status = Status;
+  protected readonly Status = SensorStatus;
 
   public readonly chartRequested = output<ChartRequest>();
   public readonly commandRequested = output<boolean>();
