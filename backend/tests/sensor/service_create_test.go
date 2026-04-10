@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/gateway"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	gatewayMocks "backend/tests/gateway/mocks"
 	helper "backend/tests/helper"
@@ -68,7 +69,7 @@ func TestService_CreateSensor(t *testing.T) {
 	baseCommand := sensor.CreateSensorCommand{
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 		GatewayId: targetGatewayId,
 	}
 

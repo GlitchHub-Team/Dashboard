@@ -136,11 +136,14 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	if err := app.Start(ctx); err != nil {
 		t.Fatalf("Failed to start Fx app for test: %v", err)
 	}
-	defer func() {
-		stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(func() {
+		stopCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
-		app.Stop(stopCtx) //nolint:errcheck
-	}()
+
+		if err := app.Stop(stopCtx); err != nil {
+			t.Errorf("Failed to stop Fx app for test: %v", err)
+		}
+	})
 
 	jetstreamTestCtx, err := natsutils.NewJetStreamContext(natsTestConn)
 	if err != nil {

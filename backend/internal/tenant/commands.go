@@ -25,7 +25,7 @@ type GetTenantCommand struct {
 type GetTenantListCommand struct {
 	Limit int
 	Page  int
-	identity.Requester
+	// identity.Requester
 }
 
 type GetTenantByUserCommand struct {

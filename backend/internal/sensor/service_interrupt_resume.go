@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-//go:generate mockgen -destination=../../tests/sensor/mocks/port_interrupt_resume.go -package=mocks . SendInterruptCmdPort,SendResumeCmdPort,UpdatedSensorStatusPort
+//go:generate mockgen -destination=../../tests/sensor/mocks/port_interrupt_resume.go -package=mocks . SendInterruptCmdPort,SendResumeCmdPort,UpdateSensorStatusPort
 
 type InterruptSensorService struct {
 	sendInterruptCmdPort    SendInterruptCmdPort

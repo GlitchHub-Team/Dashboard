@@ -417,6 +417,5 @@ func TestChangePasswordIntegration(t *testing.T) {
 			CheckSuperAdminPassword(t, *superAdminId_Unconfirmed, "", true),
 		},
 	})
-
 	helper.RunIntegrationTests(t, tests, deps)
 }

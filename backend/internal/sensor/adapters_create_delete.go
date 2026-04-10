@@ -3,6 +3,7 @@ package sensor
 import (
 	"time"
 
+	profile "backend/internal/sensor/profile"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -39,7 +40,13 @@ var (
 	_ DeleteSensorCmdPort = (*SendCmdAdapter)(nil)
 )
 
-func (adapter *DbSensorAdapter) CreateSensor(sensorId uuid.UUID, gatewayId uuid.UUID, name string, interval time.Duration, profile SensorProfile) (Sensor, error) {
+func (adapter *DbSensorAdapter) CreateSensor(
+	sensorId uuid.UUID,
+	gatewayId uuid.UUID,
+	name string,
+	interval time.Duration,
+	profile profile.SensorProfile,
+) (Sensor, error) {
 	entity := &SensorEntity{
 		ID:        sensorId.String(),
 		GatewayID: gatewayId.String(),
@@ -52,7 +59,9 @@ func (adapter *DbSensorAdapter) CreateSensor(sensorId uuid.UUID, gatewayId uuid.
 		adapter.log.Error("Failed to create sensor", zap.Error(err))
 		return Sensor{}, err
 	}
-	return entity.ToSensor(), nil
+
+	sensor, err := SensorEntityToDomain(entity)
+	return sensor, err
 }
 
 func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error) {
@@ -64,10 +73,16 @@ func (adapter *DbSensorAdapter) DeleteSensor(sensorId uuid.UUID) (Sensor, error)
 		adapter.log.Error("Failed to delete sensor", zap.Error(err))
 		return Sensor{}, err
 	}
-	return entity.ToSensor(), nil
+	sensor, err := SensorEntityToDomain(entity)
+	return sensor, err
 }
 
-func (adapter *SendCmdAdapter) SendCreateSensorCmd(sensorId uuid.UUID, gatewayId uuid.UUID, interval time.Duration, profile SensorProfile) error {
+func (adapter *SendCmdAdapter) SendCreateSensorCmd(
+	sensorId uuid.UUID,
+	gatewayId uuid.UUID,
+	interval time.Duration,
+	profile profile.SensorProfile,
+) error {
 	cmd := &CreateSensorCmdEntity{
 		SensorId:  sensorId.String(),
 		GatewayId: gatewayId.String(),

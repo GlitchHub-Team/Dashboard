@@ -127,9 +127,10 @@ describe('UserTableComponent (Unit)', () => {
       expect(stopPropagation).toHaveBeenCalledTimes(1);
     });
 
-    it('should hide delete button for the row matching currentUserId', () => {
+    it('should hide delete button for the row matching currentUserId and currentUserRole', () => {
       setInput('loading', false);
       setInput('currentUserId', 'user-1');
+      setInput('currentUserRole', UserRole.TENANT_USER);
       fixture.detectChanges();
 
       const deleteButtons = fixture.debugElement.queryAll(By.css('mat-cell button'));
@@ -140,6 +141,16 @@ describe('UserTableComponent (Unit)', () => {
       const stopPropagation = vi.fn();
       deleteButtons[0].triggerEventHandler('click', { stopPropagation });
       expect(spy).toHaveBeenCalledWith(mockUsers[1]);
+    });
+
+    it('should show delete button when id matches but role differs', () => {
+      setInput('loading', false);
+      setInput('currentUserId', 'user-1');
+      setInput('currentUserRole', UserRole.TENANT_ADMIN); // same id, different role
+      fixture.detectChanges();
+
+      const deleteButtons = fixture.debugElement.queryAll(By.css('mat-cell button'));
+      expect(deleteButtons.length).toBe(2); // both buttons visible
     });
 
     it('should emit pageChange on paginator page event', () => {

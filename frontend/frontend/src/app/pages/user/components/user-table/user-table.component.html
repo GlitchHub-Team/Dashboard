@@ -25,7 +25,7 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef class="actions-header">Azioni</mat-header-cell>
       <mat-cell *matCellDef="let user" class="actions-cell">
-        @if (user.id !== currentUserId()) {
+        @if (user.id !== currentUserId() || user.role !== currentUserRole()) {
           <button
             mat-icon-button
             (click)="onDelete(user); $event.stopPropagation()"

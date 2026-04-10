@@ -3,6 +3,7 @@ package sensor
 import (
 	"time"
 
+	profile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ type CreateSensorCommand struct {
 	identity.Requester
 	Name      string
 	Interval  time.Duration
-	Profile   SensorProfile
+	Profile   profile.SensorProfile
 	GatewayId uuid.UUID
 }
 

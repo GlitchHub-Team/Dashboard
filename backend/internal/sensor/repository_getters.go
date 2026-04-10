@@ -48,6 +48,23 @@ func (repo *sensorPostgreRepository) GetSensorById(sensorId string) (SensorEntit
 	return sensorEntity, nil
 }
 
+func (repo *sensorPostgreRepository) GetSensorByTenant(tenantId, sensorId string) (SensorEntity, error) {
+	var sensorEntity SensorEntity
+	db := (*gorm.DB)(repo.db)
+	err := db.
+		Joins("Gateway").
+		Joins("INNER JOIN tenants on tenants.id = ?", tenantId).
+		Find(&sensorEntity, "sensors.id = ?", sensorId).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return SensorEntity{}, ErrSensorNotFound
+		}
+		return SensorEntity{}, err
+	}
+	return sensorEntity, nil
+}
+
 func (repo *sensorPostgreRepository) GetSensorsByTenantId(tenantId string, offset int, limit int) ([]SensorEntity, uint, error) {
 	var sensorEntities []SensorEntity
 	var count int64

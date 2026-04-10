@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/helper"
@@ -21,7 +22,7 @@ type expectedTenantSensor struct {
 	GatewayID string
 	Name      string
 	Interval  int64
-	Profile   sensor.SensorProfile
+	Profile   sensorProfile.SensorProfile
 	Status    sensor.SensorStatus
 }
 
@@ -68,9 +69,9 @@ func TestGetSensorsByTenantIdIntegration(t *testing.T) {
 	sensorTenantTwo := uuid.NewString()
 
 	expectedTenantOneSensors := []expectedTenantSensor{
-		{SensorID: sensorTenantOneA, GatewayID: gatewayTenantOneA, Name: "Alpha Tenant One", Interval: 1000, Profile: sensor.HEART_RATE, Status: sensor.Active},
-		{SensorID: sensorTenantOneB, GatewayID: gatewayTenantOneA, Name: "Beta Tenant One", Interval: 1100, Profile: sensor.ECG_CUSTOM, Status: sensor.Active},
-		{SensorID: sensorTenantOneC, GatewayID: gatewayTenantOneB, Name: "Gamma Tenant One", Interval: 1200, Profile: sensor.PULSE_OXIMETER, Status: sensor.Inactive},
+		{SensorID: sensorTenantOneA, GatewayID: gatewayTenantOneA, Name: "Alpha Tenant One", Interval: 1000, Profile: sensorProfile.HEART_RATE, Status: sensor.Active},
+		{SensorID: sensorTenantOneB, GatewayID: gatewayTenantOneA, Name: "Beta Tenant One", Interval: 1100, Profile: sensorProfile.ECG_CUSTOM, Status: sensor.Active},
+		{SensorID: sensorTenantOneC, GatewayID: gatewayTenantOneB, Name: "Gamma Tenant One", Interval: 1200, Profile: sensorProfile.PULSE_OXIMETER, Status: sensor.Inactive},
 	}
 
 	tests := []*helper.IntegrationTestCase{
@@ -137,10 +138,10 @@ func TestGetSensorsByTenantIdIntegration(t *testing.T) {
 				preSetupCreateGatewayWithTenant(gatewayTenantOneA, "Gateway Tenant One A", &tenantOneString),
 				preSetupCreateGatewayWithTenant(gatewayTenantOneB, "Gateway Tenant One B", &tenantOneString),
 				preSetupCreateGatewayWithTenant(gatewayTenantTwo, "Gateway Tenant Two", &tenantTwoString),
-				preSetupCreateSensor(sensorTenantOneA, gatewayTenantOneA, "Alpha Tenant One", 1000, sensor.HEART_RATE, sensor.Active),
-				preSetupCreateSensor(sensorTenantOneB, gatewayTenantOneA, "Beta Tenant One", 1100, sensor.ECG_CUSTOM, sensor.Active),
-				preSetupCreateSensor(sensorTenantOneC, gatewayTenantOneB, "Gamma Tenant One", 1200, sensor.PULSE_OXIMETER, sensor.Inactive),
-				preSetupCreateSensor(sensorTenantTwo, gatewayTenantTwo, "Tenant Two Sensor", 1300, sensor.HEALTH_THERMOMETER, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneA, gatewayTenantOneA, "Alpha Tenant One", 1000, sensorProfile.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneB, gatewayTenantOneA, "Beta Tenant One", 1100, sensorProfile.ECG_CUSTOM, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneC, gatewayTenantOneB, "Gamma Tenant One", 1200, sensorProfile.PULSE_OXIMETER, sensor.Inactive),
+				preSetupCreateSensor(sensorTenantTwo, gatewayTenantTwo, "Tenant Two Sensor", 1300, sensorProfile.HEALTH_THERMOMETER, sensor.Active),
 			},
 			Name:   "Richiesta di sensori da parte di un super admin",
 			Method: http.MethodGet,
@@ -168,9 +169,9 @@ func TestGetSensorsByTenantIdIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantOneA, "Gateway Tenant One A", &tenantOneString),
 				preSetupCreateGatewayWithTenant(gatewayTenantOneB, "Gateway Tenant One B", &tenantOneString),
-				preSetupCreateSensor(sensorTenantOneA, gatewayTenantOneA, "Alpha Tenant One", 1000, sensor.HEART_RATE, sensor.Active),
-				preSetupCreateSensor(sensorTenantOneB, gatewayTenantOneA, "Beta Tenant One", 1100, sensor.ECG_CUSTOM, sensor.Active),
-				preSetupCreateSensor(sensorTenantOneC, gatewayTenantOneB, "Gamma Tenant One", 1200, sensor.PULSE_OXIMETER, sensor.Inactive),
+				preSetupCreateSensor(sensorTenantOneA, gatewayTenantOneA, "Alpha Tenant One", 1000, sensorProfile.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneB, gatewayTenantOneA, "Beta Tenant One", 1100, sensorProfile.ECG_CUSTOM, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneC, gatewayTenantOneB, "Gamma Tenant One", 1200, sensorProfile.PULSE_OXIMETER, sensor.Inactive),
 			},
 			Name:   "Richiesta di sensori da parte di un utente non super admin con tenant diverso",
 			Method: http.MethodGet,
@@ -198,9 +199,9 @@ func TestGetSensorsByTenantIdIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewayTenantOneA, "Gateway Tenant One A", &tenantOneString),
 				preSetupCreateGatewayWithTenant(gatewayTenantOneB, "Gateway Tenant One B", &tenantOneString),
-				preSetupCreateSensor(sensorTenantOneA, gatewayTenantOneA, "Alpha Tenant One", 1000, sensor.HEART_RATE, sensor.Active),
-				preSetupCreateSensor(sensorTenantOneB, gatewayTenantOneA, "Beta Tenant One", 1100, sensor.ECG_CUSTOM, sensor.Active),
-				preSetupCreateSensor(sensorTenantOneC, gatewayTenantOneB, "Gamma Tenant One", 1200, sensor.PULSE_OXIMETER, sensor.Inactive),
+				preSetupCreateSensor(sensorTenantOneA, gatewayTenantOneA, "Alpha Tenant One", 1000, sensorProfile.HEART_RATE, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneB, gatewayTenantOneA, "Beta Tenant One", 1100, sensorProfile.ECG_CUSTOM, sensor.Active),
+				preSetupCreateSensor(sensorTenantOneC, gatewayTenantOneB, "Gamma Tenant One", 1200, sensorProfile.PULSE_OXIMETER, sensor.Inactive),
 			},
 			Name:   "Richiesta di sensori da parte di un utente non super admin con tenant uguale",
 			Method: http.MethodGet,

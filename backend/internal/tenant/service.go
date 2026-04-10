@@ -1,5 +1,7 @@
 package tenant
 
+import "github.com/google/uuid"
+
 //go:generate mockgen -destination=../../tests/tenant/mocks/use_cases_crud.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetTenantByUserUseCase
 
 type CreateTenantPort interface {
@@ -18,7 +20,7 @@ type GetTenantUseCase interface {
 }
 
 type GetTenantListUseCase interface {
-	GetTenantList(cmd GetTenantListCommand) ([]Tenant, error)
+	GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error)
 }
 
 type GetTenantByUserUseCase interface {
@@ -55,11 +57,10 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 		return Tenant{}, ErrUnauthorized
 	}
 
-	if !cmd.CanImpersonate {
-		return Tenant{}, ErrImpersonationFailded
-	}
+	newTenantId := uuid.New()
 
 	newTenant := Tenant{
+		Id:             newTenantId,
 		Name:           cmd.Name,
 		CanImpersonate: cmd.CanImpersonate,
 	}
@@ -87,7 +88,7 @@ func (service *TenantService) DeleteTenant(cmd DeleteTenantCommand) (Tenant, err
 	}
 
 	if !tenant.CanImpersonate {
-		return Tenant{}, ErrImpersonationFailded
+		return Tenant{}, ErrImpersonationFailed
 	}
 
 	oldTenant, err := service.deleteTenantPort.DeleteTenant(cmd.TenantId)
@@ -112,23 +113,13 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 	return tenant, nil
 }
 
-func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, error) {
-	if !cmd.IsSuperAdmin() {
-		return nil, ErrUnauthorized
-	}
-
-	tenants, err := service.getTenantsPort.GetTenants()
+func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error) {
+	tenants, total, err := service.getTenantsPort.GetTenants(cmd.Page, cmd.Limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	for _, tenant := range tenants {
-		if !tenant.CanImpersonate {
-			return nil, ErrUnauthorized
-		}
-	}
-
-	return tenants, nil
+	return tenants, total, nil
 }
 
 func (service *TenantService) GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error) {

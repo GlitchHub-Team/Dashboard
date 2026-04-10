@@ -8,9 +8,11 @@ import (
 
 type CreateGatewayCommand struct {
 	identity.Requester
-	TenantId    uuid.UUID
-	Name        string
-	Certificate string
+	TenantId         uuid.UUID
+	Name             string
+	Certificate      string
+	PublicIdentifier string
+	SigningSecret    string
 }
 
 type DeleteGatewayCommand struct {
@@ -20,6 +22,7 @@ type DeleteGatewayCommand struct {
 
 type GetGatewayByIdCommand struct {
 	GatewayId uuid.UUID
+	identity.Requester
 }
 
 type GetGatewayListCommand struct {
@@ -37,29 +40,36 @@ type CommissionGatewayCommand struct {
 	GatewayId          uuid.UUID
 	TenantId           uuid.UUID
 	GatewayCertificate string
+	identity.Requester
 }
 
 type DecommissionGatewayCommand struct {
 	GatewayId uuid.UUID
+	identity.Requester
 }
 
 type InterruptGatewayCommand struct {
 	GatewayId uuid.UUID
+	identity.Requester
 }
 
 type ResumeGatewayCommand struct {
 	GatewayId uuid.UUID
+	identity.Requester
 }
 
 type ResetGatewayCommand struct {
 	GatewayId uuid.UUID
+	identity.Requester
 }
 
 type RebootGatewayCommand struct {
 	GatewayId uuid.UUID
+	identity.Requester
 }
 
 type SetGatewayIntervalLimitCommand struct {
 	GatewayId     uuid.UUID
 	IntervalLimit int
+	identity.Requester
 }

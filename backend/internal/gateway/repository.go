@@ -14,8 +14,6 @@ import (
 	clouddb "backend/internal/infra/database/cloud_db/connection"
 )
 
-type DB any // TODO: solo per test
-
 // per il commissionig // risoista  requst replay,
 
 // type gatewayEntity struct{}
@@ -23,13 +21,13 @@ type DB any // TODO: solo per test
 // entity =============================================================================================
 
 type GatewayEntity struct {
-	ID       string  `gorm:"type:uuid;primaryKey"`
-	Name     string  `gorm:"type:varchar(255);not null"`
-	TenantId *string `gorm:"type:uuid;index"`
-	// il modo giusto per fare il fk per assurdo
+	ID               string         `gorm:"type:uuid;primaryKey"`
+	Name             string         `gorm:"type:varchar(255);not null"`
+	TenantId         *string        `gorm:"type:uuid;index"`
 	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Status           string         `gorm:"type:varchar(50);not null"`
 	PublicIdentifier string         `gorm:"type:varchar(255)"`
+	SigningSecret    string         `gorm:"type:varchar(255)"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -41,7 +39,7 @@ type gatewayPostgreRepository struct {
 	db  clouddb.CloudDBConnection
 }
 
-func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) *gatewayPostgreRepository {
+func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) GatewayRepository {
 	return &gatewayPostgreRepository{
 		log: log,
 		db:  db,
@@ -50,11 +48,39 @@ func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) 
 
 // methods ============================================================================================
 
-func (entity *GatewayEntity) fromGateway(g Gateway) {
+func GatewayEntityToDomain(entity *GatewayEntity) (Gateway, error) {
+	if entity == nil {
+		return Gateway{}, nil
+	}
+
+	gatewayId, err := uuid.Parse(entity.ID)
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	var tenantId *uuid.UUID
+
+	if entity.TenantId != nil {
+		parsed, err := uuid.Parse(*entity.TenantId)
+		tenantId = &parsed
+		if err != nil {
+			return Gateway{}, err
+		}
+	}
+
+	return Gateway{
+		Id:       gatewayId,
+		Name:     entity.Name,
+		TenantId: tenantId,
+		Status:   GatewayStatus(entity.Status),
+		// IntervalLimit: entity.,
+	}, nil
+}
+
+func (entity *GatewayEntity) FromGateway(g Gateway) {
 	entity.ID = g.Id.String()
 	entity.Name = g.Name
 	entity.Status = string(g.Status)
-	entity.PublicIdentifier = g.PublicIdentifier
 
 	if g.TenantId != nil {
 		tenantIdStr := g.TenantId.String()
@@ -62,9 +88,11 @@ func (entity *GatewayEntity) fromGateway(g Gateway) {
 	} else {
 		entity.TenantId = nil
 	}
+	entity.PublicIdentifier = g.PublicIdentifier
+	entity.SigningSecret = g.SigningSecret
 }
 
-func (entity *GatewayEntity) toGateway() Gateway {
+func (entity *GatewayEntity) ToGateway() Gateway {
 	id, _ := uuid.Parse(entity.ID)
 	var tenantId *uuid.UUID
 	if entity.TenantId != nil {
@@ -77,12 +105,13 @@ func (entity *GatewayEntity) toGateway() Gateway {
 		Status:           (GatewayStatus)(entity.Status),
 		TenantId:         tenantId,
 		PublicIdentifier: entity.PublicIdentifier,
+		SigningSecret:    entity.SigningSecret,
 	}
 }
 
 func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
 	entity := &GatewayEntity{}
-	entity.fromGateway(gateway)
+	entity.FromGateway(gateway)
 
 	existing := &GatewayEntity{}
 	db := (*gorm.DB)(repo.db)
@@ -115,29 +144,68 @@ func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 	})
 }
 
-func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayEntity, error) {
+// TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
+func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway, error) {
 	var entity GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
 		Where("id = ?", gatewayId).
 		First(&entity).
 		Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return GatewayEntity{}, nil
+		return Gateway{}, ErrGatewayNotFound
 	}
-	return entity, err
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	gateway, err := GatewayEntityToDomain(&entity)
+	return gateway, err
 }
 
-func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]GatewayEntity, error) {
+// TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
+func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]Gateway, error) {
 	var entities []GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.Where("tenant_id = ?", tenantId).Find(&entities).Error
-	return entities, err
+	if err != nil {
+		return nil, err
+	}
+
+	gateways := make([]Gateway, len(entities))
+	for i, entity := range entities {
+		gateways[i], err = GatewayEntityToDomain(&entity)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return gateways, nil
 }
 
-func (repo *gatewayPostgreRepository) GetAllGateways() ([]GatewayEntity, error) {
+// TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
+func (repo *gatewayPostgreRepository) GetAllGateways() ([]Gateway, error) {
 	var entities []GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.Find(&entities).Error
-	return entities, err
+	if err != nil {
+		return nil, err
+	}
+	gateways := make([]Gateway, len(entities))
+	for i, entity := range entities {
+		gateways[i], err = GatewayEntityToDomain(&entity)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return gateways, nil
+}
+
+type GatewayRepository interface {
+	SaveGateway(gateway Gateway) error
+	DeleteGateway(gateway Gateway) error
+	GetGatewayById(gatewayId string) (Gateway, error)
+	GetGatewaysByTenantId(tenantId string) ([]Gateway, error)
+	GetAllGateways() ([]Gateway, error)
 }

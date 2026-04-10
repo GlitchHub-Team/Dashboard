@@ -9,7 +9,7 @@ import (
 // Create --------------------------------------------------------------------------
 type CreateTenantDTO struct {
 	dto.TenantNameField
-	CanImpersonate bool `json:"canimpersonate"`
+	CanImpersonate bool `json:"can_impersonate"`
 }
 
 // Delete --------------------------------------------------------------------------
@@ -35,7 +35,7 @@ type GetTenantByUserDTO struct {
 type TenantResponseDTO struct {
 	dto.TenantIdField
 	dto.TenantNameField
-	CanImpersonate bool `json:"canimpersonate"`
+	CanImpersonate bool `json:"can_impersonate"`
 }
 
 func NewTenantResponseDTO(tenant Tenant) TenantResponseDTO {
@@ -51,7 +51,7 @@ type TenantListResponseDTO struct {
 	Tenants []TenantResponseDTO `json:"tenants"`
 }
 
-func NewTenantListResponseDTO(tenantList []Tenant, total int) TenantListResponseDTO {
+func NewTenantListResponseDTO(tenantList []Tenant, total uint) TenantListResponseDTO {
 	var tenantDtos []TenantResponseDTO
 
 	for _, t := range tenantList {
@@ -62,7 +62,7 @@ func NewTenantListResponseDTO(tenantList []Tenant, total int) TenantListResponse
 		Tenants: tenantDtos,
 		ListInfo: dto.ListInfo{
 			Count: uint(len(tenantList)),
-			Total: uint(total),
+			Total: total,
 		},
 	}
 }

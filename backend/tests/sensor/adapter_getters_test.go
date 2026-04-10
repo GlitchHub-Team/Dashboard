@@ -4,9 +4,11 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"backend/internal/infra/database/pagination"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
@@ -20,7 +22,7 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		GatewayID: targetGatewayId.String(),
 		Name:      "Heart monitor",
 		Interval:  1200,
-		Profile:   string(sensor.HEART_RATE),
+		Profile:   string(sensorProfile.HEART_RATE),
 		Status:    string(sensor.Active),
 	}
 	entityB := sensor.SensorEntity{
@@ -28,11 +30,28 @@ func TestDbSensorAdapter_GetSensorsByGatewayId(t *testing.T) {
 		GatewayID: targetGatewayId.String(),
 		Name:      "Pulse",
 		Interval:  2000,
-		Profile:   string(sensor.PULSE_OXIMETER),
+		Profile:   string(sensorProfile.PULSE_OXIMETER),
 		Status:    string(sensor.Inactive),
 	}
 
-	expectedSensors := []sensor.Sensor{entityA.ToSensor(), entityB.ToSensor()}
+	expectedSensors := []sensor.Sensor{
+		{
+			Id:        uuid.MustParse(entityA.ID),
+			Name:      entityA.Name,
+			Interval:  time.Duration(entityA.Interval) * time.Millisecond,
+			Profile:   sensorProfile.SensorProfile(entityA.Profile),
+			GatewayId: uuid.MustParse(entityA.GatewayID),
+			Status:    sensor.SensorStatus(entityA.Status),
+		},
+		{
+			Id:        uuid.MustParse(entityB.ID),
+			Name:      entityB.Name,
+			Interval:  time.Duration(entityB.Interval) * time.Millisecond,
+			Profile:   sensorProfile.SensorProfile(entityB.Profile),
+			GatewayId: uuid.MustParse(entityB.GatewayID),
+			Status:    sensor.SensorStatus(entityB.Status),
+		},
+	}
 	expectedCount := uint(2)
 
 	stepGetSensorsByGatewayNeverCalled := func(mockBundle dbSensorAdapterMocks) *gomock.Call {
@@ -147,11 +166,18 @@ func TestDbSensorAdapter_GetSensorById(t *testing.T) {
 		GatewayID: targetGatewayId.String(),
 		Name:      "ECG",
 		Interval:  1500,
-		Profile:   string(sensor.ECG_CUSTOM),
+		Profile:   string(sensorProfile.ECG_CUSTOM),
 		Status:    string(sensor.Active),
 	}
 
-	expectedSensor := entity.ToSensor()
+	expectedSensor := sensor.Sensor{
+		Id:        uuid.MustParse(entity.ID),
+		Name:      entity.Name,
+		Interval:  time.Duration(entity.Interval) * time.Millisecond,
+		Profile:   sensorProfile.SensorProfile(entity.Profile),
+		GatewayId: uuid.MustParse(entity.GatewayID),
+		Status:    sensor.SensorStatus(entity.Status),
+	}
 
 	mockGetSensorByIdErr := errors.New("unexpected error getting sensor by id")
 	stepGetSensorByIdErr := func(mockBundle dbSensorAdapterMocks) *gomock.Call {
@@ -226,7 +252,7 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		GatewayID: uuid.New().String(),
 		Name:      "Thermometer",
 		Interval:  1000,
-		Profile:   string(sensor.HEALTH_THERMOMETER),
+		Profile:   string(sensorProfile.HEALTH_THERMOMETER),
 		Status:    string(sensor.Active),
 	}
 	entityB := sensor.SensorEntity{
@@ -234,11 +260,28 @@ func TestDbSensorAdapter_GetSensorsByTenant(t *testing.T) {
 		GatewayID: uuid.New().String(),
 		Name:      "Environment",
 		Interval:  3000,
-		Profile:   string(sensor.ENVIRONMENTAL_SENSING),
+		Profile:   string(sensorProfile.ENVIRONMENTAL_SENSING),
 		Status:    string(sensor.Inactive),
 	}
 
-	expectedSensors := []sensor.Sensor{entityA.ToSensor(), entityB.ToSensor()}
+	expectedSensors := []sensor.Sensor{
+		{
+			Id:        uuid.MustParse(entityA.ID),
+			Name:      entityA.Name,
+			Interval:  time.Duration(entityA.Interval) * time.Millisecond,
+			Profile:   sensorProfile.SensorProfile(entityA.Profile),
+			GatewayId: uuid.MustParse(entityA.GatewayID),
+			Status:    sensor.SensorStatus(entityA.Status),
+		},
+		{
+			Id:        uuid.MustParse(entityB.ID),
+			Name:      entityB.Name,
+			Interval:  time.Duration(entityB.Interval) * time.Millisecond,
+			Profile:   sensorProfile.SensorProfile(entityB.Profile),
+			GatewayId: uuid.MustParse(entityB.GatewayID),
+			Status:    sensor.SensorStatus(entityB.Status),
+		},
+	}
 	expectedCount := uint(2)
 
 	stepGetSensorsByTenantNeverCalled := func(mockBundle dbSensorAdapterMocks) *gomock.Call {

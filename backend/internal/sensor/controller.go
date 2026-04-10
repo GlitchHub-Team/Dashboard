@@ -38,7 +38,7 @@ type ResumeSensorUseCase interface {
 	ResumeSensor(cmd ResumeSensorCommand) error
 }
 
-type SensorController struct {
+type Controller struct {
 	log *zap.Logger
 
 	createSensorUseCase CreateSensorUseCase
@@ -64,8 +64,8 @@ func NewSensorController(
 
 	interruptSensorUseCase InterruptSensorUseCase,
 	resumeSensorUseCase ResumeSensorUseCase,
-) *SensorController {
-	return &SensorController{
+) *Controller {
+	return &Controller{
 		log: log,
 
 		createSensorUseCase: createSensorUseCase,
