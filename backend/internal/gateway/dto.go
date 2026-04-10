@@ -7,6 +7,7 @@ import (
 // Request
 type createGatewayDTO struct {
 	dto.GatewayNameField
+	dto.GatewayIntervalField
 }
 
 type deleteGatewayDTO struct {
@@ -29,12 +30,9 @@ type getGatewaysByTenantDTO struct {
 
 type commissionGatewayDTO struct {
 	dto.TenantIdField
-	dto.GatewayIdField
-	dto.GatewayCertificateField
+	dto.CommissionTokenField
 }
-type decommissionGatewayDTO struct {
-	dto.GatewayIdField
-}
+
 type interruptGatewayDTO struct {
 	dto.GatewayIdField
 }
@@ -51,11 +49,6 @@ type rebootGatewayDTO struct {
 	dto.GatewayIdField
 }
 
-type setGatewayIntervalLimitDTO struct {
-	dto.GatewayIdField
-	IntervalLimit int `uri:"interval_limit" form:"interval_limit" json:"interval_limit" binding:"required"`
-}
-
 // Response
 type gatewayResponseDTO struct {
 	dto.GatewayIdField
@@ -63,7 +56,7 @@ type gatewayResponseDTO struct {
 	dto.TenantIdField
 	Status           GatewayStatus `json:"status"`
 	Interval         int64         `json:"interval"`
-	PublicIdentifier string        `json:"publicIdentifier,omitempty"`
+	PublicIdentifier string        `json:"publicIdentifier"`
 }
 
 /*
@@ -78,3 +71,7 @@ type commissionGatewayResponseDTO struct {
 	dto.GatewayCertificateField
 }
 */
+
+type gatewayCommandResponseDTO struct {
+	Result string `json:"result"`
+}
