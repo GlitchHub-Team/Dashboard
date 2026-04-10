@@ -11,10 +11,11 @@ import (
 	"time"
 
 	historical_data "backend/internal/historical_data"
-	"backend/internal/sensor"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/historical_data/mocks"
+
+	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -147,7 +148,7 @@ func TestController_GetSensorHistoricalData(t *testing.T) {
 			SensorId:  targetSensorId,
 			GatewayId: uuid.New(),
 			TenantId:  targetTenantId,
-			Profile:   string(sensor.HEART_RATE),
+			Profile:   sensorProfile.HEART_RATE,
 			Timestamp: time.Date(2026, 3, 29, 12, 0, 0, 0, time.UTC),
 			Data:      json.RawMessage(`{"BpmValue":72}`),
 		},

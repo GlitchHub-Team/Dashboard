@@ -21,7 +21,7 @@ type TenantConfirmTokenEntity struct {
 	// Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
 
 	UserId       uint                    `gorm:"not null"`
-	TenantMember user.TenantMemberEntity `gorm:"foreignKey:UserId;not null"`
+	TenantMember user.TenantMemberEntity `gorm:"foreignKey:UserId;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	CreatedAt time.Time
 	ExpiresAt time.Time
@@ -137,7 +137,7 @@ type TenantPasswordTokenEntity struct {
 	// Tenant   tenant.TenantEntity `gorm:"foreignKey:TenantId;not null"`
 
 	UserId       uint                    `gorm:"not null"`
-	TenantMember user.TenantMemberEntity `gorm:"foreignKey:UserId;not null"`
+	TenantMember user.TenantMemberEntity `gorm:"foreignKey:UserId;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	CreatedAt time.Time
 	ExpiresAt time.Time

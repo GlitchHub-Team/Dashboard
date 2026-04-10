@@ -3,23 +3,19 @@ package dto
 import (
 	"encoding/json"
 	"fmt"
-)
+	"reflect"
 
-const (
-	heartRateProfile            = "heart_rate"
-	pulseOximeterProfile        = "pulse_oximeter"
-	ecgCustomProfile            = "ecg_custom"
-	healthThermometerProfile    = "health_thermometer"
-	environmentalSensingProfile = "environmental_sensing"
+	sensorProfile "backend/internal/sensor/profile"
 )
 
 type ECGData struct {
-	Waveform []int `json:"Waveform" binding:"required,min=250,max=250"`
+	Waveform []int `json:"Waveform" binding:"required,min=1"`
 }
 
 type EnvironmentalSensingData struct {
 	TemperatureValue float64 `json:"TemperatureValue" binding:"required"`
 	HumidityValue    float64 `json:"HumidityValue" binding:"required"`
+	PressureValue    float64 `json:"PressureValue" binding:"required"`
 }
 
 type HealthThermometerData struct {
@@ -35,27 +31,27 @@ type PulseOximeterData struct {
 	PulseRateValue int     `json:"PulseRateValue" binding:"required"`
 }
 
-func DecodeSensorProfileData(profile string, raw json.RawMessage) (any, error) {
+func DecodeSensorProfileData(profile sensorProfile.SensorProfile, raw json.RawMessage) (any, error) {
 	switch profile {
-	case ecgCustomProfile:
-		return decodeSensorProfileData[ECGData](profile, raw)
-	case environmentalSensingProfile:
-		return decodeSensorProfileData[EnvironmentalSensingData](profile, raw)
-	case healthThermometerProfile:
-		return decodeSensorProfileData[HealthThermometerData](profile, raw)
-	case heartRateProfile:
-		return decodeSensorProfileData[HeartRateData](profile, raw)
-	case pulseOximeterProfile:
-		return decodeSensorProfileData[PulseOximeterData](profile, raw)
+	case sensorProfile.ECG_CUSTOM:
+		return decodeSensorProfileData[ECGData](raw)
+	case sensorProfile.ENVIRONMENTAL_SENSING:
+		return decodeSensorProfileData[EnvironmentalSensingData](raw)
+	case sensorProfile.HEALTH_THERMOMETER:
+		return decodeSensorProfileData[HealthThermometerData](raw)
+	case sensorProfile.HEART_RATE:
+		return decodeSensorProfileData[HeartRateData](raw)
+	case sensorProfile.PULSE_OXIMETER:
+		return decodeSensorProfileData[PulseOximeterData](raw)
 	default:
 		return nil, fmt.Errorf("unsupported sensor profile %q", profile)
 	}
 }
 
-func decodeSensorProfileData[T any](profile string, raw json.RawMessage) (T, error) {
+func decodeSensorProfileData[T any](raw json.RawMessage) (T, error) {
 	var decoded T
 	if err := json.Unmarshal(raw, &decoded); err != nil {
-		return decoded, fmt.Errorf("decode sensor profile data for %q: %w", profile, err)
+		return decoded, fmt.Errorf("cannot decode sensor profile data for %v: %w", reflect.TypeFor[T](), err)
 	}
 	return decoded, nil
 }

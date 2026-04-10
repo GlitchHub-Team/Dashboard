@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	sensorProfile "backend/internal/sensor/profile"
+
 	"github.com/google/uuid"
 )
 
@@ -19,7 +21,7 @@ type HistoricalSample struct {
 	SensorId  uuid.UUID
 	GatewayId uuid.UUID
 	TenantId  uuid.UUID
-	Profile   string
+	Profile   sensorProfile.SensorProfile
 	Timestamp time.Time
 	Data      json.RawMessage
 }

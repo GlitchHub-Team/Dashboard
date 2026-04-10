@@ -17,7 +17,7 @@ type SuperAdminConfirmTokenEntity struct {
 	Token string `gorm:"primaryKey;index:,type:hash"`
 
 	UserId     uint                  `gorm:"not null"`
-	SuperAdmin user.SuperAdminEntity `gorm:"foreignKey:UserId;not null"`
+	SuperAdmin user.SuperAdminEntity `gorm:"foreignKey:UserId;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	CreatedAt time.Time
 	ExpiresAt time.Time
@@ -107,7 +107,7 @@ type SuperAdminPasswordTokenEntity struct {
 	Token string `gorm:"primaryKey;index:,type:hash"`
 
 	UserId     uint                  `gorm:"not null"`
-	SuperAdmin user.SuperAdminEntity `gorm:"foreignKey:UserId;not null"`
+	SuperAdmin user.SuperAdminEntity `gorm:"foreignKey:UserId;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	CreatedAt time.Time
 	ExpiresAt time.Time

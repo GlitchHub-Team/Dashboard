@@ -43,7 +43,7 @@ func NewHistoricalDataResponseDTO(samples []HistoricalSample) (HistoricalDataRes
 			TimestampField: transportDto.TimestampField{
 				Timestamp: sample.Timestamp,
 			},
-			Profile: sample.Profile,
+			Profile: string(sample.Profile),
 			Data:    decodedData,
 		})
 	}
