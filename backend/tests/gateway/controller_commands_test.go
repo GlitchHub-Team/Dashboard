@@ -258,7 +258,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 		helper.ExecuteControllerTest(t, tc, "POST", "/gateway/:gateway_id/reboot", controller.RebootGateway)
 	})
 
-	t.Run("Reboot: errore use case non trovato viene restituito 400 (comportamento corrente)", func(t *testing.T) {
+	t.Run("Reboot: errore use case non trovato viene restituito 404", func(t *testing.T) {
 		expected := gateway.RebootGatewayCommand{Requester: requester, GatewayId: gatewayID}
 		steps := []helper.MockUseCaseSetupFunc[mocks.MockRebootGatewayUseCase]{
 			func(mockUC *mocks.MockRebootGatewayUseCase) *gomock.Call {
@@ -273,7 +273,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			Url:            "/gateway/" + gatewayID.String() + "/reboot",
 			InputDto:       struct{}{},
 			Requester:      requester,
-			ExpectedStatus: http.StatusBadRequest,
+			ExpectedStatus: http.StatusNotFound,
 			ExpectedResponse: gin.H{
 				"error": gateway.ErrGatewayNotFound.Error(),
 			},
