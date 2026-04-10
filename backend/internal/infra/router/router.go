@@ -144,5 +144,14 @@ func NewGinEngine(
 		private.GET("/tenant/:tenant_id", tenantController.GetTenant)
 	}
 
+	// Gateway
+	{
+		private.POST("/gateway", gatewayController.CreateGateway)
+		private.DELETE("/gateway/:gateway_id", gatewayController.DeleteGateway)
+		private.GET("/gateway/:gateway_id", gatewayController.GetGateway)
+		private.GET("/gateways", gatewayController.GetAllGateways)
+		// private.GET("/tenant/:tenant_id/gateway/:gateway_id", gatewayController.GetGatewayByTenant)
+		private.GET("/tenant/:tenant_id/gateways", gatewayController.GetGatewaysByTenant)
+	}
 	return router
 }
