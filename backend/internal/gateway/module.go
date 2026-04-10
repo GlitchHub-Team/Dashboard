@@ -7,33 +7,12 @@ import (
 var Module = fx.Module(
 	"gateway",
 
-	// Metodi pubblici
 	fx.Provide(
 		NewGatewayController,
 
 		fx.Annotate(
-			NewCreateGatewayService,
-			fx.As(new(CreateGatewayUseCase)),
-		),
-
-		fx.Annotate(
-			NewDeleteGatewayService,
-			fx.As(new(DeleteGatewayUseCase)),
-		),
-
-		fx.Annotate(
-			NewGetGatewayService,
-			fx.As(new(GetGatewayUseCase)),
-		),
-
-		fx.Annotate(
-			NewGetAllGatewaysService,
-			fx.As(new(GetAllGatewaysUseCase)),
-		),
-
-		fx.Annotate(
-			NewGetGatewaysByTenantService,
-			fx.As(new(GetGatewaysByTenantUseCase)),
+			NewGatewayPostgreRepository,
+			fx.As(new(GatewayRepository)),
 		),
 
 		fx.Annotate(
@@ -44,6 +23,29 @@ var Module = fx.Module(
 			fx.As(new(GetGatewaysPort)),
 		),
 
-		NewGatewayPostgreRepository,
+		fx.Annotate(
+			NewGatewayCommandNATSAdapter,
+			fx.As(new(GatewayCommandPort)),
+		),
+
+		fx.Annotate(
+			NewGatewayManagementService,
+			fx.As(new(CreateGatewayUseCase)),
+			fx.As(new(DeleteGatewayUseCase)),
+			fx.As(new(GetGatewayUseCase)),
+			fx.As(new(GetAllGatewaysUseCase)),
+			fx.As(new(GetGatewaysByTenantUseCase)),
+		),
+
+		fx.Annotate(
+			NewGatewayCommandService,
+			fx.As(new(CommissionGatewayUseCase)),
+			fx.As(new(DecommissionGatewayUseCase)),
+			fx.As(new(InterruptGatewayUseCase)),
+			fx.As(new(ResumeGatewayUseCase)),
+			fx.As(new(ResetGatewayUseCase)),
+			fx.As(new(RebootGatewayUseCase)),
+			fx.As(new(SetGatewayIntervalLimitUseCase)),
+		),
 	),
 )
