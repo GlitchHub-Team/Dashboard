@@ -23,12 +23,7 @@ type GetTenantCommand struct {
 }
 
 type GetTenantListCommand struct {
+	identity.Requester
 	Limit int
 	Page  int
-	// identity.Requester
-}
-
-type GetTenantByUserCommand struct {
-	UserId uuid.UUID
-	identity.Requester
 }

@@ -30,7 +30,7 @@ func SeverDropDatabase(log *zap.Logger, db *gorm.DB, targetDBName, dbType string
 		return fmt.Errorf("impossibile eliminare %v \"%v\": %w", dbType, targetDBName, err)
 	}
 
-	log.Info("Eliminato con successo %v \"%v\"")
+	log.Sugar().Infof("Eliminato con successo %v \"%v\"", dbType, targetDBName)
 
 	return nil
 }

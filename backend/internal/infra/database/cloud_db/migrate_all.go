@@ -120,7 +120,7 @@ func populateTenantDefaultData(migrator localCloudMigrator) error {
 }
 
 func migrateAll(
-	tenantRepo *tenant.TenantPostgreRepository,
+	tenantRepo tenant.TenantRepository,
 	migrator localCloudMigrator,
 	setDefaultData bool,
 ) (err error) {

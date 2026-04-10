@@ -2,7 +2,6 @@ package tenant
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	transportHttp "backend/internal/infra/transport/http"
@@ -13,13 +12,36 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetAllTenantsUseCase
+
+type CreateTenantUseCase interface {
+	CreateTenant(cmd CreateTenantCommand) (Tenant, error)
+}
+
+type DeleteTenantUseCase interface {
+	DeleteTenant(cmd DeleteTenantCommand) (Tenant, error)
+}
+
+type GetTenantUseCase interface {
+	GetTenant(cmd GetTenantCommand) (Tenant, error)
+}
+
+type GetAllTenantsUseCase interface {
+	GetAllTenants() ([]Tenant, error)
+}
+
+type GetTenantListUseCase interface {
+	GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error)
+}
+
 type Controller struct {
-	log                    *zap.Logger
-	createTenantUseCase    CreateTenantUseCase
-	deleteTenantUseCase    DeleteTenantUseCase
-	getTenantUseCase       GetTenantUseCase
-	getTenantListUseCase   GetTenantListUseCase
-	getTenantByUserUseCase GetTenantByUserUseCase
+	log                  *zap.Logger
+
+	createTenantUseCase  CreateTenantUseCase
+	deleteTenantUseCase  DeleteTenantUseCase
+	getTenantUseCase     GetTenantUseCase
+	getTenantListUseCase GetTenantListUseCase
+	getAllTenantsUseCase GetAllTenantsUseCase
 }
 
 func NewTenantController(
@@ -28,19 +50,20 @@ func NewTenantController(
 	deleteTenantUseCase DeleteTenantUseCase,
 	getTenantUseCase GetTenantUseCase,
 	getTenantListUseCase GetTenantListUseCase,
-	getTenantByUserUseCase GetTenantByUserUseCase,
+	getAllTenantsUseCase GetAllTenantsUseCase,
 ) *Controller {
 	return &Controller{
-		log:                    log,
-		createTenantUseCase:    createTenantUseCase,
-		deleteTenantUseCase:    deleteTenantUseCase,
-		getTenantUseCase:       getTenantUseCase,
-		getTenantListUseCase:   getTenantListUseCase,
-		getTenantByUserUseCase: getTenantByUserUseCase,
+		log:                  log,
+		createTenantUseCase:  createTenantUseCase,
+		deleteTenantUseCase:  deleteTenantUseCase,
+		getTenantUseCase:     getTenantUseCase,
+		getTenantListUseCase: getTenantListUseCase,
+		getAllTenantsUseCase: getAllTenantsUseCase,
 	}
 }
 
 // CREATE TENANT ======================================================================================
+
 func (controller *Controller) CreateTenant(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
@@ -82,6 +105,7 @@ func (controller *Controller) CreateTenant(ctx *gin.Context) {
 }
 
 // DELETE TENANT ======================================================================================
+
 func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
@@ -89,7 +113,7 @@ func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 		return
 	}
 	var bodyDto DeleteTenantDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
+	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
 		}
@@ -109,7 +133,7 @@ func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrTenantNotFound) {
-			transportHttp.RequestError(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
 
@@ -122,6 +146,7 @@ func (controller *Controller) DeleteTenant(ctx *gin.Context) {
 }
 
 // GET TENANT =========================================================================================
+
 func (controller *Controller) GetTenant(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
@@ -150,7 +175,7 @@ func (controller *Controller) GetTenant(ctx *gin.Context) {
 			transportHttp.RequestUnauthorized(ctx, err)
 			return
 		} else if errors.Is(err, ErrTenantNotFound) {
-			transportHttp.RequestError(ctx, err)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
 
@@ -162,13 +187,33 @@ func (controller *Controller) GetTenant(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
+// GET ALL TENANTS ========================================================================================
+
+/*
+NOTA: Questo è un endpoint che ha senso solo ai fini del prototipo, in quanto è utilizzato principalmente
+nella pagina di login per elencare i vari tenant a cui si può accedere. In un progetto reale, ci dev'essere
+separazione completa tra i tenant, per cui ciascuno di questi avrebbe a disposizione una propria pagina
+di login (su un dominio/sottodominio diverso) che permette agli utenti del tenant di accedere a quest'ultimo.
+*/
+func (controller *Controller) GetAllTenants(ctx *gin.Context) {
+	tenants, err := controller.getAllTenantsUseCase.GetAllTenants()
+	if err != nil {
+		transportHttp.RequestServerError(ctx, err)
+		return
+	}
+
+	responseDto := NewAllTenantsResponseDTO(tenants)
+	ctx.JSON(http.StatusOK, responseDto)
+}
+
 // GET TENANTS ========================================================================================
-func (controller *Controller) GetTenants(ctx *gin.Context) {
-	// requester, err := transportHttp.ExtractRequester(ctx)
-	// if err != nil {
-	// 	transportHttp.RequestUnauthorized(ctx, err)
-	// 	return
-	// }
+
+func (controller *Controller) GetTenantList(ctx *gin.Context) {
+	requester, err := transportHttp.ExtractRequester(ctx)
+	if err != nil {
+		transportHttp.RequestUnauthorized(ctx, err)
+		return
+	}
 
 	var queryDto GetTenantListDTO
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
@@ -179,9 +224,9 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 	}
 
 	cmd := GetTenantListCommand{
-		// Requester: requester,
-		Page:  queryDto.Page,
-		Limit: queryDto.Limit,
+		Requester: requester,
+		Page:      queryDto.Page,
+		Limit:     queryDto.Limit,
 	}
 
 	tenants, total, err := controller.getTenantListUseCase.GetTenantList(cmd)
@@ -195,28 +240,7 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 		return
 	}
 
-	responseDtos := NewTenantListResponseDTO(tenants, total)
+	responseDto := NewTenantListResponseDTO(tenants, total)
 
-	ctx.JSON(http.StatusOK, responseDtos)
-}
-
-// GET TENANT BY USER =================================================================================
-// non usare :)
-func (controller *Controller) GetTenantByUser(ctx *gin.Context) {
-	var cmd GetTenantByUserCommand
-
-	if err := ctx.ShouldBindJSON(&cmd); err != nil {
-		controller.log.Error("Error binding JSON", zap.Error(err))
-		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid request body"))
-		return
-	}
-
-	tenant, err := controller.getTenantByUserUseCase.GetTenantByUser(cmd)
-	if err != nil {
-		controller.log.Error("Error getting tenant by user", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to get tenant by user"))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, tenant)
+	ctx.JSON(http.StatusOK, responseDto)
 }

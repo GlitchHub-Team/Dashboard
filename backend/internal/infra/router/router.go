@@ -140,8 +140,9 @@ func NewGinEngine(
 	{
 		private.POST("/tenant", tenantController.CreateTenant)
 		private.DELETE("/tenant/:tenant_id", tenantController.DeleteTenant)
-		private.GET("/tenants", tenantController.GetTenants)
 		private.GET("/tenant/:tenant_id", tenantController.GetTenant)
+		private.GET("/tenants", tenantController.GetTenantList)
+		public.GET("/all_tenants", tenantController.GetAllTenants)
 	}
 
 	// Gateway
