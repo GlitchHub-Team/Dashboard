@@ -10,7 +10,7 @@ export class TenantApiAdapter extends TenantAdapter {
     return {
       id: dto.tenant_id,
       name: dto.tenant_name,
-      canImpersonate: dto.can_impersonate,
+      canImpersonate: dto.can_impersonate ?? false,
     };
   }
 
