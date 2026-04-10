@@ -113,20 +113,20 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 }
 
 func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, error) {
-	if !cmd.IsSuperAdmin() {
-		return nil, ErrUnauthorized
-	}
+	// if !cmd.IsSuperAdmin() {
+	// 	return nil, ErrUnauthorized
+	// }
 
 	tenants, err := service.getTenantsPort.GetTenants()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, tenant := range tenants {
-		if !tenant.CanImpersonate {
-			return nil, ErrUnauthorized
-		}
-	}
+	// for _, tenant := range tenants {
+	// 	if !tenant.CanImpersonate {
+	// 		return nil, ErrUnauthorized
+	// 	}
+	// }
 
 	return tenants, nil
 }

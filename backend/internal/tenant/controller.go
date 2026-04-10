@@ -164,11 +164,11 @@ func (controller *Controller) GetTenant(ctx *gin.Context) {
 
 // GET TENANTS ========================================================================================
 func (controller *Controller) GetTenants(ctx *gin.Context) {
-	requester, err := transportHttp.ExtractRequester(ctx)
-	if err != nil {
-		transportHttp.RequestUnauthorized(ctx, err)
-		return
-	}
+	// requester, err := transportHttp.ExtractRequester(ctx)
+	// if err != nil {
+	// 	transportHttp.RequestUnauthorized(ctx, err)
+	// 	return
+	// }
 
 	var queryDto GetTenantListDTO
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
@@ -179,7 +179,7 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 	}
 
 	cmd := GetTenantListCommand{
-		Requester: requester,
+		// Requester: requester,
 		Page:      queryDto.Page,
 		Limit:     queryDto.Limit,
 	}
