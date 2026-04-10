@@ -20,6 +20,7 @@ import { User } from '../../models/user/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserRole } from '../../models/user/user-role.enum';
 import { TenantService } from '../../services/tenant/tenant.service';
+import { Tenant } from '../../models/tenant/tenant.model';
 
 interface UserManagerContext {
   title: string;
@@ -55,7 +56,7 @@ export class UserManagerPage implements OnInit {
   protected readonly limit = this.userService.limit;
   protected readonly loading = this.userService.loading;
   protected readonly error = this.userService.error;
-  protected readonly tenants = this.tenantService.tenantList;
+  protected readonly tenants = signal<Tenant[]>([]);
 
   private readonly _dismissedError = signal<string | null>(null);
 
@@ -109,7 +110,9 @@ export class UserManagerPage implements OnInit {
         this.context.set({ ...baseContext, tenantId: resolvedTenantId || undefined });
 
         if (currentUserRole === UserRole.SUPER_ADMIN && baseContext.role === UserRole.TENANT_ADMIN) {
-          this.tenantService.retrieveTenants(true);
+          this.tenantService.getAllTenants().subscribe((tenants) => {
+            this.tenants.set(tenants);
+          });
         }
 
         const needsTenantId =

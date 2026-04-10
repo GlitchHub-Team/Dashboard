@@ -29,6 +29,12 @@ export class TenantApiClientService {
     });
   }
 
+  // Memo: can_impersonate qua non ci serve, in quanto usiamo questo endpoint solo per popolare dropdown di selezione tenant 
+  // e li ci basta sapere nome e id del tenant
+  public getAllTenants(): Observable<TenantBackend[]> {
+    return this.http.get<TenantBackend[]>(`${this.apiUrl}/all_tenants`);
+  }
+
   public createTenant(config: TenantConfig): Observable<TenantBackend> {
     return this.http.post<TenantBackend>(`${this.apiUrl}/tenant`, {
       // Mapping del body rispetto a quando documentato su APIDOG

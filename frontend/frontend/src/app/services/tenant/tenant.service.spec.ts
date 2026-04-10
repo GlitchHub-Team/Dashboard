@@ -51,6 +51,7 @@ describe('TenantService', () => {
   const tenantApiMock = {
     getTenant: vi.fn(),
     getTenants: vi.fn(),
+    getAllTenants: vi.fn(),
     createTenant: vi.fn(),
     deleteTenant: vi.fn(),
   };
@@ -122,7 +123,7 @@ describe('TenantService', () => {
       tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
       tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
 
-      service.retrieveTenants(false);
+      service.retrieveTenants();
 
       expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
       expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
@@ -141,40 +142,9 @@ describe('TenantService', () => {
     ])('should handle retrieval errors', ({ error, expected }) => {
       tenantApiMock.getTenants.mockReturnValue(throwError(() => error));
 
-      service.retrieveTenants(false);
+      service.retrieveTenants();
 
       expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
-      expect(service.loading()).toBe(false);
-      expect(service.tenantList()).toEqual([]);
-      expect(service.error()).toBe(expected);
-    });
-
-    it('should retrieve tenants with limit 100 when called for login', () => {
-      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
-      tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
-
-      service.retrieveTenants(true);
-
-      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 100);
-      expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
-      expect(service.loading()).toBe(false);
-      expect(service.tenantList()).toEqual(mappedTenants);
-      expect(service.total()).toBe(2);
-      expect(service.error()).toBeNull();
-    });
-
-    it.each([
-      {
-        error: { status: 500, message: 'Failed to fetch' } as ApiError,
-        expected: 'Failed to fetch',
-      },
-      { error: { status: 500 } as ApiError, expected: 'Failed to fetch tenants' },
-    ])('should handle retrieval errors when called for login', ({ error, expected }) => {
-      tenantApiMock.getTenants.mockReturnValue(throwError(() => error));
-
-      service.retrieveTenants(true);
-
-      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 100);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual([]);
       expect(service.error()).toBe(expected);
@@ -248,6 +218,42 @@ describe('TenantService', () => {
       expect(service.tenantList()).toEqual([]);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBe(expected);
+    });
+  });
+
+  describe('getAllTenants', () => {
+    it('should call API, adapt each DTO and return mapped tenants', () => {
+      tenantApiMock.getAllTenants.mockReturnValue(of(tenantBackendList));
+      tenantAdapterMock.fromDTO
+        .mockReturnValueOnce(mappedTenants[0])
+        .mockReturnValueOnce(mappedTenants[1]);
+
+      let result: Tenant[] | undefined;
+      service.getAllTenants().subscribe((tenants) => {
+        result = tenants;
+      });
+
+      expect(tenantApiMock.getAllTenants).toHaveBeenCalled();
+      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledTimes(2);
+      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(tenantBackendList[0]);
+      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(tenantBackendList[1]);
+      expect(result).toEqual(mappedTenants);
+      expect(service.loading()).toBe(false);
+      expect(service.error()).toBeNull();
+    });
+
+    it.each([
+      { error: { status: 500, message: 'Server error' } as ApiError },
+      { error: { status: 500 } as ApiError },
+    ])('should reset loading and propagate error to subscriber', ({ error }) => {
+      tenantApiMock.getAllTenants.mockReturnValue(throwError(() => error));
+
+      let propagatedError: ApiError | undefined;
+      service.getAllTenants().subscribe({ error: (err) => (propagatedError = err) });
+
+      expect(service.error()).toBeNull();
+      expect(service.loading()).toBe(false);
+      expect(propagatedError).toEqual(error);
     });
   });
 });

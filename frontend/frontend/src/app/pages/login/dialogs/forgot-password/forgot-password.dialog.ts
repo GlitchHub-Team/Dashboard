@@ -1,4 +1,4 @@
-import { Component, inject, DestroyRef } from '@angular/core';
+import { Component, inject, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -12,6 +12,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { AuthActionsService } from '../../../../services/auth/auth-actions.service';
 import { TenantService } from '../../../../services/tenant/tenant.service';
 import { ForgotPasswordRequest } from '../../../../models/auth/forgot-password-request.model';
+import { Tenant } from '../../../../models/tenant/tenant.model';
+import { ApiError } from '../../../../models/api-error.model';
 
 @Component({
   selector: 'app-forgot-password.dialog',
@@ -36,7 +38,8 @@ export class ForgotPasswordDialog {
   private readonly tenantService = inject(TenantService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly displayedTenants = this.tenantService.tenantList;
+  protected readonly displayedTenants = signal<Tenant[]>([]);
+  protected readonly tenantLoadingError = signal<string | null>(null);
 
   protected readonly forgotPasswordForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -47,7 +50,10 @@ export class ForgotPasswordDialog {
   protected readonly generalError = this.authActionsService.error;
 
   constructor() {
-    this.tenantService.retrieveTenants(true);
+    this.tenantService.getAllTenants().subscribe({
+      next: (tenants) => this.displayedTenants.set(tenants),
+      error: (err: ApiError) => this.tenantLoadingError.set(err.message ?? 'Failed to fetch tenants'),
+    });
     this.setupAutoClear();
   }
 

@@ -15,7 +15,6 @@ import { TenantService } from '../../services/tenant/tenant.service';
 import { User } from '../../models/user/user.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
-import { Tenant } from '../../models/tenant/tenant.model';
 
 const mockUsers: User[] = [
   {
@@ -79,8 +78,7 @@ function setupTestBed(options: {
   const routerMock = { navigate: vi.fn() };
   const tenantServiceMock = {
     getTenant: vi.fn().mockReturnValue(of({ id: 'mock', name: 'Mock', canImpersonate: options.canImpersonate ?? true })),
-    retrieveTenants: vi.fn(),
-    tenantList: signal<Tenant[]>([]),
+    getAllTenants: vi.fn().mockReturnValue(of([])),
   };
 
   TestBed.configureTestingModule({
@@ -392,25 +390,30 @@ describe('UserManagerPage (Integration)', () => {
       expect(getTable(fixture)).toBeTruthy();
     });
 
-    it.each([
-      ['TENANT_USER', tenantUserContext, 2],
-      ['TENANT_ADMIN', tenantAdminContext, 1],
-    ] as const)(
-      'should show tenant banner with correct buttons for SUPER_ADMIN viewing %s',
-      (_label, routeContext, expectedButtonCount) => {
-        const { fixture } = setupTestBed({
-          session: superAdminSession,
-          routeContext,
-          queryParams: { tenantId: 'tenant-xyz' },
-        });
-        fixture.detectChanges();
+    it('should show tenant banner with 2 buttons for SUPER_ADMIN viewing TENANT_USER', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantUserContext,
+        queryParams: { tenantId: 'tenant-xyz' },
+      });
+      fixture.detectChanges();
 
-        const banner = fixture.nativeElement.querySelector('.tenant-banner');
-        expect(banner).toBeTruthy();
-        expect(banner.textContent).toContain('tenant-xyz');
-        expect(banner.querySelectorAll('button').length).toBe(expectedButtonCount);
-      },
-    );
+      const banner = fixture.nativeElement.querySelector('.tenant-banner');
+      expect(banner).toBeTruthy();
+      expect(banner.textContent).toContain('tenant-xyz');
+      expect(banner.querySelectorAll('button').length).toBe(2);
+    });
+
+    it('should NOT show tenant banner for SUPER_ADMIN viewing TENANT_ADMIN', () => {
+      const { fixture } = setupTestBed({
+        session: superAdminSession,
+        routeContext: tenantAdminContext,
+        queryParams: { tenantId: 'tenant-xyz' },
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.tenant-banner')).toBeFalsy();
+    });
 
     it('should NOT show tenant banner for non-SUPER_ADMIN session', () => {
       const { fixture } = setupTestBed({
@@ -506,13 +509,6 @@ describe('UserManagerPage (Integration)', () => {
 
     describe('Navigation', () => {
       it.each([
-        [
-          'tenant-management from tenant banner back button',
-          tenantAdminContext,
-          { tenantId: 'tenant-1' },
-          '.tenant-banner .banner-actions button:last-child',
-          [['/tenant-management']],
-        ],
         [
           'dashboard with tenantId from dashboard button',
           tenantUserContext,

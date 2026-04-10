@@ -13,6 +13,7 @@ import { GatewayService } from '../../../../services/gateway/gateway.service';
 import { ApiError } from '../../../../models/api-error.model';
 import { ActionMode } from '../../../../models/action-mode.model';
 import { TenantService } from '../../../../services/tenant/tenant.service';
+import { Tenant } from '../../../../models/tenant/tenant.model';
 
 @Component({
   selector: 'app-gateway-commands',
@@ -36,7 +37,7 @@ export class GatewayCommandsDialog implements OnInit {
   private readonly tenantService = inject(TenantService);
   protected readonly data = inject<{ gateway: Gateway; mode: ActionMode }>(MAT_DIALOG_DATA);
 
-  protected readonly displayedTenants = this.tenantService.tenantList;
+  protected readonly displayedTenants = signal<Tenant[]>([]);
 
   private get mode(): ActionMode {
     return this.data.mode;
@@ -93,7 +94,11 @@ export class GatewayCommandsDialog implements OnInit {
   });
 
   ngOnInit(): void {
-    this.tenantService.retrieveTenants(true);
+    this.tenantService.getAllTenants().subscribe({
+      next: (tenants) => this.displayedTenants.set(tenants),
+      error: (err: ApiError) => this.generalError.set(err.message ?? 'Failed to fetch tenants'),
+    });
+
     this.commandForm.controls.command.valueChanges.subscribe((command) => {
       const tenantIdCtrl = this.commandForm.controls.tenantId;
       const tokenCtrl = this.commandForm.controls.token;
