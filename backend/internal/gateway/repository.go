@@ -14,22 +14,22 @@ import (
 	clouddb "backend/internal/infra/database/cloud_db/connection"
 )
 
-type DB any // TODO: solo per test
+//go:generate mockgen -destination=../../tests/gateway/mocks/gateway_repository.go -package=mocks . GatewayRepository
 
-// per il commissionig // risoista  requst replay,
+type DB any
 
 // type gatewayEntity struct{}
 
 // entity =============================================================================================
 
 type GatewayEntity struct {
-	ID       string  `gorm:"type:uuid;primaryKey"`
-	Name     string  `gorm:"type:varchar(255);not null"`
-	TenantId *string `gorm:"type:uuid;index"`
-	// il modo giusto per fare il fk per assurdo
+	ID               string         `gorm:"type:uuid;primaryKey"`
+	Name             string         `gorm:"type:varchar(255);not null"`
+	TenantId         *string        `gorm:"type:uuid;index"`
 	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Status           string         `gorm:"type:varchar(50);not null"`
 	PublicIdentifier string         `gorm:"type:varchar(255)"`
+	SigningSecret    string         `gorm:"type:varchar(255)"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -41,7 +41,7 @@ type gatewayPostgreRepository struct {
 	db  clouddb.CloudDBConnection
 }
 
-func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) *gatewayPostgreRepository {
+func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) GatewayRepository {
 	return &gatewayPostgreRepository{
 		log: log,
 		db:  db,
@@ -54,7 +54,6 @@ func (entity *GatewayEntity) fromGateway(g Gateway) {
 	entity.ID = g.Id.String()
 	entity.Name = g.Name
 	entity.Status = string(g.Status)
-	entity.PublicIdentifier = g.PublicIdentifier
 
 	if g.TenantId != nil {
 		tenantIdStr := g.TenantId.String()
@@ -62,6 +61,8 @@ func (entity *GatewayEntity) fromGateway(g Gateway) {
 	} else {
 		entity.TenantId = nil
 	}
+	entity.PublicIdentifier = g.PublicIdentifier
+	entity.SigningSecret = g.SigningSecret
 }
 
 func (entity *GatewayEntity) toGateway() Gateway {
@@ -77,6 +78,7 @@ func (entity *GatewayEntity) toGateway() Gateway {
 		Status:           (GatewayStatus)(entity.Status),
 		TenantId:         tenantId,
 		PublicIdentifier: entity.PublicIdentifier,
+		SigningSecret:    entity.SigningSecret,
 	}
 }
 
@@ -115,29 +117,56 @@ func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 	})
 }
 
-func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayEntity, error) {
+func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway, error) {
 	var entity GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
 		Where("id = ?", gatewayId).
 		First(&entity).
 		Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return GatewayEntity{}, nil
+		return Gateway{}, ErrGatewayNotFound
 	}
-	return entity, err
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	return entity.toGateway(), nil
 }
 
-func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]GatewayEntity, error) {
+func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]Gateway, error) {
 	var entities []GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.Where("tenant_id = ?", tenantId).Find(&entities).Error
-	return entities, err
+	if err != nil {
+		return nil, err
+	}
+	gateways := make([]Gateway, len(entities))
+	for i, entity := range entities {
+		gateways[i] = entity.toGateway()
+	}
+	return gateways, nil
 }
 
-func (repo *gatewayPostgreRepository) GetAllGateways() ([]GatewayEntity, error) {
+func (repo *gatewayPostgreRepository) GetAllGateways() ([]Gateway, error) {
 	var entities []GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.Find(&entities).Error
-	return entities, err
+	if err != nil {
+		return nil, err
+	}
+	gateways := make([]Gateway, len(entities))
+	for i, entity := range entities {
+		gateways[i] = entity.toGateway()
+	}
+	return gateways, nil
+}
+
+type GatewayRepository interface {
+	SaveGateway(gateway Gateway) error
+	DeleteGateway(gateway Gateway) error
+	GetGatewayById(gatewayId string) (Gateway, error)
+	GetGatewaysByTenantId(tenantId string) ([]Gateway, error)
+	GetAllGateways() ([]Gateway, error)
 }
