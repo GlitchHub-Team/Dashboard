@@ -61,7 +61,7 @@ export class AuthApiClientService {
   }
 
   public verifyAccountToken(token: string, tenantId?: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/confirm_account/verify_token/`, {
+    return this.http.post<void>(`${this.apiUrl}/confirm_account/verify_token`, {
       token: token,
       tenant_id: tenantId,
     });
