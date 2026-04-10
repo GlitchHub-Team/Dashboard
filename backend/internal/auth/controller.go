@@ -230,7 +230,7 @@ func (controller *Controller) ConfirmAccount(ctx *gin.Context) {
 			return
 		}
 		if errors.Is(err, ErrTokenNotFound) || errors.Is(err, ErrTokenExpired) {
-			transportHttp.RequestNotFound(ctx, ErrTokenNotFound)
+			transportHttp.RequestNotFound(ctx, err)
 			return
 		}
 		transportHttp.RequestServerError(ctx, err)
@@ -339,7 +339,7 @@ func (controller *Controller) ConfirmForgotPasswordToken(ctx *gin.Context) {
 		NewPassword: bodyDto.NewPassword,
 	})
 	if err != nil {
-		if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrTokenNotFound) {
+		if errors.Is(err, ErrAccountNotConfirmed) || errors.Is(err, ErrTokenNotFound) || errors.Is(err, ErrTokenExpired) {
 			transportHttp.RequestNotFound(ctx, err)
 			return
 		}

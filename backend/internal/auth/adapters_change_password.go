@@ -72,6 +72,7 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 	if err != nil {
 		return "", err
 	}
+	expiry := adapter.tokenGenerator.ExpiryFromNow()
 
 	// 2. Save token
 	switch user.Role {
@@ -79,6 +80,7 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 		entity := SuperAdminPasswordTokenEntity{
 			Token:  rawToken,
 			UserId: user.Id,
+			ExpiresAt: expiry,
 		}
 		err = adapter.superAdminRepo.SaveToken(&entity)
 		if err != nil {
@@ -91,6 +93,7 @@ func (adapter *ChangePasswordTokenPgAdapter) NewForgotPasswordToken(user user.Us
 			Token:    rawToken,
 			TenantId: tenantIdString,
 			UserId:   user.Id,
+			ExpiresAt: expiry,
 		}
 		err = adapter.tenantMemberRepo.SaveToken(&entity)
 		if err != nil {
