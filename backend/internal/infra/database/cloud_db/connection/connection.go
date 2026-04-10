@@ -113,22 +113,12 @@ func SetCloudDbLifecycle(
 						cfg.CloudDBName,
 					)
 				}
-            }
-
-				if err := db.Exec(
-					"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ? AND pid <> pg_backend_pid()",
-					cfg.CloudDBName,
-				).Error; err != nil {
-					log.Warn("impossibile terminare connessioni attive Cloud DB", zap.String("name", cfg.CloudDBName), zap.Error(err))
-				}
-
-				err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.CloudDBName)).Error
+				
+				err = dbPackage.SeverDropDatabase(log, db, cfg.CloudDBName, "Cloud DB Test")
 				if err != nil {
-					return fmt.Errorf("impossibile eliminare Cloud DB di test %v: %w", cfg.CloudDBName, err)
+					return err
 				}
-
-				log.Info("Eliminato cloud db di test", zap.String("name", cfg.CloudDBName))
-			}
+            }
 
 			return nil
 		},

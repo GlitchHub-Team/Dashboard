@@ -56,35 +56,37 @@ func (a *GatewayPostgreAdapter) Remove(gatewayId uuid.UUID) (Gateway, error) {
 	return existing, nil
 }
 
+// TODO: fix hexagonal sbagliato
 func (a *GatewayPostgreAdapter) GetById(gatewayId string) (Gateway, error) {
 	entity, err := a.repo.GetGatewayById(gatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
-	return entity.ToGateway(), nil
+	return entity, nil
 }
 
+// TODO: fix hexagonal sbagliato
 func (a *GatewayPostgreAdapter) GetByTenantId(tenantId string) ([]Gateway, error) {
 	gateways, err := a.repo.GetGatewaysByTenantId(tenantId)
 	if err != nil {
 		return nil, err
 	}
-	gateways := make([]Gateway, len(entities))
-	for i := range entities {
-		gateways[i] = entities[i].ToGateway()
-	}
+	// gateways := make([]Gateway, len(entities))
+	// for i := range entities {
+	// 	gateways[i] = entities[i].ToGateway()
+	// }
 	return gateways, nil
 }
-
+// TODO: fix hexagonal sbagliato
 func (a *GatewayPostgreAdapter) GetAll() ([]Gateway, error) {
 	gateways, err := a.repo.GetAllGateways()
 	if err != nil {
 		return nil, err
 	}
-	gateways := make([]Gateway, len(entities))
-	for i := range entities {
-		gateways[i] = entities[i].ToGateway()
-	}
+	// gateways := make([]Gateway, len(entities))
+	// for i := range entities {
+	// 	gateways[i] = entities[i].ToGateway()
+	// }
 	return gateways, nil
 }
 

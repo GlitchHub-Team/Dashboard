@@ -21,13 +21,13 @@ import (
 // entity =============================================================================================
 
 type GatewayEntity struct {
-	ID       string  `gorm:"type:uuid;primaryKey"`
-	Name     string  `gorm:"type:varchar(255);not null"`
-	TenantId *string `gorm:"type:uuid;index"`
-	// il modo giusto per fare il fk per assurdo
-	Tenant           *tenant.TenantEntity `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Status           string               `gorm:"type:varchar(50);not null"`
-	PublicIdentifier string               `gorm:"type:varchar(255)"`
+	ID               string         `gorm:"type:uuid;primaryKey"`
+	Name             string         `gorm:"type:varchar(255);not null"`
+	TenantId         *string        `gorm:"type:uuid;index"`
+	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Status           string         `gorm:"type:varchar(50);not null"`
+	PublicIdentifier string         `gorm:"type:varchar(255)"`
+	SigningSecret    string         `gorm:"type:varchar(255)"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -144,6 +144,7 @@ func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
 	})
 }
 
+// TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
 func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway, error) {
 	var entity GatewayEntity
 	db := (*gorm.DB)(repo.db)
@@ -158,10 +159,12 @@ func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway,
 	if err != nil {
 		return Gateway{}, err
 	}
-
-	return entity.toGateway(), nil
+	
+	gateway, err := GatewayEntityToDomain(&entity)
+	return gateway, err
 }
 
+// TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
 func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]Gateway, error) {
 	var entities []GatewayEntity
 	db := (*gorm.DB)(repo.db)
@@ -169,13 +172,19 @@ func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]
 	if err != nil {
 		return nil, err
 	}
+
 	gateways := make([]Gateway, len(entities))
 	for i, entity := range entities {
-		gateways[i] = entity.toGateway()
+		gateways[i], err = GatewayEntityToDomain(&entity)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return gateways, nil
 }
 
+// TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
 func (repo *gatewayPostgreRepository) GetAllGateways() ([]Gateway, error) {
 	var entities []GatewayEntity
 	db := (*gorm.DB)(repo.db)
@@ -185,7 +194,10 @@ func (repo *gatewayPostgreRepository) GetAllGateways() ([]Gateway, error) {
 	}
 	gateways := make([]Gateway, len(entities))
 	for i, entity := range entities {
-		gateways[i] = entity.toGateway()
+		gateways[i], err = GatewayEntityToDomain(&entity)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return gateways, nil
 }
