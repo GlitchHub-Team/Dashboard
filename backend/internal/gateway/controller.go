@@ -454,7 +454,7 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
 
-	if err := ctx.ShouldBindJSON(&queryDto); err != nil {
+	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
 		}
