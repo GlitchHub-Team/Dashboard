@@ -180,11 +180,11 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 
 	cmd := GetTenantListCommand{
 		// Requester: requester,
-		Page:      queryDto.Page,
-		Limit:     queryDto.Limit,
+		Page:  queryDto.Page,
+		Limit: queryDto.Limit,
 	}
 
-	tenants, err := controller.getTenantListUseCase.GetTenantList(cmd)
+	tenants, total, err := controller.getTenantListUseCase.GetTenantList(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
 			transportHttp.RequestUnauthorized(ctx, err)
@@ -195,15 +195,9 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 		return
 	}
 
-	responseDtos := NewTenantListResponseDTO(tenants, 10)
-	listInfo := gin.H{
-		"page":  queryDto.Page,
-		"limit": queryDto.Limit,
-	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"tenants":   responseDtos,
-		"list_info": listInfo,
-	})
+	responseDtos := NewTenantListResponseDTO(tenants, total)
+
+	ctx.JSON(http.StatusOK, responseDtos)
 }
 
 // GET TENANT BY USER =================================================================================

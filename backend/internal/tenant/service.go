@@ -20,7 +20,7 @@ type GetTenantUseCase interface {
 }
 
 type GetTenantListUseCase interface {
-	GetTenantList(cmd GetTenantListCommand) ([]Tenant, error)
+	GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error)
 }
 
 type GetTenantByUserUseCase interface {
@@ -60,7 +60,7 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 	newTenantId := uuid.New()
 
 	newTenant := Tenant{
-		Id: newTenantId,
+		Id:             newTenantId,
 		Name:           cmd.Name,
 		CanImpersonate: cmd.CanImpersonate,
 	}
@@ -113,27 +113,13 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 	return tenant, nil
 }
 
-func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, error) {
-	// if !cmd.IsSuperAdmin() {
-	// 	return nil, ErrUnauthorized
-	// }
-
-	tenants, err := service.getTenantsPort.GetTenants()
+func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error) {
+	tenants, total, err := service.getTenantsPort.GetTenants(cmd.Page, cmd.Limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	if tenants == nil {
-		tenants = make([]Tenant, 0)
-	}
-
-	// for _, tenant := range tenants {
-	// 	if !tenant.CanImpersonate {
-	// 		return nil, ErrUnauthorized
-	// 	}
-	// }
-
-	return tenants, nil
+	return tenants, total, nil
 }
 
 func (service *TenantService) GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error) {

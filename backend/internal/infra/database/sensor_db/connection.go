@@ -115,7 +115,7 @@ func SetSensorDbLifecycle(
 				}
 			}
 
-            return nil
+			return nil
 		},
 	})
 }
