@@ -7,19 +7,19 @@ import (
 )
 
 type CreateTenantCommand struct {
+	identity.Requester
 	Name           string
 	CanImpersonate bool
-	identity.Requester
 }
 
 type DeleteTenantCommand struct {
-	TenantId uuid.UUID
 	identity.Requester
+	TenantId uuid.UUID
 }
 
 type GetTenantCommand struct {
-	TenantId uuid.UUID
 	identity.Requester
+	TenantId uuid.UUID
 }
 
 type GetTenantListCommand struct {
