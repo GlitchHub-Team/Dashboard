@@ -71,7 +71,7 @@ func (s *InterruptSensorService) InterruptSensor(cmd InterruptSensorCommand) err
 
 	// Controllo che l'utente sia super admin
 	if !cmd.IsSuperAdmin() {
-		if cmd.RequesterTenantId == nil || !gat.BelongsToTenant(*cmd.RequesterTenantId) {
+		if cmd.RequesterTenantId == nil || !gat.BelongsToTenant(*cmd.RequesterTenantId) || cmd.RequesterRole != identity.ROLE_TENANT_ADMIN {
 			return identity.ErrUnauthorizedAccess
 		}
 	}
@@ -122,7 +122,7 @@ func (s *ResumeSensorService) ResumeSensor(cmd ResumeSensorCommand) error {
 
 	// Controllo che l'utente sia super admin
 	if !cmd.IsSuperAdmin() {
-		if cmd.RequesterTenantId == nil || !gat.BelongsToTenant(*cmd.RequesterTenantId) {
+		if cmd.RequesterTenantId == nil || !gat.BelongsToTenant(*cmd.RequesterTenantId) || cmd.RequesterRole != identity.ROLE_TENANT_ADMIN {
 			return identity.ErrUnauthorizedAccess
 		}
 	}

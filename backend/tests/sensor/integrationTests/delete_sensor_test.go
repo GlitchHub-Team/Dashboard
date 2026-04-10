@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"backend/internal/infra/transport/http/dto"
 	"backend/internal/sensor"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
@@ -132,7 +133,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayTimeout, "Gateway Timeout Delete"),
 				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Delete", 1100, sensorProfile.PULSE_OXIMETER, sensor.Active),
-				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.DELETE_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&timeoutSub, false, dto.CommandResponse{}, sensor.DELETE_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Eliminazione sensore con timeout NATS e nessuna eliminazione DB",
 			Method: http.MethodDelete,
@@ -156,7 +157,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayFailedReply, "Gateway Failed Reply Delete"),
 				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Reply Delete", 1200, sensorProfile.HEALTH_THERMOMETER, sensor.Active),
-				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats delete failed"}, sensor.DELETE_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&failedReplySub, true, dto.CommandResponse{Success: false, Message: "nats delete failed"}, sensor.DELETE_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Eliminazione sensore con NATS success false e nessuna eliminazione DB",
 			Method: http.MethodDelete,
@@ -183,7 +184,7 @@ func TestDeleteSensorIntegration(t *testing.T) {
 				preSetupCommandResponseListener(
 					&successSub,
 					true,
-					sensor.CommandResponse{Success: true, Message: "ok"},
+					dto.CommandResponse{Success: true, Message: "ok"},
 					sensor.DELETE_SENSOR_CMD_SUBJECT,
 					func(msg *nats.Msg) {
 						_ = json.Unmarshal(msg.Data, &successCmd)

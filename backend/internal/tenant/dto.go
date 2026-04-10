@@ -66,3 +66,26 @@ func NewTenantListResponseDTO(tenantList []Tenant, total uint) TenantListRespons
 		},
 	}
 }
+
+type allTenants_SingleTenantResponseDTO struct {
+	dto.TenantIdField
+	dto.TenantNameField
+}
+
+type AllTenantsResponseDTO struct {
+	Tenants []allTenants_SingleTenantResponseDTO `json:"tenants"`
+}
+
+func NewAllTenantsResponseDTO(tenantList []Tenant) AllTenantsResponseDTO {
+	var tenantDtos []allTenants_SingleTenantResponseDTO
+	for _, tenant := range tenantList {
+		tenantDtos = append(tenantDtos, allTenants_SingleTenantResponseDTO{
+			TenantIdField:   dto.TenantIdField{TenantId: tenant.Id.String()},
+			TenantNameField: dto.TenantNameField{TenantName: tenant.Name},
+		})
+	}
+
+	return AllTenantsResponseDTO{
+		Tenants: tenantDtos,
+	}
+}

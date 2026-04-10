@@ -8,6 +8,10 @@ type GatewayNameField struct {
 	GatewayName string `uri:"gateway_name" form:"gateway_name" json:"gateway_name" binding:"required"`
 }
 
-type GatewayCertificateField struct {
-	Certificate string `uri:"certificate" form:"certificate" json:"certificate" binding:"required"`
+type CommissionTokenField struct {
+	CommissionToken string `uri:"commission_token" form:"commission_token" json:"commission_token" binding:"required"`
+}
+
+type GatewayIntervalField struct {
+	Interval int64 `uri:"interval" form:"interval" json:"interval" binding:"required,gt=0"`
 }

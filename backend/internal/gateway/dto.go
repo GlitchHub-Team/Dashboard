@@ -7,21 +7,13 @@ import (
 // Request
 type createGatewayDTO struct {
 	dto.GatewayNameField
-}
-
-type deleteGatewayDTO struct {
-	dto.GatewayIdField
+	dto.GatewayIntervalField
 }
 
 type getGatewayByIdDTO struct {
 	dto.GatewayIdField
 }
 
-/*
-	type getGatewayListDTO struct {
-		dto.Pagination
-	}
-*/
 type getGatewaysByTenantDTO struct {
 	dto.TenantIdField
 	dto.Pagination
@@ -29,31 +21,7 @@ type getGatewaysByTenantDTO struct {
 
 type commissionGatewayDTO struct {
 	dto.TenantIdField
-	dto.GatewayIdField
-	dto.GatewayCertificateField
-}
-type decommissionGatewayDTO struct {
-	dto.GatewayIdField
-}
-type interruptGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type resumeGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type resetGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type rebootGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type setGatewayIntervalLimitDTO struct {
-	dto.GatewayIdField
-	IntervalLimit int `uri:"interval_limit" form:"interval_limit" json:"interval_limit" binding:"required"`
+	dto.CommissionTokenField
 }
 
 // Response
@@ -63,18 +31,44 @@ type gatewayResponseDTO struct {
 	dto.TenantIdField
 	Status           GatewayStatus `json:"status"`
 	Interval         int64         `json:"interval"`
-	PublicIdentifier string        `json:"publicIdentifier,omitempty"`
+	PublicIdentifier *string       `json:"publicIdentifier"`
 }
 
-/*
-type gatewayListResponseDTO struct {
-	dto.ListInfo
-	Gateways []gatewayResponseDTO `json:"gateways"`
+type gatewayCommandResponseDTO struct {
+	Result string `json:"result"`
 }
 
-type commissionGatewayResponseDTO struct {
-	dto.TenantIdField
-	dto.TenantNameField
-	dto.GatewayCertificateField
+type createGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+	Interval  int64  `json:"interval"`
 }
-*/
+
+type deleteGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type commissionGatewayCommandPayloadDTO struct {
+	GatewayId       string `json:"gatewayId"`
+	TenantId        string `json:"tenantId"`
+	CommissionToken string `json:"commissionedToken"`
+}
+
+type decommissionGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type interruptGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type resumeGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type resetGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type rebootGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}

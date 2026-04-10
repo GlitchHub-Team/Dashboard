@@ -11,6 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
+func strPtr(v string) *string {
+	return &v
+}
+
 // mockGetGatewayPort implementa gateway.GetGatewayPort
 type mockGetGatewayPort struct {
 	result       gateway.Gateway
@@ -64,6 +68,28 @@ func TestProcessHello_InvalidUUID(t *testing.T) {
 	}
 }
 
+func TestProcessHello_MissingPublicIdentifier_Nak(t *testing.T) {
+	logger := zap.NewNop()
+	get := &mockGetGatewayPort{}
+	save := &mockSaveGatewayPort{}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: ""}
+	err := svc.ProcessHello(msg)
+	if err == nil {
+		t.Fatalf("expected error when public identifier is missing, got nil")
+	}
+	if !errors.Is(err, gateway_connection.ErrPublicIdentifierRequired) {
+		t.Fatalf("expected ErrPublicIdentifierRequired, got %v", err)
+	}
+	if get.calledGetBy {
+		t.Fatalf("did not expect GetById to be called when public identifier is missing")
+	}
+	if save.called {
+		t.Fatalf("did not expect Save to be called when public identifier is missing")
+	}
+}
+
 func TestProcessHello_GatewayNotFound_Nak(t *testing.T) {
 	logger := zap.NewNop()
 	// adapter returns zero-value Gateway and nil error when not found
@@ -107,7 +133,7 @@ func TestProcessHello_UpdatePublicIdentifier_SaveCalled(t *testing.T) {
 		Id:               id,
 		Name:             "gw",
 		Status:           gateway.GATEWAY_STATUS_INACTIVE,
-		PublicIdentifier: "",
+		PublicIdentifier: strPtr("old-id"),
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{}
@@ -121,11 +147,37 @@ func TestProcessHello_UpdatePublicIdentifier_SaveCalled(t *testing.T) {
 	if !save.called {
 		t.Fatalf("expected Save to be called")
 	}
-	if save.received.PublicIdentifier != "new-id" {
-		t.Fatalf("expected saved public identifier to be new-id, got %s", save.received.PublicIdentifier)
+	if save.received.PublicIdentifier == nil || *save.received.PublicIdentifier != "new-id" {
+		t.Fatalf("expected saved public identifier to be new-id")
 	}
-	if save.received.Status != gateway.GATEWAY_STATUS_ACTIVE {
-		t.Fatalf("expected saved status active, got %v", save.received.Status)
+	if save.received.Status != gateway.GATEWAY_STATUS_INACTIVE {
+		t.Fatalf("expected status to remain unchanged, got %v", save.received.Status)
+	}
+}
+
+func TestProcessHello_PublicIdentifierNil_SaveCalled(t *testing.T) {
+	logger := zap.NewNop()
+	id := uuid.New()
+	existing := gateway.Gateway{
+		Id:               id,
+		Name:             "gw",
+		Status:           gateway.GATEWAY_STATUS_ACTIVE,
+		PublicIdentifier: nil,
+	}
+	get := &mockGetGatewayPort{result: existing, err: nil}
+	save := &mockSaveGatewayPort{}
+	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+
+	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	err := svc.ProcessHello(msg)
+	if err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+	if !save.called {
+		t.Fatalf("expected Save to be called when PublicIdentifier is nil")
+	}
+	if save.received.PublicIdentifier == nil || *save.received.PublicIdentifier != "new-id" {
+		t.Fatalf("expected saved public identifier to be new-id")
 	}
 }
 
@@ -136,7 +188,7 @@ func TestProcessHello_PublicIdentifierUnchanged_NoSave(t *testing.T) {
 		Id:               id,
 		Name:             "gw",
 		Status:           gateway.GATEWAY_STATUS_ACTIVE,
-		PublicIdentifier: "same-id",
+		PublicIdentifier: strPtr("same-id"),
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{}
@@ -159,7 +211,7 @@ func TestProcessHello_SaveError_Nak(t *testing.T) {
 		Id:               id,
 		Name:             "gw",
 		Status:           gateway.GATEWAY_STATUS_INACTIVE,
-		PublicIdentifier: "",
+		PublicIdentifier: nil,
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{err: errors.New("save failed")}

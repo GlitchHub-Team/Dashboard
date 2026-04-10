@@ -1,38 +1,35 @@
 package tenant
 
-import "github.com/google/uuid"
+import (
+	"backend/internal/shared/identity"
 
-//go:generate mockgen -destination=../../tests/tenant/mocks/use_cases_crud.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetTenantByUserUseCase
+	"github.com/google/uuid"
+)
+
+//go:generate mockgen -destination=../../tests/tenant/mocks/ports.go -package=mocks . CreateTenantPort,DeleteTenantPort,GetTenantPort,GetTenantsPort,GetTenantByUserPort
 
 type CreateTenantPort interface {
 	CreateTenant(tenant Tenant) (Tenant, error)
 }
-type CreateTenantUseCase interface {
-	CreateTenant(cmd CreateTenantCommand) (Tenant, error)
+
+type DeleteTenantPort interface {
+	DeleteTenant(tenantId uuid.UUID) (Tenant, error)
 }
 
-type DeleteTenantUseCase interface {
-	DeleteTenant(cmd DeleteTenantCommand) (Tenant, error)
+type GetTenantPort interface {
+	GetTenant(tenantId uuid.UUID) (Tenant, error)
 }
 
-type GetTenantUseCase interface {
-	GetTenant(cmd GetTenantCommand) (Tenant, error)
-}
-
-type GetTenantListUseCase interface {
-	GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error)
-}
-
-type GetTenantByUserUseCase interface {
-	GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error)
+type GetTenantsPort interface {
+	GetTenants(page, limit int) ([]Tenant, uint, error)
+	GetAllTenants() ([]Tenant, error)
 }
 
 type TenantService struct {
-	createTenantPort    CreateTenantPort
-	deleteTenantPort    DeleteTenantPort
-	getTenantPort       GetTenantPort
-	getTenantsPort      GetTenantsPort
-	getTenantByUserPort GetTenantByUserPort
+	createTenantPort CreateTenantPort
+	deleteTenantPort DeleteTenantPort
+	getTenantPort    GetTenantPort
+	getTenantsPort   GetTenantsPort
 }
 
 func NewCreateTenantService(
@@ -40,21 +37,21 @@ func NewCreateTenantService(
 	deleteTenantPort DeleteTenantPort,
 	getTenantPort GetTenantPort,
 	getTenantsPort GetTenantsPort,
-	getTenantByUserPort GetTenantByUserPort,
-) (CreateTenantUseCase, DeleteTenantUseCase, GetTenantUseCase, GetTenantListUseCase, GetTenantByUserUseCase) {
-	service := &TenantService{
-		createTenantPort:    createTenantPort,
-		deleteTenantPort:    deleteTenantPort,
-		getTenantPort:       getTenantPort,
-		getTenantsPort:      getTenantsPort,
-		getTenantByUserPort: getTenantByUserPort,
+) *TenantService {
+	return &TenantService{
+		createTenantPort: createTenantPort,
+		deleteTenantPort: deleteTenantPort,
+		getTenantPort:    getTenantPort,
+		getTenantsPort:   getTenantsPort,
 	}
-	return service, service, service, service, service
 }
 
+/*
+Crea un tenant come specificato in cmd
+*/
 func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, error) {
 	if !cmd.IsSuperAdmin() {
-		return Tenant{}, ErrUnauthorized
+		return Tenant{}, identity.ErrUnauthorizedAccess
 	}
 
 	newTenantId := uuid.New()
@@ -73,29 +70,29 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 	return tenant, nil
 }
 
+/*
+Elimina un tenant come specificato in cmd
+*/
 func (service *TenantService) DeleteTenant(cmd DeleteTenantCommand) (Tenant, error) {
-	tenant, err := service.getTenantPort.GetTenant(cmd.TenantId)
+	if !cmd.IsSuperAdmin() {
+		return Tenant{}, identity.ErrUnauthorizedAccess
+	}
+
+	_, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
 		return Tenant{}, err
 	}
 
-	if tenant.IsZero() {
-		return Tenant{}, ErrTenantNotFound
-	}
-
-	if !cmd.IsSuperAdmin() {
-		return Tenant{}, ErrUnauthorized
-	}
-
-	if !tenant.CanImpersonate {
-		return Tenant{}, ErrImpersonationFailed
-	}
-
 	oldTenant, err := service.deleteTenantPort.DeleteTenant(cmd.TenantId)
-
+	if err != nil {
+		return Tenant{}, err
+	}
 	return oldTenant, err
 }
 
+/*
+Ottiene un tenant per TenantId come specificato in cmd
+*/
 func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 	tenant, err := service.getTenantPort.GetTenant(cmd.TenantId)
 	if err != nil {
@@ -107,13 +104,27 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 	}
 
 	if !cmd.IsSuperAdmin() && !cmd.CanTenantAdminAccess(tenant.Id) {
-		return Tenant{}, ErrUnauthorized
+		return Tenant{}, identity.ErrUnauthorizedAccess
 	}
 
 	return tenant, nil
 }
 
+/*
+Ottiene la lista NON PAGINATA di tutti i tenant presenti
+*/
+func (service *TenantService) GetAllTenants() ([]Tenant, error) {
+	return service.getTenantsPort.GetAllTenants()
+}
+
+/*
+Ottiene la lista paginata dei tenant come specificato in cmd
+*/
 func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error) {
+	if !cmd.IsSuperAdmin() {
+		return nil, 0, identity.ErrUnauthorizedAccess
+	}
+
 	tenants, total, err := service.getTenantsPort.GetTenants(cmd.Page, cmd.Limit)
 	if err != nil {
 		return nil, 0, err
@@ -122,19 +133,11 @@ func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant,
 	return tenants, total, nil
 }
 
-func (service *TenantService) GetTenantByUser(cmd GetTenantByUserCommand) (Tenant, error) {
-	tenant, err := service.getTenantByUserPort.GetTenantByUser(cmd.UserId)
-	if err != nil {
-		return Tenant{}, err
-	}
-
-	if tenant.IsZero() {
-		return Tenant{}, ErrTenantNotFound
-	}
-
-	if !cmd.IsSuperAdmin() && !cmd.CanTenantAdminAccess(tenant.Id) {
-		return Tenant{}, ErrUnauthorized
-	}
-
-	return tenant, nil
-}
+// Compile-time checks
+var (
+	_ CreateTenantUseCase  = (*TenantService)(nil)
+	_ DeleteTenantUseCase  = (*TenantService)(nil)
+	_ GetTenantUseCase     = (*TenantService)(nil)
+	_ GetTenantListUseCase = (*TenantService)(nil)
+	_ GetAllTenantsUseCase = (*TenantService)(nil)
+)

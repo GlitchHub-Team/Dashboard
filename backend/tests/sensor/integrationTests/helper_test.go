@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"backend/internal/gateway"
+	"backend/internal/infra/transport/http/dto"
 	"backend/internal/sensor"
 	sensorProfile "backend/internal/sensor/profile"
 	sharedCrypto "backend/internal/shared/crypto"
@@ -199,7 +200,7 @@ func checkSensorStatus(
 func preSetupCommandResponseListener(
 	subscription **nats.Subscription,
 	shouldReply bool,
-	reply sensor.CommandResponse,
+	reply dto.CommandResponse,
 	subject string,
 	onMessage ...func(*nats.Msg),
 ) helper.IntegrationTestPreSetup {
