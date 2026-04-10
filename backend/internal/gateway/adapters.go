@@ -77,6 +77,7 @@ func (a *GatewayPostgreAdapter) GetByTenantId(tenantId string) ([]Gateway, error
 	// }
 	return gateways, nil
 }
+
 // TODO: fix hexagonal sbagliato
 func (a *GatewayPostgreAdapter) GetAll() ([]Gateway, error) {
 	gateways, err := a.repo.GetAllGateways()

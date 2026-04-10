@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"backend/internal/infra/database"
+	"backend/internal/infra/database/pagination"
 
 	"github.com/google/uuid"
 )
@@ -77,7 +78,8 @@ type GetTenantPort interface {
 }
 
 type GetTenantsPort interface {
-	GetTenants() ([]Tenant, uint, error)
+	GetTenants(page, limit int) ([]Tenant, uint, error)
+	GetAllTenants() ([]Tenant, error)
 }
 
 type GetTenantByUserPort interface {
@@ -94,8 +96,13 @@ func (adapter *TenantPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, erro
 	return tenant, err
 }
 
-func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, uint, error) {
-	entities, total, err := adapter.repo.GetAllTenants()
+func (adapter *TenantPostgreAdapter) GetTenants(page, limit int) ([]Tenant, uint, error) {
+	offset, err := pagination.PageLimitToOffset(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	entities, total, err := adapter.repo.GetTenants(offset, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -103,6 +110,17 @@ func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, uint, error) {
 	var tenants []Tenant
 	tenants, err = database.MapEntityListToDomain(entities, TenantEntityToDomain)
 	return tenants, uint(total), err
+}
+
+func (adapter *TenantPostgreAdapter) GetAllTenants() ([]Tenant, error) {
+	entities, err := adapter.repo.GetAllTenants()
+	if err != nil {
+		return nil, err
+	}
+
+	var tenants []Tenant
+	tenants, err = database.MapEntityListToDomain(entities, TenantEntityToDomain)
+	return tenants, err
 }
 
 func (adapter *TenantPostgreAdapter) GetTenantByUser(userId uuid.UUID) (Tenant, error) {

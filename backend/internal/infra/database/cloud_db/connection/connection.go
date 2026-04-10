@@ -113,12 +113,12 @@ func SetCloudDbLifecycle(
 						cfg.CloudDBName,
 					)
 				}
-				
+
 				err = dbPackage.SeverDropDatabase(log, db, cfg.CloudDBName, "Cloud DB Test")
 				if err != nil {
 					return err
 				}
-            }
+			}
 
 			return nil
 		},

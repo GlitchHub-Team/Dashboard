@@ -180,8 +180,8 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 
 	cmd := GetTenantListCommand{
 		// Requester: requester,
-		Page:      queryDto.Page,
-		Limit:     queryDto.Limit,
+		Page:  queryDto.Page,
+		Limit: queryDto.Limit,
 	}
 
 	tenants, total, err := controller.getTenantListUseCase.GetTenantList(cmd)
@@ -196,7 +196,7 @@ func (controller *Controller) GetTenants(ctx *gin.Context) {
 	}
 
 	responseDtos := NewTenantListResponseDTO(tenants, total)
-	
+
 	ctx.JSON(http.StatusOK, responseDtos)
 }
 

@@ -60,7 +60,7 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 	newTenantId := uuid.New()
 
 	newTenant := Tenant{
-		Id: newTenantId,
+		Id:             newTenantId,
 		Name:           cmd.Name,
 		CanImpersonate: cmd.CanImpersonate,
 	}
@@ -114,13 +114,9 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 }
 
 func (service *TenantService) GetTenantList(cmd GetTenantListCommand) ([]Tenant, uint, error) {
-	tenants, total, err := service.getTenantsPort.GetTenants()
+	tenants, total, err := service.getTenantsPort.GetTenants(cmd.Page, cmd.Limit)
 	if err != nil {
 		return nil, 0, err
-	}
-
-	if tenants == nil {
-		tenants = make([]Tenant, 0)
 	}
 
 	return tenants, total, nil

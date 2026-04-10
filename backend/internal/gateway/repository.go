@@ -159,7 +159,7 @@ func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway,
 	if err != nil {
 		return Gateway{}, err
 	}
-	
+
 	gateway, err := GatewayEntityToDomain(&entity)
 	return gateway, err
 }

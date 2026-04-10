@@ -39,11 +39,16 @@ func (repo *TenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, 
 	return entity, err
 }
 
-func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, int64, error) {
+func (repo *TenantPostgreRepository) GetTenants(offset, limit int) ([]TenantEntity, int64, error) {
 	db := (*gorm.DB)(repo.db)
-	
-	var tenants []TenantEntity
-	if err := db.Find(&tenants).Error; err != nil {
+
+	var entities []TenantEntity
+	err := db.
+		Offset(offset).
+		Limit(limit).
+		Find(&entities).
+		Error
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -52,7 +57,18 @@ func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, int64, err
 		return nil, 0, err
 	}
 
-	return tenants, total, nil
+	return entities, total, err
+}
+
+func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
+	db := (*gorm.DB)(repo.db)
+
+	var tenants []TenantEntity
+	if err := db.Find(&tenants).Error; err != nil {
+		return nil, err
+	}
+
+	return tenants, nil
 }
 
 func (repo *TenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
