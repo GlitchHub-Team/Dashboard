@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (c *SensorController) GetSensor(ctx *gin.Context) {
+func (c *Controller) GetSensor(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
@@ -48,7 +48,7 @@ func (c *SensorController) GetSensor(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-func (c *SensorController) GetSensorsByGateway(ctx *gin.Context) {
+func (c *Controller) GetSensorsByGateway(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
@@ -94,7 +94,7 @@ func (c *SensorController) GetSensorsByGateway(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responseDto)
 }
 
-func (c *SensorController) GetSensorsByTenant(ctx *gin.Context) {
+func (c *Controller) GetSensorsByTenant(ctx *gin.Context) {
 	// Autorizza utente
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {

@@ -83,6 +83,21 @@ func (mr *MockDatabaseRepositoryMockRecorder) GetSensorById(sensorId any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSensorById", reflect.TypeOf((*MockDatabaseRepository)(nil).GetSensorById), sensorId)
 }
 
+// GetSensorByTenant mocks base method.
+func (m *MockDatabaseRepository) GetSensorByTenant(tenantId, sensorId string) (sensor.SensorEntity, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSensorByTenant", tenantId, sensorId)
+	ret0, _ := ret[0].(sensor.SensorEntity)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSensorByTenant indicates an expected call of GetSensorByTenant.
+func (mr *MockDatabaseRepositoryMockRecorder) GetSensorByTenant(tenantId, sensorId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSensorByTenant", reflect.TypeOf((*MockDatabaseRepository)(nil).GetSensorByTenant), tenantId, sensorId)
+}
+
 // GetSensorsByGatewayId mocks base method.
 func (m *MockDatabaseRepository) GetSensorsByGatewayId(gatewayId string, offset, limit int) ([]sensor.SensorEntity, uint, error) {
 	m.ctrl.T.Helper()

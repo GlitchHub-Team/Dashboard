@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (c *SensorController) InterruptSensor(ctx *gin.Context) {
+func (c *Controller) InterruptSensor(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		transportHttp.RequestUnauthorized(ctx, err)
@@ -43,7 +43,7 @@ func (c *SensorController) InterruptSensor(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
-func (c *SensorController) ResumeSensor(ctx *gin.Context) {
+func (c *Controller) ResumeSensor(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		transportHttp.RequestUnauthorized(ctx, err)

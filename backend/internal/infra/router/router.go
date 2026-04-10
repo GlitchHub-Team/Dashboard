@@ -7,6 +7,7 @@ import (
 	"backend/internal/auth"
 	"backend/internal/gateway"
 	"backend/internal/historical_data"
+	"backend/internal/real_time_data"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
 	"backend/internal/tenant"
@@ -29,9 +30,10 @@ func NewGinEngine(
 
 	gatewayController *gateway.GatewayController,
 	historicalDataController *historical_data.Controller,
+	realTimeDataController *real_time_data.Controller,
 	userController *user.Controller,
 	authController *auth.Controller,
-	sensorController *sensor.SensorController,
+	sensorController *sensor.Controller,
 	tenantController *tenant.Controller,
 ) *gin.Engine {
 	router := gin.Default()
@@ -63,6 +65,9 @@ func NewGinEngine(
 
 	private := router.Group("/api/v1")
 	private.Use(authzMiddleware.RequireAuthToken)
+
+	websocketPrivate := router.Group("/api/v1")
+	websocketPrivate.Use(authzMiddleware.RequireAuthTokenInQuery)
 
 	// Auth
 	{
@@ -120,6 +125,14 @@ func NewGinEngine(
 		private.GET(
 			"/tenant/:tenant_id/sensor/:sensor_id/historical_data",
 			historicalDataController.GetSensorHistoricalData,
+		)
+	}
+
+	// Real time data
+	{
+		websocketPrivate.GET(
+			"/tenant/:tenant_id/sensor/:sensor_id/real_time_data",
+			realTimeDataController.GetRealTimeData,
 		)
 	}
 

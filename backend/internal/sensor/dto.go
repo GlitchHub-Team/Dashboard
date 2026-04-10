@@ -1,16 +1,17 @@
 package sensor
 
 import (
-	"github.com/google/uuid"
-
 	"backend/internal/infra/transport/http/dto"
+	profile "backend/internal/sensor/profile"
+
+	"github.com/google/uuid"
 )
 
 type CreateSensorBodyDTO struct {
-	Name      string        `json:"sensor_name" binding:"required"`
-	Interval  int64         `json:"data_interval" binding:"required,gte=1"`
-	Profile   SensorProfile `json:"profile" binding:"required,oneof=heart_rate pulse_oximeter ecg_custom health_thermometer environmental_sensing"`
-	GatewayId uuid.UUID     `json:"gateway_id" binding:"required,uuid"`
+	Name      string                `json:"sensor_name" binding:"required"`
+	Interval  int64                 `json:"data_interval" binding:"required,gte=1"`
+	Profile   profile.SensorProfile `json:"profile" binding:"required,oneof=heart_rate pulse_oximeter ecg_custom health_thermometer environmental_sensing"`
+	GatewayId uuid.UUID             `json:"gateway_id" binding:"required,uuid"`
 }
 
 type SensorResponseDTO struct {

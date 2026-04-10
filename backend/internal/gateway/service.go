@@ -44,6 +44,7 @@ func GenerateGatewaySecret() (string, error) {
 	return base64.StdEncoding.EncodeToString(b), nil
 }
 
+// TODO: perché non viene salvato l'interval limit???
 func (s *GatewayManagementService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
 	if !command.IsSuperAdmin() {
 		return Gateway{}, identity.ErrUnauthorizedAccess

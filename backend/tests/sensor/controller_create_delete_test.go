@@ -9,6 +9,7 @@ import (
 	"backend/internal/gateway"
 	transportHttp "backend/internal/infra/transport/http"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	helper "backend/tests/helper"
 	"backend/tests/sensor/mocks"
@@ -34,7 +35,7 @@ func TestSensorController_CreateSensor(t *testing.T) {
 	validPayload := sensor.CreateSensorBodyDTO{
 		Name:      "Heart monitor",
 		Interval:  1500,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 		GatewayId: targetGatewayId,
 	}
 
@@ -50,7 +51,7 @@ func TestSensorController_CreateSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	expectedCommand := sensor.CreateSensorCommand{
@@ -231,7 +232,7 @@ func TestSensorController_DeleteSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  2 * time.Second,
 		Status:    sensor.Inactive,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	expectedCommand := sensor.DeleteSensorCommand{

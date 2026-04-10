@@ -44,3 +44,4 @@ Infrastructure
 *.key
 
 .github/*.md
+.codex

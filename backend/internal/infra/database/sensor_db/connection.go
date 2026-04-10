@@ -109,22 +109,13 @@ func SetSensorDbLifecycle(
 					)
 				}
 
-				if err := db.Exec(
-					"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ? AND pid <> pg_backend_pid()",
-					cfg.SensorDBName,
-				).Error; err != nil {
-					log.Warn("impossibile terminare connessioni attive Sensor DB", zap.String("name", cfg.SensorDBName), zap.Error(err))
-				}
-
-				err = db.Exec(fmt.Sprintf("DROP DATABASE \"%s\"", cfg.SensorDBName)).Error
+				err = dbPackage.SeverDropDatabase(log, db, cfg.CloudDBName, "Cloud DB Test")
 				if err != nil {
-					return fmt.Errorf("impossibile eliminare Sensor DB di test %v: %w", cfg.SensorDBName, err)
+					return err
 				}
-
-				log.Info("Eliminato Sensor DB di test", zap.String("name", cfg.SensorDBName))
 			}
 
-			return nil
+            return nil
 		},
 	})
 }

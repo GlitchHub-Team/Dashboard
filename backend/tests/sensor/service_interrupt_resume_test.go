@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/gateway"
 	"backend/internal/sensor"
+	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
 	gatewayMocks "backend/tests/gateway/mocks"
 	helper "backend/tests/helper"
@@ -21,7 +22,7 @@ type interruptResumeServiceMocks struct {
 	sendResumeCmdPort       *mocks.MockSendResumeCmdPort
 	getSensorByIdPort       *mocks.MockGetSensorByIdPort
 	getGatewayPort          *gatewayMocks.MockGetGatewayPort
-	updatedSensorStatusPort *mocks.MockUpdatedSensorStatusPort
+	updatedSensorStatusPort *mocks.MockUpdateSensorStatusPort
 }
 
 type mockSetupFunc_InterruptResumeService = helper.ServiceMockSetupFunc[interruptResumeServiceMocks]
@@ -40,7 +41,7 @@ func setupInterruptSensorService(
 				sendResumeCmdPort:       mocks.NewMockSendResumeCmdPort(ctrl),
 				getSensorByIdPort:       mocks.NewMockGetSensorByIdPort(ctrl),
 				getGatewayPort:          gatewayMocks.NewMockGetGatewayPort(ctrl),
-				updatedSensorStatusPort: mocks.NewMockUpdatedSensorStatusPort(ctrl),
+				updatedSensorStatusPort: mocks.NewMockUpdateSensorStatusPort(ctrl),
 			}
 		},
 		setupSteps,
@@ -69,7 +70,7 @@ func setupResumeSensorService(
 				sendResumeCmdPort:       mocks.NewMockSendResumeCmdPort(ctrl),
 				getSensorByIdPort:       mocks.NewMockGetSensorByIdPort(ctrl),
 				getGatewayPort:          gatewayMocks.NewMockGetGatewayPort(ctrl),
-				updatedSensorStatusPort: mocks.NewMockUpdatedSensorStatusPort(ctrl),
+				updatedSensorStatusPort: mocks.NewMockUpdateSensorStatusPort(ctrl),
 			}
 		},
 		setupSteps,
@@ -254,7 +255,7 @@ func TestService_InterruptSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	inactiveSensor := sensor.Sensor{
@@ -263,7 +264,7 @@ func TestService_InterruptSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Inactive,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	gatewayBelongsToTenant := gateway.Gateway{
@@ -525,7 +526,7 @@ func TestService_ResumeSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Active,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	inactiveSensor := sensor.Sensor{
@@ -534,7 +535,7 @@ func TestService_ResumeSensor(t *testing.T) {
 		Name:      "Heart monitor",
 		Interval:  1500 * time.Millisecond,
 		Status:    sensor.Inactive,
-		Profile:   sensor.HEART_RATE,
+		Profile:   sensorProfile.HEART_RATE,
 	}
 
 	gatewayBelongsToTenant := gateway.Gateway{
