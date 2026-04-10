@@ -1,5 +1,7 @@
 package tenant
 
+import "github.com/google/uuid"
+
 //go:generate mockgen -destination=../../tests/tenant/mocks/use_cases_crud.go -package=mocks . CreateTenantUseCase,DeleteTenantUseCase,GetTenantUseCase,GetTenantListUseCase,GetTenantByUserUseCase
 
 type CreateTenantPort interface {
@@ -55,11 +57,10 @@ func (service *TenantService) CreateTenant(cmd CreateTenantCommand) (Tenant, err
 		return Tenant{}, ErrUnauthorized
 	}
 
-	if !cmd.CanImpersonate {
-		return Tenant{}, ErrImpersonationFailed
-	}
+	newTenantId := uuid.New()
 
 	newTenant := Tenant{
+		Id: newTenantId,
 		Name:           cmd.Name,
 		CanImpersonate: cmd.CanImpersonate,
 	}
