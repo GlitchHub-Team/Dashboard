@@ -4,4 +4,5 @@ export interface GatewayBackend {
   name: string;
   status: string;
   interval: number;
+  public_identifier?: string;
 }

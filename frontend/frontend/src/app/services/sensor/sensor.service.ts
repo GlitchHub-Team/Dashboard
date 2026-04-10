@@ -6,12 +6,14 @@ import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { ApiError } from '../../models/api-error.model';
+import { SensorCommandApiClientService } from '../sensor-command-api-client/sensor-command-api-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SensorService {
   private readonly sensorApi = inject(SensorApiClientService);
+  private readonly sensorCommandApi = inject(SensorCommandApiClientService);
   private readonly adapter = inject(SensorAdapter);
 
   private readonly _sensorList = signal<Sensor[]>([]);
@@ -95,6 +97,18 @@ export class SensorService {
         this._loading.set(false);
         return EMPTY;
       }),
+    );
+  }
+
+  public interruptSensor(sensorId: string): Observable<void> {
+    return this.sensorCommandApi.interruptSensor(sensorId).pipe(
+      tap(() => this.refetchCurrentPage()),
+    );
+  }
+
+  public resumeSensor(sensorId: string): Observable<void> {
+    return this.sensorCommandApi.resumeSensor(sensorId).pipe(
+      tap(() => this.refetchCurrentPage()),
     );
   }
 

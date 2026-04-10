@@ -1,7 +1,7 @@
 // mocks/sensor-real-time-mock.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, interval, map, Subject, takeUntil, switchMap, throwError, timer } from 'rxjs';
-import { Sensor } from '../models/sensor/sensor.model';
+import { ChartRequest } from '../models/chart/chart-request.model';
 import { RealTimeReading } from '../models/sensor-data/real-time-reading.model';
 import { SensorProfiles } from '../models/sensor/sensor-profiles.enum';
 import { getMockFieldConfigs, MockFieldConfig } from './sensor-mock.config';
@@ -16,9 +16,11 @@ export class SensorRealTimeMockService {
   private readonly shouldFailConnection = false;
   private readonly shouldDisconnectAfter = 0;
 
-  connect(sensor: Sensor): Observable<RealTimeReading> {
+  connect(req: ChartRequest): Observable<RealTimeReading> {
     this.readingCount = 0;
     this.currentValues.clear();
+
+    const sensor = req.sensor;
 
     if (this.shouldFailConnection) {
       return this.delayedError(0, 'WebSocket connection failed');

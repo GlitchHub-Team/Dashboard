@@ -29,6 +29,7 @@ describe('SensorHistoricApiService', () => {
   const mockChartRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-1',
     timeInterval: {
       from: new Date('2026-01-01T00:00:00.000Z'),
       to: new Date('2026-01-02T00:00:00.000Z'),
@@ -83,7 +84,7 @@ describe('SensorHistoricApiService', () => {
         expect(response).toEqual(mockHistoricResponse);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/sensor/sensor-1/historical_data`);
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/tenant/tenant-1/sensor/sensor-1/historical_data`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('from_time')).toBe('2026-01-01T00:00:00.000Z');
       expect(req.request.params.get('to_time')).toBe('2026-01-02T00:00:00.000Z');

@@ -79,6 +79,14 @@ export class GatewaySensorManagerPage implements OnInit {
     this.managerService.changeSensorPage(event.pageIndex, event.pageSize);
   }
 
+  protected onCommandRequested(result: boolean): void {
+    if (result) {
+      this.snackBar.open('Comando inviato correttamente', 'Chiudi', {
+        duration: 3000,
+      });
+    }
+  }
+
   protected onCreateGateway(): void {
     this.dialog
       .open(CreateGatewayDialog)
@@ -89,7 +97,7 @@ export class GatewaySensorManagerPage implements OnInit {
       )
       .subscribe(() => {
         this.managerService.refreshGateways();
-        this.snackBar.open('Gateway creato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Gateway creato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 
@@ -108,7 +116,7 @@ export class GatewaySensorManagerPage implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        this.snackBar.open('Gateway eliminato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Gateway eliminato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 
@@ -127,7 +135,7 @@ export class GatewaySensorManagerPage implements OnInit {
       )
       .subscribe(() => {
         this.managerService.refreshSensors(gateway.id);
-        this.snackBar.open('Sensore creato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Sensore creato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 
@@ -146,7 +154,7 @@ export class GatewaySensorManagerPage implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        this.snackBar.open('Sensore eliminato con successo', 'Close', { duration: 3000 });
+        this.snackBar.open('Sensore eliminato con successo', 'Chiudi', { duration: 3000 });
       });
   }
 }

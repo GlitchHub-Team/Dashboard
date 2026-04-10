@@ -127,6 +127,21 @@ describe('UserTableComponent (Unit)', () => {
       expect(stopPropagation).toHaveBeenCalledTimes(1);
     });
 
+    it('should hide delete button for the row matching currentUserId', () => {
+      setInput('loading', false);
+      setInput('currentUserId', 'user-1');
+      fixture.detectChanges();
+
+      const deleteButtons = fixture.debugElement.queryAll(By.css('mat-cell button'));
+      expect(deleteButtons.length).toBe(1);
+
+      const spy = vi.fn();
+      component.deleteRequested.subscribe(spy);
+      const stopPropagation = vi.fn();
+      deleteButtons[0].triggerEventHandler('click', { stopPropagation });
+      expect(spy).toHaveBeenCalledWith(mockUsers[1]);
+    });
+
     it('should emit pageChange on paginator page event', () => {
       setInput('loading', false);
       const spy = vi.fn();

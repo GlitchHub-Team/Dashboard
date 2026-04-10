@@ -122,7 +122,7 @@ describe('TenantService', () => {
       tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
       tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
 
-      service.retrieveTenants();
+      service.retrieveTenants(false);
 
       expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
       expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
@@ -141,9 +141,40 @@ describe('TenantService', () => {
     ])('should handle retrieval errors', ({ error, expected }) => {
       tenantApiMock.getTenants.mockReturnValue(throwError(() => error));
 
-      service.retrieveTenants();
+      service.retrieveTenants(false);
 
       expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
+      expect(service.loading()).toBe(false);
+      expect(service.tenantList()).toEqual([]);
+      expect(service.error()).toBe(expected);
+    });
+
+    it('should retrieve tenants with limit 100 when called for login', () => {
+      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
+      tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
+
+      service.retrieveTenants(true);
+
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 100);
+      expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
+      expect(service.loading()).toBe(false);
+      expect(service.tenantList()).toEqual(mappedTenants);
+      expect(service.total()).toBe(2);
+      expect(service.error()).toBeNull();
+    });
+
+    it.each([
+      {
+        error: { status: 500, message: 'Failed to fetch' } as ApiError,
+        expected: 'Failed to fetch',
+      },
+      { error: { status: 500 } as ApiError, expected: 'Failed to fetch tenants' },
+    ])('should handle retrieval errors when called for login', ({ error, expected }) => {
+      tenantApiMock.getTenants.mockReturnValue(throwError(() => error));
+
+      service.retrieveTenants(true);
+
+      expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 100);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual([]);
       expect(service.error()).toBe(expected);

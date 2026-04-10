@@ -38,10 +38,10 @@ export class AuthApiClientService {
     });
   }
 
-  public forgotPasswordRequest(forgotPasswordRequest: ForgotPasswordRequest): Observable<void> {
+  public forgotPasswordRequest(req: ForgotPasswordRequest): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot_password/request`, {
-      email: forgotPasswordRequest.email,
-      ...(forgotPasswordRequest.tenantId ? { tenant_id: forgotPasswordRequest.tenantId } : {}),
+      email: req.email,
+      ...(req.tenantId ? { tenant_id: req.tenantId } : {}),
     });
   }
 
@@ -53,10 +53,10 @@ export class AuthApiClientService {
     });
   }
 
-  public confirmPasswordChange(data: PasswordChange): Observable<void> {
+  public confirmPasswordChange(req: PasswordChange): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/change_password`, {
-      old_password: data.oldPassword,
-      new_password: data.newPassword,
+      old_password: req.oldPassword,
+      new_password: req.newPassword,
     });
   }
 

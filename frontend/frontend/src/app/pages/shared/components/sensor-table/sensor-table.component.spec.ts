@@ -65,7 +65,7 @@ describe('SensorTableComponent (Unit)', () => {
   describe('initial state', () => {
     it('should create with correct setup, defaults, and dashboard actionMode', () => {
       expect(component).toBeTruthy();
-      expect(component['displayedColumns']()).toEqual(['id', 'name', 'profile', 'status', 'actions']);
+      expect(component['displayedColumns']()).toEqual(['id', 'name', 'profile', 'status', 'commands', 'actions']);
       expect(component['ChartType']).toBe(ChartType);
       expect(component.actionMode()).toBe('dashboard');
 
@@ -187,14 +187,26 @@ describe('SensorTableComponent (Unit)', () => {
   });
 
   describe('chart actions', () => {
-    it('should render chart buttons for each sensor', () => {
+    it('should render chart buttons only for active sensors', () => {
       const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
       expect(
         buttons.filter((btn) => btn.nativeElement.textContent.includes('query_stats')).length,
-      ).toBe(2);
+      ).toBe(1);
       expect(
         buttons.filter((btn) => btn.nativeElement.textContent.includes('ssid_chart')).length,
-      ).toBe(2);
+      ).toBe(1);
+    });
+
+    it('should not render chart buttons for inactive sensors', () => {
+      fixture.componentRef.setInput('sensors', [mockSensors[1]]);
+      fixture.detectChanges();
+      const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
+      expect(
+        buttons.filter((btn) => btn.nativeElement.textContent.includes('query_stats')).length,
+      ).toBe(0);
+      expect(
+        buttons.filter((btn) => btn.nativeElement.textContent.includes('ssid_chart')).length,
+      ).toBe(0);
     });
 
     it('should open HistoricChartFiltersDialog and emit chartRequested with dialog result', () => {

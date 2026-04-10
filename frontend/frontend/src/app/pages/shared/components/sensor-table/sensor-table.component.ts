@@ -14,6 +14,8 @@ import { Sensor } from '../../../../models/sensor/sensor.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ActionMode } from '../../../../models/action-mode.model';
+import { SensorCommandsDialog } from '../../../dashboard/dialogs/sensor-commands/sensor-commands.dialog';
+import { Status } from '../../../../models/gateway-sensor-status.enum';
 
 @Component({
   selector: 'app-sensor-table',
@@ -42,7 +44,7 @@ export class SensorTableComponent {
   public readonly limit = input<number>(10);
 
   protected readonly displayedColumns = computed(() => {
-    const base = ['id', 'name', 'profile', 'status'];
+    const base = ['id', 'name', 'profile', 'status', 'commands'];
     switch (this.actionMode()) {
       case 'manage':
         return [...base, 'delete'];
@@ -52,8 +54,10 @@ export class SensorTableComponent {
   });
 
   protected readonly ChartType = ChartType;
+  protected readonly Status = Status;
 
   public readonly chartRequested = output<ChartRequest>();
+  public readonly commandRequested = output<boolean>();
   public readonly deleteRequested = output<Sensor>();
   public readonly createRequested = output<void>();
   public readonly pageChange = output<PageEvent>();
@@ -80,5 +84,17 @@ export class SensorTableComponent {
 
   protected onPageChange(event: PageEvent): void {
     this.pageChange.emit(event);
+  }
+
+  protected onSendCommand(sensor: Sensor): void {
+    const ref = this.dialog.open(SensorCommandsDialog, {
+      data: { sensor: sensor, mode: this.actionMode() },
+    });
+
+    ref.afterClosed().subscribe((result: boolean | undefined) => {
+      if (result) {
+        this.commandRequested.emit(true);
+      }
+    });
   }
 }

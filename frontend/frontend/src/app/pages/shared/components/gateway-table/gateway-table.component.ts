@@ -14,6 +14,7 @@ import { Gateway } from '../../../../models/gateway/gateway.model';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ActionMode } from '../../../../models/action-mode.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-gateway-table',
@@ -32,6 +33,7 @@ import { ActionMode } from '../../../../models/action-mode.model';
 })
 export class GatewayTableComponent {
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   public readonly gateways = input.required<Gateway[]>();
   public readonly sensors = input.required<Sensor[]>();
@@ -63,7 +65,7 @@ export class GatewayTableComponent {
   private readonly columns = ['id', 'tenantId', 'name', 'status', 'commands'];
   protected readonly displayedColumns = computed(() => {
     if (this.actionMode() === 'manage') {
-      return [...this.columns, 'delete'];
+      return ['id', 'tenantId', 'name', 'status', 'publicKey', 'commands', 'delete'];
     }
     return this.columns;
   });
@@ -74,6 +76,11 @@ export class GatewayTableComponent {
 
   protected onGatewayPageChange(event: PageEvent): void {
     this.gatewayPageChange.emit(event);
+  }
+
+  protected copyToClipboard(value: string): void {
+    navigator.clipboard.writeText(value);
+    this.snackBar.open('Public key copiata negli appunti', 'Chiudi', { duration: 2000 });
   }
 
   protected onSendCommand(gateway: Gateway): void {

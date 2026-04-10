@@ -36,23 +36,38 @@
       <mat-cell *matCellDef="let sensor">{{ sensor.status | uppercase }}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef>Grafici</mat-header-cell>
+    <ng-container matColumnDef="commands">
+      <mat-header-cell *matHeaderCellDef>Comandi</mat-header-cell>
       <mat-cell *matCellDef="let sensor">
         <button
           mat-icon-button
-          matTooltip="Historic Chart"
-          (click)="onViewChart(sensor, ChartType.HISTORIC)"
+          matTooltip="Send Command"
+          (click)="onSendCommand(sensor); $event.stopPropagation()"
         >
-          <mat-icon>query_stats</mat-icon>
+          <mat-icon>terminal</mat-icon>
         </button>
-        <button
-          mat-icon-button
-          matTooltip="Real-time Chart"
-          (click)="onViewChart(sensor, ChartType.REALTIME)"
-        >
-          <mat-icon>ssid_chart</mat-icon>
-        </button>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef>Grafici</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">
+        @if (sensor.status !== Status.INACTIVE) {
+          <button
+            mat-icon-button
+            matTooltip="Historic Chart"
+            (click)="onViewChart(sensor, ChartType.HISTORIC)"
+          >
+            <mat-icon>query_stats</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            matTooltip="Real-time Chart"
+            (click)="onViewChart(sensor, ChartType.REALTIME)"
+          >
+            <mat-icon>ssid_chart</mat-icon>
+          </button>
+        }
       </mat-cell>
     </ng-container>
 

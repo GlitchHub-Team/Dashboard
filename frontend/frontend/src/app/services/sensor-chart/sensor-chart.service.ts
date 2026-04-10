@@ -86,7 +86,7 @@ export class SensorChartService {
     this._connectionStatus.set('connecting');
 
     this.subscription = this.liveReadingsService
-      .connect(req.sensor)
+      .connect(req)
       .pipe(
         retry({
           count: 3,

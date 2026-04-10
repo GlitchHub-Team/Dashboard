@@ -31,10 +31,10 @@ export class UserApiClientService {
   public getUsers(
     role: UserRole,
     page: number,
-    size: number,
+    limit: number,
     tenantId?: string,
   ): Observable<PaginatedUserResponse<UserBackend>> {
-    const params = new HttpParams().set('page', page).set('limit', size);
+    const params = new HttpParams().set('page', page).set('limit', limit);
 
     const url = this.getBaseUrl(role, tenantId, true);
 

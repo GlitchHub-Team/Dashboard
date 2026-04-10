@@ -21,6 +21,7 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { UserSessionService } from '../../services/user-session/user-session.service';
+import { TenantService } from '../../services/tenant/tenant.service';
 import { UserRole } from '../../models/user/user-role.enum';
 import { UserSession } from '../../models/auth/user-session.model';
 
@@ -102,6 +103,7 @@ describe('DashboardPage (Unit)', () => {
   const mockChartRequest: ChartRequest = {
     sensor: mockSensor,
     chartType: ChartType.HISTORIC,
+    tenantId: 'tenant-01',
     timeInterval: { from: new Date('2025-01-01'), to: new Date('2025-01-02') },
   };
 
@@ -110,6 +112,7 @@ describe('DashboardPage (Unit)', () => {
   let routerMock: { navigate: ReturnType<typeof vi.fn> };
   let activatedRouteMock: { queryParams: Observable<Record<string, unknown>> };
   let userSessionMock: { currentUser: () => UserSession | null };
+  let tenantServiceMock: { getTenant: ReturnType<typeof vi.fn> };
 
   const getGatewayTable = () =>
     fixture.debugElement.query(By.directive(StubGatewayTable))
@@ -171,6 +174,7 @@ describe('DashboardPage (Unit)', () => {
     userSessionMock = {
       currentUser: () => ({ userId: '1', role: UserRole.TENANT_ADMIN, tenantId: 'tenant-01' }),
     };
+    tenantServiceMock = { getTenant: vi.fn().mockReturnValue(of({ id: 'tenant-01', name: 'Test', canImpersonate: true })) };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPage],
@@ -181,6 +185,7 @@ describe('DashboardPage (Unit)', () => {
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: UserSessionService, useValue: userSessionMock },
+        { provide: TenantService, useValue: tenantServiceMock },
       ],
     })
       .overrideComponent(DashboardPage, {
@@ -358,7 +363,7 @@ describe('DashboardPage (Unit)', () => {
         .query(By.directive(StubGatewayTable))
         .triggerEventHandler('commandRequested', value);
       if (shouldCall) {
-        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Close', {
+        expect(snackBarMock.open).toHaveBeenCalledWith('Comando inviato correttamente', 'Chiudi', {
           duration: 3000,
         });
       } else {
@@ -426,8 +431,9 @@ describe('DashboardPage (Unit)', () => {
   });
 
   describe('SUPER_ADMIN ngOnInit', () => {
-    const setupAsSuperAdmin = async (queryParams: Record<string, unknown>) => {
+    const setupAsSuperAdmin = async (queryParams: Record<string, unknown>, canImpersonate = true) => {
       vi.resetAllMocks();
+      tenantServiceMock.getTenant.mockReturnValue(of({ id: queryParams['tenantId'], name: 'Test', canImpersonate }));
       activatedRouteMock = { queryParams: of(queryParams) };
       userSessionMock = { currentUser: () => ({ userId: 'admin', role: UserRole.SUPER_ADMIN }) };
 
@@ -441,6 +447,7 @@ describe('DashboardPage (Unit)', () => {
           { provide: Router, useValue: routerMock },
           { provide: ActivatedRoute, useValue: activatedRouteMock },
           { provide: UserSessionService, useValue: userSessionMock },
+          { provide: TenantService, useValue: tenantServiceMock },
         ],
       })
         .overrideComponent(DashboardPage, {
@@ -460,14 +467,24 @@ describe('DashboardPage (Unit)', () => {
       fixture.detectChanges();
     };
 
-    it('should call loadDashboard with tenantId from queryParams and set activeTenantId', async () => {
+    it('should call getTenant, loadDashboard with tenantId and set activeTenantId when canImpersonate is true', async () => {
       await setupAsSuperAdmin({ tenantId: 'super-tenant' });
+      expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('super-tenant');
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith('super-tenant');
       expect(component['activeTenantId']()).toBe('super-tenant');
     });
 
+    it('should navigate to /dashboard and not load when canImpersonate is false', async () => {
+      await setupAsSuperAdmin({ tenantId: 'restricted-tenant' }, false);
+      expect(tenantServiceMock.getTenant).toHaveBeenCalledWith('restricted-tenant');
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
+      expect(dashboardServiceMock.loadDashboard).not.toHaveBeenCalled();
+      expect(component['activeTenantId']()).toBeNull();
+    });
+
     it('should call loadDashboard with undefined and set activeTenantId to null when no tenantId', async () => {
       await setupAsSuperAdmin({});
+      expect(tenantServiceMock.getTenant).not.toHaveBeenCalled();
       expect(dashboardServiceMock.loadDashboard).toHaveBeenCalledWith(undefined);
       expect(component['activeTenantId']()).toBeNull();
     });
