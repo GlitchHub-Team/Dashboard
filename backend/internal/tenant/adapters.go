@@ -77,7 +77,7 @@ type GetTenantPort interface {
 }
 
 type GetTenantsPort interface {
-	GetTenants() ([]Tenant, error)
+	GetTenants() ([]Tenant, uint, error)
 }
 
 type GetTenantByUserPort interface {
@@ -94,15 +94,15 @@ func (adapter *TenantPostgreAdapter) GetTenant(tenantId uuid.UUID) (Tenant, erro
 	return tenant, err
 }
 
-func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, error) {
-	entities, err := adapter.repo.GetAllTenants()
+func (adapter *TenantPostgreAdapter) GetTenants() ([]Tenant, uint, error) {
+	entities, total, err := adapter.repo.GetAllTenants()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var tenants []Tenant
 	tenants, err = database.MapEntityListToDomain(entities, TenantEntityToDomain)
-	return tenants, err
+	return tenants, uint(total), err
 }
 
 func (adapter *TenantPostgreAdapter) GetTenantByUser(userId uuid.UUID) (Tenant, error) {

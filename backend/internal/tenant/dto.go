@@ -51,7 +51,7 @@ type TenantListResponseDTO struct {
 	Tenants []TenantResponseDTO `json:"tenants"`
 }
 
-func NewTenantListResponseDTO(tenantList []Tenant, total int) TenantListResponseDTO {
+func NewTenantListResponseDTO(tenantList []Tenant, total uint) TenantListResponseDTO {
 	var tenantDtos []TenantResponseDTO
 
 	for _, t := range tenantList {
@@ -62,7 +62,7 @@ func NewTenantListResponseDTO(tenantList []Tenant, total int) TenantListResponse
 		Tenants: tenantDtos,
 		ListInfo: dto.ListInfo{
 			Count: uint(len(tenantList)),
-			Total: uint(total),
+			Total: total,
 		},
 	}
 }

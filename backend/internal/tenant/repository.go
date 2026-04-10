@@ -39,13 +39,20 @@ func (repo *TenantPostgreRepository) GetTenant(tenantId string) (*TenantEntity, 
 	return entity, err
 }
 
-func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
-	var users []TenantEntity
+func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, int64, error) {
 	db := (*gorm.DB)(repo.db)
-	if err := db.Find(&users).Error; err != nil {
-		return nil, err
+	
+	var tenants []TenantEntity
+	if err := db.Find(&tenants).Error; err != nil {
+		return nil, 0, err
 	}
-	return users, nil
+
+	var total int64
+	if err := db.Model(&TenantEntity{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return tenants, total, nil
 }
 
 func (repo *TenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
