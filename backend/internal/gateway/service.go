@@ -1,9 +1,10 @@
 package gateway
 
 import (
-	"backend/internal/shared/identity"
 	"crypto/rand"
 	"encoding/base64"
+
+	"backend/internal/shared/identity"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -25,7 +26,6 @@ func NewGatewayManagementService(
 	removePort RemoveGatewayPort,
 	getPort GetGatewayPort,
 	getManyPort GetGatewaysPort,
-
 ) *GatewayManagementService {
 	return &GatewayManagementService{
 		log:               log,

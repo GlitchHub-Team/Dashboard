@@ -21,6 +21,12 @@ services:
       BCRYPT_COST: ${BCRYPT_COST}
       AUTH_TOKEN_DURATION: ${AUTH_TOKEN_DURATION}
       AUTH_TOKEN_SECRET: ${AUTH_TOKEN_SECRET}
+      APP_URL: ${APP_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
     depends_on:
       timescale:
         condition: service_healthy

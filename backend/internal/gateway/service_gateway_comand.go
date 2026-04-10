@@ -81,7 +81,6 @@ func (s *GatewayCommandService) CommissionGateway(command CommissionGatewayComma
 	gw.TenantId = &command.TenantId
 
 	savedGw, err := s.saveGatewayPort.Save(gw)
-
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -138,6 +137,7 @@ func (s *GatewayCommandService) InterruptGateway(command InterruptGatewayCommand
 
 	return savedGw, nil
 }
+
 func (s *GatewayCommandService) ResumeGateway(command ResumeGatewayCommand) (Gateway, error) {
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {

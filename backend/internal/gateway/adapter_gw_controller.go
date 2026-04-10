@@ -9,20 +9,17 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-//go:generate mockgen -destination=../../tests/gateway/mocks/nats_client.go -package=mocks . NATSClient
-type NATSClient interface {
-	Request(subj string, data []byte, timeout time.Duration) (*nats.Msg, error)
-}
+type TimeoutNATSClient time.Duration
 
 type GatewayCommandNATSAdapter struct {
-	nc      NATSClient
+	nc      *nats.Conn
 	timeout time.Duration
 }
 
-func NewGatewayCommandNATSAdapter(nc NATSClient, timeout time.Duration) *GatewayCommandNATSAdapter {
+func NewGatewayCommandNATSAdapter(nc *nats.Conn, timeout TimeoutNATSClient) *GatewayCommandNATSAdapter {
 	return &GatewayCommandNATSAdapter{
 		nc:      nc,
-		timeout: timeout,
+		timeout: time.Duration(timeout),
 	}
 }
 

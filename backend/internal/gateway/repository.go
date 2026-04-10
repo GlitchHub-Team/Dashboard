@@ -126,7 +126,7 @@ func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway,
 		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return Gateway{}, errors.New("gateway not found")
+		return Gateway{}, ErrGatewayNotFound
 	}
 	if err != nil {
 		return Gateway{}, err

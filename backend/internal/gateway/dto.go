@@ -16,10 +16,12 @@ type deleteGatewayDTO struct {
 type getGatewayByIdDTO struct {
 	dto.GatewayIdField
 }
-type getGatewayListDTO struct {
-	dto.Pagination
-}
 
+/*
+	type getGatewayListDTO struct {
+		dto.Pagination
+	}
+*/
 type getGatewaysByTenantDTO struct {
 	dto.TenantIdField
 	dto.Pagination
@@ -62,6 +64,7 @@ type gatewayResponseDTO struct {
 	PublicIdentifier  string `json:"publicIdentifier,omitempty"`
 }
 
+/*
 type gatewayListResponseDTO struct {
 	dto.ListInfo
 	Gateways []gatewayResponseDTO `json:"gateways"`
@@ -72,3 +75,4 @@ type commissionGatewayResponseDTO struct {
 	dto.TenantNameField
 	dto.GatewayCertificateField
 }
+*/

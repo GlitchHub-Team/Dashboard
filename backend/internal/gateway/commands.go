@@ -8,9 +8,9 @@ import (
 
 type CreateGatewayCommand struct {
 	identity.Requester
-	TenantId    uuid.UUID
-	Name        string
-	Certificate string
+	TenantId         uuid.UUID
+	Name             string
+	Certificate      string
 	PublicIdentifier string
 	SigningSecret    string
 }

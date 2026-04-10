@@ -1,12 +1,15 @@
 package gateway
 
 import (
+	"time"
+
 	"go.uber.org/fx"
 )
 
 var Module = fx.Module(
 	"gateway",
 
+	fx.Supply(TimeoutNATSClient(time.Second*10)),
 	fx.Provide(
 		NewGatewayController,
 
