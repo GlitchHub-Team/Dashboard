@@ -3,6 +3,7 @@ package gateway
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	transportHttp "backend/internal/infra/transport/http"
 	"backend/internal/infra/transport/http/dto"
@@ -13,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -destination=../../tests/gateway/mocks/gateway_usecases.go -package=mocks . CreateGatewayUseCase,DeleteGatewayUseCase,GetGatewayUseCase,GetAllGatewaysUseCase,GetGatewaysByTenantUseCase,CommissionGatewayUseCase,DecommissionGatewayUseCase,InterruptGatewayUseCase,ResumeGatewayUseCase,ResetGatewayUseCase,RebootGatewayUseCase,SetGatewayIntervalLimitUseCase
+//go:generate mockgen -destination=../../tests/gateway/mocks/gateway_usecases.go -package=mocks . CreateGatewayUseCase,DeleteGatewayUseCase,GetGatewayUseCase,GetAllGatewaysUseCase,GetGatewaysByTenantUseCase,CommissionGatewayUseCase,DecommissionGatewayUseCase,InterruptGatewayUseCase,ResumeGatewayUseCase,ResetGatewayUseCase,RebootGatewayUseCase
 type CreateGatewayUseCase interface {
 	CreateGateway(command CreateGatewayCommand) (Gateway, error)
 }
@@ -63,13 +64,10 @@ type RebootGatewayUseCase interface {
 	RebootGateway(cmd RebootGatewayCommand) (Gateway, error)
 }
 
-type SetGatewayIntervalLimitUseCase interface {
-	SetGatewayIntervalLimit(cmd SetGatewayIntervalLimitCommand) (Gateway, error)
-}
-
 type GatewayController struct {
 	log *zap.Logger
 
+<<<<<<< issue-130
 	createGatewayUseCase           CreateGatewayUseCase
 	deleteGatewayUseCase           DeleteGatewayUseCase
 	getAllGatewaysUseCase          GetAllGatewaysUseCase
@@ -83,6 +81,19 @@ type GatewayController struct {
 	setGatewayIntervalLimitUseCase SetGatewayIntervalLimitUseCase
 	getGatewayUseCase              GetGatewayUseCase
 	getGatewayByTenantIDUseCase    GetGatewayByTenantIDUseCase
+=======
+	createGatewayUseCase       CreateGatewayUseCase
+	deleteGatewayUseCase       DeleteGatewayUseCase
+	getAllGatewaysUseCase      GetAllGatewaysUseCase
+	getGatewaysByTenantUseCase GetGatewaysByTenantUseCase
+	commissionGatewayUseCase   CommissionGatewayUseCase
+	decommissionGatewayUseCase DecommissionGatewayUseCase
+	interruptGatewayUseCase    InterruptGatewayUseCase
+	resumeGatewayUseCase       ResumeGatewayUseCase
+	resetGatewayUseCase        ResetGatewayUseCase
+	rebootGatewayUseCase       RebootGatewayUseCase
+	getGatewayUseCase          GetGatewayUseCase
+>>>>>>> main
 }
 
 func NewGatewayController(
@@ -97,7 +108,6 @@ func NewGatewayController(
 	resumeGatewayUseCase ResumeGatewayUseCase,
 	resetGatewayUseCase ResetGatewayUseCase,
 	rebootGatewayUseCase RebootGatewayUseCase,
-	setGatewayIntervalLimitUseCase SetGatewayIntervalLimitUseCase,
 	getGatewayUseCase GetGatewayUseCase,
 	getGatewayByTenantIDUseCase GetGatewayByTenantIDUseCase,
 ) *GatewayController {
@@ -113,16 +123,30 @@ func NewGatewayController(
 		resumeGatewayUseCase,
 		resetGatewayUseCase,
 		rebootGatewayUseCase,
-		setGatewayIntervalLimitUseCase,
 		getGatewayUseCase,
 		getGatewayByTenantIDUseCase,
 	}
+}
+
+func tenantIDString(tenantID *uuid.UUID) string {
+	if tenantID == nil {
+		return ""
+	}
+
+	return tenantID.String()
 }
 
 func (controller *GatewayController) CommissionGateway(ctx *gin.Context) {
 	requester, err := transportHttp.ExtractRequester(ctx)
 	if err != nil {
 		transportHttp.RequestUnauthorized(ctx, err)
+		return
+	}
+
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
+	if err != nil {
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
@@ -134,12 +158,6 @@ func (controller *GatewayController) CommissionGateway(ctx *gin.Context) {
 		return
 	}
 
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
-	if err != nil {
-		transportHttp.RequestError(ctx, err)
-		return
-	}
-
 	tenantId, err := uuid.Parse(bodyDto.TenantId)
 	if err != nil {
 		transportHttp.RequestError(ctx, err)
@@ -147,18 +165,16 @@ func (controller *GatewayController) CommissionGateway(ctx *gin.Context) {
 	}
 
 	cmd := CommissionGatewayCommand{
-		Requester: requester,
-		GatewayId: gatewayId,
-		TenantId:  tenantId,
+		Requester:       requester,
+		GatewayId:       gatewayId,
+		TenantId:        tenantId,
+		CommissionToken: bodyDto.CommissionToken,
 	}
 
 	gateway, err := controller.commissionGatewayUseCase.CommissionGateway(cmd)
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
 
@@ -169,9 +185,9 @@ func (controller *GatewayController) CommissionGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Interval:         gateway.IntervalLimit.Milliseconds(),
 		Status:           gateway.Status,
-		Interval:         gateway.IntervalLimit,
+		TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
 		PublicIdentifier: gateway.PublicIdentifier,
 	}
 
@@ -185,35 +201,24 @@ func (controller *GatewayController) DecommissionGateway(ctx *gin.Context) {
 		return
 	}
 
-	var bodyDto decommissionGatewayDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !transportHttp.ValidationError(ctx, err) {
-			transportHttp.RequestError(ctx, err)
-		}
-		return
-	}
-
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
 	cmd := DecommissionGatewayCommand{
-		Requester: requester,
 		GatewayId: gatewayId,
+		Requester: requester,
 	}
 
 	gateway, err := controller.decommissionGatewayUseCase.DecommissionGateway(cmd)
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
@@ -221,9 +226,9 @@ func (controller *GatewayController) DecommissionGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
 		Status:           gateway.Status,
-		Interval:         gateway.IntervalLimit,
+		Interval:         gateway.IntervalLimit.Milliseconds(),
 		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
@@ -236,46 +241,30 @@ func (controller *GatewayController) InterruptGateway(ctx *gin.Context) {
 		return
 	}
 
-	var bodyDto interruptGatewayDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !transportHttp.ValidationError(ctx, err) {
-			transportHttp.RequestError(ctx, err)
-		}
-		return
-	}
-
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
 	cmd := InterruptGatewayCommand{
-		Requester: requester,
 		GatewayId: gatewayId,
+		Requester: requester,
 	}
 
-	gateway, err := controller.interruptGatewayUseCase.InterruptGateway(cmd)
+	_, err = controller.interruptGatewayUseCase.InterruptGateway(cmd)
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
-	responseDto := gatewayResponseDTO{
-		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
-		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
-		Status:           gateway.Status,
-		Interval:         gateway.IntervalLimit,
-		PublicIdentifier: gateway.PublicIdentifier,
+	responseDto := gatewayCommandResponseDTO{
+		Result: "Invio dei dati da parte del gateway interrotto correttamente",
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -287,46 +276,30 @@ func (controller *GatewayController) ResumeGateway(ctx *gin.Context) {
 		return
 	}
 
-	var bodyDto resumeGatewayDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !transportHttp.ValidationError(ctx, err) {
-			transportHttp.RequestError(ctx, err)
-		}
-		return
-	}
-
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
 	cmd := ResumeGatewayCommand{
-		Requester: requester,
 		GatewayId: gatewayId,
+		Requester: requester,
 	}
 
-	gateway, err := controller.resumeGatewayUseCase.ResumeGateway(cmd)
+	_, err = controller.resumeGatewayUseCase.ResumeGateway(cmd)
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
-	responseDto := gatewayResponseDTO{
-		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
-		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
-		Status:           gateway.Status,
-		Interval:         gateway.IntervalLimit,
-		PublicIdentifier: gateway.PublicIdentifier,
+	responseDto := gatewayCommandResponseDTO{
+		Result: "Invio dei dati da parte del gateway ripreso correttamente",
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -338,46 +311,30 @@ func (controller *GatewayController) ResetGateway(ctx *gin.Context) {
 		return
 	}
 
-	var bodyDto resetGatewayDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !transportHttp.ValidationError(ctx, err) {
-			transportHttp.RequestError(ctx, err)
-		}
-		return
-	}
-
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
 	cmd := ResetGatewayCommand{
-		Requester: requester,
 		GatewayId: gatewayId,
+		Requester: requester,
 	}
 
-	gateway, err := controller.resetGatewayUseCase.ResetGateway(cmd)
+	_, err = controller.resetGatewayUseCase.ResetGateway(cmd)
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
-	responseDto := gatewayResponseDTO{
-		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
-		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
-		Status:           gateway.Status,
-		Interval:         gateway.IntervalLimit,
-		PublicIdentifier: gateway.PublicIdentifier,
+	responseDto := gatewayCommandResponseDTO{
+		Result: "Reset del gateway eseguito correttamente",
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -389,25 +346,19 @@ func (controller *GatewayController) RebootGateway(ctx *gin.Context) {
 		return
 	}
 
-	var bodyDto rebootGatewayDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !transportHttp.ValidationError(ctx, err) {
-			transportHttp.RequestError(ctx, err)
-		}
-		return
-	}
-
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
 	cmd := RebootGatewayCommand{
-		Requester: requester,
 		GatewayId: gatewayId,
+		Requester: requester,
 	}
 
+<<<<<<< issue-130
 	gateway, err := controller.rebootGatewayUseCase.RebootGateway(cmd)
 	if err != nil {
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
@@ -463,19 +414,19 @@ func (controller *GatewayController) SetGatewayIntervalLimit(ctx *gin.Context) {
 	}
 
 	gateway, err := controller.setGatewayIntervalLimitUseCase.SetGatewayIntervalLimit(cmd)
+=======
+	_, err = controller.rebootGatewayUseCase.RebootGateway(cmd)
+>>>>>>> main
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
 
+<<<<<<< issue-130
 	publicIdentifier := ""
 	if gateway.PublicIdentifier != nil {
 		publicIdentifier = *gateway.PublicIdentifier
@@ -488,6 +439,10 @@ func (controller *GatewayController) SetGatewayIntervalLimit(ctx *gin.Context) {
 		Status:           gateway.Status,
 		Interval:         gateway.IntervalLimit,
 		PublicIdentifier: publicIdentifier,
+=======
+	responseDto := gatewayCommandResponseDTO{
+		Result: "Reboot del gateway eseguito correttamente",
+>>>>>>> main
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -510,19 +465,15 @@ func (controller *GatewayController) CreateGateway(ctx *gin.Context) {
 	cmd := CreateGatewayCommand{
 		Requester: requester,
 		Name:      bodyDto.GatewayName,
+		Interval:  time.Duration(bodyDto.Interval) * time.Millisecond,
 	}
 
 	gateway, err := controller.createGatewayUseCase.CreateGateway(cmd)
 	if err != nil {
-
 		if errors.Is(err, identity.ErrUnauthorizedAccess) {
 			transportHttp.RequestUnauthorized(ctx, err)
 			return
-		} else if errors.Is(err, ErrGatewayAlreadyExists) {
-			transportHttp.RequestError(ctx, err)
-			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
@@ -535,10 +486,15 @@ func (controller *GatewayController) CreateGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
 		Status:           gateway.Status,
+<<<<<<< issue-130
 		Interval:         gateway.IntervalLimit,
 		PublicIdentifier: publicIdentifier,
+=======
+		Interval:         gateway.IntervalLimit.Milliseconds(),
+		PublicIdentifier: gateway.PublicIdentifier,
+>>>>>>> main
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -549,35 +505,25 @@ func (controller *GatewayController) DeleteGateway(ctx *gin.Context) {
 		transportHttp.RequestUnauthorized(ctx, err)
 		return
 	}
-	var bodyDto deleteGatewayDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
-		if !transportHttp.ValidationError(ctx, err) {
-			transportHttp.RequestError(ctx, err)
-		}
-		return
-	}
 
-	gatewayId, err := uuid.Parse(bodyDto.GatewayId)
+	gatewayIdParam := ctx.Param("gateway_id")
+	gatewayId, err := uuid.Parse(gatewayIdParam)
 	if err != nil {
-		transportHttp.RequestError(ctx, err)
+		transportHttp.RequestError(ctx, ErrInvalidGatewayID)
 		return
 	}
 
 	cmd := DeleteGatewayCommand{
-		Requester: requester,
 		GatewayId: gatewayId,
+		Requester: requester,
 	}
 
 	gateway, err := controller.deleteGatewayUseCase.DeleteGateway(cmd)
 	if err != nil {
-		if errors.Is(err, identity.ErrUnauthorizedAccess) {
-			transportHttp.RequestUnauthorized(ctx, err)
-			return
-		} else if errors.Is(err, ErrGatewayNotFound) {
-			transportHttp.RequestError(ctx, err)
+		if errors.Is(err, ErrGatewayNotFound) || errors.Is(err, identity.ErrUnauthorizedAccess) {
+			transportHttp.RequestNotFound(ctx, ErrGatewayNotFound)
 			return
 		}
-
 		transportHttp.RequestServerError(ctx, err)
 		return
 	}
@@ -585,7 +531,7 @@ func (controller *GatewayController) DeleteGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
 		Status:           gateway.Status,
 		Interval:         gateway.IntervalLimit.Milliseconds(),
 		PublicIdentifier: gateway.PublicIdentifier,
@@ -628,6 +574,7 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 	responseDtos := make([]gatewayListResponseDTO, len(gateways))
 
 	for i, gateway := range gateways {
+<<<<<<< issue-130
 		responseDtos[i] = gatewayListResponseDTO{
 			ListInfo: dto.ListInfo{
 				Total: count,
@@ -643,6 +590,15 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 					PublicIdentifier: gateway.PublicIdentifier,
 				},
 			},
+=======
+		responseDtos[i] = gatewayResponseDTO{
+			GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
+			GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+			TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
+			Status:           gateway.Status,
+			Interval:         gateway.IntervalLimit.Milliseconds(),
+			PublicIdentifier: gateway.PublicIdentifier,
+>>>>>>> main
 		}
 	}
 
@@ -703,6 +659,7 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 	responseDtos := make([]gatewayListResponseDTO, len(gateways))
 
 	for i, gateway := range gateways {
+<<<<<<< issue-130
 		responseDtos[i] = gatewayListResponseDTO{
 			ListInfo: dto.ListInfo{
 				Total: count,
@@ -718,6 +675,15 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 					PublicIdentifier: gateway.PublicIdentifier,
 				},
 			},
+=======
+		responseDtos[i] = gatewayResponseDTO{
+			GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
+			GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+			TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
+			Status:           gateway.Status,
+			Interval:         gateway.IntervalLimit.Milliseconds(),
+			PublicIdentifier: gateway.PublicIdentifier,
+>>>>>>> main
 		}
 	}
 
@@ -813,7 +779,7 @@ func (controller *GatewayController) GetGatewayByTenantID(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
 		Status:           gateway.Status,
 		Interval:         gateway.IntervalLimit.Milliseconds(),
 		PublicIdentifier: gateway.PublicIdentifier,

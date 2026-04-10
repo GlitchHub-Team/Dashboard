@@ -129,10 +129,10 @@ describe('AuthApiClientService', () => {
     it.each([
       [undefined, { token: 'account-token', tenant_id: undefined }],
       ['tenant-01', { token: 'account-token', tenant_id: 'tenant-01' }],
-    ])('should POST to /auth/confirm_account/verify_token/ (tenantId=%s)', (tenantId, expectedBody) => {
+    ])('should POST to /auth/confirm_account/verify_token (tenantId=%s)', (tenantId, expectedBody) => {
       service.verifyAccountToken('account-token', tenantId as string | undefined).subscribe();
 
-      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token/`);
+      const req = httpMock.expectOne(`${apiUrl}/confirm_account/verify_token`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(expectedBody);
       req.flush(null);

@@ -15,7 +15,8 @@ import { CreateGatewayDialog } from './dialogs/create-gateway/create-gateway.dia
 import { CreateSensorDialog } from './dialogs/create-sensor/create-sensor.dialog';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
+import { GatewayStatus } from '../../models/gateway-status.enum';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { ActionMode } from '../../models/action-mode.model';
 
@@ -52,7 +53,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
     id: 'gw-1',
     tenantId: 'tenant-01',
     name: 'Gateway 1',
-    status: Status.ACTIVE,
+    status: GatewayStatus.ACTIVE,
     interval: 60,
   };
   const mockSensor: Sensor = {
@@ -60,7 +61,7 @@ describe('GatewaySensorManagerPage (Unit)', () => {
     gatewayId: 'gw-1',
     name: 'Heart Rate Sensor',
     profile: SensorProfiles.HEART_RATE_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 1000,
   };
 

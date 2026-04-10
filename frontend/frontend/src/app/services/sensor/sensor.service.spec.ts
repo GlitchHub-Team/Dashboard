@@ -11,7 +11,7 @@ import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 import { ApiError } from '../../models/api-error.model';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
 
 describe('SensorService', () => {
   let service: SensorService;
@@ -22,7 +22,7 @@ describe('SensorService', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-      status: Status.ACTIVE,
+      status: SensorStatus.ACTIVE,
       dataInterval: 60,
     },
     {
@@ -30,7 +30,7 @@ describe('SensorService', () => {
       gatewayId: 'gw-1',
       name: 'Humidity',
       profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
-      status: Status.INACTIVE,
+      status: SensorStatus.INACTIVE,
       dataInterval: 60,
     },
   ];
@@ -45,7 +45,7 @@ describe('SensorService', () => {
         sensor_name: 'Temperature',
         profile: 'health thermometer',
         data_interval: 60,
-        status: Status.ACTIVE,
+        status: SensorStatus.ACTIVE,
       },
       {
         sensor_id: 's-2',
@@ -53,7 +53,7 @@ describe('SensorService', () => {
         sensor_name: 'Humidity',
         profile: 'environmental sensing',
         data_interval: 60,
-        status: Status.INACTIVE,
+        status: SensorStatus.INACTIVE,
       },
     ],
   };
@@ -72,13 +72,13 @@ describe('SensorService', () => {
     sensor_name: 'Pressure',
     profile: 'environmental sensing',
     data_interval: 60,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
   };
   const mockNewSensor: Sensor = {
     id: 's-3',
     gatewayId: 'gw-1',
     name: 'Pressure',
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
     dataInterval: 60,
   };

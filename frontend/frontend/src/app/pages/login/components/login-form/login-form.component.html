@@ -12,6 +12,16 @@
   </div>
 }
 
+@if (tenantLoadingError(); as error) {
+  <div class="error-banner">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+    <button mat-icon-button type="button" (click)="tenantLoadingError.set(null)">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+}
+
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Email</mat-label>

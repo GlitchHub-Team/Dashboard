@@ -56,6 +56,7 @@
           <button
             mat-icon-button
             matTooltip="Historic Chart"
+            [disabled]="gatewayStatus() === GatewayStatus.INACTIVE"
             (click)="onViewChart(sensor, ChartType.HISTORIC)"
           >
             <mat-icon>query_stats</mat-icon>
@@ -63,6 +64,7 @@
           <button
             mat-icon-button
             matTooltip="Real-time Chart"
+            [disabled]="gatewayStatus() === GatewayStatus.INACTIVE"
             (click)="onViewChart(sensor, ChartType.REALTIME)"
           >
             <mat-icon>ssid_chart</mat-icon>

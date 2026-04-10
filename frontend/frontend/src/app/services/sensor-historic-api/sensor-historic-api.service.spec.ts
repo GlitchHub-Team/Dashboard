@@ -9,7 +9,7 @@ import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
 
 describe('SensorHistoricApiService', () => {
   let service: SensorHistoricApiService;
@@ -22,7 +22,7 @@ describe('SensorHistoricApiService', () => {
     gatewayId: 'gateway-1',
     name: 'Test Sensor',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 60,
   };
 

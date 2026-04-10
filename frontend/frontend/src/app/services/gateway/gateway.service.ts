@@ -120,6 +120,18 @@ export class GatewayService {
     return this.gatewayCommandApi.rebootGateway(id);
   }
 
+  public interruptGateway(id: string): Observable<void> {
+    return this.gatewayCommandApi
+    .interruptGateway(id)
+    .pipe(tap(() => this.refetchCurrentPage()));
+  }
+
+  public resumeGateway(id: string): Observable<void> {
+    return this.gatewayCommandApi
+    .resumeGateway(id)
+    .pipe(tap(() => this.refetchCurrentPage()));
+  }
+
   public changePage(page: number, limit: number): void {
     const tenantId = this._currentTenantId();
     if (tenantId) {

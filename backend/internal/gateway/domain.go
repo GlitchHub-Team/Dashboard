@@ -12,6 +12,19 @@ const (
 	GATEWAY_STATUS_ACTIVE         GatewayStatus = "active"
 	GATEWAY_STATUS_INACTIVE       GatewayStatus = "inactive"
 	GATEWAY_STATUS_DECOMMISSIONED GatewayStatus = "decommissioned"
+<<<<<<< issue-130
+=======
+	DEFAULT_INTERVAL_LIMIT        time.Duration = time.Second * 5
+
+	CREATE_GATEWAY_COMMAND_SUBJECT       = "commands.creategateway"
+	DELETE_GATEWAY_COMMAND_SUBJECT       = "commands.deletegateway"
+	COMMISSION_GATEWAY_COMMAND_SUBJECT   = "commands.commissiongateway"
+	DECOMMISSION_GATEWAY_COMMAND_SUBJECT = "commands.decommissiongateway"
+	INTERRUPT_GATEWAY_COMMAND_SUBJECT    = "commands.interruptgateway"
+	RESUME_GATEWAY_COMMAND_SUBJECT       = "commands.resumegateway"
+	RESET_GATEWAY_COMMAND_SUBJECT        = "commands.resetgateway"
+	REBOOT_GATEWAY_COMMAND_SUBJECT       = "commands.rebootgateway"
+>>>>>>> main
 )
 
 type Gateway struct {

@@ -24,9 +24,14 @@ type GatewayEntity struct {
 	ID               string         `gorm:"type:uuid;primaryKey"`
 	Name             string         `gorm:"type:varchar(255);not null"`
 	TenantId         *string        `gorm:"type:uuid;index"`
+	Interval         int64          `gorm:"not null"`
 	Tenant           *tenant.Tenant `gorm:"foreignKey:TenantId;references:Id;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Status           string         `gorm:"type:varchar(50);not null"`
+<<<<<<< issue-130
 	PublicIdentifier string         `gorm:"type:varchar(255)"`
+=======
+	PublicIdentifier *string        `gorm:"type:varchar(255)"`
+>>>>>>> main
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -43,6 +48,15 @@ func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) 
 		log: log,
 		db:  db,
 	}
+}
+
+type GatewayRepository interface {
+	SaveGateway(entity *GatewayEntity) error
+	DeleteGateway(entity *GatewayEntity) error
+	GetGatewayById(gatewayId string) (Gateway, error)
+	GetGatewaysByTenantId(tenantId string) ([]Gateway, error)
+	GetAllGateways() ([]Gateway, error)
+	CreateGateway(entity *GatewayEntity) (Gateway, error)
 }
 
 // methods ============================================================================================
@@ -71,6 +85,10 @@ func GatewayEntityToDomain(entity *GatewayEntity) (Gateway, error) {
 		Id:               gatewayId,
 		Name:             entity.Name,
 		TenantId:         tenantId,
+<<<<<<< issue-130
+=======
+		IntervalLimit:    time.Duration(entity.Interval) * time.Millisecond,
+>>>>>>> main
 		Status:           GatewayStatus(entity.Status),
 		PublicIdentifier: entity.PublicIdentifier,
 	}, nil
@@ -80,6 +98,7 @@ func (entity *GatewayEntity) FromGateway(g Gateway) {
 	entity.ID = g.Id.String()
 	entity.Name = g.Name
 	entity.Status = string(g.Status)
+	entity.Interval = g.IntervalLimit.Milliseconds()
 
 	if g.TenantId != nil {
 		tenantIdStr := g.TenantId.String()
@@ -102,43 +121,34 @@ func (entity *GatewayEntity) ToGateway() Gateway {
 		Name:             entity.Name,
 		Status:           (GatewayStatus)(entity.Status),
 		TenantId:         tenantId,
+		IntervalLimit:    time.Duration(entity.Interval) * time.Millisecond,
 		PublicIdentifier: entity.PublicIdentifier,
 	}
 }
 
-func (repo *gatewayPostgreRepository) SaveGateway(gateway Gateway) error {
-	entity := &GatewayEntity{}
-	entity.FromGateway(gateway)
-
-	existing := &GatewayEntity{}
-	db := (*gorm.DB)(repo.db)
-	err := db.Where("id = ? AND tenant_id IS NOT NULL", entity.ID).First(existing).Error
-
-	if err == nil {
-		return ErrGatewayAlreadyAssigned
+func (repo *gatewayPostgreRepository) CreateGateway(entity *GatewayEntity) (Gateway, error) {
+	if err := (*gorm.DB)(repo.db).Clauses(clause.Returning{}).Create(entity).Error; err != nil {
+		return Gateway{}, err
 	}
-
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-
-	return db.Save(entity).Error
+	return entity.ToGateway(), nil
 }
 
-func (repo *gatewayPostgreRepository) DeleteGateway(gateway Gateway) error {
-	entity := &GatewayEntity{}
-
+func (repo *gatewayPostgreRepository) SaveGateway(entity *GatewayEntity) error {
 	db := (*gorm.DB)(repo.db)
+	return db.Clauses(clause.Returning{}).Save(entity).Error
+}
 
-	return db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("id = ?", gateway.Id).
-			Clauses(clause.Locking{Strength: "UPDATE"}).
-			First(entity).Error; err != nil {
-			return err
-		}
-
-		return tx.Delete(entity).Error
-	})
+func (repo *gatewayPostgreRepository) DeleteGateway(entity *GatewayEntity) error {
+	db := (*gorm.DB)(repo.db)
+	err := db.
+		Clauses(clause.Returning{}).
+		Delete(entity).
+		Error
+	if err != nil {
+		repo.log.Error("Failed to delete gateway", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 func (repo *gatewayPostgreRepository) GetGatewayByTenantID(tenantId string, gatewayId string) (GatewayEntity, error) {
@@ -215,6 +225,7 @@ func (repo *gatewayPostgreRepository) GetAllGateways(offset int, limit int) ([]G
 	return entities, uint(totalCount), nil
 }
 
+<<<<<<< issue-130
 type GatewayRepository interface {
 	SaveGateway(gateway Gateway) error
 	DeleteGateway(gateway Gateway) error
@@ -223,3 +234,6 @@ type GatewayRepository interface {
 	GetAllGateways(offset int, limit int) ([]GatewayEntity, uint, error)
 	GetGatewayByTenantID(tenantId string, gatewayId string) (GatewayEntity, error)
 }
+=======
+var _ GatewayRepository = (*gatewayPostgreRepository)(nil)
+>>>>>>> main

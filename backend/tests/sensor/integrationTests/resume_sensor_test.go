@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"backend/internal/infra/transport/http/dto"
 	"backend/internal/sensor"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
@@ -189,7 +190,7 @@ func TestResumeSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayTimeout, "Gateway Timeout Resume"),
 				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Resume", 1300, sensorProfile.PULSE_OXIMETER, sensor.Inactive),
-				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.RESUME_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&timeoutSub, false, dto.CommandResponse{}, sensor.RESUME_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Resume sensore valida ma request NATS in timeout",
 			Method: http.MethodPost,
@@ -213,7 +214,7 @@ func TestResumeSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayFailedReply, "Gateway Failed Resume"),
 				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Resume", 1400, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Inactive),
-				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats resume failed"}, sensor.RESUME_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&failedReplySub, true, dto.CommandResponse{Success: false, Message: "nats resume failed"}, sensor.RESUME_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Resume sensore valida ma reply NATS con success false",
 			Method: http.MethodPost,
@@ -237,7 +238,7 @@ func TestResumeSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewaySuperAdminNil, "Gateway Super Admin Nil Resume", nil),
 				preSetupCreateSensor(sensorSuperAdminNil, gatewaySuperAdminNil, "Sensor Super Admin Nil Resume", 1500, sensorProfile.HEART_RATE, sensor.Inactive),
-				preSetupCommandResponseListener(&superAdminNilSub, true, sensor.CommandResponse{Success: true, Message: "ok"}, sensor.RESUME_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&superAdminNilSub, true, dto.CommandResponse{Success: true, Message: "ok"}, sensor.RESUME_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Resume sensore super admin di sensore con gateway con tenantId nil",
 			Method: http.MethodPost,
@@ -264,7 +265,7 @@ func TestResumeSensorIntegration(t *testing.T) {
 				preSetupCommandResponseListener(
 					&successSub,
 					true,
-					sensor.CommandResponse{Success: true, Message: "ok"},
+					dto.CommandResponse{Success: true, Message: "ok"},
 					sensor.RESUME_SENSOR_CMD_SUBJECT,
 					func(msg *nats.Msg) {
 						_ = json.Unmarshal(msg.Data, &successCmd)

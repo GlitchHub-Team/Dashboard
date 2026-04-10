@@ -43,52 +43,41 @@ export class TenantService {
     );
   }
 
-  public retrieveTenants(needAll: boolean): void {
+  public getAllTenants(): Observable<Tenant[]> {
+    this.setLoadingState();
+
+    return this.tenantApi.getAllTenants().pipe(
+      map((dtos) => dtos.map((dto) => this.adapter.fromDTO(dto))),
+      finalize(() => this._loading.set(false)),
+    );
+  }
+
+  public retrieveTenants(): void {
     this.setGettingTenantsState();
 
-    if (needAll) {
-      this.tenantApi
-        .getTenants(this.pageIndex() + 1, 100)
-        .pipe(
-          // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
-          tap((response) => console.log('Response raw: ', response)),
-          map((response) => this.adapter.fromPaginatedDTO(response)),
-          tap((result) => {
-            this._tenantList.set(result.tenants);
-            this._total.set(result.total);
-          }),
-          catchError((err: ApiError) => {
-            this._error.set(err.message ?? 'Failed to fetch tenants');
-            return EMPTY;
-          }),
-          finalize(() => this._loading.set(false)),
-        )
-        .subscribe(); 
-    } else {
-      this.tenantApi
-        .getTenants(this.pageIndex() + 1, this.limit())
-        .pipe(
-          // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
-          tap((response) => console.log('Response raw: ', response)),
-          map((response) => this.adapter.fromPaginatedDTO(response)),
-          tap((result) => {
-            this._tenantList.set(result.tenants);
-            this._total.set(result.total);
-          }),
-          catchError((err: ApiError) => {
-            this._error.set(err.message ?? 'Failed to fetch tenants');
-            return EMPTY;
-          }),
-          finalize(() => this._loading.set(false)),
-        )
-        .subscribe();
-    }
+    this.tenantApi
+      .getTenants(this.pageIndex() + 1, this.limit())
+      .pipe(
+        // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
+        tap((response) => console.log('Response raw: ', response)),
+        map((response) => this.adapter.fromPaginatedDTO(response)),
+        tap((result) => {
+          this._tenantList.set(result.tenants);
+          this._total.set(result.total);
+        }),
+        catchError((err: ApiError) => {
+          this._error.set(err.message ?? 'Failed to fetch tenants');
+          return EMPTY;
+        }),
+        finalize(() => this._loading.set(false)),
+      )
+      .subscribe();
   }
 
   public changePage(pageIndex: number, limit: number): void {
     this._pageIndex.set(pageIndex);
     this._limit.set(limit);
-    this.retrieveTenants(false);
+    this.retrieveTenants();
   }
 
   // Il dialog si occupa del loading/errors

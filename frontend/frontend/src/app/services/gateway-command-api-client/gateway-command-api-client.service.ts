@@ -37,5 +37,13 @@ export class GatewayCommandApiClientService {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reboot`, {});
   }
 
-  // TODO: AGGIUNGI INTERROMPI E RIPRENDI
+  // STOP INVIO DATI
+  public interruptGateway(gatewayId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/interrupt`, {});
+  }
+
+  // RIPRESA INVIO DATI
+  public resumeGateway(gatewayId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/resume`, {});
+  }
 }

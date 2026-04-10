@@ -8,6 +8,7 @@ var Module = fx.Module(
 	"gateway_connection",
 	fx.Provide(
 		NewGatewayHelloService,
+		NewConsumer,
 		NewNATSWorker,
 	),
 	fx.Invoke(

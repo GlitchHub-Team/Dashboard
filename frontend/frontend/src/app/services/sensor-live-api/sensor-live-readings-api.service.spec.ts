@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
-import { Status } from '../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../models/sensor-status.enum';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { SensorLiveReadingsApiService } from './sensor-live-readings-api.service';
@@ -24,7 +24,7 @@ describe('SensorLiveReadingsApiService', () => {
     name: 'Temperature',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
     dataInterval: 60,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
   };
 
   const mockRequest: ChartRequest = {

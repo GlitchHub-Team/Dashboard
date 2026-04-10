@@ -1,12 +1,15 @@
 package gateway
 
 import (
+<<<<<<< issue-130
 	"crypto/rand"
 	"encoding/base64"
 
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 
+=======
+>>>>>>> main
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -14,23 +17,28 @@ import (
 // Use Cases ------------------------------------------------------------------------------------------
 
 type GatewayManagementService struct {
+<<<<<<< issue-130
 	log               *zap.Logger
 	saveGatewayPort   SaveGatewayPort
 	removeGatewayPort RemoveGatewayPort
 	getGatewayPort    GetGatewayPort
 	getGatewaysPort   GetGatewaysPort
 	getTenantPort     tenant.GetTenantPort
+=======
+	log             *zap.Logger
+	getGatewayPort  GetGatewayPort
+	getGatewaysPort GetGatewaysPort
+>>>>>>> main
 }
 
 func NewGatewayManagementService(
 	log *zap.Logger,
-	savePort SaveGatewayPort,
-	removePort RemoveGatewayPort,
 	getPort GetGatewayPort,
 	getManyPort GetGatewaysPort,
 	getTenantPort tenant.GetTenantPort,
 ) *GatewayManagementService {
 	return &GatewayManagementService{
+<<<<<<< issue-130
 		log:               log,
 		saveGatewayPort:   savePort,
 		removeGatewayPort: removePort,
@@ -72,21 +80,25 @@ func (s *GatewayManagementService) CreateGateway(command CreateGatewayCommand) (
 	_, err = s.saveGatewayPort.Save(gateway)
 	if err != nil {
 		return Gateway{}, err
+=======
+		log:             log,
+		getGatewayPort:  getPort,
+		getGatewaysPort: getManyPort,
+>>>>>>> main
 	}
-
-	return gateway, nil
 }
 
-func (s *GatewayManagementService) DeleteGateway(command DeleteGatewayCommand) (Gateway, error) {
-	oldGateway, err := s.removeGatewayPort.Remove(command.GatewayId)
+func (s *GatewayManagementService) GetGateway(command GetGatewayByIdCommand) (Gateway, error) {
+	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	if oldGateway.IsZero() {
+	if gw.IsZero() {
 		return Gateway{}, ErrGatewayNotFound
 	}
 
+<<<<<<< issue-130
 	return oldGateway, nil
 }
 
@@ -100,6 +112,12 @@ func (s *GatewayManagementService) GetGateway(command GetGatewayByIdCommand) (Ga
 
 	if !command.IsSuperAdmin() {
 		return Gateway{}, ErrUnauthorizedAccess
+=======
+	if !command.IsSuperAdmin() {
+		if command.RequesterTenantId == nil || !gw.BelongsToTenant(*command.RequesterTenantId) {
+			return Gateway{}, ErrUnauthorizedAccess
+		}
+>>>>>>> main
 	}
 
 	return gw, nil
@@ -175,3 +193,9 @@ func (s *GatewayManagementService) GetGatewayByTenantId(command GetGatewayByTena
 
 	return gw, nil
 }
+
+var (
+	_ GetGatewayUseCase          = (*GatewayManagementService)(nil)
+	_ GetAllGatewaysUseCase      = (*GatewayManagementService)(nil)
+	_ GetGatewaysByTenantUseCase = (*GatewayManagementService)(nil)
+)

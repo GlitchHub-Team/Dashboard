@@ -5,11 +5,18 @@ type GatewayIdField struct {
 }
 
 type GatewayNameField struct {
-	GatewayName string `uri:"gateway_name" form:"gateway_name" json:"gateway_name" binding:"required"`
+	GatewayName string `uri:"name" form:"name" json:"name" binding:"required"`
 }
 
 type CommissionTokenField struct {
 	CommissionToken string `uri:"commission_token" form:"commission_token" json:"commission_token" binding:"required"`
+<<<<<<< issue-130
+=======
+}
+
+type GatewayIntervalField struct {
+	Interval int64 `uri:"interval" form:"interval" json:"interval" binding:"required,gt=0"`
+>>>>>>> main
 }
 
 type GatewayIntervalField struct {

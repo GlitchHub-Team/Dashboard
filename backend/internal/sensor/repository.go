@@ -46,11 +46,6 @@ type sensorPostgreRepository struct {
 	db  clouddb.CloudDBConnection
 }
 
-type CommandResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-}
-
 type sensorNatsRepository struct {
 	log *zap.Logger
 	nc  *nats.Conn

@@ -11,7 +11,7 @@ import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
 import { ChartType } from '../../../../models/chart/chart-type.enum';
 import { ChartRequest } from '../../../../models/chart/chart-request.model';
 import { ActionMode } from '../../../../models/action-mode.model';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 
 describe('SensorTableComponent (Unit)', () => {
   let component: SensorTableComponent;
@@ -23,7 +23,7 @@ describe('SensorTableComponent (Unit)', () => {
       gatewayId: 'gw-1',
       name: 'Temperature',
       profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-      status: Status.ACTIVE,
+      status: SensorStatus.ACTIVE,
       dataInterval: 60,
     },
     {
@@ -31,7 +31,7 @@ describe('SensorTableComponent (Unit)', () => {
       gatewayId: 'gw-2',
       name: 'Humidity',
       profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
-      status: Status.INACTIVE,
+      status: SensorStatus.INACTIVE,
       dataInterval: 120,
     },
   ];

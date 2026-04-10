@@ -8,12 +8,12 @@ import { SensorCommandsDialog } from './sensor-commands.dialog';
 import { SensorService } from '../../../../services/sensor/sensor.service';
 import { Sensor } from '../../../../models/sensor/sensor.model';
 import { SensorProfiles } from '../../../../models/sensor/sensor-profiles.enum';
-import { Status } from '../../../../models/gateway-sensor-status.enum';
+import { SensorStatus } from '../../../../models/sensor-status.enum';
 import { ApiError } from '../../../../models/api-error.model';
 
-const COMMAND_CASES: ['interrupt' | 'resume', 'interruptSensor' | 'resumeSensor', Status][] = [
-  ['interrupt', 'interruptSensor', Status.ACTIVE],
-  ['resume', 'resumeSensor', Status.INACTIVE],
+const COMMAND_CASES: ['interrupt' | 'resume', 'interruptSensor' | 'resumeSensor', SensorStatus][] = [
+  ['interrupt', 'interruptSensor', SensorStatus.ACTIVE],
+  ['resume', 'resumeSensor', SensorStatus.INACTIVE],
 ];
 
 describe('SensorCommandsDialog', () => {
@@ -30,11 +30,11 @@ describe('SensorCommandsDialog', () => {
     gatewayId: 'gw-1',
     name: 'Temperature',
     profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
-    status: Status.ACTIVE,
+    status: SensorStatus.ACTIVE,
     dataInterval: 60,
   };
 
-  const mockInactiveSensor: Sensor = { ...mockSensor, status: Status.INACTIVE };
+  const mockInactiveSensor: Sensor = { ...mockSensor, status: SensorStatus.INACTIVE };
 
   const buildFixture = async (sensor: Sensor) => {
     await TestBed.configureTestingModule({
@@ -143,7 +143,7 @@ describe('SensorCommandsDialog', () => {
     it.each(COMMAND_CASES)(
       '%s: should call %s with sensor id and close with true on success',
       async (command, method, status) => {
-        if (status !== Status.ACTIVE) {
+        if (status !== SensorStatus.ACTIVE) {
           TestBed.resetTestingModule();
           await buildFixture(mockInactiveSensor);
         }
@@ -158,7 +158,7 @@ describe('SensorCommandsDialog', () => {
     it.each(COMMAND_CASES)(
       '%s: should set generalError, reset isSubmitting, and keep dialog open on error',
       async (command, method, status) => {
-        if (status !== Status.ACTIVE) {
+        if (status !== SensorStatus.ACTIVE) {
           TestBed.resetTestingModule();
           await buildFixture(mockInactiveSensor);
         }

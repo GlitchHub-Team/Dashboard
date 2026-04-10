@@ -10,13 +10,21 @@ import (
 )
 
 type NATSWorker struct {
-	js      jetstream.JetStream
-	service GatewayHelloService
-	logger  *zap.Logger
+	consumer jetstream.Consumer
+	service  GatewayHelloService
+	logger   *zap.Logger
 }
 
-func NewNATSWorker(js jetstream.JetStream, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
-	return &NATSWorker{js: js, service: service, logger: logger}
+func NewConsumer(js jetstream.JetStream) (jetstream.Consumer, error) {
+	return js.CreateOrUpdateConsumer(context.Background(), "HELLO_STREAM", jetstream.ConsumerConfig{
+		Durable:       "gateway_hello_consumer",
+		FilterSubject: "gateway.hello.*",
+		AckPolicy:     jetstream.AckExplicitPolicy,
+	})
+}
+
+func NewNATSWorker(consumer jetstream.Consumer, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
+	return &NATSWorker{consumer: consumer, service: service, logger: logger}
 }
 
 func (w *NATSWorker) Run(lc fx.Lifecycle) {
@@ -50,13 +58,7 @@ func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 }
 
 func (w *NATSWorker) ListenHelloMessages(ctx context.Context) {
-	cons, err := w.js.Consumer(ctx, "HELLO_STREAM", "gateway_hello_consumer")
-	if err != nil {
-		w.logger.Error("js.Consumer failed", zap.Error(err))
-		return
-	}
-
-	_, err = cons.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
+	_, err := w.consumer.Consume(w.ProcessMsg, jetstream.PullMaxMessages(1))
 	if err != nil {
 		w.logger.Error("failed to start consume", zap.Error(err))
 		return

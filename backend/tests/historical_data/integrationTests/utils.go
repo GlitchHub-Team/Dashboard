@@ -171,7 +171,7 @@ func setupHistoricalDataTenantTestContext(
 ) error {
 	tenantEntity := tenant.TenantEntity{
 		ID:             tenantID.String(),
-		Name:           "Historical Data Test Tenant",
+		Name:           fmt.Sprintf("Historical Data Test Tenant %s", tenantID.String()),
 		CanImpersonate: canImpersonate,
 	}
 

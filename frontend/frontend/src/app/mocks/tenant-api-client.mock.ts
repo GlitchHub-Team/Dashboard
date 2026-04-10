@@ -10,6 +10,7 @@ import { ApiError } from '../models/api-error.model';
 export class TenantApiClientMockService {
   private readonly shouldFailGetTenant = false;
   private readonly shouldFailGetTenants = false;
+  private readonly shouldFailGetAllTenants = false;
   private readonly shouldFailCreateTenant = false;
   private readonly shouldFailDeleteTenant = false;
 
@@ -46,6 +47,14 @@ export class TenantApiClientMockService {
     const start = (page - 1) * limit;
     const tenants = this.mockTenants.slice(start, start + limit);
     return of({ count: tenants.length, total, tenants }).pipe(delay(500));
+  }
+
+  public getAllTenants(): Observable<TenantBackend[]> {
+    if (this.shouldFailGetAllTenants) {
+      return this.delayedError(400, 'Failed to fetch tenants');
+    }
+
+    return of(this.mockTenants).pipe(delay(500));
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {

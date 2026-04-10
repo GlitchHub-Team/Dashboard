@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
@@ -27,6 +27,14 @@ export class TenantApiClientService {
     return this.http.get<PaginatedTenantResponse<TenantBackend>>(`${this.apiUrl}/tenants`, {
       params,
     });
+  }
+
+  // Memo: can_impersonate qua non ci serve, in quanto usiamo questo endpoint solo per popolare dropdown di selezione tenant
+  // e li ci basta sapere nome e id del tenant
+  public getAllTenants(): Observable<TenantBackend[]> {
+    return this.http
+      .get<{ tenants: TenantBackend[] }>(`${this.apiUrl}/all_tenants`)
+      .pipe(map((response) => response.tenants));
   }
 
   public createTenant(config: TenantConfig): Observable<TenantBackend> {

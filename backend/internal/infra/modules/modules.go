@@ -6,6 +6,7 @@ import (
 	"backend/internal/auth"
 	"backend/internal/email"
 	"backend/internal/gateway"
+	"backend/internal/gateway_connection"
 	"backend/internal/historical_data"
 	"backend/internal/infra/crypto"
 	"backend/internal/infra/database/cloud_db"
@@ -42,6 +43,7 @@ func AppModules() fx.Option {
 		api_key.Module, // NOTA: Desiderabile
 		auth.Module,
 		gateway.Module,
+		gateway_connection.Module,
 		historical_data.Module,
 		real_time_data.Module,
 		sensor.Module,
