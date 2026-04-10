@@ -26,7 +26,7 @@ export class GatewayApiClientServiceMock {
       gateway_id: 'gateway-02',
       tenant_id: undefined,
       name: 'ICU Gateway',
-      status: 'active',
+      status: 'inactive',
       interval: 60,
     },
     {
