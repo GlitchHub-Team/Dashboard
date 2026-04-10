@@ -28,7 +28,6 @@ var Module = fx.Module(
 	fx.Invoke(
 		func(tenantRepo *tenant.TenantPostgreRepository, cfg *config.Config, migrator localCloudMigrator) {
 			err := migrateAll(tenantRepo, migrator, !cfg.CloudDBTest) // Imposta dati di default solo se non sto testando
-
 			if err != nil {
 				panic(fmt.Errorf("migrator error: %v", err))
 			}

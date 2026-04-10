@@ -95,7 +95,6 @@ func (repo *TenantPostgreRepository) SaveTenant(tenant *TenantEntity) error {
 	return db.Save(tenant).Error
 }
 
-
 func (repo *TenantPostgreRepository) DeleteTenant(tenant *TenantEntity) error {
 	db := (*gorm.DB)(repo.db)
 	err := db.
