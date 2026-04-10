@@ -130,10 +130,10 @@ func migrateAll(
 		return
 	}
 
-	// 2. Impostazione dati pubblici (opzionale)
+	// 2. Impostazione dati tenant (opzionale): necessario prima di migrare gli schemi tenant
 	if setDefaultData {
-		migrator.Logger().Sugar().Infof("[Migrator] Add default data")
-		err = populatePublicDefaultData(migrator)
+		migrator.Logger().Sugar().Infof("[Migrator] add tenant data")
+		err = populateTenantDefaultData(migrator)
 		if err != nil {
 			return
 		}
@@ -152,10 +152,10 @@ func migrateAll(
 		}
 	}
 
-	// 4. Impostazione dati tenant (opzionale)
+	// 4. Impostazione dati pubblici (opzionale)
 	if setDefaultData {
-		migrator.Logger().Sugar().Infof("[Migrator] add tenant data")
-		err = populateTenantDefaultData(migrator)
+		migrator.Logger().Sugar().Infof("[Migrator] Add default data")
+		err = populatePublicDefaultData(migrator)
 		if err != nil {
 			return err
 		}
