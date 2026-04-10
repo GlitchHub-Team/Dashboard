@@ -24,7 +24,7 @@ func PreSetupCreateTenant(tenantId uuid.UUID, canImpersonate bool) helper.Integr
 
 		tenantEntity := tenant.TenantEntity{
 			ID:             tenantId.String(),
-			Name:           "test tenant",
+			Name:           fmt.Sprintf("test tenant %s", tenantId.String()),
 			CanImpersonate: canImpersonate,
 		}
 		if err := db.Clauses().Create(&tenantEntity).Error; err != nil {
