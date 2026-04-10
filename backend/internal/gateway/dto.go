@@ -10,19 +10,10 @@ type createGatewayDTO struct {
 	dto.GatewayIntervalField
 }
 
-type deleteGatewayDTO struct {
-	dto.GatewayIdField
-}
-
 type getGatewayByIdDTO struct {
 	dto.GatewayIdField
 }
 
-/*
-	type getGatewayListDTO struct {
-		dto.Pagination
-	}
-*/
 type getGatewaysByTenantDTO struct {
 	dto.TenantIdField
 	dto.Pagination
@@ -33,22 +24,6 @@ type commissionGatewayDTO struct {
 	dto.CommissionTokenField
 }
 
-type interruptGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type resumeGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type resetGatewayDTO struct {
-	dto.GatewayIdField
-}
-
-type rebootGatewayDTO struct {
-	dto.GatewayIdField
-}
-
 // Response
 type gatewayResponseDTO struct {
 	dto.GatewayIdField
@@ -56,22 +31,44 @@ type gatewayResponseDTO struct {
 	dto.TenantIdField
 	Status           GatewayStatus `json:"status"`
 	Interval         int64         `json:"interval"`
-	PublicIdentifier string        `json:"publicIdentifier"`
+	PublicIdentifier *string       `json:"publicIdentifier"`
 }
-
-/*
-type gatewayListResponseDTO struct {
-	dto.ListInfo
-	Gateways []gatewayResponseDTO `json:"gateways"`
-}
-
-type commissionGatewayResponseDTO struct {
-	dto.TenantIdField
-	dto.TenantNameField
-	dto.GatewayCertificateField
-}
-*/
 
 type gatewayCommandResponseDTO struct {
 	Result string `json:"result"`
+}
+
+type createGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+	Interval  int64  `json:"interval"`
+}
+
+type deleteGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type commissionGatewayCommandPayloadDTO struct {
+	GatewayId       string `json:"gatewayId"`
+	TenantId        string `json:"tenantId"`
+	CommissionToken string `json:"commissionedToken"`
+}
+
+type decommissionGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type interruptGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type resumeGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type resetGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
+}
+
+type rebootGatewayCommandPayloadDTO struct {
+	GatewayId string `json:"gatewayId"`
 }

@@ -47,13 +47,15 @@ func preSetupSensorChain(
 			return false
 		}
 
+		publicIdentifier := "test-public-identifier"
+
 		// Crea gateway
 		err = db.Save(&gateway.GatewayEntity{
 			ID:               gatewayId.String(),
 			Name:             "Test gateway",
 			TenantId:         &tenantIdStr,
 			Status:           string(gateway.GATEWAY_STATUS_ACTIVE),
-			PublicIdentifier: "test-public-identifier",
+			PublicIdentifier: &publicIdentifier,
 		}).Error
 		if err != nil {
 			t.Errorf("error creating tenant: %v", err)

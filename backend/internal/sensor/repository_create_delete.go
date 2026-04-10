@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"backend/internal/infra/transport/http/dto"
+
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -53,7 +55,7 @@ func (repo *sensorNatsRepository) SendCreateSensorCmd(cmd *CreateSensorCmdEntity
 		return err
 	}
 
-	var resp CommandResponse
+	var resp dto.CommandResponse
 	if err := json.Unmarshal(msg.Data, &resp); err != nil {
 		repo.log.Error("Failed to unmarshal reply from NATS", zap.Error(err))
 		return err
@@ -84,7 +86,7 @@ func (repo *sensorNatsRepository) SendDeleteSensorCmd(cmd *DeleteSensorCmdEntity
 		return err
 	}
 
-	var resp CommandResponse
+	var resp dto.CommandResponse
 	if err := json.Unmarshal(msg.Data, &resp); err != nil {
 		repo.log.Error("Failed to unmarshal reply from NATS", zap.Error(err))
 		return err

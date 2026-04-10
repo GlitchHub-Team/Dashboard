@@ -5,90 +5,149 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/infra/transport/http/dto"
+
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 )
 
 type TimeoutNATSClient time.Duration
 
-type GatewayCommandNATSAdapter struct {
+type GatewayCommandNATSRepository struct {
 	nc      *nats.Conn
 	timeout time.Duration
 }
 
-func NewGatewayCommandNATSAdapter(nc *nats.Conn, timeout TimeoutNATSClient) *GatewayCommandNATSAdapter {
-	return &GatewayCommandNATSAdapter{
+func NewGatewayCommandNATSRepository(nc *nats.Conn, timeout TimeoutNATSClient) *GatewayCommandNATSRepository {
+	return &GatewayCommandNATSRepository{
 		nc:      nc,
 		timeout: time.Duration(timeout),
 	}
 }
 
-type gatewayCommandPayload struct {
-	Action    string `json:"action"`
-	TenantId  string `json:"tenant_id,omitempty"`
-	Frequency int    `json:"frequency,omitempty"`
-	Token     string `json:"token,omitempty"`
-}
-
-func (a *GatewayCommandNATSAdapter) sendCommand(gatewayId uuid.UUID, payload gatewayCommandPayload) error {
-	subject := fmt.Sprintf("gateway.%s.command", gatewayId.String())
-
-	data, err := json.Marshal(payload)
+func (a *GatewayCommandNATSRepository) sendCommand(subject string, payload []byte) error {
+	msg, err := a.nc.Request(subject, payload, a.timeout)
 	if err != nil {
-		return fmt.Errorf("failed to marshal command payload: %w", err)
+		return fmt.Errorf("NATS request failed for subject %s: %w", subject, err)
 	}
 
-	msg, err := a.nc.Request(subject, data, a.timeout)
-	if err != nil {
-		return fmt.Errorf("NATS request failed for gateway %s: %w", gatewayId, err)
-	}
-
-	var response struct {
-		Status  string `json:"status"`
-		Message string `json:"message,omitempty"`
-	}
+	var response dto.CommandResponse
 	if err := json.Unmarshal(msg.Data, &response); err != nil {
-		return fmt.Errorf("invalid NATS response for gateway %s: %w", gatewayId, err)
+		return fmt.Errorf("invalid NATS response for subject %s, error: %v", subject, err)
 	}
 
-	if response.Status != "OK" {
-		return fmt.Errorf("gateway %s returned error: %s", gatewayId, response.Message)
+	if !response.Success {
+		return fmt.Errorf("command failed for subject %s, message: %s", subject, response.Message)
 	}
 
 	return nil
 }
 
-func (a *GatewayCommandNATSAdapter) SendCommission(gatewayId uuid.UUID, tenantId uuid.UUID, token string) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{
-		Action:   "COMMISSION",
-		TenantId: tenantId.String(),
-		Token:    token,
-	})
+func (a *GatewayCommandNATSRepository) SendCreateGateway(gatewayId uuid.UUID, interval int64) error {
+	payload := createGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+		Interval:  interval,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal create gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(CREATE_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
 
-func (a *GatewayCommandNATSAdapter) SendDecommission(gatewayId uuid.UUID) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{Action: "DECOMMISSION"})
+func (a *GatewayCommandNATSRepository) SendDeleteGateway(gatewayId uuid.UUID) error {
+	payload := deleteGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal delete gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(DELETE_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
 
-func (a *GatewayCommandNATSAdapter) SendInterrupt(gatewayId uuid.UUID) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{Action: "INTERRUPT"})
+func (a *GatewayCommandNATSRepository) SendCommission(gatewayId uuid.UUID, tenantId uuid.UUID, token string) error {
+	payload := commissionGatewayCommandPayloadDTO{
+		GatewayId:       gatewayId.String(),
+		TenantId:        tenantId.String(),
+		CommissionToken: token,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal commission gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(COMMISSION_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
 
-func (a *GatewayCommandNATSAdapter) SendResume(gatewayId uuid.UUID) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{Action: "RESUME"})
+func (a *GatewayCommandNATSRepository) SendDecommission(gatewayId uuid.UUID) error {
+	payload := decommissionGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal decommission gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(DECOMMISSION_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
 
-func (a *GatewayCommandNATSAdapter) SendReset(gatewayId uuid.UUID) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{Action: "RESET"})
+func (a *GatewayCommandNATSRepository) SendInterrupt(gatewayId uuid.UUID) error {
+	payload := interruptGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal interrupt gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(INTERRUPT_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
 
-func (a *GatewayCommandNATSAdapter) SendReboot(gatewayId uuid.UUID) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{Action: "REBOOT"})
+func (a *GatewayCommandNATSRepository) SendResume(gatewayId uuid.UUID) error {
+	payload := resumeGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal resume gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(RESUME_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
 
-func (a *GatewayCommandNATSAdapter) SendSetFrequency(gatewayId uuid.UUID, frequency int) error {
-	return a.sendCommand(gatewayId, gatewayCommandPayload{
-		Action:    "SET_FREQUENCY",
-		Frequency: frequency,
-	})
+func (a *GatewayCommandNATSRepository) SendReset(gatewayId uuid.UUID) error {
+	payload := resetGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal reset gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(RESET_GATEWAY_COMMAND_SUBJECT, payloadBytes)
 }
+
+func (a *GatewayCommandNATSRepository) SendReboot(gatewayId uuid.UUID) error {
+	payload := rebootGatewayCommandPayloadDTO{
+		GatewayId: gatewayId.String(),
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal reboot gateway command payload: %w", err)
+	}
+
+	return a.sendCommand(REBOOT_GATEWAY_COMMAND_SUBJECT, payloadBytes)
+}
+
+var _ GatewayCommandPort = (*GatewayCommandNATSRepository)(nil)

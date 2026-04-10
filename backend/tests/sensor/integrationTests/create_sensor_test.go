@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"backend/internal/gateway"
+	"backend/internal/infra/transport/http/dto"
 	"backend/internal/sensor"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
@@ -136,7 +137,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayForTimeout, "Gateway Timeout"),
-				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.CREATE_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&timeoutSub, false, dto.CommandResponse{}, sensor.CREATE_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Creazione sensore con timeout NATS e nessun inserimento DB",
 			Method: http.MethodPost,
@@ -163,7 +164,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayForFailedReply, "Gateway Failed Reply"),
-				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats create failed"}, sensor.CREATE_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&failedReplySub, true, dto.CommandResponse{Success: false, Message: "nats create failed"}, sensor.CREATE_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Creazione sensore con NATS success false e nessun inserimento DB",
 			Method: http.MethodPost,
@@ -193,7 +194,7 @@ func TestCreateSensorIntegration(t *testing.T) {
 				preSetupCommandResponseListener(
 					&successSub,
 					true,
-					sensor.CommandResponse{Success: true, Message: "ok"},
+					dto.CommandResponse{Success: true, Message: "ok"},
 					sensor.CREATE_SENSOR_CMD_SUBJECT,
 					func(msg *nats.Msg) {
 						_ = json.Unmarshal(msg.Data, &successCmd)

@@ -152,6 +152,14 @@ func NewGinEngine(
 		private.GET("/gateways", gatewayController.GetAllGateways)
 		// private.GET("/tenant/:tenant_id/gateway/:gateway_id", gatewayController.GetGatewayByTenant)
 		private.GET("/tenant/:tenant_id/gateways", gatewayController.GetGatewaysByTenant)
+
+		// Commands
+		private.POST("/gateway/:gateway_id/commission", gatewayController.CommissionGateway)
+		private.POST("/gateway/:gateway_id/decommission", gatewayController.DecommissionGateway)
+		private.POST("/gateway/:gateway_id/interrupt", gatewayController.InterruptGateway)
+		private.POST("/gateway/:gateway_id/resume", gatewayController.ResumeGateway)
+		private.POST("/gateway/:gateway_id/reset", gatewayController.ResetGateway)
+		private.POST("/gateway/:gateway_id/reboot", gatewayController.RebootGateway)
 	}
 	return router
 }

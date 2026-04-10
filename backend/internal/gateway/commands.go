@@ -2,17 +2,15 @@ package gateway
 
 import (
 	"backend/internal/shared/identity"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type CreateGatewayCommand struct {
 	identity.Requester
-	TenantId         uuid.UUID
-	Name             string
-	Certificate      string
-	PublicIdentifier string
-	SigningSecret    string
+	Name     string
+	Interval time.Duration
 }
 
 type DeleteGatewayCommand struct {
@@ -37,9 +35,9 @@ type GetGatewaysByTenantCommand struct {
 }
 
 type CommissionGatewayCommand struct {
-	GatewayId          uuid.UUID
-	TenantId           uuid.UUID
-	GatewayCertificate string
+	GatewayId       uuid.UUID
+	TenantId        uuid.UUID
+	CommissionToken string
 	identity.Requester
 }
 
@@ -65,11 +63,5 @@ type ResetGatewayCommand struct {
 
 type RebootGatewayCommand struct {
 	GatewayId uuid.UUID
-	identity.Requester
-}
-
-type SetGatewayIntervalLimitCommand struct {
-	GatewayId     uuid.UUID
-	IntervalLimit int
 	identity.Requester
 }

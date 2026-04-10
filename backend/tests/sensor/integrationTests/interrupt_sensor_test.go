@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"backend/internal/infra/transport/http/dto"
 	"backend/internal/sensor"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/shared/identity"
@@ -189,7 +190,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayTimeout, "Gateway Timeout Interrupt"),
 				preSetupCreateSensor(sensorTimeout, gatewayTimeout, "Sensor Timeout Interrupt", 1300, sensorProfile.PULSE_OXIMETER, sensor.Active),
-				preSetupCommandResponseListener(&timeoutSub, false, sensor.CommandResponse{}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&timeoutSub, false, dto.CommandResponse{}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Interruzione sensore valida ma request NATS in timeout",
 			Method: http.MethodPost,
@@ -213,7 +214,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGateway(gatewayFailedReply, "Gateway Failed Interrupt"),
 				preSetupCreateSensor(sensorFailedReply, gatewayFailedReply, "Sensor Failed Interrupt", 1400, sensorProfile.ENVIRONMENTAL_SENSING, sensor.Active),
-				preSetupCommandResponseListener(&failedReplySub, true, sensor.CommandResponse{Success: false, Message: "nats interrupt failed"}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&failedReplySub, true, dto.CommandResponse{Success: false, Message: "nats interrupt failed"}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Interruzione sensore valida ma reply NATS con success false",
 			Method: http.MethodPost,
@@ -237,7 +238,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				preSetupCreateGatewayWithTenant(gatewaySuperAdminNil, "Gateway Super Admin Nil", nil),
 				preSetupCreateSensor(sensorSuperAdminNil, gatewaySuperAdminNil, "Sensor Super Admin Nil", 1500, sensorProfile.HEART_RATE, sensor.Active),
-				preSetupCommandResponseListener(&superAdminNilSub, true, sensor.CommandResponse{Success: true, Message: "ok"}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
+				preSetupCommandResponseListener(&superAdminNilSub, true, dto.CommandResponse{Success: true, Message: "ok"}, sensor.INTERRUPT_SENSOR_CMD_SUBJECT),
 			},
 			Name:   "Interruzione sensore super admin di sensore con gateway con tenantId nil",
 			Method: http.MethodPost,
@@ -264,7 +265,7 @@ func TestInterruptSensorIntegration(t *testing.T) {
 				preSetupCommandResponseListener(
 					&successSub,
 					true,
-					sensor.CommandResponse{Success: true, Message: "ok"},
+					dto.CommandResponse{Success: true, Message: "ok"},
 					sensor.INTERRUPT_SENSOR_CMD_SUBJECT,
 					func(msg *nats.Msg) {
 						_ = json.Unmarshal(msg.Data, &successCmd)

@@ -1,127 +1,149 @@
 package gateway
 
 import (
-	"time"
+	"backend/internal/shared/identity"
+	"backend/internal/tenant"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
 type GatewayCommandPort interface {
+	SendCreateGateway(gatewayId uuid.UUID, interval int64) error
+	SendDeleteGateway(gatewayId uuid.UUID) error
 	SendCommission(gatewayId uuid.UUID, tenantId uuid.UUID, token string) error
 	SendDecommission(gatewayId uuid.UUID) error
 	SendInterrupt(gatewayId uuid.UUID) error
 	SendResume(gatewayId uuid.UUID) error
 	SendReset(gatewayId uuid.UUID) error
 	SendReboot(gatewayId uuid.UUID) error
-	SendSetFrequency(gatewayId uuid.UUID, frequency int) error
 }
 
 type GatewayCommandService struct {
+	createGatewayPort  CreateGatewayPort
+	removeGatewayPort  DeleteGatewayPort
+	getTenantPort      tenant.GetTenantPort
 	getGatewayPort     GetGatewayPort
 	saveGatewayPort    SaveGatewayPort
 	gatewayCommandPort GatewayCommandPort
 }
 
 func NewGatewayCommandService(
+	createGatewayPort CreateGatewayPort,
+	removeGatewayPort DeleteGatewayPort,
 	getGatewayPort GetGatewayPort,
+	getTenantPort tenant.GetTenantPort,
 	saveGatewayPort SaveGatewayPort,
 	gatewayCommandPort GatewayCommandPort,
 ) *GatewayCommandService {
 	return &GatewayCommandService{
+		createGatewayPort:  createGatewayPort,
+		removeGatewayPort:  removeGatewayPort,
 		getGatewayPort:     getGatewayPort,
+		getTenantPort:      getTenantPort,
 		saveGatewayPort:    saveGatewayPort,
 		gatewayCommandPort: gatewayCommandPort,
 	}
 }
 
-var BackendJWTSecret = []byte("aaaaaaa")
-
-func GenerateCommissionedToken(gatewayId uuid.UUID, tenantId uuid.UUID, gatewaySecret []byte) (string, error) {
-	claims := jwt.MapClaims{
-		"tenant_id":  tenantId.String(),
-		"gateway_id": gatewayId.String(),
-		"role":       "gateway_device",
-		"iat":        time.Now().Unix(),
+func (s *GatewayCommandService) CommissionGateway(command CommissionGatewayCommand) (Gateway, error) {
+	// Controllo che sia super admin
+	if !command.IsSuperAdmin() {
+		return Gateway{}, identity.ErrUnauthorizedAccess
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(gatewaySecret)
-}
-
-func (s *GatewayCommandService) CommissionGateway(command CommissionGatewayCommand) (Gateway, error) {
+	// Controllo che il gateway esista
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	if gw.Status == GATEWAY_STATUS_COMMISSIONED {
+	if gw.IsZero() {
+		return Gateway{}, ErrGatewayNotFound
+	}
+
+	// Controllo che il gateway non sia già commissionato
+	if gw.TenantId != nil {
 		return Gateway{}, ErrGatewayAlreadyCommissioned
 	}
 
-	if gw.SigningSecret == "" {
-		return Gateway{}, ErrMissingGatewaySecret
-	}
-
-	tokenString, err := GenerateCommissionedToken(
-		gw.Id,
-		command.TenantId,
-		[]byte(gw.SigningSecret),
-	)
+	// Controllo che il tenant esista
+	tenantFound, err := s.getTenantPort.GetTenant(command.TenantId)
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	err = s.gatewayCommandPort.SendCommission(gw.Id, command.TenantId, tokenString)
-	if err != nil {
-		return Gateway{}, ErrComunicationNats
+	if tenantFound.IsZero() {
+		return Gateway{}, tenant.ErrTenantNotFound
 	}
 
-	gw.Status = GATEWAY_STATUS_COMMISSIONED
+	// Invio comando di commissionamento al gateway simulato
+	err = s.gatewayCommandPort.SendCommission(gw.Id, command.TenantId, command.CommissionToken)
+	if err != nil {
+		return Gateway{}, err
+	}
+
+	// Aggiorno il gateway
+	gw.Status = GATEWAY_STATUS_ACTIVE
 	gw.TenantId = &command.TenantId
 
-	savedGw, err := s.saveGatewayPort.Save(gw)
-	if err != nil {
-		return Gateway{}, err
-	}
-
-	savedGw.SigningSecret = tokenString
-	return savedGw, nil
+	return s.saveGatewayPort.Save(gw)
 }
 
 func (s *GatewayCommandService) DecommissionGateway(command DecommissionGatewayCommand) (Gateway, error) {
+	// Controllo che sia super admin
+	if !command.IsSuperAdmin() {
+		return Gateway{}, identity.ErrUnauthorizedAccess
+	}
+
+	// Controllo che il gateway esista
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	if gw.Status == "DECOMMISSIONED" {
-		return Gateway{}, ErrGatewayAlreadyDecommissioned
+	if gw.IsZero() {
+		return Gateway{}, ErrGatewayNotFound
 	}
+
+	// Controllo che il gateway sia commissionato
+	if gw.TenantId == nil {
+		return Gateway{}, ErrGatewayNotCommissioned
+	}
+
+	// Invio comando di decommissionamento al gateway simulato
 	err = s.gatewayCommandPort.SendDecommission(gw.Id)
-	if err != nil {
-		return Gateway{}, ErrComunicationNats
-	}
-
-	gw.Status = "DECOMMISSIONED"
-	gw.TenantId = nil
-
-	savedGw, err := s.saveGatewayPort.Save(gw)
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	return savedGw, nil
+	// Aggiorno il gateway
+	gw.Status = GATEWAY_STATUS_DECOMMISSIONED
+	gw.TenantId = nil
+
+	return s.saveGatewayPort.Save(gw)
 }
 
 func (s *GatewayCommandService) InterruptGateway(command InterruptGatewayCommand) (Gateway, error) {
+	// Controllo che il gateway esista
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	if gw.Status != "COMMISSIONED" {
-		return Gateway{}, ErrGatewayNotCommissioned
+	if gw.IsZero() {
+		return Gateway{}, ErrGatewayNotFound
+	}
+
+	// Controllo che l'utente abbia i permessi per interrompere il gateway
+	if !command.IsSuperAdmin() {
+		if command.RequesterTenantId == nil || !gw.BelongsToTenant(*command.RequesterTenantId) || command.RequesterRole != identity.ROLE_TENANT_ADMIN {
+			return Gateway{}, identity.ErrUnauthorizedAccess
+		}
+	}
+
+	// Controllo che il gateway non sia già interrotto o decommissionato
+	if gw.Status != GATEWAY_STATUS_ACTIVE {
+		return Gateway{}, ErrGatewayNotActive
 	}
 
 	err = s.gatewayCommandPort.SendInterrupt(gw.Id)
@@ -129,16 +151,12 @@ func (s *GatewayCommandService) InterruptGateway(command InterruptGatewayCommand
 		return Gateway{}, err
 	}
 
-	gw.Status = "INTERRUPTED"
-	savedGw, err := s.saveGatewayPort.Save(gw)
-	if err != nil {
-		return Gateway{}, err
-	}
-
-	return savedGw, nil
+	gw.Status = GATEWAY_STATUS_INACTIVE
+	return s.saveGatewayPort.Save(gw)
 }
 
 func (s *GatewayCommandService) ResumeGateway(command ResumeGatewayCommand) (Gateway, error) {
+	// Controllo che il gateway esista
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
@@ -148,24 +166,29 @@ func (s *GatewayCommandService) ResumeGateway(command ResumeGatewayCommand) (Gat
 		return Gateway{}, ErrGatewayNotFound
 	}
 
-	if gw.Status != GATEWAY_STATUS_INTERRUPTED {
-		return Gateway{}, ErrGatewayNotCommissioned
+	// Controllo che l'utente abbia i permessi per riattivare il gateway
+	if !command.IsSuperAdmin() {
+		if command.RequesterTenantId == nil || !gw.BelongsToTenant(*command.RequesterTenantId) || command.RequesterRole != identity.ROLE_TENANT_ADMIN {
+			return Gateway{}, identity.ErrUnauthorizedAccess
+		}
 	}
 
+	// Controllo che il gateway non sia attivo o decommissionato
+	if gw.Status != GATEWAY_STATUS_INACTIVE {
+		return Gateway{}, ErrGatewayNotInactive
+	}
+
+	// Invio comando di riattivazione al gateway simulato
 	if err := s.gatewayCommandPort.SendResume(gw.Id); err != nil {
-		return Gateway{}, ErrComunicationNats
-	}
-
-	gw.Status = GATEWAY_STATUS_COMMISSIONED
-	savedGw, err := s.saveGatewayPort.Save(gw)
-	if err != nil {
 		return Gateway{}, err
 	}
 
-	return savedGw, nil
+	gw.Status = GATEWAY_STATUS_ACTIVE
+	return s.saveGatewayPort.Save(gw)
 }
 
 func (s *GatewayCommandService) ResetGateway(command ResetGatewayCommand) (Gateway, error) {
+	// Controllo che il gateway esista
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
@@ -175,18 +198,24 @@ func (s *GatewayCommandService) ResetGateway(command ResetGatewayCommand) (Gatew
 		return Gateway{}, ErrGatewayNotFound
 	}
 
-	if gw.Status != GATEWAY_STATUS_COMMISSIONED {
-		return Gateway{}, ErrGatewayNotCommissioned
+	// Controllo che l'utente abbia i permessi per resettare il gateway
+	if !command.IsSuperAdmin() {
+		if command.RequesterTenantId == nil || !gw.BelongsToTenant(*command.RequesterTenantId) || command.RequesterRole != identity.ROLE_TENANT_ADMIN {
+			return Gateway{}, identity.ErrUnauthorizedAccess
+		}
 	}
 
+	// Invio comando di reset al gateway simulato
 	if err := s.gatewayCommandPort.SendReset(gw.Id); err != nil {
-		return Gateway{}, ErrComunicationNats
+		return Gateway{}, err
 	}
 
-	return gw, nil
+	gw.IntervalLimit = DEFAULT_INTERVAL_LIMIT
+	return s.saveGatewayPort.Save(gw)
 }
 
 func (s *GatewayCommandService) RebootGateway(command RebootGatewayCommand) (Gateway, error) {
+	// Controllo che il gateway esista
 	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
@@ -196,40 +225,77 @@ func (s *GatewayCommandService) RebootGateway(command RebootGatewayCommand) (Gat
 		return Gateway{}, ErrGatewayNotFound
 	}
 
-	if gw.Status != GATEWAY_STATUS_COMMISSIONED {
-		return Gateway{}, ErrGatewayNotCommissioned
+	// Controllo che l'utente abbia i permessi per riavviare il gateway
+	if !command.IsSuperAdmin() {
+		if command.RequesterTenantId == nil || !gw.BelongsToTenant(*command.RequesterTenantId) || command.RequesterRole != identity.ROLE_TENANT_ADMIN {
+			return Gateway{}, identity.ErrUnauthorizedAccess
+		}
 	}
 
+	// Invio comando di riavvio al gateway simulato
 	if err := s.gatewayCommandPort.SendReboot(gw.Id); err != nil {
-		return Gateway{}, ErrComunicationNats
+		return Gateway{}, err
 	}
 
 	return gw, nil
 }
 
-func (s *GatewayCommandService) SetGatewayIntervalLimit(command SetGatewayIntervalLimitCommand) (Gateway, error) {
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+func (s *GatewayCommandService) CreateGateway(command CreateGatewayCommand) (Gateway, error) {
+	// Controllo che sia super admin
+	if !command.IsSuperAdmin() {
+		return Gateway{}, identity.ErrUnauthorizedAccess
+	}
+
+	gateway := Gateway{
+		Id:               uuid.New(),
+		Name:             command.Name,
+		IntervalLimit:    command.Interval,
+		Status:           GATEWAY_STATUS_DECOMMISSIONED,
+		PublicIdentifier: nil,
+		TenantId:         nil,
+	}
+
+	// Invio comando di creazione al gateway simulato
+	if err := s.gatewayCommandPort.SendCreateGateway(gateway.Id, gateway.IntervalLimit.Milliseconds()); err != nil {
+		return Gateway{}, err
+	}
+
+	// Salvo il gateway nel database
+	return s.createGatewayPort.Create(gateway)
+}
+
+func (s *GatewayCommandService) DeleteGateway(command DeleteGatewayCommand) (Gateway, error) {
+	// Controllo che l'utente sia super admin
+	if !command.IsSuperAdmin() {
+		return Gateway{}, identity.ErrUnauthorizedAccess
+	}
+
+	// Controllo che il gateway esista
+	oldGateway, err := s.getGatewayPort.GetById(command.GatewayId.String())
 	if err != nil {
 		return Gateway{}, err
 	}
 
-	if gw.IsZero() {
+	if oldGateway.IsZero() {
 		return Gateway{}, ErrGatewayNotFound
 	}
 
-	if gw.Status != GATEWAY_STATUS_COMMISSIONED {
-		return Gateway{}, ErrGatewayNotCommissioned
-	}
-
-	if err := s.gatewayCommandPort.SendSetFrequency(gw.Id, command.IntervalLimit); err != nil {
-		return Gateway{}, ErrComunicationNats
-	}
-
-	gw.IntervalLimit = int64(command.IntervalLimit)
-	savedGw, err := s.saveGatewayPort.Save(gw)
-	if err != nil {
+	// Invio comando di cancellazione al gateway simulato
+	if err := s.gatewayCommandPort.SendDeleteGateway(oldGateway.Id); err != nil {
 		return Gateway{}, err
 	}
 
-	return savedGw, nil
+	// Rimuovo il gateway dal database
+	return s.removeGatewayPort.Delete(oldGateway.Id)
 }
+
+var (
+	_ CreateGatewayUseCase       = (*GatewayCommandService)(nil)
+	_ DeleteGatewayUseCase       = (*GatewayCommandService)(nil)
+	_ CommissionGatewayUseCase   = (*GatewayCommandService)(nil)
+	_ DecommissionGatewayUseCase = (*GatewayCommandService)(nil)
+	_ InterruptGatewayUseCase    = (*GatewayCommandService)(nil)
+	_ ResumeGatewayUseCase       = (*GatewayCommandService)(nil)
+	_ ResetGatewayUseCase        = (*GatewayCommandService)(nil)
+	_ RebootGatewayUseCase       = (*GatewayCommandService)(nil)
+)
