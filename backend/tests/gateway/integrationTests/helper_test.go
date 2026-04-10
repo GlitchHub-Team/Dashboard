@@ -33,10 +33,6 @@ type commissionGatewayCommandPayload struct {
 	CommissionedToken string `json:"commissionedToken"`
 }
 
-type gatewayCommandResultResponse struct {
-	Result string `json:"result"`
-}
-
 func preSetupCommandResponseListener(
 	subscription **nats.Subscription,
 	shouldReply bool,

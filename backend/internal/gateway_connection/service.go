@@ -1,8 +1,9 @@
 package gateway_connection
 
 import (
-	"backend/internal/gateway"
 	"errors"
+
+	"backend/internal/gateway"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
