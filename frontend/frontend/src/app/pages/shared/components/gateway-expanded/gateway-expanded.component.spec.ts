@@ -19,10 +19,12 @@ class StubSensorTable {
   sensors = input<Sensor[]>();
   loading = input<boolean>();
   actionMode = input<ActionMode>();
+  gatewayStatus = input<GatewayStatus>();
   total = input<number>();
   pageIndex = input<number>();
   limit = input<number>();
   chartRequested = output<ChartRequest>();
+  commandRequested = output<boolean>();
   createRequested = output<void>();
   deleteRequested = output<Sensor>();
   pageChange = output<PageEvent>();
@@ -113,6 +115,7 @@ describe('GatewayExpandedComponent (Unit)', () => {
       expect(table.sensors()).toEqual(mockSensors);
       expect(table.loading()).toBeUndefined();
       expect(table.actionMode()).toBe('dashboard');
+      expect(table.gatewayStatus()).toBe(GatewayStatus.ACTIVE);
       expect(table.total()).toBe(2);
       expect(table.pageIndex()).toBe(0);
       expect(table.limit()).toBe(10);
@@ -142,6 +145,17 @@ describe('GatewayExpandedComponent (Unit)', () => {
       expect(table.pageIndex()).toBe(3);
       expect(table.limit()).toBe(5);
       expect(table.sensors()).toEqual([mockSensors[0]]);
+    });
+
+    it('should pass gatewayStatus from gateway input to child table', () => {
+      setInput('gateway', { ...mockGateway, status: GatewayStatus.INACTIVE });
+      expect(getTableInstance().gatewayStatus()).toBe(GatewayStatus.INACTIVE);
+
+      setInput('gateway', { ...mockGateway, status: GatewayStatus.DECOMMISSIONED });
+      expect(getTableInstance().gatewayStatus()).toBe(GatewayStatus.DECOMMISSIONED);
+
+      setInput('gateway', { ...mockGateway, status: GatewayStatus.ACTIVE });
+      expect(getTableInstance().gatewayStatus()).toBe(GatewayStatus.ACTIVE);
     });
   });
 
@@ -182,6 +196,13 @@ describe('GatewayExpandedComponent (Unit)', () => {
       component.sensorDeleteRequested.subscribe(spy);
       getTable().triggerEventHandler('deleteRequested', mockSensors[0]);
       expect(spy).toHaveBeenCalledWith(mockSensors[0]);
+    });
+
+    it('should forward commandRequested from sensor table', () => {
+      const spy = vi.fn();
+      component.commandRequested.subscribe(spy);
+      getTable().triggerEventHandler('commandRequested', true);
+      expect(spy).toHaveBeenCalledWith(true);
     });
 
     it('should forward sensorPageChange from sensor table', () => {
