@@ -6,7 +6,6 @@ services:
     user: vscode
     env_file:
       - ../Infrastructure/.env
-      - .env
     volumes:
       - ..:/workspaces/app:cached
     command: sleep infinity

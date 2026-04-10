@@ -96,7 +96,7 @@ func TestGatewayController_CommissionGateway(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
 			mockUseCase := helper.SetupMockUseCase(mocks.NewMockCommissionGatewayUseCase, tc.SetupSteps, t)
-			controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil)
+			controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil)
 			helper.ExecuteControllerTest(t, tc, "POST", "/gateway/:gateway_id/commission", controller.CommissionGateway)
 		})
 	}
@@ -156,7 +156,7 @@ func TestGatewayController_DecommissionGateway(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
 			mockUseCase := helper.SetupMockUseCase(mocks.NewMockDecommissionGatewayUseCase, tc.SetupSteps, t)
-			controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil)
+			controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil)
 			helper.ExecuteControllerTest(t, tc, "POST", "/gateway/:gateway_id/decommission", controller.DecommissionGateway)
 		})
 	}
@@ -174,7 +174,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			},
 		}
 		mockUseCase := helper.SetupMockUseCase(mocks.NewMockInterruptGatewayUseCase, steps, t)
-		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil)
+		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil)
 
 		tc := helper.GenericControllerTestCase[any, mocks.MockInterruptGatewayUseCase]{
 			Method:         "POST",
@@ -197,7 +197,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			},
 		}
 		mockUseCase := helper.SetupMockUseCase(mocks.NewMockResumeGatewayUseCase, steps, t)
-		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil)
+		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil)
 
 		tc := helper.GenericControllerTestCase[any, mocks.MockResumeGatewayUseCase]{
 			Method:         "POST",
@@ -220,7 +220,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			},
 		}
 		mockUseCase := helper.SetupMockUseCase(mocks.NewMockResetGatewayUseCase, steps, t)
-		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil)
+		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil)
 
 		tc := helper.GenericControllerTestCase[any, mocks.MockResetGatewayUseCase]{
 			Method:         "POST",
@@ -243,7 +243,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			},
 		}
 		mockUseCase := helper.SetupMockUseCase(mocks.NewMockRebootGatewayUseCase, steps, t)
-		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil)
+		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil)
 
 		tc := helper.GenericControllerTestCase[any, mocks.MockRebootGatewayUseCase]{
 			Method:         "POST",
@@ -266,7 +266,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			},
 		}
 		mockUseCase := helper.SetupMockUseCase(mocks.NewMockRebootGatewayUseCase, steps, t)
-		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil)
+		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil)
 
 		tc := helper.GenericControllerTestCase[any, mocks.MockRebootGatewayUseCase]{
 			Method:         "POST",
@@ -290,7 +290,7 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 			},
 		}
 		mockUseCase := helper.SetupMockUseCase(mocks.NewMockInterruptGatewayUseCase, steps, t)
-		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil)
+		controller := gateway.NewGatewayController(nil, nil, nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil)
 
 		tc := helper.GenericControllerTestCase[any, mocks.MockInterruptGatewayUseCase]{
 			Method:         "POST",

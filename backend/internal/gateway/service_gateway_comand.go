@@ -52,7 +52,7 @@ func (s *GatewayCommandService) CommissionGateway(command CommissionGatewayComma
 	}
 
 	// Controllo che il gateway esista
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -96,7 +96,7 @@ func (s *GatewayCommandService) DecommissionGateway(command DecommissionGatewayC
 	}
 
 	// Controllo che il gateway esista
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -125,7 +125,7 @@ func (s *GatewayCommandService) DecommissionGateway(command DecommissionGatewayC
 
 func (s *GatewayCommandService) InterruptGateway(command InterruptGatewayCommand) (Gateway, error) {
 	// Controllo che il gateway esista
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -157,7 +157,7 @@ func (s *GatewayCommandService) InterruptGateway(command InterruptGatewayCommand
 
 func (s *GatewayCommandService) ResumeGateway(command ResumeGatewayCommand) (Gateway, error) {
 	// Controllo che il gateway esista
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -189,7 +189,7 @@ func (s *GatewayCommandService) ResumeGateway(command ResumeGatewayCommand) (Gat
 
 func (s *GatewayCommandService) ResetGateway(command ResetGatewayCommand) (Gateway, error) {
 	// Controllo che il gateway esista
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -216,7 +216,7 @@ func (s *GatewayCommandService) ResetGateway(command ResetGatewayCommand) (Gatew
 
 func (s *GatewayCommandService) RebootGateway(command RebootGatewayCommand) (Gateway, error) {
 	// Controllo che il gateway esista
-	gw, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	gw, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -271,7 +271,7 @@ func (s *GatewayCommandService) DeleteGateway(command DeleteGatewayCommand) (Gat
 	}
 
 	// Controllo che il gateway esista
-	oldGateway, err := s.getGatewayPort.GetById(command.GatewayId.String())
+	oldGateway, err := s.getGatewayPort.GetById(command.GatewayId)
 	if err != nil {
 		return Gateway{}, err
 	}

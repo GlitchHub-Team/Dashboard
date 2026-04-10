@@ -158,18 +158,19 @@ func (m *MockGetAllGatewaysUseCase) EXPECT() *MockGetAllGatewaysUseCaseMockRecor
 }
 
 // GetAllGateways mocks base method.
-func (m *MockGetAllGatewaysUseCase) GetAllGateways() ([]gateway.Gateway, error) {
+func (m *MockGetAllGatewaysUseCase) GetAllGateways(command gateway.GetAllGatewaysCommand) ([]gateway.Gateway, uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllGateways")
+	ret := m.ctrl.Call(m, "GetAllGateways", command)
 	ret0, _ := ret[0].([]gateway.Gateway)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetAllGateways indicates an expected call of GetAllGateways.
-func (mr *MockGetAllGatewaysUseCaseMockRecorder) GetAllGateways() *gomock.Call {
+func (mr *MockGetAllGatewaysUseCaseMockRecorder) GetAllGateways(command any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGateways", reflect.TypeOf((*MockGetAllGatewaysUseCase)(nil).GetAllGateways))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGateways", reflect.TypeOf((*MockGetAllGatewaysUseCase)(nil).GetAllGateways), command)
 }
 
 // MockGetGatewaysByTenantUseCase is a mock of GetGatewaysByTenantUseCase interface.
@@ -197,12 +198,13 @@ func (m *MockGetGatewaysByTenantUseCase) EXPECT() *MockGetGatewaysByTenantUseCas
 }
 
 // GetGatewaysByTenant mocks base method.
-func (m *MockGetGatewaysByTenantUseCase) GetGatewaysByTenant(command gateway.GetGatewaysByTenantCommand) ([]gateway.Gateway, error) {
+func (m *MockGetGatewaysByTenantUseCase) GetGatewaysByTenant(command gateway.GetGatewaysByTenantCommand) ([]gateway.Gateway, uint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGatewaysByTenant", command)
 	ret0, _ := ret[0].([]gateway.Gateway)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetGatewaysByTenant indicates an expected call of GetGatewaysByTenant.

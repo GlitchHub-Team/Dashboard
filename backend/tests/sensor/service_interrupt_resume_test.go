@@ -115,7 +115,7 @@ func newStepGetSensorByIdNotFound(sensorId uuid.UUID) mockSetupFunc_InterruptRes
 func newStepGetGatewayOk(foundSensor sensor.Sensor, foundGateway gateway.Gateway) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.getGatewayPort.EXPECT().
-			GetById(foundSensor.GatewayId.String()).
+			GetById(foundSensor.GatewayId).
 			Return(foundGateway, nil).
 			Times(1)
 	}
@@ -124,7 +124,7 @@ func newStepGetGatewayOk(foundSensor sensor.Sensor, foundGateway gateway.Gateway
 func newStepGetGatewayErr(foundSensor sensor.Sensor, expectedErr error) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.getGatewayPort.EXPECT().
-			GetById(foundSensor.GatewayId.String()).
+			GetById(foundSensor.GatewayId).
 			Return(gateway.Gateway{}, expectedErr).
 			Times(1)
 	}
@@ -133,7 +133,7 @@ func newStepGetGatewayErr(foundSensor sensor.Sensor, expectedErr error) mockSetu
 func newStepGetGatewayNotFound(foundSensor sensor.Sensor) mockSetupFunc_InterruptResumeService {
 	return func(mockBundle interruptResumeServiceMocks) *gomock.Call {
 		return mockBundle.getGatewayPort.EXPECT().
-			GetById(foundSensor.GatewayId.String()).
+			GetById(foundSensor.GatewayId).
 			Return(gateway.Gateway{}, nil).
 			Times(1)
 	}

@@ -45,7 +45,7 @@ func (s *gatewayHelloService) ProcessHello(msg GatewayHelloMessage) error {
 		return err
 	}
 
-	gw, err := s.getGateway.GetById(gwID.String())
+	gw, err := s.getGateway.GetById(gwID)
 	if err != nil {
 		s.logger.Error("Error retrieving gateway from database", zap.Error(err))
 		return err
