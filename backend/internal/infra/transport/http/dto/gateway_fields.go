@@ -5,7 +5,7 @@ type GatewayIdField struct {
 }
 
 type GatewayNameField struct {
-	GatewayName string `uri:"gateway_name" form:"gateway_name" json:"gateway_name" binding:"required"`
+	GatewayName string `uri:"name" form:"name" json:"name" binding:"required"`
 }
 
 type CommissionTokenField struct {

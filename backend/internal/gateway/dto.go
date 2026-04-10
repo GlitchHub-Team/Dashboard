@@ -31,7 +31,7 @@ type gatewayResponseDTO struct {
 	dto.TenantIdField
 	Status           GatewayStatus `json:"status"`
 	Interval         int64         `json:"interval"`
-	PublicIdentifier *string       `json:"publicIdentifier"`
+	PublicIdentifier *string       `json:"public_identifier"`
 }
 
 type gatewayCommandResponseDTO struct {

@@ -16,17 +16,17 @@ import (
 )
 
 type createGatewayRequest struct {
-	GatewayName string `json:"gateway_name"`
+	GatewayName string `json:"name"`
 	Interval    int64  `json:"interval"`
 }
 
 type createGatewayResponse struct {
 	GatewayID        string  `json:"gateway_id"`
-	GatewayName      string  `json:"gateway_name"`
+	GatewayName      string  `json:"name"`
 	TenantID         string  `json:"tenant_id"`
 	Status           string  `json:"status"`
 	Interval         int64   `json:"interval"`
-	PublicIdentifier *string `json:"publicIdentifier"`
+	PublicIdentifier *string `json:"public_identifier"`
 }
 
 type createGatewayCommandPayload struct {
@@ -106,7 +106,7 @@ func TestCreateGatewayIntegration(t *testing.T) {
 			Method:     http.MethodPost,
 			Path:       "/api/v1/gateway",
 			Header:     integration.AuthHeader(superAdminJWT),
-			Body:       strings.NewReader("{\"gateway_name\":"),
+			Body:       strings.NewReader("{\"name\":"),
 			PreSetups:  []helper.IntegrationTestPreSetup{},
 			PostSetups: []helper.IntegrationTestPostSetup{},
 

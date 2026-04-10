@@ -24,8 +24,8 @@ func TestGatewayController_CreateGateway(t *testing.T) {
 	}
 
 	input := map[string]any{
-		"gateway_name": "Gateway A",
-		"interval":     3000,
+		"name":     "Gateway A",
+		"interval": 3000,
 	}
 
 	expectedCommand := gateway.CreateGatewayCommand{
@@ -64,19 +64,19 @@ func TestGatewayController_CreateGateway(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusOK,
 			ExpectedResponse: gin.H{
-				"gateway_id":       createdGateway.Id.String(),
-				"gateway_name":     createdGateway.Name,
-				"tenant_id":        "",
-				"status":           string(createdGateway.Status),
-				"interval":         createdGateway.IntervalLimit.Milliseconds(),
-				"publicIdentifier": nil,
+				"gateway_id":        createdGateway.Id.String(),
+				"name":              createdGateway.Name,
+				"tenant_id":         "",
+				"status":            string(createdGateway.Status),
+				"interval":          createdGateway.IntervalLimit.Milliseconds(),
+				"public_identifier": nil,
 			},
 		},
 		{
 			Name:      "400 Bad Request: body non valido",
 			Method:    "POST",
 			Url:       "/gateway",
-			InputDto:  map[string]any{"gateway_name": "Gateway A", "interval": 0},
+			InputDto:  map[string]any{"name": "Gateway A", "interval": 0},
 			Requester: requester,
 			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockCreateGatewayUseCase]{
 				useCaseNeverCalled,
@@ -187,12 +187,12 @@ func TestGatewayController_DeleteGateway(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusOK,
 			ExpectedResponse: gin.H{
-				"gateway_id":       deletedGateway.Id.String(),
-				"gateway_name":     deletedGateway.Name,
-				"tenant_id":        "",
-				"status":           string(deletedGateway.Status),
-				"interval":         deletedGateway.IntervalLimit.Milliseconds(),
-				"publicIdentifier": nil,
+				"gateway_id":        deletedGateway.Id.String(),
+				"name":              deletedGateway.Name,
+				"tenant_id":         "",
+				"status":            string(deletedGateway.Status),
+				"interval":          deletedGateway.IntervalLimit.Milliseconds(),
+				"public_identifier": nil,
 			},
 		},
 		{

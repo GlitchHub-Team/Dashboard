@@ -16,11 +16,11 @@ import (
 
 type gatewayHTTPResponse struct {
 	GatewayID        string  `json:"gateway_id"`
-	GatewayName      string  `json:"gateway_name"`
+	GatewayName      string  `json:"name"`
 	TenantID         string  `json:"tenant_id"`
 	Status           string  `json:"status"`
 	Interval         int64   `json:"interval"`
-	PublicIdentifier *string `json:"publicIdentifier"`
+	PublicIdentifier *string `json:"public_identifier"`
 }
 
 type gatewayCommandPayload struct {
@@ -382,7 +382,7 @@ func checkCreateGatewayResponseAndDB(
 		}
 
 		if resp.GatewayName != expectedName {
-			t.Errorf("gateway_name errato: got=%s want=%s", resp.GatewayName, expectedName)
+			t.Errorf("name errato: got=%s want=%s", resp.GatewayName, expectedName)
 			return false
 		}
 
