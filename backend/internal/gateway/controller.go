@@ -158,9 +158,12 @@ func (controller *GatewayController) CommissionGateway(ctx *gin.Context) {
 	}
 
 	responseDto := gatewayResponseDTO{
-		GatewayIdField:    dto.GatewayIdField{GatewayId: gateway.Id.String()},
-		GatewayNameField:  dto.GatewayNameField{GatewayName: gateway.Name},
-		CommissionedToken: gateway.SigningSecret,
+		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
+		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 
 	ctx.JSON(http.StatusOK, responseDto)
@@ -209,6 +212,10 @@ func (controller *GatewayController) DecommissionGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -256,6 +263,10 @@ func (controller *GatewayController) InterruptGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -303,6 +314,10 @@ func (controller *GatewayController) ResumeGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -350,6 +365,10 @@ func (controller *GatewayController) ResetGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -397,6 +416,10 @@ func (controller *GatewayController) RebootGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -445,6 +468,10 @@ func (controller *GatewayController) SetGatewayIntervalLimit(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -487,6 +514,10 @@ func (controller *GatewayController) CreateGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -533,6 +564,10 @@ func (controller *GatewayController) DeleteGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
+		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)
 }
@@ -549,6 +584,9 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 		responseDtos[i] = gatewayResponseDTO{
 			GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 			GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+			TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+			Status:           gateway.Status,
+			Interval:         gateway.IntervalLimit,
 			PublicIdentifier: gateway.PublicIdentifier,
 		}
 	}
@@ -586,6 +624,10 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 		responseDtos[i] = gatewayResponseDTO{
 			GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 			GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+			TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+			Status:           gateway.Status,
+			Interval:         gateway.IntervalLimit,
+			PublicIdentifier: gateway.PublicIdentifier,
 		}
 	}
 
@@ -635,6 +677,9 @@ func (controller *GatewayController) GetGateway(ctx *gin.Context) {
 	responseDto := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit,
 		PublicIdentifier: gateway.PublicIdentifier,
 	}
 	ctx.JSON(http.StatusOK, responseDto)

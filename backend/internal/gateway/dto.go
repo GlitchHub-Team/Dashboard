@@ -60,8 +60,10 @@ type setGatewayIntervalLimitDTO struct {
 type gatewayResponseDTO struct {
 	dto.GatewayIdField
 	dto.GatewayNameField
-	CommissionedToken string `json:"token,omitempty"`
-	PublicIdentifier  string `json:"publicIdentifier,omitempty"`
+	dto.TenantIdField
+	Status           GatewayStatus `json:"status"`
+	Interval         int64         `json:"interval"`
+	PublicIdentifier string        `json:"publicIdentifier,omitempty"`
 }
 
 /*
