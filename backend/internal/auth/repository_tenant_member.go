@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 
 	"backend/internal/user"
@@ -105,19 +106,12 @@ func (repo *tenantConfirmTokenPgRepository) GetTokenWithUser(tenantId string, to
 	entity = &TenantConfirmTokenEntity{}
 	db := (*gorm.DB)(repo.db)
 	err = db.
-		Scopes(clouddb.WithTenantSchema(tenantId, &TenantConfirmTokenEntity{})).
+		Joins(fmt.Sprintf(
+			`LEFT JOIN "tenant_%v"."tenant_members" "TenantMember" ON "TenantMember"."id" = "user_id"`, tenantId,
+		), tenantId).
+		Scopes(clouddb.WithTenantSchema(tenantId, &TenantPasswordTokenEntity{})).
 		Where("token = ?", tokenString).
-		First(entity).
-		Error
-	entity.TenantId = tenantId
-
-	if err != nil {
-		return
-	}
-
-	err = db.
-		Scopes(clouddb.WithTenantSchema(tenantId, &user.TenantMemberEntity{})).
-		First(&entity.TenantMember, entity.UserId).
+		First(&entity).
 		Error
 
 	entity.TenantMember.TenantId = tenantId
@@ -215,8 +209,10 @@ func (repo *tenantPasswordTokenPgRepository) GetTokenWithUser(tenantId string, t
 	entity := TenantPasswordTokenEntity{}
 	db := (*gorm.DB)(repo.db)
 	err := db.
+		Joins(fmt.Sprintf(
+			`LEFT JOIN "tenant_%v"."tenant_members" "TenantMember" ON "TenantMember"."id" = "user_id"`, tenantId,
+		), tenantId).
 		Scopes(clouddb.WithTenantSchema(tenantId, &TenantPasswordTokenEntity{})).
-		Preload("TenantMember").
 		Where("token = ?", tokenString).
 		First(&entity).
 		Error

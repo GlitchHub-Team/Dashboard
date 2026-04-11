@@ -35,6 +35,7 @@ type ConfirmUserAccountService struct {
 	hasher                  crypto.SecretHasher
 	confirmAccountTokenPort ConfirmAccountTokenPort
 	saveUserPort            user.SaveUserPort
+	getUserPort             user.GetUserPort
 }
 
 // Compile-time checks
@@ -48,12 +49,14 @@ func NewConfirmUserAccountService(
 	hasher crypto.SecretHasher,
 	confirmAccountTokenPort ConfirmAccountTokenPort,
 	saveUserPort user.SaveUserPort,
+	getUserPort user.GetUserPort,
 ) *ConfirmUserAccountService {
 	return &ConfirmUserAccountService{
 		log:                     log,
 		hasher:                  hasher,
 		confirmAccountTokenPort: confirmAccountTokenPort,
 		saveUserPort:            saveUserPort,
+		getUserPort:             getUserPort,
 	}
 }
 
@@ -106,17 +109,7 @@ func (service *ConfirmUserAccountService) ConfirmAccount(cmd ConfirmAccountComma
 	}
 
 	// 2. Get user
-	// TODO: Non so se fare questa query o chiamare getUserPort.Get -> problema di questo approccio =
-	// dover rifare sempre la logica relativa ai ruoli
-
-	// - Super Admin
-	if cmd.TenantId == nil {
-		confirmedUser, err = service.confirmAccountTokenPort.GetSuperAdminByConfirmAccountToken(cmd.Token)
-	} else
-	// - Tenant Member
-	{
-		confirmedUser, err = service.confirmAccountTokenPort.GetTenantMemberByConfirmAccountToken(*cmd.TenantId, cmd.Token)
-	}
+	confirmedUser, err = service.getUserPort.GetUser(tokenObj.TenantId, tokenObj.UserId)
 
 	if confirmedUser.Confirmed {
 		return user.User{}, ErrAccountAlreadyConfirmed
