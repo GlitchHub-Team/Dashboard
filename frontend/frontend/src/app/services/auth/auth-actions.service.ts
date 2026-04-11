@@ -60,7 +60,7 @@ export class AuthActionsService {
   public confirmPasswordReset(req: ForgotPasswordResponse): Observable<void> {
     this.setLoadingState();
 
-    return this.authApiClient.verifyForgotPasswordToken(req.token).pipe(
+    return this.authApiClient.verifyForgotPasswordToken(req.token, req.tenantId).pipe(
       switchMap(() => {
         // Non ritorna niente ma semplicemente aggiorna i propri signal per indicare il successo
         return this.authApiClient.confirmPasswordReset(req).pipe(
@@ -82,7 +82,7 @@ export class AuthActionsService {
     this.setLoadingState();
 
     // confirmAccountCreation ritorna il JWT legato all'account confermato
-    return this.authApiClient.verifyAccountToken(req.token).pipe(
+    return this.authApiClient.verifyAccountToken(req.token, req.tenantId).pipe(
       switchMap(() => {
         return this.authApiClient.confirmAccountCreation(req).pipe(
           tap((response) => {

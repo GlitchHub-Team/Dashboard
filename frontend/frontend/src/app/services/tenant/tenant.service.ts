@@ -59,7 +59,6 @@ export class TenantService {
       .getTenants(this.pageIndex() + 1, this.limit())
       .pipe(
         // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
-        tap((response) => console.log('Response raw: ', response)),
         map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._tenantList.set(result.tenants);
