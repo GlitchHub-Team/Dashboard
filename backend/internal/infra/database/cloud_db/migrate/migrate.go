@@ -6,6 +6,7 @@ import (
 	"backend/internal/auth"
 	"backend/internal/gateway"
 	"backend/internal/infra/database/cloud_db/connection"
+	"backend/internal/infra/database/schema"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
 	"backend/internal/tenant"
@@ -49,6 +50,7 @@ type Migrator interface {
 
 	MigratePublic() error
 	MigrateTenantSchema(tenantId string, shouldLog bool) error
+	DeleteTenantSchema(tenantId string) error
 }
 
 type CloudDBMigrator struct {
@@ -85,11 +87,11 @@ func (migrator *CloudDBMigrator) MigratePublic() error {
 }
 
 func (migrator *CloudDBMigrator) MigrateTenantSchema(tenantId string, shouldLog bool) error {
-	schemaName := fmt.Sprintf("tenant_%v", tenantId)
+	schemaName := schema.GetSchemaName(tenantId)
 
 	// Crea schema
-	if err := migrator.db.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS \"%v\"", schemaName)).Error; err != nil {
-		return fmt.Errorf("error creating schema %v: %v", schemaName, err)
+	if err := schema.CreateSchema(migrator.db, schemaName); err != nil {
+		return err
 	}
 
 	if shouldLog {
@@ -108,13 +110,23 @@ func (migrator *CloudDBMigrator) MigrateTenantSchema(tenantId string, shouldLog 
 			}
 
 			if err := tx.AutoMigrate(entity); err != nil {
-				return fmt.Errorf("error migrating table %v: %v", entity.TableName(), err)
+				return fmt.Errorf("error migrating table %v: %w", entity.TableName(), err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error migrating tenant %v: %v", tenantId, err)
+		return fmt.Errorf("error migrating tenant %v: %w", tenantId, err)
+	}
+
+	return nil
+}
+
+func (migrator *CloudDBMigrator) DeleteTenantSchema(tenantId string) error {
+	schemaName := schema.GetSchemaName(tenantId)
+
+	if err := schema.DropSchema(migrator.db, schemaName); err != nil {
+		return err
 	}
 
 	return nil

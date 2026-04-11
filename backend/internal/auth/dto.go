@@ -16,11 +16,6 @@ type LogoutUserDTO struct {
 	identity.Requester
 }
 
-// type LogoutUserDto struct {
-// 	TenantId string
-// 	UserId   uint
-// }
-
 // CONFIRM ACCOUNT ====================================================================================
 type VerifyConfirmAccountTokenBodyDTO struct {
 	dto.TokenFields

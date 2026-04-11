@@ -2,6 +2,8 @@ package tenant
 
 import (
 	clouddb "backend/internal/infra/database/cloud_db/connection"
+	sensorDbMigrate "backend/internal/infra/database/sensor_db/migrate"
+
 	// "backend/internal/infra/database/cloud_db/migrate"
 
 	"go.uber.org/zap"
@@ -19,28 +21,30 @@ func (TenantEntity) TableName() string { return "tenants" }
 
 /*
 NOTA: Interfaccia locale che deve rispecchiare "backend/internal/infra/database/cloud_db/migrate".Migrator
-
-Da non confondere con [TenantMigrator], che invece è il tipo utilizzato internamente al tenant package
 */
 type LocalCloudMigrator interface {
 	MigrateTenantSchema(tenantId string, shouldLog bool) error
+	DeleteTenantSchema(tenantId string) error
 }
 
 type TenantPostgreRepository struct {
-	log      *zap.Logger
-	db       clouddb.CloudDBConnection
-	migrator LocalCloudMigrator
+	log              *zap.Logger
+	db               clouddb.CloudDBConnection
+	cloudDbMigrator  LocalCloudMigrator
+	sensorDbMigrator sensorDbMigrate.Migrator
 }
 
 func NewTenantPostgreRepository(
 	log *zap.Logger,
 	db clouddb.CloudDBConnection,
-	migrator LocalCloudMigrator,
+	cloudDbMigrator LocalCloudMigrator,
+	sensorDbMigrator sensorDbMigrate.Migrator,
 ) *TenantPostgreRepository {
 	return &TenantPostgreRepository{
-		log:      log,
-		db:       db,
-		migrator: migrator,
+		log:              log,
+		db:               db,
+		cloudDbMigrator:  cloudDbMigrator,
+		sensorDbMigrator: sensorDbMigrator,
 	}
 }
 
@@ -86,13 +90,19 @@ func (repo *TenantPostgreRepository) GetAllTenants() ([]TenantEntity, error) {
 }
 
 func (repo *TenantPostgreRepository) SaveTenant(entity *TenantEntity) error {
-	db := (*gorm.DB)(repo.db)
-
-	err := repo.migrator.MigrateTenantSchema(entity.ID, false)
+	// Migra cloud db
+	err := repo.cloudDbMigrator.MigrateTenantSchema(entity.ID, false)
 	if err != nil {
 		return err
 	}
 
+	// Crea schema in sensor db
+	err = repo.sensorDbMigrator.CreateTenantSchema(entity.ID)
+	if err != nil {
+		return err
+	}
+
+	db := (*gorm.DB)(repo.db)
 	return db.Save(entity).Error
 }
 
@@ -100,6 +110,18 @@ func (repo *TenantPostgreRepository) SaveTenant(entity *TenantEntity) error {
 Elimina tenant, rappresentato da entity. E' importante che entity.ID != ""
 */
 func (repo *TenantPostgreRepository) DeleteTenant(entity *TenantEntity) (err error) {
+	// Elimina cloud db
+	err = repo.cloudDbMigrator.DeleteTenantSchema(entity.ID)
+	if err != nil {
+		return err
+	}
+
+	// Elimina schema in sensor db
+	err = repo.sensorDbMigrator.DeleteTenantSchema(entity.ID)
+	if err != nil {
+		return err
+	}
+
 	db := (*gorm.DB)(repo.db)
 	result := db.
 		Clauses(clause.Returning{}).

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	clouddb "backend/internal/infra/database/cloud_db/connection"
-	sensordb "backend/internal/infra/database/sensor_db"
+	sensordb "backend/internal/infra/database/sensor_db/connection"
 	"backend/internal/infra/modules"
 	natsutils "backend/internal/infra/nats"
 	"backend/internal/shared/config"

@@ -35,7 +35,7 @@ func TestDeleteTenantIntegration(t *testing.T) {
 	tests := []*helper.IntegrationTestCase{
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				PreSetupCreateTenantWithName(successTenantID, "tenant-delete-success-"+uuid.NewString(), true),
+				PreSetupCreateTenantWithName(successTenantID, "tenant-delete-success-"+successTenantID.String(), true),
 			},
 			Name:   "Success: super admin deletes tenant",
 			Method: http.MethodDelete,
@@ -47,6 +47,8 @@ func TestDeleteTenantIntegration(t *testing.T) {
 			WantResponseBody: successTenantID.String(),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				CheckNoTenantByID(t, successTenantID),
+				CheckCloudDbTenantSchema(t, successTenantID.String(), false),
+				CheckSensorDbTenantSchema(t, successTenantID.String(), false),
 			},
 			PostSetups: []helper.IntegrationTestPostSetup{
 				integration.PostSetupDeleteTenant(t, successTenantID),
@@ -54,7 +56,7 @@ func TestDeleteTenantIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				PreSetupCreateTenantWithName(noJWTTenantID, "tenant-delete-no-jwt-"+uuid.NewString(), true),
+				PreSetupCreateTenantWithName(noJWTTenantID, "tenant-delete-no-jwt-"+noJWTTenantID.String(), true),
 			},
 			Name:   "Fail: unauthorized, no JWT",
 			Method: http.MethodDelete,
@@ -73,7 +75,7 @@ func TestDeleteTenantIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				PreSetupCreateTenantWithName(unauthorizedTenantID, "tenant-delete-unauthorized-"+uuid.NewString(), true),
+				PreSetupCreateTenantWithName(unauthorizedTenantID, "tenant-delete-unauthorized-"+unauthorizedTenantID.String(), true),
 			},
 			Name:   "Fail: tenant admin cannot delete tenant",
 			Method: http.MethodDelete,
@@ -92,7 +94,7 @@ func TestDeleteTenantIntegration(t *testing.T) {
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
-				PreSetupCreateTenantWithName(invalidURITenantID, "tenant-delete-invalid-uri-"+uuid.NewString(), true),
+				PreSetupCreateTenantWithName(invalidURITenantID, "tenant-delete-invalid-uri-"+invalidURITenantID.String(), true),
 			},
 			Name:   "Fail: invalid tenant_id in URI",
 			Method: http.MethodDelete,
@@ -120,6 +122,8 @@ func TestDeleteTenantIntegration(t *testing.T) {
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
+				CheckCloudDbTenantSchema(t, notFoundTenantID.String(), false),
+				CheckSensorDbTenantSchema(t, notFoundTenantID.String(), false),
 				CheckNoTenantByID(t, notFoundTenantID),
 			},
 			PostSetups: []helper.IntegrationTestPostSetup{},
