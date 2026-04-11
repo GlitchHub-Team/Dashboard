@@ -1,6 +1,7 @@
 package integrationtests
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -61,6 +62,32 @@ func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 
 	sensorIDNoData := uuid.New()
 	sensorIDUnauthorized := uuid.New()
+	sensorIDUnlimited := uuid.New()
+	gatewayIDUnlimited := uuid.New()
+	tsUnlimitedStart := tsValid.Add(10 * time.Minute)
+
+	unlimitedPreSetups := make([]helper.IntegrationTestPreSetup, 0, 20)
+	unlimitedPostSetups := make([]helper.IntegrationTestPostSetup, 0, 20)
+	for i := 0; i < 20; i++ {
+		ts := tsUnlimitedStart.Add(time.Duration(i) * time.Minute)
+		payload := []byte(`{"BpmValue":` + fmt.Sprintf("%d", 60+i) + `}`)
+
+		unlimitedPreSetups = append(unlimitedPreSetups, preSetupInsertSensorDataRow(
+			tenantIDOne,
+			sensorIDUnlimited,
+			gatewayIDUnlimited,
+			ts,
+			string(sensorProfile.HEART_RATE),
+			payload,
+		))
+
+		unlimitedPostSetups = append(unlimitedPostSetups, postSetupDeleteSensorDataRow(
+			tenantIDOne,
+			sensorIDUnlimited,
+			gatewayIDUnlimited,
+			ts,
+		))
+	}
 
 	from := tsRangeTwo.Add(-time.Second).Format(time.RFC3339)
 	to := tsRangeTwo.Add(time.Second).Format(time.RFC3339)
@@ -166,6 +193,33 @@ func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 			},
 
 			PostSetups: nil,
+		},
+		{
+			PreSetups: unlimitedPreSetups,
+			Name:      "Intervallo illimitato: restituisce tutte le 20 righe",
+			Method:    http.MethodGet,
+			Path:      historicalDataPath(tenantIDOne, sensorIDUnlimited),
+			Header:    authHeader(tenantAdminTenantOneJWT),
+			Body:      nil,
+
+			WantStatusCode:   http.StatusOK,
+			WantResponseBody: `"count":20`,
+			ResponseChecks: []helper.IntegrationTestCheck{
+				checkHistoricalDataResponse(
+					20,
+					historicalDataExpectedSample{
+						SensorID:   sensorIDUnlimited,
+						GatewayID:  gatewayIDUnlimited,
+						TenantID:   tenantIDOne,
+						Profile:    string(sensorProfile.HEART_RATE),
+						Timestamp:  tsUnlimitedStart,
+						HeartRate:  60,
+						ExpectData: true,
+					},
+				),
+			},
+
+			PostSetups: unlimitedPostSetups,
 		},
 		{
 			PreSetups: nil,
