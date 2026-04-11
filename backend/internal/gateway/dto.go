@@ -59,7 +59,7 @@ func NewGatewayResponseDTO(gateway Gateway) gatewayResponseDTO {
 	response := gatewayResponseDTO{
 		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
 		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		TenantIdField:    dto.TenantIdField{TenantId: tenantIDString(gateway.TenantId)},
 		Status:           gateway.Status,
 		Interval:         gateway.IntervalLimit.Milliseconds(),
 		PublicIdentifier: gateway.PublicIdentifier,
@@ -69,10 +69,10 @@ func NewGatewayResponseDTO(gateway Gateway) gatewayResponseDTO {
 }
 
 func NewGatewayListResponseDTO(gatewayList []Gateway, total uint) gatewayListResponseDTO {
-	gatewayDtos := make([]gatewayResponseDTO, len(gatewayList))
+	var gatewayDtos []gatewayResponseDTO
 
-	for i, gateway := range gatewayList {
-		gatewayDtos[i] = NewGatewayResponseDTO(gateway)
+	for _, gateway := range gatewayList {
+		gatewayDtos = append(gatewayDtos, NewGatewayResponseDTO(gateway))
 	}
 
 	return gatewayListResponseDTO{
