@@ -3,9 +3,9 @@ package historical_data
 import transportDto "backend/internal/infra/transport/http/dto"
 
 type GetHistoricalDataQueryDTO struct {
-	From  *string `form:"from" binding:"omitempty"`
-	To    *string `form:"to" binding:"omitempty"`
-	Limit int     `form:"limit" binding:"omitempty,min=1,max=5000"`
+	From  *string `form:"from_time" binding:"omitempty"`
+	To    *string `form:"to_time" binding:"omitempty"`
+	Limit int     `form:"max_data_points" binding:"omitempty,min=1,max=300"`
 }
 
 type HistoricalSampleResponseDTO struct {

@@ -23,6 +23,10 @@ func NewGetHistoricalDataService(
 func (service *GetHistoricalDataService) GetSensorHistoricalData(
 	cmd GetSensorHistoricalDataCommand,
 ) ([]HistoricalSample, error) {
+	if (cmd.From == nil) != (cmd.To == nil) {
+		return nil, ErrInvalidDateRange
+	}
+
 	if cmd.From != nil && cmd.To != nil && cmd.From.After(*cmd.To) {
 		return nil, ErrInvalidDateRange
 	}

@@ -125,7 +125,7 @@ func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 			},
 			Name:   "Filtro per intervallo temporale",
 			Method: http.MethodGet,
-			Path:   historicalDataPath(tenantIDOne, sensorIDRange) + "?from=" + from + "&to=" + to,
+			Path:   historicalDataPath(tenantIDOne, sensorIDRange) + "?from_time=" + from + "&to_time=" + to,
 			Header: authHeader(tenantAdminTenantOneJWT),
 			Body:   nil,
 
@@ -185,7 +185,7 @@ func TestGetSensorHistoricalDataIntegration(t *testing.T) {
 			PreSetups: nil,
 			Name:      "Timestamp query invalido",
 			Method:    http.MethodGet,
-			Path:      historicalDataPath(tenantIDOne, sensorIDNoData) + "?from=not-a-timestamp",
+			Path:      historicalDataPath(tenantIDOne, sensorIDNoData) + "?from_time=not-a-timestamp",
 			Header:    authHeader(tenantAdminTenantOneJWT),
 			Body:      nil,
 

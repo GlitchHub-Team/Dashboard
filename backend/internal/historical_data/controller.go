@@ -73,6 +73,11 @@ func (controller *Controller) GetSensorHistoricalData(ctx *gin.Context) {
 		return
 	}
 
+	if (from == nil) != (to == nil) {
+		transportHttp.RequestError(ctx, ErrInvalidDateRange)
+		return
+	}
+
 	cmd := GetSensorHistoricalDataCommand{
 		Requester: requester,
 		TenantId:  tenantId,

@@ -165,6 +165,8 @@ func TestService_GetSensorHistoricalData(t *testing.T) {
 
 	from := time.Now().UTC()
 	to := from.Add(-time.Minute)
+	onlyFrom := from
+	onlyTo := from.Add(time.Minute)
 
 	cases := []testCase{
 		{
@@ -205,6 +207,34 @@ func TestService_GetSensorHistoricalData(t *testing.T) {
 				SensorId:  targetSensorId,
 				From:      &from,
 				To:        &to,
+			},
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: historical_data.ErrInvalidDateRange,
+		},
+		{
+			name: "Fail: only from is provided",
+			input: historical_data.GetSensorHistoricalDataCommand{
+				Requester: authorizedTenantAdminRequester,
+				TenantId:  targetTenantId,
+				SensorId:  targetSensorId,
+				From:      &onlyFrom,
+			},
+			setupSteps: []mockSetupFunc_GetHistoricalDataService{
+				step2NeverCalled,
+			},
+			expectedData:  nil,
+			expectedError: historical_data.ErrInvalidDateRange,
+		},
+		{
+			name: "Fail: only to is provided",
+			input: historical_data.GetSensorHistoricalDataCommand{
+				Requester: authorizedTenantAdminRequester,
+				TenantId:  targetTenantId,
+				SensorId:  targetSensorId,
+				To:        &onlyTo,
 			},
 			setupSteps: []mockSetupFunc_GetHistoricalDataService{
 				step2NeverCalled,
