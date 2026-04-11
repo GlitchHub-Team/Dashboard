@@ -6,6 +6,10 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
+
+	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -93,23 +97,43 @@ func (st *stringInt) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func ReadConfigFromEnv() (*Config, error) {
-	envDict := map[string]string{}
-
-	configType := reflect.TypeFor[Config]()
+func ReadConfigFromEnv(log *zap.Logger) (*Config, error) {
+	// NOTA: Il file .env ha la priorità sulle variabili d'ambiente
+	envDict, err := godotenv.Read(".env")
+	if envDict == nil {
+		envDict = make(map[string]string, 0)
+	}
+	if err != nil {
+		log.Sugar().Infof("Cannot read env: %v", err)
+	}
+	if len(envDict) == 0 {
+		log.Sugar().Infof(".env file is empty")
+	}
 
 	// Itera su tutti i campi dello struct Config usando reflection
-	for field := range configType.Fields() {
+	var missingFields []string
+	for field := range reflect.TypeFor[Config]().Fields() {
 		envKey := field.Tag.Get("json")
 		if envKey == "" {
 			continue
 		}
 
-		value, ok := os.LookupEnv(envKey)
-		if !ok {
-			return nil, fmt.Errorf("cannot find field '%v' in env", envKey)
+		_, inEnvFile := envDict[envKey]
+		value, inEnv := os.LookupEnv(envKey)
+
+		if !inEnv && !inEnvFile {
+			missingFields = append(missingFields, envKey)
+			continue
 		}
-		envDict[envKey] = value
+		
+		// Inserisci in envDict se NON trovo già
+		if !inEnvFile {
+			envDict[envKey] = value
+		}
+	}
+
+	if missingFields != nil {
+		return nil, fmt.Errorf("the following env variables are missing: %v", strings.Join(missingFields, ", "))
 	}
 
 	jsonBody, err := json.Marshal(&envDict)

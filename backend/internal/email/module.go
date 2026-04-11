@@ -20,6 +20,7 @@ func NewEmailAdapterFactory(
 	// NOTA: Si può avere solo un email sender alla volta, quindi è importante usare questo
 	// factory per crearlo
 	// Bisogna inserire tutte le dipendenze di tutti i possibili adapter
+	log.Sugar().Infof("Mail adapter chosen: %v", cfg.MailAdapter)
 	switch cfg.MailAdapter {
 	case "terminal":
 		return NewSendEmailTerminalAdapter(log), nil
