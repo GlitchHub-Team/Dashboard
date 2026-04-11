@@ -31,6 +31,8 @@ export class ConfirmAccountPage {
       token: this.token,
       tenantId: this.tenantId,
     };
+
+    console.log('Confirming account with request:', requestWithToken);
     // La conferma di un account ritorna il JWT dell'utente appena confermato,
     // quindi logga automaticamente l'utente dopo la conferma
     this.authActionsService

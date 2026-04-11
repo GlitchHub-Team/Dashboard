@@ -61,7 +61,7 @@ export class AuthServiceMock {
     if (
       entry &&
       entry.password === req.password &&
-      (entry.tenantId === req.tenantId || !entry.tenantId)
+      entry.tenantId === req.tenantId
     ) {
       const jwt = this.buildJwt(entry.userId, entry.role, entry.tenantId);
       return of({ jwt }).pipe(delay(MOCK_DELAY));
