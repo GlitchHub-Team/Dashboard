@@ -55,6 +55,35 @@ type gatewayListResponseDTO struct {
 	Gateways []gatewayResponseDTO `json:"gateways"`
 }
 
+func NewGatewayResponseDTO(gateway Gateway) gatewayResponseDTO {
+	response := gatewayResponseDTO{
+		GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
+		GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
+		TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
+		Status:           gateway.Status,
+		Interval:         gateway.IntervalLimit.Milliseconds(),
+		PublicIdentifier: gateway.PublicIdentifier,
+	}
+
+	return response
+}
+
+func NewGatewayListResponseDTO(gatewayList []Gateway, total uint) gatewayListResponseDTO {
+	gatewayDtos := make([]gatewayResponseDTO, len(gatewayList))
+
+	for i, gateway := range gatewayList {
+		gatewayDtos[i] = NewGatewayResponseDTO(gateway)
+	}
+
+	return gatewayListResponseDTO{
+		Gateways: gatewayDtos,
+		ListInfo: dto.ListInfo{
+			Count: uint(len(gatewayList)),
+			Total: total,
+		},
+	}
+}
+
 type decommissionGatewayCommandPayloadDTO struct {
 	GatewayId string `json:"gatewayId"`
 }

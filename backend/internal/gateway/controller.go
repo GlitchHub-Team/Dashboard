@@ -454,7 +454,7 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 		Pagination: dto.DEFAULT_PAGINATION,
 	}
 
-	if err := ctx.ShouldBindJSON(&queryDto); err != nil {
+	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
 		}
@@ -473,27 +473,7 @@ func (controller *GatewayController) GetAllGateways(ctx *gin.Context) {
 		return
 	}
 
-	responseDtos := make([]gatewayListResponseDTO, len(gateways))
-
-	for i, gateway := range gateways {
-		responseDtos[i] = gatewayListResponseDTO{
-			ListInfo: dto.ListInfo{
-				Total: count,
-				Count: uint(queryDto.Page),
-			},
-			Gateways: []gatewayResponseDTO{
-				{
-					GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
-					GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-					TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
-					Status:           gateway.Status,
-					Interval:         gateway.IntervalLimit.Milliseconds(),
-					PublicIdentifier: gateway.PublicIdentifier,
-				},
-			},
-		}
-	}
-
+	responseDtos := NewGatewayListResponseDTO(gateways, count)
 	ctx.JSON(http.StatusOK, responseDtos)
 }
 
@@ -543,27 +523,7 @@ func (controller *GatewayController) GetGatewaysByTenant(ctx *gin.Context) {
 		return
 	}
 
-	responseDtos := make([]gatewayListResponseDTO, len(gateways))
-
-	for i, gateway := range gateways {
-		responseDtos[i] = gatewayListResponseDTO{
-			ListInfo: dto.ListInfo{
-				Total: count,
-				Count: uint(queryDto.Page),
-			},
-			Gateways: []gatewayResponseDTO{
-				{
-					GatewayIdField:   dto.GatewayIdField{GatewayId: gateway.Id.String()},
-					GatewayNameField: dto.GatewayNameField{GatewayName: gateway.Name},
-					TenantIdField:    dto.TenantIdField{TenantId: gateway.TenantId.String()},
-					Status:           gateway.Status,
-					Interval:         gateway.IntervalLimit.Milliseconds(),
-					PublicIdentifier: gateway.PublicIdentifier,
-				},
-			},
-		}
-	}
-
+	responseDtos := NewGatewayListResponseDTO(gateways, count)
 	ctx.JSON(http.StatusOK, responseDtos)
 }
 

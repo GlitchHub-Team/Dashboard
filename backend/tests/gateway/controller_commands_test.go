@@ -305,3 +305,4 @@ func TestGatewayController_InterruptResumeResetReboot(t *testing.T) {
 		helper.ExecuteControllerTest(t, tc, "POST", "/gateway/:gateway_id/interrupt", controller.InterruptGateway)
 	})
 }
+
