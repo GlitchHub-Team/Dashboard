@@ -81,6 +81,30 @@ func TestGetTenantAdminIntegration(t *testing.T) {
 	}
 	tests = append(tests, &tcSuccess)
 
+	// Success: Super admin when CanImpersonate=false
+	var tcSuperDenied helper.IntegrationTestCase
+	tcSuperDenied = helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			integration.PreSetupCreateTenant(tenant1Id, false),
+			integration.PreSetupAddTenantAdmin(t, &tcSuperDenied, existingTenantAdmin1Entity, true),
+		},
+		Name:   "Success: super admin when CanImpersonate=false",
+		Method: http.MethodGet,
+		Header: integration.AuthHeader(superAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: existingEmail1,
+		ResponseChecks: []helper.IntegrationTestCheck{
+			integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String()),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			integration.PostSetupDeleteTenant(t, tenant1Id),
+			nil,
+		},
+	}
+	tests = append(tests, &tcSuperDenied)
+
 	// Unauthorized: no JWT
 	var tcNoJwt helper.IntegrationTestCase
 	tcNoJwt = helper.IntegrationTestCase{
@@ -194,28 +218,6 @@ func TestGetTenantAdminIntegration(t *testing.T) {
 		},
 	}
 	tests = append(tests, &tcWrongTenantAdmin)
-
-	// Super admin denied when CanImpersonate=false
-	var tcSuperDenied helper.IntegrationTestCase
-	tcSuperDenied = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{
-			integration.PreSetupCreateTenant(tenant1Id, false),
-			integration.PreSetupAddTenantAdmin(t, &tcSuperDenied, existingTenantAdmin1Entity, true),
-		},
-		Name:   "Fail: super admin denied when CanImpersonate=false",
-		Method: http.MethodGet,
-		Header: integration.AuthHeader(superAdminJWT),
-		Body:   nil,
-
-		WantStatusCode:   http.StatusNotFound,
-		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String())},
-		PostSetups: []helper.IntegrationTestPostSetup{
-			integration.PostSetupDeleteTenant(t, tenant1Id),
-			nil,
-		},
-	}
-	tests = append(tests, &tcSuperDenied)
 
 	// User not found
 	tests = append(tests, &helper.IntegrationTestCase{

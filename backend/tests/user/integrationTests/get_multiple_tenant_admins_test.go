@@ -105,6 +105,29 @@ func TestGetTenantAdminListIntegration(t *testing.T) {
 		PostSetups: []helper.IntegrationTestPostSetup{integration.PostSetupDeleteTenant(t, tenantId), nil, nil},
 	})
 
+	// Success: super admin (CanImpersonate=false)
+	tests = append(tests, &helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			integration.PreSetupCreateTenant(tenantId, false),
+			integration.PreSetupAddTenantAdmin(t, nil, tenantAdmin1Entity, false),
+			integration.PreSetupAddTenantAdmin(t, nil, tenantAdmin2Entity, false),
+		},
+		Name:   "(Super Admin) Success: canImpersonate=false",
+		Method: http.MethodGet,
+		Path:   tenantPath + "?limit=100",
+		Header: integration.AuthHeader(superAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: "\"count\":2",
+		ResponseChecks:   []helper.IntegrationTestCheck{},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			integration.PostSetupDeleteTenant(t, tenantId),
+			nil,
+			nil,
+		},
+	})
+
 	// Unauthorized no JWT
 	tests = append(tests, &helper.IntegrationTestCase{
 		PreSetups: []helper.IntegrationTestPreSetup{
@@ -191,29 +214,6 @@ func TestGetTenantAdminListIntegration(t *testing.T) {
 			integration.CheckNoTenant(nonexistentTenantId.String()),
 		},
 		PostSetups: nil,
-	})
-
-	// Unauthorized access: super admin (CanImpersonate=false)
-	tests = append(tests, &helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{
-			integration.PreSetupCreateTenant(tenantId, false),
-			integration.PreSetupAddTenantAdmin(t, nil, tenantAdmin1Entity, false),
-			integration.PreSetupAddTenantAdmin(t, nil, tenantAdmin2Entity, false),
-		},
-		Name:   "Fail (super admin): unauth access (canImpersonate=false)",
-		Method: http.MethodGet,
-		Path:   tenantPath,
-		Header: integration.AuthHeader(superAdminJWT),
-		Body:   nil,
-
-		WantStatusCode:   http.StatusNotFound,
-		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks:   []helper.IntegrationTestCheck{},
-		PostSetups: []helper.IntegrationTestPostSetup{
-			integration.PostSetupDeleteTenant(t, tenantId),
-			nil,
-			nil,
-		},
 	})
 
 	// Unauthorized access: other tenant admin

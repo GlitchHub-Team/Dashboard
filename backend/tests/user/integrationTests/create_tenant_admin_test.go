@@ -80,21 +80,25 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			},
 		},
 
-		// Super admin should be denied when tenant CanImpersonate == false
+		// Success: super admin with CanImpersonate = false
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{
 				integration.PreSetupCreateTenant(tenantID, false),
 			},
-			Name:   "Fail: super admin cannot access tenant when CanImpersonate=false",
+			Name:   "Success: super admin when CanImpersonate=false",
 			Method: http.MethodPost,
 			Path:   "/api/v1/tenant/" + tenantID.String() + "/tenant_admin",
 			Header: integration.AuthHeader(superAdminJWT),
-			Body:   helper.MustJSONBody(t, user.CreateUserBodyDTO{EmailField: dto.EmailField{Email: "impersonation@t.test"}, UsernameField: dto.UsernameField{Username: "Imp"}}),
+			Body: helper.MustJSONBody(t, user.CreateUserBodyDTO{
+				EmailField:    dto.EmailField{Email: validEmail},
+				UsernameField: dto.UsernameField{Username: "Imp"},
+			}),
 
-			WantStatusCode:   http.StatusNotFound,
-			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
+			WantStatusCode:   http.StatusOK,
+			WantResponseBody: validEmail, // Cerco email utente nel body
 			ResponseChecks: []helper.IntegrationTestCheck{
-				integration.CheckNoTenantMember("impersonation@t.test", tenantID.String()),
+				integration.CheckTenantMemberInserted(validEmail, tenantID.String()),
+				integration.CheckCountTenantConfirmAccountTokens(t, tenantID.String(), 1),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{

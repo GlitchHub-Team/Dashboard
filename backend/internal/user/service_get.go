@@ -7,8 +7,6 @@ import (
 
 /*
 Servizio usato per ottenere informazioni su uno o più utenti.
-
-Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
 */
 type GetUserService struct {
 	getUserPort   GetUserPort
@@ -80,8 +78,8 @@ func (service *GetUserService) GetTenantAdmin(cmd GetTenantAdminCommand) (User, 
 
 	// Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
-	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)          //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin()                      //nolint:staticcheck
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId) //nolint:staticcheck
 	if !superAdminAccess && !tenantAdminAccess {
 		return User{}, identity.ErrUnauthorizedAccess
 	}
@@ -162,9 +160,9 @@ func (service *GetUserService) GetTenantAdminsByTenant(cmd GetTenantAdminsByTena
 
 	// 2) Controlla autorizzazione
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
-	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId)          //nolint:staticcheck
-	if !superAdminAccess && !tenantAdminAccess {                                   //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin()                      //nolint:staticcheck
+	tenantAdminAccess := cmd.Requester.CanTenantAdminAccess(cmd.TenantId) //nolint:staticcheck
+	if !superAdminAccess && !tenantAdminAccess {                          //nolint:staticcheck
 		return nil, 0, identity.ErrUnauthorizedAccess
 	}
 

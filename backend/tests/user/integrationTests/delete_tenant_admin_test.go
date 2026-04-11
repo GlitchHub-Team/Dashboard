@@ -84,6 +84,32 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 	}
 	tests = append(tests, &tcSuccess)
 
+	// Success: Super admin when CanImpersonate=false
+	var tcSuperAdmin_NoImpersonate helper.IntegrationTestCase
+	tcSuperAdmin_NoImpersonate = helper.IntegrationTestCase{
+		PreSetups: []helper.IntegrationTestPreSetup{
+			integration.PreSetupCreateTenant(tenant1Id, false),
+			integration.PreSetupAddTenantAdmin(t, &tcSuperAdmin_NoImpersonate, existingTenantAdmin1Entity, true),
+			integration.PreSetupAddTenantAdmin(t, &tcSuperAdmin_NoImpersonate, existingTenantAdmin2Entity, true),
+		},
+		Name:   "Success: super admin when CanImpersonate=false",
+		Method: http.MethodDelete,
+		Header: integration.AuthHeader(superAdminJWT),
+		Body:   nil,
+
+		WantStatusCode:   http.StatusOK,
+		WantResponseBody: existingEmail2,
+		ResponseChecks: []helper.IntegrationTestCheck{
+			integration.CheckNoTenantMember(existingEmail2, tenant1Id.String()),
+		},
+		PostSetups: []helper.IntegrationTestPostSetup{
+			integration.PostSetupDeleteTenant(t, tenant1Id),
+			integration.PostSetupDeleteTenantMember(tenant1Id, existingEmail1),
+			integration.PostSetupDeleteTenantMember(tenant1Id, existingEmail2),
+		},
+	}
+	tests = append(tests, &tcSuperAdmin_NoImpersonate)
+
 	// Unauthorized no JWT
 	var tcNoJwt helper.IntegrationTestCase
 	tcNoJwt = helper.IntegrationTestCase{
@@ -205,32 +231,6 @@ func TestDeleteTenantAdminIntegration(t *testing.T) {
 		},
 	}
 	tests = append(tests, &tcWrongTenantId)
-
-	// Super admin denied when CanImpersonate=false
-	var tcSuperAdmin_NoImpersonate helper.IntegrationTestCase
-	tcSuperAdmin_NoImpersonate = helper.IntegrationTestCase{
-		PreSetups: []helper.IntegrationTestPreSetup{
-			integration.PreSetupCreateTenant(tenant1Id, false),
-			integration.PreSetupAddTenantAdmin(t, &tcSuperAdmin_NoImpersonate, existingTenantAdmin1Entity, true),
-			integration.PreSetupAddTenantAdmin(t, &tcSuperAdmin_NoImpersonate, existingTenantAdmin2Entity, true),
-		},
-		Name:   "Fail: super admin denied when CanImpersonate=false",
-		Method: http.MethodDelete,
-		Header: integration.AuthHeader(superAdminJWT),
-		Body:   nil,
-
-		WantStatusCode:   http.StatusNotFound,
-		WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
-		ResponseChecks: []helper.IntegrationTestCheck{
-			integration.CheckTenantMemberInserted(existingEmail1, tenant1Id.String()),
-		},
-		PostSetups: []helper.IntegrationTestPostSetup{
-			integration.PostSetupDeleteTenant(t, tenant1Id),
-			nil,
-			nil,
-		},
-	}
-	tests = append(tests, &tcSuperAdmin_NoImpersonate)
 
 	// User not found
 	tests = append(tests, &helper.IntegrationTestCase{

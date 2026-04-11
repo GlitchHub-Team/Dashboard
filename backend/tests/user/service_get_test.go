@@ -370,7 +370,6 @@ func TestService_GetTenantAdmin(t *testing.T) {
 	// Test comportamentali
 	// Step 1: get tenant
 	step1TenantOk_CanImpersonate := newStepTenantOk_GetUserService(targetTenantId, true)
-	step1TenantOk_CannotImpersonate := newStepTenantOk_GetUserService(targetTenantId, false)
 
 	step1TenantFail := newStepTenantNotFound_GetUserService(targetTenantId)
 
@@ -495,16 +494,6 @@ func TestService_GetTenantAdmin(t *testing.T) {
 		},
 
 		// Step 1: autorizzazione
-		{
-			name:  "(Super Admin) Fail (step 1): impersonation fail",
-			input: inputWith(superAdminRequester),
-			setupSteps: []mockSetupFunc_GetUserService{
-				step1TenantOk_CannotImpersonate,
-				step2NeverCalled,
-			},
-			expectedUser:  user.User{},
-			expectedError: identity.ErrUnauthorizedAccess,
-		},
 		{
 			name:  "(Tenant Admin) Fail (step 1): unauthorized access",
 			input: inputWith(unauthorizedTenantAdminRequester),
@@ -1261,6 +1250,17 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 			expectedTotal: expectedTotalCase2,
 			expectedError: nil,
 		},
+		{
+			name:  "(Super Admin) Fail (auth): impersonation failed",
+			input: inputWith(baseInputCase1, superAdminRequester),
+			setupSteps: []mockSetupFunc_GetUserService{
+				step1TenantOk_CannotImpersonate,
+				step2Case1Ok,
+			},
+			expectedUsers: expectedUsersCase1,
+			expectedTotal: expectedTotalCase1,
+			expectedError: nil,
+		},
 
 		// Step 1: get tenant
 		{
@@ -1285,17 +1285,7 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 		},
 
 		// Step 1: autorizzazione
-		{
-			name:  "(Super Admin) Fail (auth): impersonation failed",
-			input: inputWith(baseInputCase1, superAdminRequester),
-			setupSteps: []mockSetupFunc_GetUserService{
-				step1TenantOk_CannotImpersonate,
-				step2NeverCalled,
-			},
-			expectedUsers: nil,
-			expectedTotal: 0,
-			expectedError: identity.ErrUnauthorizedAccess,
-		},
+
 		{
 			name:  "(Tenant Admin) Fail (auth): unauthorized access",
 			input: inputWith(baseInputCase1, unauthorizedTenantAdminRequester),
