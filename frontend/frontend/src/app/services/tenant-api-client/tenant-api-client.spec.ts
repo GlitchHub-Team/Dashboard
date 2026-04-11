@@ -86,7 +86,7 @@ describe('TenantApiClientService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/all_tenants`);
       expect(req.request.method).toBe('GET');
-      req.flush(allTenants);
+      req.flush({ tenants: allTenants });
     });
   });
 

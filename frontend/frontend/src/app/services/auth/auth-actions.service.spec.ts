@@ -142,7 +142,7 @@ describe('AuthActionsService', () => {
 
       service.confirmPasswordReset(mockReq).subscribe();
 
-      expect(authApiClientMock.verifyForgotPasswordToken).toHaveBeenCalledWith(mockReq.token);
+      expect(authApiClientMock.verifyForgotPasswordToken).toHaveBeenCalledWith(mockReq.token, mockReq.tenantId);
       expect(authApiClientMock.confirmPasswordReset).toHaveBeenCalledWith(mockReq);
       expect(service.passwordChangeResult()).toBe(true);
       expect(service.loading()).toBe(false);
@@ -173,7 +173,7 @@ describe('AuthActionsService', () => {
 
       service.confirmAccount(mockReq).subscribe();
 
-      expect(authApiClientMock.verifyAccountToken).toHaveBeenCalledWith(mockReq.token);
+      expect(authApiClientMock.verifyAccountToken).toHaveBeenCalledWith(mockReq.token, mockReq.tenantId);
       expect(authApiClientMock.confirmAccountCreation).toHaveBeenCalledWith(mockReq);
       expect(tokenStorageMock.saveToken).toHaveBeenCalledWith(mockAuthResponse.jwt);
       expect(userSessionMock.initSession).toHaveBeenCalledWith(mockAuthResponse.jwt);

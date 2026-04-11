@@ -187,26 +187,26 @@ describe('SensorTableComponent (Unit)', () => {
   });
 
   describe('chart actions', () => {
-    it('should render chart buttons only for active sensors', () => {
+    it('should render chart buttons for all sensors', () => {
       const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
       expect(
         buttons.filter((btn) => btn.nativeElement.textContent.includes('query_stats')).length,
-      ).toBe(1);
+      ).toBe(2);
       expect(
         buttons.filter((btn) => btn.nativeElement.textContent.includes('ssid_chart')).length,
-      ).toBe(1);
+      ).toBe(2);
     });
 
-    it('should not render chart buttons for inactive sensors', () => {
+    it('should disable only the realtime button for inactive sensors', () => {
       fixture.componentRef.setInput('sensors', [mockSensors[1]]);
       fixture.detectChanges();
       const buttons = fixture.debugElement.queryAll(By.css('mat-cell button'));
-      expect(
-        buttons.filter((btn) => btn.nativeElement.textContent.includes('query_stats')).length,
-      ).toBe(0);
-      expect(
-        buttons.filter((btn) => btn.nativeElement.textContent.includes('ssid_chart')).length,
-      ).toBe(0);
+      const historicBtn = buttons.find((btn) => btn.nativeElement.textContent.includes('query_stats'))!;
+      const realtimeBtn = buttons.find((btn) => btn.nativeElement.textContent.includes('ssid_chart'))!;
+      expect(historicBtn).toBeTruthy();
+      expect(realtimeBtn).toBeTruthy();
+      expect(historicBtn.nativeElement.disabled).toBe(false);
+      expect(realtimeBtn.nativeElement.disabled).toBe(true);
     });
 
     it('should open HistoricChartFiltersDialog and emit chartRequested with dialog result', () => {
