@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	transportHttp "backend/internal/infra/transport/http"
-	"backend/internal/infra/transport/http/dto"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	"backend/tests/helper"
@@ -31,7 +30,6 @@ func TestGetTenantIntegration(t *testing.T) {
 	successTenantID := uuid.New()
 	successTenantName := "tenant-get-success-" + uuid.NewString()
 	noJWTTenantID := uuid.New()
-	missingBodyTenantID := uuid.New()
 	unauthorizedTenantID := uuid.New()
 	notFoundTenantID := uuid.New()
 
@@ -40,13 +38,10 @@ func TestGetTenantIntegration(t *testing.T) {
 			PreSetups: []helper.IntegrationTestPreSetup{
 				PreSetupCreateTenantWithName(successTenantID, successTenantName, true),
 			},
-			Name:   "Success: get tenant with valid body and auth",
+			Name:   "Success: get tenant with valid URI and auth",
 			Method: http.MethodGet,
 			Path:   tenantPath(successTenantID),
 			Header: integration.AuthHeader(superAdminJWT),
-			Body: helper.MustJSONBody(t, tenant.GetTenantDTO{
-				TenantIdField: dto.TenantIdField{TenantId: successTenantID.String()},
-			}),
 
 			WantStatusCode:   http.StatusOK,
 			WantResponseBody: successTenantID.String(),
@@ -66,9 +61,6 @@ func TestGetTenantIntegration(t *testing.T) {
 			Method: http.MethodGet,
 			Path:   tenantPath(noJWTTenantID),
 			Header: http.Header{},
-			Body: helper.MustJSONBody(t, tenant.GetTenantDTO{
-				TenantIdField: dto.TenantIdField{TenantId: noJWTTenantID.String()},
-			}),
 
 			WantStatusCode:   http.StatusUnauthorized,
 			WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
@@ -80,33 +72,23 @@ func TestGetTenantIntegration(t *testing.T) {
 			},
 		},
 		{
-			PreSetups: []helper.IntegrationTestPreSetup{
-				PreSetupCreateTenantWithName(missingBodyTenantID, "tenant-get-missing-body-"+uuid.NewString(), true),
-			},
-			Name:   "Fail: missing JSON body",
+			PreSetups: []helper.IntegrationTestPreSetup{},
+			Name:   "Fail: invalid UUID in URI",
 			Method: http.MethodGet,
-			Path:   tenantPath(missingBodyTenantID),
+			Path:   "/api/v1/tenant/not-a-uuid",
 			Header: integration.AuthHeader(superAdminJWT),
-			Body:   nil,
 
 			WantStatusCode:   http.StatusBadRequest,
 			WantResponseBody: "error",
-			ResponseChecks: []helper.IntegrationTestCheck{
-				CheckTenantExistsByID(t, missingBodyTenantID),
-			},
-			PostSetups: []helper.IntegrationTestPostSetup{
-				integration.PostSetupDeleteTenant(t, missingBodyTenantID),
-			},
+			ResponseChecks: []helper.IntegrationTestCheck{},
+			PostSetups: []helper.IntegrationTestPostSetup{},
 		},
 		{
 			PreSetups: []helper.IntegrationTestPreSetup{},
-			Name:      "Fail: tenant not found",
-			Method:    http.MethodGet,
-			Path:      tenantPath(notFoundTenantID),
-			Header:    integration.AuthHeader(superAdminJWT),
-			Body: helper.MustJSONBody(t, tenant.GetTenantDTO{
-				TenantIdField: dto.TenantIdField{TenantId: notFoundTenantID.String()},
-			}),
+			Name:   "Fail: tenant not found",
+			Method: http.MethodGet,
+			Path:   tenantPath(notFoundTenantID),
+			Header: integration.AuthHeader(superAdminJWT),
 
 			WantStatusCode:   http.StatusNotFound,
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
@@ -123,9 +105,6 @@ func TestGetTenantIntegration(t *testing.T) {
 			Method: http.MethodGet,
 			Path:   tenantPath(unauthorizedTenantID),
 			Header: integration.AuthHeader(otherTenantAdminJWT),
-			Body: helper.MustJSONBody(t, tenant.GetTenantDTO{
-				TenantIdField: dto.TenantIdField{TenantId: unauthorizedTenantID.String()},
-			}),
 
 			WantStatusCode:   http.StatusUnauthorized,
 			WantResponseBody: helper.ErrJsonString(identity.ErrUnauthorizedAccess),

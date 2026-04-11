@@ -248,7 +248,6 @@ func TestController_DeleteTenant(t *testing.T) {
 func TestController_GetTenant(t *testing.T) {
 	targetTenantID := uuid.New()
 	requester := identity.Requester{RequesterUserId: 1, RequesterRole: identity.ROLE_SUPER_ADMIN}
-	inputDTO := tenant.GetTenantDTO{TenantIdField: httpdto.TenantIdField{TenantId: targetTenantID.String()}}
 
 	expectedCmd := tenant.GetTenantCommand{Requester: requester, TenantId: targetTenantID}
 	expectedTenant := tenant.Tenant{Id: targetTenantID, Name: "Tenant A", CanImpersonate: true}
@@ -284,13 +283,13 @@ func TestController_GetTenant(t *testing.T) {
 			Times(1)
 	}
 
-	baseURL := "/tenant/get"
+	mountPath := "/tenant/:tenant_id"
+	baseURL := "/tenant/" + targetTenantID.String()
 	cases := []helper.GenericControllerTestCase[any, tenantMocks.MockGetTenantUseCase]{
 		{
 			Name:             "200 OK",
-			Method:           http.MethodPost,
+			Method:           http.MethodGet,
 			Url:              baseURL,
-			InputDto:         inputDTO,
 			Requester:        requester,
 			SetupSteps:       []helper.MockUseCaseSetupFunc[tenantMocks.MockGetTenantUseCase]{useCaseOK},
 			ExpectedStatus:   http.StatusOK,
@@ -298,19 +297,17 @@ func TestController_GetTenant(t *testing.T) {
 		},
 		{
 			Name:             "401 Unauthorized: missing identity",
-			Method:           http.MethodPost,
+			Method:           http.MethodGet,
 			Url:              baseURL,
-			InputDto:         inputDTO,
 			OmitIdentity:     true,
 			SetupSteps:       []helper.MockUseCaseSetupFunc[tenantMocks.MockGetTenantUseCase]{useCaseNeverCalled},
 			ExpectedStatus:   http.StatusUnauthorized,
 			ExpectedResponse: gin.H{"error": transportHttp.ErrMissingIdentity.Error()},
 		},
 		{
-			Name:             "400 Bad Request: invalid body",
-			Method:           http.MethodPost,
-			Url:              baseURL,
-			InputDto:         tenant.GetTenantDTO{},
+			Name:             "400 Bad Request: invalid tenant id in URI",
+			Method:           http.MethodGet,
+			Url:              "/tenant/not-a-uuid",
 			Requester:        requester,
 			SetupSteps:       []helper.MockUseCaseSetupFunc[tenantMocks.MockGetTenantUseCase]{useCaseNeverCalled},
 			ExpectedStatus:   http.StatusBadRequest,
@@ -318,9 +315,8 @@ func TestController_GetTenant(t *testing.T) {
 		},
 		{
 			Name:             "401 Unauthorized: use case unauthorized",
-			Method:           http.MethodPost,
+			Method:           http.MethodGet,
 			Url:              baseURL,
-			InputDto:         inputDTO,
 			Requester:        requester,
 			SetupSteps:       []helper.MockUseCaseSetupFunc[tenantMocks.MockGetTenantUseCase]{useCaseUnauthorized},
 			ExpectedStatus:   http.StatusUnauthorized,
@@ -328,9 +324,8 @@ func TestController_GetTenant(t *testing.T) {
 		},
 		{
 			Name:             "404 Not Found: tenant not found",
-			Method:           http.MethodPost,
+			Method:           http.MethodGet,
 			Url:              baseURL,
-			InputDto:         inputDTO,
 			Requester:        requester,
 			SetupSteps:       []helper.MockUseCaseSetupFunc[tenantMocks.MockGetTenantUseCase]{useCaseNotFound},
 			ExpectedStatus:   http.StatusNotFound,
@@ -338,9 +333,8 @@ func TestController_GetTenant(t *testing.T) {
 		},
 		{
 			Name:             "500 Internal Server Error",
-			Method:           http.MethodPost,
+			Method:           http.MethodGet,
 			Url:              baseURL,
-			InputDto:         inputDTO,
 			Requester:        requester,
 			SetupSteps:       []helper.MockUseCaseSetupFunc[tenantMocks.MockGetTenantUseCase]{useCaseUnexpectedErr},
 			ExpectedStatus:   http.StatusInternalServerError,
@@ -352,7 +346,7 @@ func TestController_GetTenant(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			mockUseCase := helper.SetupMockUseCase(tenantMocks.NewMockGetTenantUseCase, tc.SetupSteps, t)
 			controller := tenant.NewTenantController(zap.NewNop(), nil, nil, mockUseCase, nil, nil)
-			helper.ExecuteControllerTest(t, tc, http.MethodPost, "/tenant/get", controller.GetTenant)
+			helper.ExecuteControllerTest(t, tc, http.MethodGet, mountPath, controller.GetTenant)
 		})
 	}
 }
