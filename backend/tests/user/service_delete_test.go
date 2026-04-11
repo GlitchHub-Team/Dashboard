@@ -508,6 +508,18 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 			expectedUser:  expectedUser,
 		},
 		{
+			name:  "(Super Admin) Success: delete tenant admin, impersonation fail",
+			input: inputWith(superAdminRequester),
+			setupSteps: []mockSetupFunc_DeleteUserService{
+				step1TenantOk_CannotImpersonate,
+				step2GetUserOk,
+				step3CountOk,
+				step4DeleteUserOk,
+			},
+			expectedError: nil,
+			expectedUser:  expectedUser,
+		},
+		{
 			name:  "(Tenant Admin) Success: delete tenant admin, authorization ok",
 			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_DeleteUserService{
@@ -542,16 +554,6 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 		},
 
 		// Step 1: autorizzazione
-		{
-			name:  "(Super Admin) Fail (step 1 auth): impersonation fail",
-			input: inputWith(superAdminRequester),
-			setupSteps: []mockSetupFunc_DeleteUserService{
-				step1TenantOk_CannotImpersonate,
-				step2NeverCalled,
-			},
-			expectedError: identity.ErrUnauthorizedAccess,
-			expectedUser:  user.User{},
-		},
 		{
 			name:  "(Tenant Admin) Fail (step 1 auth): unauthorized access",
 			input: inputWith(unauthorizedTenantAdminRequester),

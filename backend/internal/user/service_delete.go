@@ -8,8 +8,6 @@ import (
 // Delete User ====================================================================================
 /*
 	Servizio di eliminazione utente.
-
-	Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
 */
 type DeleteUserService struct {
 	deleteUserPort DeleteUserPort
@@ -77,8 +75,8 @@ func (service *DeleteUserService) DeleteTenantAdmin(cmd DeleteTenantAdminCommand
 
 	// Controlla autorizzazione tenant
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
-	if !superAdminAccess && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) {    //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin()                            //nolint:staticcheck
+	if !superAdminAccess && !cmd.Requester.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 

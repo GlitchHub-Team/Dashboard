@@ -3,6 +3,7 @@ package user
 import (
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
+
 	// "errors"
 
 	"github.com/google/uuid"
@@ -20,8 +21,6 @@ type SendConfirmAccountEmailPort interface {
 
 /*
 Servizio di creazione utente.
-
-Possibile miglioria: Validare l'input, non affidandosi a validazione in controller
 */
 type CreateUserService struct {
 	createUserPort          SaveUserPort
@@ -117,8 +116,8 @@ func (service *CreateUserService) CreateTenantAdmin(cmd CreateTenantAdminCommand
 
 	// Controlla autorizzazione tenant
 	// NOTA: rimosso static check per chiarezza
-	superAdminAccess := cmd.Requester.IsSuperAdmin() && tenantFound.CanImpersonate //nolint:staticcheck
-	if !superAdminAccess && !cmd.CanTenantAdminAccess(cmd.TenantId) {              //nolint:staticcheck
+	superAdminAccess := cmd.Requester.IsSuperAdmin()                  //nolint:staticcheck
+	if !superAdminAccess && !cmd.CanTenantAdminAccess(cmd.TenantId) { //nolint:staticcheck
 		return User{}, identity.ErrUnauthorizedAccess
 	}
 

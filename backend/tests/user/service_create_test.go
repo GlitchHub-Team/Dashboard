@@ -603,6 +603,18 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 			expectedUser:  expectedUser,
 		},
 		{
+			name:  "(Super Admin) Success: impersonation fail",
+			input: inputWith(superAdminRequester),
+			setupSteps: []mockSetupFunc_CreateUserService{
+				step1TenantOk_CannotImpersonate,
+				step2CreateUserOk,
+				step3CreateTokenOk,
+				step4SendEmailOk,
+			},
+			expectedError: nil,
+			expectedUser:  expectedUser,
+		},
+		{
 			name:  "(Tenant Admin) Success: authorized, OK",
 			input: inputWith(authorizedTenantAdminRequester),
 			setupSteps: []mockSetupFunc_CreateUserService{
@@ -636,16 +648,6 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 		},
 
 		// Step 1: test autorizzazione
-		{
-			name:  "(Super Admin) Fail (step 1): impersonation fail",
-			input: inputWith(superAdminRequester),
-			setupSteps: []mockSetupFunc_CreateUserService{
-				step1TenantOk_CannotImpersonate,
-				step3NeverCalled,
-			},
-			expectedError: identity.ErrUnauthorizedAccess,
-			expectedUser:  user.User{},
-		},
 		{
 			name:  "(Tenant Admin) Fail (step 1): unauthorized access",
 			input: inputWith(unauthorizedTenantAdminRequester),
