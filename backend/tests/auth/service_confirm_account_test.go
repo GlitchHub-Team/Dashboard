@@ -105,9 +105,16 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	expectedTokenHash := "hash"
 	// targetWrongToken := "token456"
 
-	expectedTokenObj := auth.ConfirmAccountToken{
+	expectedTokenObj_TenantAdmin := auth.ConfirmAccountToken{
 		Token:      expectedTokenHash,
 		TenantId:   &targetTenantId,
+		ExpiryDate: targetExpiryDate,
+		UserId:     targetUserId,
+	}
+
+	expectedTokenObj_SuperAdmin := auth.ConfirmAccountToken{
+		Token:      expectedTokenHash,
+		TenantId:   nil,
 		ExpiryDate: targetExpiryDate,
 		UserId:     targetUserId,
 	}
@@ -117,6 +124,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 		mockSecretHasher *cryptoMocks.MockSecretHasher,
 		mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort,
 		mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call
 
 	// test case
@@ -132,16 +140,16 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 
 	// - Tenant Member
 	step1GetTokenOk_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
-			Return(expectedTokenObj, nil).
+			Return(expectedTokenObj_TenantAdmin, nil).
 			Times(1)
 	}
 
 	step1GetTokenExpired_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
@@ -151,7 +159,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 
 	errMockStep1 := errors.New("unexpected error 1")
 	step1GetTokenError_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
@@ -161,16 +169,16 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 
 	// - Super Admin
 	step1GetTokenOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetSuperAdminConfirmAccountToken(targetCorrectToken).
-			Return(expectedTokenObj, nil).
+			Return(expectedTokenObj_SuperAdmin, nil).
 			Times(1)
 	}
 
 	step1GetTokenExpired_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetSuperAdminConfirmAccountToken(targetCorrectToken).
@@ -179,7 +187,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	}
 
 	step1GetTokenError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetSuperAdminConfirmAccountToken(targetCorrectToken).
@@ -191,57 +199,57 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 
 	// - Tenant Member
 	step2GetUserOk_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
-		return mockConfirmTokenPort.EXPECT().
-			GetTenantMemberByConfirmAccountToken(targetTenantId, targetCorrectToken).
+		return mockGetUserPort.EXPECT().
+			GetUser(&targetTenantId, targetUserId).
 			Return(expectedTenantUser, nil).
 			Times(1)
 	}
 
 	errMockStep2 := errors.New("unexpected error 2")
 	step2GetUserError_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
-		return mockConfirmTokenPort.EXPECT().
-			GetTenantMemberByConfirmAccountToken(targetTenantId, targetCorrectToken).
+		return mockGetUserPort.EXPECT().
+			GetUser(&targetTenantId, targetUserId).
 			Return(user.User{}, errMockStep2).
 			Times(1)
 	}
 
 	step2GetConfirmedUser_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
-		return mockConfirmTokenPort.EXPECT().
-			GetTenantMemberByConfirmAccountToken(targetTenantId, targetCorrectToken).
+		return mockGetUserPort.EXPECT().
+			GetUser(&targetTenantId, targetUserId).
 			Return(expectedAlreadyConfirmedTenantMember, errMockStep2).
 			Times(1)
 	}
 
 	// - Super Admin
 	step2GetUserOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
-		return mockConfirmTokenPort.EXPECT().
-			GetSuperAdminByConfirmAccountToken(targetCorrectToken).
+		return mockGetUserPort.EXPECT().
+			GetUser(nil, targetUserId).
 			Return(expectedSuperAdmin, nil).
 			Times(1)
 	}
 
 	step2GetUserError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
-		return mockConfirmTokenPort.EXPECT().
-			GetSuperAdminByConfirmAccountToken(targetCorrectToken).
+		return mockGetUserPort.EXPECT().
+			GetUser(nil, targetUserId).
 			Return(user.User{}, errMockStep2).
 			Times(1)
 	}
 
 	step2GetConfirmedUser_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
-		return mockConfirmTokenPort.EXPECT().
-			GetSuperAdminByConfirmAccountToken(targetCorrectToken).
+		return mockGetUserPort.EXPECT().
+			GetUser(nil, targetUserId).
 			Return(expectedAlreadyConfirmedSuperAdmin, errMockStep2).
 			Times(1)
 	}
@@ -249,7 +257,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	// Step 3: crea hash ------------------------------------------------------------
 	errMockStep3 := errors.New("unexpected error in step 3")
 	step3CreateHashOk := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			HashSecret(targetNewPassword).
@@ -258,7 +266,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	}
 
 	step3CreateHashError := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockSecretHasher.EXPECT().
 			HashSecret(targetNewPassword).
@@ -268,7 +276,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 
 	// Step 4: imposta campi utente ------------------------------------------------------------
 	step4SaveUserOk_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedTenantUser).
@@ -278,7 +286,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 
 	errMockStep4 := errors.New("unexpected error in step 4")
 	step4SaveUserError_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedTenantUser).
@@ -287,7 +295,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	}
 
 	step4SaveUserOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedSuperAdmin).
@@ -296,7 +304,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 	}
 
 	step4SaveUserError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockSaveUserPort.EXPECT().
 			SaveUser(targetConfirmedSuperAdmin).
@@ -304,68 +312,25 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 			Times(1)
 	}
 
-	// step4SaveUserNeverCalled := func(
-	// 	mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
-	// ) *gomock.Call {
-	// 	return mockSaveUserPort.EXPECT().
-	// 		SaveUser(gomock.Any()).
-	// 		Times(0)
-	// }
-
 	// Step 5: elimina token -----------------------------------------------------------------------
 	step5DeleteTokenOk := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
-			DeleteConfirmAccountToken(expectedTokenObj).
+			DeleteConfirmAccountToken(gomock.AssignableToTypeOf(expectedTokenObj_TenantAdmin)).
 			Return(nil).
 			Times(1)
 	}
 
 	err5MockStep := errors.New("unexpected error in step 5")
-
 	step5DeleteTokenError := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
-			DeleteConfirmAccountToken(expectedTokenObj).
+			DeleteConfirmAccountToken(gomock.AssignableToTypeOf(expectedTokenObj_TenantAdmin)).
 			Return(err5MockStep).
 			Times(1)
 	}
-
-	// input_tenantUser := auth.LoginUserCommand{
-	// 	TenantId: &targetTenantId,
-	// 	Email:    targetUserEmail,
-	// 	Password: targetCorrectPassword,
-	// 	Role:     identity.ROLE_TENANT_USER,
-	// }
-
-	// input_tenantAdmin := auth.LoginUserCommand{
-	// 	TenantId: &targetTenantId,
-	// 	Email:    targetUserEmail,
-	// 	Password: targetCorrectPassword,
-	// 	Role:     identity.ROLE_TENANT_ADMIN,
-	// }
-
-	// input_superAdmin := auth.LoginUserCommand{
-	// 	TenantId: &targetTenantId,
-	// 	Email:    targetUserEmail,
-	// 	Password: targetCorrectPassword,
-	// 	Role:     identity.ROLE_SUPER_ADMIN,
-	// }
-
-	// input_noRole := auth.LoginUserCommand{
-	// 	TenantId: &targetTenantId,
-	// 	Email:    targetUserEmail,
-	// 	Password: targetCorrectPassword,
-	// }
-
-	// input_wrongPassword := auth.LoginUserCommand{
-	// 	TenantId: &targetTenantId,
-	// 	Email:    targetUserEmail,
-	// 	Password: targetWrongPassword,
-	// 	Role:     identity.ROLE_TENANT_USER,
-	// }
 
 	baseInput_TenantMember := auth.ConfirmAccountCommand{
 		TenantId:    &targetTenantId,
@@ -589,13 +554,14 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
 			mockTokenPort := mocks.NewMockConfirmAccountTokenPort(mockController)
 			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
+			mockGetUserPort := userMocks.NewMockGetUserPort(mockController)
 
 			// Slice con chiamate da eseguire
 			var expectedCalls []any // NOTA: Dovrebbe essere []*gomock.Call, però il compilatore non accetta
 
 			// Collezione le chiamate per questo test case
 			for _, step := range tc.setupSteps {
-				call := step(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
+				call := step(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort, mockGetUserPort)
 				if call != nil {
 					expectedCalls = append(expectedCalls, call)
 				}
@@ -607,7 +573,7 @@ func TestConfirmAccountService_ConfirmAccount(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			service := auth.NewConfirmUserAccountService(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
+			service := auth.NewConfirmUserAccountService(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort, mockGetUserPort)
 
 			// Esegui funzione in oggetto
 			loggedUser, err := service.ConfirmAccount(tc.input)
@@ -643,6 +609,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 		mockSecretHasher *cryptoMocks.MockSecretHasher,
 		mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort,
 		mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call
 
 	type testCase struct {
@@ -656,7 +623,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 
 	// - Tenant Member
 	stepGetTokenOk_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
@@ -665,7 +632,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 	}
 
 	stepGetTokenExpired_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
@@ -675,7 +642,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 
 	errMockGetToken := errors.New("unexpected database error")
 	stepGetTokenError_TenantMember := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetTenantConfirmAccountToken(targetTenantId, targetCorrectToken).
@@ -687,7 +654,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 
 	// - Super Admin
 	stepGetTokenOk_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetSuperAdminConfirmAccountToken(targetCorrectToken).
@@ -696,7 +663,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 	}
 
 	stepGetTokenExpired_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetSuperAdminConfirmAccountToken(targetCorrectToken).
@@ -705,7 +672,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 	}
 
 	stepGetTokenError_SuperAdmin := func(
-		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort,
+		mockLogger *zap.Logger, mockSecretHasher *cryptoMocks.MockSecretHasher, mockConfirmTokenPort *mocks.MockConfirmAccountTokenPort, mockSaveUserPort *userMocks.MockSaveUserPort, mockGetUserPort *userMocks.MockGetUserPort,
 	) *gomock.Call {
 		return mockConfirmTokenPort.EXPECT().
 			GetSuperAdminConfirmAccountToken(targetCorrectToken).
@@ -776,11 +743,12 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 			mockHasher := cryptoMocks.NewMockSecretHasher(mockController)
 			mockTokenPort := mocks.NewMockConfirmAccountTokenPort(mockController)
 			mockSaveUserPort := userMocks.NewMockSaveUserPort(mockController)
+			mockGetUserPort := userMocks.NewMockGetUserPort(mockController)
 
 			var expectedCalls []any
 
 			for _, step := range tc.setupSteps {
-				call := step(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
+				call := step(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort, mockGetUserPort)
 				if call != nil {
 					expectedCalls = append(expectedCalls, call)
 				}
@@ -790,7 +758,7 @@ func TestConfirmAccountService_VerifyConfirmAccountToken(t *testing.T) {
 				gomock.InOrder(expectedCalls...)
 			}
 
-			service := auth.NewConfirmUserAccountService(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort)
+			service := auth.NewConfirmUserAccountService(mockLogger, mockHasher, mockTokenPort, mockSaveUserPort, mockGetUserPort)
 
 			err := service.VerifyConfirmAccountToken(tc.input)
 
