@@ -69,7 +69,7 @@ func NewGatewayResponseDTO(gateway Gateway) gatewayResponseDTO {
 }
 
 func NewGatewayListResponseDTO(gatewayList []Gateway, total uint) gatewayListResponseDTO {
-	var gatewayDtos []gatewayResponseDTO
+	gatewayDtos := make([]gatewayResponseDTO, 0)
 
 	for _, gateway := range gatewayList {
 		gatewayDtos = append(gatewayDtos, NewGatewayResponseDTO(gateway))
