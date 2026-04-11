@@ -308,7 +308,8 @@ func TestService_GetTenant(t *testing.T) {
 	superAdminRequester := identity.Requester{RequesterUserId: 1, RequesterRole: identity.ROLE_SUPER_ADMIN}
 	authorizedTenantAdmin := identity.Requester{RequesterUserId: 2, RequesterTenantId: &targetTenantID, RequesterRole: identity.ROLE_TENANT_ADMIN}
 	unauthorizedTenantAdmin := identity.Requester{RequesterUserId: 3, RequesterTenantId: &otherTenantID, RequesterRole: identity.ROLE_TENANT_ADMIN}
-	tenantUserRequester := identity.Requester{RequesterUserId: 4, RequesterTenantId: &targetTenantID, RequesterRole: identity.ROLE_TENANT_USER}
+	authorizedTenantUser := identity.Requester{RequesterUserId: 4, RequesterTenantId: &targetTenantID, RequesterRole: identity.ROLE_TENANT_USER}
+	unauthorizedTenantUser := identity.Requester{RequesterUserId: 5, RequesterTenantId: &otherTenantID, RequesterRole: identity.ROLE_TENANT_USER}
 
 	targetTenant := tenant.Tenant{Id: targetTenantID, Name: "Tenant A", CanImpersonate: true}
 	errMock := newMockError(3)
@@ -388,8 +389,21 @@ func TestService_GetTenant(t *testing.T) {
 			expectedErr: identity.ErrUnauthorizedAccess,
 		},
 		{
+			name:  "(Tenant User) Success: same tenant",
+			input: tenant.GetTenantCommand{Requester: authorizedTenantUser, TenantId: targetTenantID},
+			setupSteps: []helper.ServiceMockSetupFunc[tenantServiceMockBundle]{
+				func(m tenantServiceMockBundle) *gomock.Call {
+					return m.getTenantPort.EXPECT().
+						GetTenant(targetTenantID).
+						Return(targetTenant, nil).
+						Times(1)
+				},
+			},
+			expectedOut: targetTenant,
+		},
+		{
 			name:  "(Tenant User) Fail: unauthorized",
-			input: tenant.GetTenantCommand{Requester: tenantUserRequester, TenantId: targetTenantID},
+			input: tenant.GetTenantCommand{Requester: unauthorizedTenantUser, TenantId: targetTenantID},
 			setupSteps: []helper.ServiceMockSetupFunc[tenantServiceMockBundle]{
 				func(m tenantServiceMockBundle) *gomock.Call {
 					return m.getTenantPort.EXPECT().

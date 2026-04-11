@@ -103,7 +103,7 @@ func (service *TenantService) GetTenant(cmd GetTenantCommand) (Tenant, error) {
 		return Tenant{}, ErrTenantNotFound
 	}
 
-	if !cmd.IsSuperAdmin() && !cmd.CanTenantAdminAccess(tenant.Id) {
+	if !cmd.IsSuperAdmin() && !cmd.CanTenantAdminAccess(tenant.Id) && !cmd.CanTenantUserAccess(tenant.Id) {
 		return Tenant{}, identity.ErrUnauthorizedAccess
 	}
 

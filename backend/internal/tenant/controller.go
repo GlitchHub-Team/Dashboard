@@ -155,7 +155,7 @@ func (controller *Controller) GetTenant(ctx *gin.Context) {
 	}
 
 	var bodyDto GetTenantDTO
-	if err := ctx.ShouldBindJSON(&bodyDto); err != nil {
+	if err := ctx.ShouldBindUri(&bodyDto); err != nil {
 		if !transportHttp.ValidationError(ctx, err) {
 			transportHttp.RequestError(ctx, err)
 		}
