@@ -1,6 +1,6 @@
 // mocks/sensor-historic-mock.service.ts
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, throwError, switchMap, timer } from 'rxjs';
+import { Observable, of, delay, throwError, switchMap, timer, range } from 'rxjs';
 import { ChartRequest } from '../models/chart/chart-request.model';
 import { HistoricResponse, HistoricSample } from '../models/sensor-data/historic-response.model';
 import { TimeInterval } from '../models/chart/time-interval.model';
@@ -12,6 +12,7 @@ import { ApiError } from '../models/api-error.model';
 export class SensorHistoricMockService {
   private readonly DEFAULT_HOURS = 24;
   private readonly shouldFailGetHistoricData = false;
+  public samplesPerSecond = 250;
 
   getHistoricData(req: ChartRequest): Observable<HistoricResponse> {
     if (this.shouldFailGetHistoricData) {
@@ -98,7 +99,7 @@ export class SensorHistoricMockService {
    */
   private generateEcgWaveform(secondIndex: number): number[] {
     const waveform: number[] = [];
-    const samplesPerSecond = 250;
+    const samplesPerSecond = this.samplesPerSecond;
 
     for (let i = 0; i < samplesPerSecond; i++) {
       const t = i / samplesPerSecond; // 0.0 -> 1.0 within this second

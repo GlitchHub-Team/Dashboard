@@ -20,6 +20,7 @@ class StubHistoricChart {
   readings = input<SensorReading[]>();
   sensor = input<Sensor>();
   fields = input<FieldDescriptor[]>();
+  samplesPerPacket = input<number | undefined>();
 }
 
 @Component({ selector: 'app-real-time-chart', template: '', standalone: true })
@@ -88,6 +89,7 @@ describe('ChartContainerComponent (Unit)', () => {
       loading: loadingSig,
       connectionStatus: connectionStatusSig,
       error: errorSig,
+      samplesPerPacket: signal<number | undefined>(undefined),
       startChart: vi.fn(),
       stopChart: vi.fn(),
     };

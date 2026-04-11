@@ -39,6 +39,7 @@ export class ChartContainerComponent implements OnDestroy {
   protected readonly connectionStatus = this.chartService.connectionStatus;
   protected readonly error = this.chartService.error;
   protected readonly fields = this.chartService.fields;
+  protected readonly samplesPerPacket = this.chartService.samplesPerPacket;
 
   protected readonly isHistoricChart = computed(() => {
     return this.chartRequest().chartType === ChartType.HISTORIC;

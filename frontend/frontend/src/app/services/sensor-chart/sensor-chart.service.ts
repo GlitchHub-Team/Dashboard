@@ -13,6 +13,9 @@ import { ChartRequest } from '../../models/chart/chart-request.model';
 import { ChartType } from '../../models/chart/chart-type.enum';
 import { ApiError } from '../../models/api-error.model';
 import { SENSOR_MAX_LIVE_READINGS } from '../../models/chart/sensor-visible-points.model';
+import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
+
+const ECG_LIVE_WINDOW_SECONDS = 2;
 
 @Injectable({
   providedIn: 'root',
@@ -25,6 +28,7 @@ export class SensorChartService {
   private historicAdapter: SensorHistoricAdapter | null = null;
   private liveAdapter: SensorLiveReadingAdapter | null = null;
   private maxLiveReadings = 50;
+  private isEcgLive = false;
 
   private subscription: Subscription | null = null;
 
@@ -36,6 +40,7 @@ export class SensorChartService {
     'connected' | 'connecting' | 'disconnected' | 'reconnecting'
   >('disconnected');
   private readonly _error = signal<string | null>(null);
+  private readonly _samplesPerPacket = signal<number | undefined>(undefined);
 
   public readonly historicReadings = this._historicReadings.asReadonly();
   public readonly liveReadings = this._liveReadings.asReadonly();
@@ -43,6 +48,7 @@ export class SensorChartService {
   public readonly loading = this._loading.asReadonly();
   public readonly connectionStatus = this._connectionStatus.asReadonly();
   public readonly error = this._error.asReadonly();
+  public readonly samplesPerPacket = this._samplesPerPacket.asReadonly();
 
   public startChart(req: ChartRequest): void {
     this.reset();
@@ -54,6 +60,7 @@ export class SensorChartService {
     } else {
       this.liveAdapter = this.adapterFactory.createLiveAdapter(req.sensor.profile);
       this._fields.set(this.liveAdapter.fields);
+      this.isEcgLive = req.sensor.profile === SensorProfiles.CUSTOM_ECG_SERVICE;
       this.maxLiveReadings = SENSOR_MAX_LIVE_READINGS[req.sensor.profile] ?? 50;
       this.startLiveReadingsChart(req);
     }
@@ -73,6 +80,7 @@ export class SensorChartService {
       next: (response) => {
         const historicData = this.historicAdapter!.fromResponse(response);
         this._historicReadings.set(historicData.readings);
+        this._samplesPerPacket.set(historicData.samplesPerPacket);
       },
       error: (err: ApiError) => {
         this._error.set(err.message ?? 'Failed to load historic data');
@@ -102,6 +110,10 @@ export class SensorChartService {
           this._connectionStatus.set('connected');
           this._error.set(null);
           const readings = this.liveAdapter!.fromDTO(raw);
+          if (this.isEcgLive && this._samplesPerPacket() === undefined) {
+            this._samplesPerPacket.set(readings.length);
+            this.maxLiveReadings = Math.round(readings.length * ECG_LIVE_WINDOW_SECONDS);
+          }
           this._liveReadings.update((current) => {
             const updated = [...current, ...readings];
             return updated.length > this.maxLiveReadings
@@ -127,6 +139,8 @@ export class SensorChartService {
     this._loading.set(false);
     this._connectionStatus.set('disconnected');
     this._error.set(null);
+    this._samplesPerPacket.set(undefined);
+    this.isEcgLive = false;
     this.historicAdapter = null;
     this.liveAdapter = null;
   }

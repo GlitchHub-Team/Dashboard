@@ -36,6 +36,7 @@ export class HistoricChartComponent {
   public readings = input.required<SensorReading[]>();
   public sensor = input.required<Sensor>();
   public fields = input.required<FieldDescriptor[]>();
+  public samplesPerPacket = input<number | undefined>(undefined);
 
   protected readonly selectedField = signal<string>('');
 
@@ -56,9 +57,13 @@ export class HistoricChartComponent {
     () => this.sensor().profile === SensorProfiles.CUSTOM_ECG_SERVICE,
   );
 
-  protected readonly visiblePoints = computed(
-    () => SENSOR_VISIBLE_POINTS[this.sensor().profile] ?? 50,
-  );
+  protected readonly visiblePoints = computed(() => {
+    const profile = this.sensor().profile;
+    if (profile === SensorProfiles.CUSTOM_ECG_SERVICE) {
+      return this.samplesPerPacket() ?? SENSOR_VISIBLE_POINTS[profile] ?? 50;
+    }
+    return SENSOR_VISIBLE_POINTS[profile] ?? 50;
+  });
   protected readonly offset = signal(0);
 
   protected readonly maxOffset = computed(() =>

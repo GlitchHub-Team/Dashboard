@@ -15,6 +15,7 @@ export class SensorRealTimeMockService {
 
   private readonly shouldFailConnection = false;
   private readonly shouldDisconnectAfter = 0;
+  public samplesPerSecond = 250;
 
   connect(req: ChartRequest): Observable<RealTimeReading> {
     this.readingCount = 0;
@@ -77,7 +78,7 @@ export class SensorRealTimeMockService {
 
   private generateEcgWaveform(): number[] {
     const waveform: number[] = [];
-    const samplesPerSecond = 250;
+    const samplesPerSecond = this.samplesPerSecond;
 
     for (let i = 0; i < samplesPerSecond; i++) {
       const t = i / samplesPerSecond;

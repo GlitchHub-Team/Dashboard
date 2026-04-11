@@ -25,10 +25,13 @@ export class EcgHistoricAdapter extends SensorHistoricAdapter {
       }
     }
 
+    const firstWaveform = response.samples[0]?.data['Waveform'] as number[] | undefined;
+
     return {
       dataCount: readings.length,
       readings,
       fields: this.fields,
+      samplesPerPacket: firstWaveform?.length,
     };
   }
 }

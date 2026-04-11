@@ -139,6 +139,15 @@ describe('HistoricChartComponent', () => {
       expect(component['visiblePoints']()).toBe(ECG_VP);
     });
 
+    it('should use samplesPerPacket for ECG when provided', () => {
+      fixture.componentRef.setInput('readings', createReadings(5, 'ecg', 100));
+      fixture.componentRef.setInput('sensor', createSensor({ profile: SensorProfiles.CUSTOM_ECG_SERVICE }));
+      fixture.componentRef.setInput('fields', ECG_FIELDS);
+      fixture.componentRef.setInput('samplesPerPacket', 500);
+      fixture.detectChanges();
+      expect(component['visiblePoints']()).toBe(500);
+    });
+
     it('should fallback to 50 for unknown sensor profile', () => {
       setup(
         createReadings(5, 'bpm', 70),

@@ -43,6 +43,7 @@ function createChartServiceMock() {
     loading: signal(false),
     connectionStatus: signal<ConnectionStatus>('disconnected'),
     error: signal<string | null>(null),
+    samplesPerPacket: signal<number | undefined>(undefined),
     startChart: vi.fn(),
     stopChart: vi.fn(),
   };

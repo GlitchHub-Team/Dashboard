@@ -27,7 +27,7 @@
         }
 
         @if (isHistoricChart() && historicReadings().length > 0) {
-          <app-historic-chart [readings]="historicReadings()" [sensor]="chartRequest()!.sensor" [fields]="fields()" />
+          <app-historic-chart [readings]="historicReadings()" [sensor]="chartRequest()!.sensor" [fields]="fields()" [samplesPerPacket]="samplesPerPacket()" />
         }
 
         @if (isLiveChart() && liveReadings().length > 0) {

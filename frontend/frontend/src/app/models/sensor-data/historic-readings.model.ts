@@ -5,4 +5,5 @@ export interface HistoricReadings {
   dataCount: number;
   readings: SensorReading[];
   fields: FieldDescriptor[];
+  samplesPerPacket?: number;
 }
