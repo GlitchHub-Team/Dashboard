@@ -52,11 +52,12 @@ func NewGinEngine(
 	}
 
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{config.AppURL, "*"},
-		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowOrigins:     []string{config.AppURL,},
+		AllowMethods:     []string{"GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
+		AllowWebSockets:  true,
 	}
 
 	router.Use(cors.New(corsConfig))
