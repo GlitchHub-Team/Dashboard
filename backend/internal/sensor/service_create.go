@@ -39,7 +39,7 @@ func NewCreateSensorService(
 
 func (s *CreateSensorService) CreateSensor(cmd CreateSensorCommand) (Sensor, error) {
 	// Controllo che il gateway esista
-	gat, err := s.getGatewayPort.GetById(cmd.GatewayId.String())
+	gat, err := s.getGatewayPort.GetById(cmd.GatewayId)
 	if err != nil {
 		return Sensor{}, err
 	}

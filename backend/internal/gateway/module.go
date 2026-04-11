@@ -37,6 +37,7 @@ var Module = fx.Module(
 			fx.As(new(GetGatewayUseCase)),
 			fx.As(new(GetAllGatewaysUseCase)),
 			fx.As(new(GetGatewaysByTenantUseCase)),
+			fx.As(new(GetGatewayByTenantIDUseCase)),
 		),
 
 		fx.Annotate(

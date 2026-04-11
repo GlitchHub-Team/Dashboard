@@ -159,7 +159,7 @@ func (m *MockGetGatewayPort) EXPECT() *MockGetGatewayPortMockRecorder {
 }
 
 // GetById mocks base method.
-func (m *MockGetGatewayPort) GetById(gatewayId string) (gateway.Gateway, error) {
+func (m *MockGetGatewayPort) GetById(gatewayId uuid.UUID) (gateway.Gateway, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetById", gatewayId)
 	ret0, _ := ret[0].(gateway.Gateway)
@@ -171,6 +171,21 @@ func (m *MockGetGatewayPort) GetById(gatewayId string) (gateway.Gateway, error) 
 func (mr *MockGetGatewayPortMockRecorder) GetById(gatewayId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockGetGatewayPort)(nil).GetById), gatewayId)
+}
+
+// GetGatewayByTenantID mocks base method.
+func (m *MockGetGatewayPort) GetGatewayByTenantID(tenantId, gatewayId uuid.UUID) (gateway.Gateway, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGatewayByTenantID", tenantId, gatewayId)
+	ret0, _ := ret[0].(gateway.Gateway)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGatewayByTenantID indicates an expected call of GetGatewayByTenantID.
+func (mr *MockGetGatewayPortMockRecorder) GetGatewayByTenantID(tenantId, gatewayId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGatewayByTenantID", reflect.TypeOf((*MockGetGatewayPort)(nil).GetGatewayByTenantID), tenantId, gatewayId)
 }
 
 // MockGetGatewaysPort is a mock of GetGatewaysPort interface.
@@ -198,31 +213,33 @@ func (m *MockGetGatewaysPort) EXPECT() *MockGetGatewaysPortMockRecorder {
 }
 
 // GetAll mocks base method.
-func (m *MockGetGatewaysPort) GetAll() ([]gateway.Gateway, error) {
+func (m *MockGetGatewaysPort) GetAll(page, limit int) ([]gateway.Gateway, uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAll")
+	ret := m.ctrl.Call(m, "GetAll", page, limit)
 	ret0, _ := ret[0].([]gateway.Gateway)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetAll indicates an expected call of GetAll.
-func (mr *MockGetGatewaysPortMockRecorder) GetAll() *gomock.Call {
+func (mr *MockGetGatewaysPortMockRecorder) GetAll(page, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockGetGatewaysPort)(nil).GetAll))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockGetGatewaysPort)(nil).GetAll), page, limit)
 }
 
 // GetByTenantId mocks base method.
-func (m *MockGetGatewaysPort) GetByTenantId(tenantId string) ([]gateway.Gateway, error) {
+func (m *MockGetGatewaysPort) GetByTenantId(tenantId uuid.UUID, page, limit int) ([]gateway.Gateway, uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByTenantId", tenantId)
+	ret := m.ctrl.Call(m, "GetByTenantId", tenantId, page, limit)
 	ret0, _ := ret[0].([]gateway.Gateway)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetByTenantId indicates an expected call of GetByTenantId.
-func (mr *MockGetGatewaysPortMockRecorder) GetByTenantId(tenantId any) *gomock.Call {
+func (mr *MockGetGatewaysPortMockRecorder) GetByTenantId(tenantId, page, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByTenantId", reflect.TypeOf((*MockGetGatewaysPort)(nil).GetByTenantId), tenantId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByTenantId", reflect.TypeOf((*MockGetGatewaysPort)(nil).GetByTenantId), tenantId, page, limit)
 }

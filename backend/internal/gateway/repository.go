@@ -46,20 +46,11 @@ func NewGatewayPostgreRepository(log *zap.Logger, db clouddb.CloudDBConnection) 
 	}
 }
 
-type GatewayRepository interface {
-	SaveGateway(entity *GatewayEntity) error
-	DeleteGateway(entity *GatewayEntity) error
-	GetGatewayById(gatewayId string) (Gateway, error)
-	GetGatewaysByTenantId(tenantId string) ([]Gateway, error)
-	GetAllGateways() ([]Gateway, error)
-	CreateGateway(entity *GatewayEntity) (Gateway, error)
-}
-
 // methods ============================================================================================
 
 func GatewayEntityToDomain(entity *GatewayEntity) (Gateway, error) {
 	if entity == nil {
-		return Gateway{}, nil
+		return Gateway{}, errors.New("entity is nil")
 	}
 
 	gatewayId, err := uuid.Parse(entity.ID)
@@ -144,8 +135,23 @@ func (repo *gatewayPostgreRepository) DeleteGateway(entity *GatewayEntity) error
 	return nil
 }
 
+func (repo *gatewayPostgreRepository) GetGatewayByTenantID(tenantId string, gatewayId string) (GatewayEntity, error) {
+	var gatewayEntity GatewayEntity
+	db := (*gorm.DB)(repo.db)
+	err := db.
+		Where("tenant_id = ? AND id = ?", tenantId, gatewayId).
+		First(&gatewayEntity).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return GatewayEntity{}, ErrGatewayNotFound
+		}
+		return GatewayEntity{}, err
+	}
+	return gatewayEntity, nil
+}
+
 // TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
-func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway, error) {
+func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (GatewayEntity, error) {
 	var entity GatewayEntity
 	db := (*gorm.DB)(repo.db)
 	err := db.
@@ -154,52 +160,63 @@ func (repo *gatewayPostgreRepository) GetGatewayById(gatewayId string) (Gateway,
 		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return Gateway{}, ErrGatewayNotFound
+		return GatewayEntity{}, ErrGatewayNotFound
 	}
 	if err != nil {
-		return Gateway{}, err
+		return GatewayEntity{}, err
 	}
-
-	gateway, err := GatewayEntityToDomain(&entity)
-	return gateway, err
+	return entity, err
 }
 
 // TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
-func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string) ([]Gateway, error) {
+func (repo *gatewayPostgreRepository) GetGatewaysByTenantId(tenantId string, offset int, limit int) ([]GatewayEntity, uint, error) {
 	var entities []GatewayEntity
+	var count int64
+
 	db := (*gorm.DB)(repo.db)
-	err := db.Where("tenant_id = ?", tenantId).Find(&entities).Error
+
+	baseQuery := db.
+		Where("tenant_id = ?", tenantId)
+
+	err := baseQuery.Offset(offset).Limit(limit).Find(&entities).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	gateways := make([]Gateway, len(entities))
-	for i, entity := range entities {
-		gateways[i], err = GatewayEntityToDomain(&entity)
-		if err != nil {
-			return nil, err
-		}
+	err = baseQuery.
+		Count(&count).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return gateways, nil
+	return entities, uint(count), err
 }
 
 // TODO: hexagonal sbagliato, repo non può ritornare classi di dominio
-func (repo *gatewayPostgreRepository) GetAllGateways() ([]Gateway, error) {
+func (repo *gatewayPostgreRepository) GetAllGateways(offset int, limit int) ([]GatewayEntity, uint, error) {
 	var entities []GatewayEntity
+	var totalCount int64
 	db := (*gorm.DB)(repo.db)
-	err := db.Find(&entities).Error
-	if err != nil {
-		return nil, err
+
+	if err := db.Model(&GatewayEntity{}).Count(&totalCount).Error; err != nil {
+		return nil, 0, err
 	}
-	gateways := make([]Gateway, len(entities))
-	for i, entity := range entities {
-		gateways[i], err = GatewayEntityToDomain(&entity)
-		if err != nil {
-			return nil, err
-		}
+
+	if err := db.Offset(offset).Limit(limit).Find(&entities).Error; err != nil {
+		return nil, 0, err
 	}
-	return gateways, nil
+
+	return entities, uint(totalCount), nil
+}
+
+type GatewayRepository interface {
+	SaveGateway(entity *GatewayEntity) error
+	CreateGateway(entity *GatewayEntity) (Gateway, error)
+	DeleteGateway(entity *GatewayEntity) error
+	GetGatewayById(gatewayId string) (GatewayEntity, error)
+	GetGatewaysByTenantId(tenantId string, offset int, limit int) ([]GatewayEntity, uint, error)
+	GetAllGateways(offset int, limit int) ([]GatewayEntity, uint, error)
+	GetGatewayByTenantID(tenantId string, gatewayId string) (GatewayEntity, error)
 }
 
 var _ GatewayRepository = (*gatewayPostgreRepository)(nil)

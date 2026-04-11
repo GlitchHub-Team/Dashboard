@@ -108,7 +108,7 @@ func TestService_CommissionGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.getTenantPort.EXPECT().GetTenant(tenantID).Return(tenant.Tenant{}, nil).Times(1)
@@ -136,7 +136,7 @@ func TestService_CommissionGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.getTenantPort.EXPECT().GetTenant(tenantID).Return(activeTenant, nil).Times(1)
@@ -180,7 +180,7 @@ func TestService_DecommissionGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(uncommissioned, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(uncommissioned, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				m.gatewayCommandPort.EXPECT().SendDecommission(gomock.Any()).Times(0)
@@ -201,7 +201,7 @@ func TestService_DecommissionGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(commissionedGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(commissionedGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendDecommission(gatewayID).Return(natsErr).Times(1)
@@ -219,7 +219,7 @@ func TestService_DecommissionGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(commissionedGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(commissionedGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendDecommission(gatewayID).Return(nil).Times(1)
@@ -265,7 +265,7 @@ func TestService_ResetGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				m.gatewayCommandPort.EXPECT().SendReset(gomock.Any()).Times(0)
@@ -286,7 +286,7 @@ func TestService_ResetGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendReset(gatewayID).Return(natsErr).Times(1)
@@ -304,7 +304,7 @@ func TestService_ResetGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendReset(gatewayID).Return(nil).Times(1)
@@ -340,7 +340,7 @@ func TestService_RebootGateway(t *testing.T) {
 		natsErr := errors.New("nats reboot failed")
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendReboot(gatewayID).Return(natsErr).Times(1)
@@ -357,7 +357,7 @@ func TestService_RebootGateway(t *testing.T) {
 		cmd := gateway.RebootGatewayCommand{GatewayId: gatewayID, Requester: requesterSuperAdmin()}
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(baseGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(baseGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendReboot(gatewayID).Return(nil).Times(1)
@@ -391,7 +391,7 @@ func TestService_InterruptGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(inactiveGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(inactiveGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				m.gatewayCommandPort.EXPECT().SendInterrupt(gomock.Any()).Times(0)
@@ -411,7 +411,7 @@ func TestService_InterruptGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(activeGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(activeGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				m.gatewayCommandPort.EXPECT().SendInterrupt(gomock.Any()).Times(0)
@@ -432,7 +432,7 @@ func TestService_InterruptGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(activeGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(activeGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendInterrupt(gatewayID).Return(natsErr).Times(1)
@@ -450,7 +450,7 @@ func TestService_InterruptGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(activeGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(activeGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendInterrupt(gatewayID).Return(nil).Times(1)
@@ -487,7 +487,7 @@ func TestService_ResumeGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(activeGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(activeGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				m.gatewayCommandPort.EXPECT().SendResume(gomock.Any()).Times(0)
@@ -508,7 +508,7 @@ func TestService_ResumeGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(inactiveGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(inactiveGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendResume(gatewayID).Return(natsErr).Times(1)
@@ -526,7 +526,7 @@ func TestService_ResumeGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(inactiveGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(inactiveGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendResume(gatewayID).Return(nil).Times(1)
@@ -649,7 +649,7 @@ func TestService_DeleteGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(gateway.Gateway{}, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(gateway.Gateway{}, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				m.gatewayCommandPort.EXPECT().SendDeleteGateway(gomock.Any()).Times(0)
@@ -669,7 +669,7 @@ func TestService_DeleteGateway(t *testing.T) {
 
 		service := setupGatewayCommandService(t, []mockSetupFuncGatewayCommandService{
 			func(m gatewayCommandServiceMocks) *gomock.Call {
-				return m.getGatewayPort.EXPECT().GetById(gatewayID.String()).Return(oldGateway, nil).Times(1)
+				return m.getGatewayPort.EXPECT().GetById(gatewayID).Return(oldGateway, nil).Times(1)
 			},
 			func(m gatewayCommandServiceMocks) *gomock.Call {
 				return m.gatewayCommandPort.EXPECT().SendDeleteGateway(gatewayID).Return(nil).Times(1)
