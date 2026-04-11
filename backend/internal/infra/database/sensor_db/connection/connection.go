@@ -1,4 +1,4 @@
-package sensordb
+package connection
 
 import (
 	"context"

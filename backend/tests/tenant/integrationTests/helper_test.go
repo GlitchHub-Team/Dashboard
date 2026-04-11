@@ -1,12 +1,14 @@
 package tenant_integration_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"backend/internal/auth"
+	"backend/internal/infra/database/schema"
 	"backend/internal/tenant"
 	"backend/internal/user"
 	"backend/tests/helper"
@@ -153,4 +155,86 @@ func CheckResponseBodyContains(t *testing.T, values ...string) helper.Integratio
 
 func tenantPath(tenantID uuid.UUID) string {
 	return "/api/v1/tenant/" + tenantID.String()
+}
+
+func checkTenantSchema(t *testing.T, db *gorm.DB, tenantId string, exists bool) bool {
+	t.Helper()
+
+	schemaName := schema.GetSchemaName(tenantId)
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Errorf("cannot get db.DB(): %v", err)
+		return false
+	}
+
+	var count int64
+	row := sqlDB.QueryRow(`SELECT COUNT(*) num from pg_namespace where nspname = $1`, schemaName)
+	err = row.Scan(&count)
+	if err != nil {
+		t.Errorf("error scanning result: %v", err)
+		return false
+	}
+
+	if exists && count != 1 {
+		t.Errorf("Schema '%v' not found", schemaName)
+		return false
+	}
+
+	if !exists && count != 0 {
+		t.Errorf("Schema '%v' not expected, but found", schemaName)
+		return false
+	}
+
+	return true
+}
+
+func CheckCloudDbTenantSchema_CheckBody(t *testing.T, exists bool) helper.IntegrationTestCheck {
+	t.Helper()
+	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
+		db := (*gorm.DB)(deps.SensorDB)
+		bytes := respRecorder.Body.Bytes()
+
+		dto := tenant.TenantResponseDTO{}
+		err := json.Unmarshal(bytes, &dto)
+		if err != nil {
+			t.Errorf("Cannot unmarshal response: %v", err)
+			return false
+		}
+
+		return checkTenantSchema(t, db, dto.TenantId, exists)
+	}
+}
+
+func CheckSensorDbTenantSchema_CheckBody(t *testing.T, exists bool) helper.IntegrationTestCheck {
+	t.Helper()
+	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
+		db := (*gorm.DB)(deps.SensorDB)
+		bytes := respRecorder.Body.Bytes()
+
+		dto := tenant.TenantResponseDTO{}
+		err := json.Unmarshal(bytes, &dto)
+		if err != nil {
+			t.Errorf("Cannot unmarshal response: %v", err)
+			return false
+		}
+
+		return checkTenantSchema(t, db, dto.TenantId, exists)
+	}
+}
+
+func CheckCloudDbTenantSchema(t *testing.T, tenantId string, exists bool) helper.IntegrationTestCheck {
+	t.Helper()
+	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
+		db := (*gorm.DB)(deps.SensorDB)
+		return checkTenantSchema(t, db, tenantId, exists)
+	}
+}
+
+func CheckSensorDbTenantSchema(t *testing.T, tenantId string, exists bool) helper.IntegrationTestCheck {
+	t.Helper()
+	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
+		db := (*gorm.DB)(deps.SensorDB)
+		return checkTenantSchema(t, db, tenantId, exists)
+	}
 }

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"backend/internal/historical_data"
-	sensordb "backend/internal/infra/database/sensor_db"
+	sensordb "backend/internal/infra/database/sensor_db/connection"
 	"backend/internal/shared/identity"
 	"backend/internal/tenant"
 	tenantmocks "backend/tests/tenant/mocks"

@@ -50,6 +50,8 @@ func TestCreateTenantIntegration(t *testing.T) {
 			WantResponseBody: successTenantName,
 			ResponseChecks: []helper.IntegrationTestCheck{
 				CheckTenantInsertedByName(t, successTenantName, true),
+				CheckCloudDbTenantSchema_CheckBody(t, true),
+				CheckSensorDbTenantSchema_CheckBody(t, true),
 			},
 			PostSetups: []helper.IntegrationTestPostSetup{
 				PostSetupDeleteTenantByName(t, successTenantName),
@@ -70,6 +72,8 @@ func TestCreateTenantIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				CheckNoTenantByName(t, missingJWTTenantName),
+				CheckCloudDbTenantSchema_CheckBody(t, false),
+				CheckSensorDbTenantSchema_CheckBody(t, false),
 			},
 			PostSetups: []helper.IntegrationTestPostSetup{},
 		},
@@ -88,6 +92,8 @@ func TestCreateTenantIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(identity.ErrUnauthorizedAccess),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				CheckNoTenantByName(t, unauthorizedTenantName),
+				CheckCloudDbTenantSchema_CheckBody(t, false),
+				CheckSensorDbTenantSchema_CheckBody(t, false),
 			},
 			PostSetups: []helper.IntegrationTestPostSetup{},
 		},
@@ -121,6 +127,8 @@ func TestCreateTenantIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantAlreadyExists),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				CheckTenantExistsByID(t, duplicateTenantID),
+				CheckCloudDbTenantSchema_CheckBody(t, false),
+				CheckSensorDbTenantSchema_CheckBody(t, false),
 			},
 			PostSetups: []helper.IntegrationTestPostSetup{
 				integration.PostSetupDeleteTenant(t, duplicateTenantID),

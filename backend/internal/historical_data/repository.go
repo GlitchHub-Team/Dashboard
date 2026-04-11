@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	sensordb "backend/internal/infra/database/sensor_db"
+	sensorDbConn "backend/internal/infra/database/sensor_db/connection"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -14,12 +14,12 @@ import (
 
 type historicalDataTimescaleRepository struct {
 	log *zap.Logger
-	db  sensordb.SensorDBConnection
+	db  sensorDbConn.SensorDBConnection
 }
 
 func newHistoricalDataTimescaleRepository(
 	log *zap.Logger,
-	db sensordb.SensorDBConnection,
+	db sensorDbConn.SensorDBConnection,
 ) *historicalDataTimescaleRepository {
 	return &historicalDataTimescaleRepository{
 		log: log,
