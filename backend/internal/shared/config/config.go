@@ -125,7 +125,7 @@ func ReadConfigFromEnv(log *zap.Logger) (*Config, error) {
 			missingFields = append(missingFields, envKey)
 			continue
 		}
-		
+
 		// Inserisci in envDict se NON trovo già
 		if !inEnvFile {
 			envDict[envKey] = value
