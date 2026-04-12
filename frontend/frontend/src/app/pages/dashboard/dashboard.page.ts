@@ -75,6 +75,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   // Utilizzato solo quando si fa impersonation di un tenant da SUPER_ADMIN, altrimenti è null e viene ignorato
   protected readonly activeTenantId = signal<string | null>(null);
+  protected readonly activeTenantName = signal<string | null>(null);
 
   // In base al tenant impersonato mostra la rispettiva dashboard
   // Altrimenti se non si è SUPER_ADMIN mostra la dashboard del tenant dell'utente
@@ -89,10 +90,12 @@ export class DashboardPage implements OnInit, OnDestroy {
               return;
             }
             this.activeTenantId.set(tenantId);
+            this.activeTenantName.set(tenant.name);
             this.dashboardService.loadDashboard(tenantId);
           });
         } else {
           this.activeTenantId.set(null);
+          this.activeTenantName.set(null);
           this.dashboardService.loadDashboard(undefined);
         }
       });
@@ -142,7 +145,6 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-  // TODO: aggiungere tenantId alla ChartRequest
   protected onChartOpen(request: ChartRequest): void {
     const requestWithTenantId = {
       ...request,

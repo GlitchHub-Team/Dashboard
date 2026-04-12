@@ -73,6 +73,7 @@ export class UserManagerPage implements OnInit {
   protected readonly currentRole = this.userSession.currentUser()!.role;
   protected readonly currentUserId = this.userSession.currentUser()!.userId;
   protected readonly activeTenantId = signal<string | null>(null);
+  protected readonly activeTenantName = signal<string | null>(null);
   protected readonly activeTabIndex = signal<number>(0);
 
   protected readonly showMemberTabs = computed(
@@ -97,7 +98,10 @@ export class UserManagerPage implements OnInit {
               this.router.navigate(['/user-management/tenant-users']);
               return;
             }
+            this.activeTenantName.set(tenant.name);
           });
+        } else {
+          this.activeTenantName.set(null);
         }
 
         const resolvedTenantId =

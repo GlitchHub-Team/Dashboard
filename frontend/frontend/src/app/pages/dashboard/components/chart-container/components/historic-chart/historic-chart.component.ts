@@ -1,4 +1,3 @@
-// historic-chart.component.ts
 import { Component, computed, effect, input, signal } from '@angular/core';
 import { Chart, registerables, ChartData, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';

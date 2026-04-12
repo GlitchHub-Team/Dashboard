@@ -48,7 +48,7 @@ export class UserFormDialogComponent {
   protected readonly tenantList = signal<Tenant[]>([]);
   protected readonly UserRole = UserRole;
 
-  // Indica se sto creando Tenant Admin?
+  // Indica se sto creando Tenant Admin
   private get isTenantAdminRole(): boolean {
     return this.data.role === UserRole.TENANT_ADMIN;
   }

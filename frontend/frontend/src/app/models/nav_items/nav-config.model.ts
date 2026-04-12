@@ -7,6 +7,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'settings',
     route: '/gateway-management',
     permission: Permission.GATEWAY_MANAGEMENT,
+    sectionTitle: 'Amministrazione Sistema',
   },
   {
     label: 'Gestione Tenant',
@@ -38,6 +39,8 @@ export const NAV_ITEMS: NavItem[] = [
     route: '/dashboard',
     permission: Permission.DASHBOARD_ACCESS,
     separator: true,
+    sectionTitle: 'Impersonificazione Tenant',
+    tenantSectionTitle: 'Generale',
   },
   {
     label: 'Gestione Tenant User',

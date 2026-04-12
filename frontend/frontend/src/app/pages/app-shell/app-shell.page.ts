@@ -58,7 +58,13 @@ export class AppShellPage {
       }
       const permissions = Array.isArray(item.permission) ? item.permission : [item.permission];
       return this.permissionService.canAny(permissions);
-    }).map((item) => (item.separator && !isSuperAdmin ? { ...item, separator: false } : item));
+    }).map((item) => {
+      const mapped = item.separator && !isSuperAdmin ? { ...item, separator: false } : { ...item };
+      if (!isSuperAdmin && item.tenantSectionTitle) {
+        mapped.sectionTitle = item.tenantSectionTitle;
+      }
+      return mapped;
+    });
   });
 
   // Logout non richiede campi da passare

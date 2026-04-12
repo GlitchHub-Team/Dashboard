@@ -49,3 +49,13 @@ nav {
 mat-divider {
   margin: 8px 0;
 }
+
+.nav-section-title {
+  display: block;
+  padding: 8px 20px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
