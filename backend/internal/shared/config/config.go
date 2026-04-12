@@ -28,16 +28,16 @@ type Config struct {
 	// Crypto ===========================================================================
 
 	// Fattore di costo per algoritmo bcrypt
-	BcryptCost stringInt `json:"BCRYPT_COST"`
+	BcryptCost StringInt `json:"BCRYPT_COST"`
 
 	// Lunghezza in byte di un token di sicurezza
-	TokenLength stringInt `json:"TOKEN_LENGTH"`
+	TokenLength StringInt `json:"TOKEN_LENGTH"`
 
 	// Durata di un token di sicurezza in secondi
-	TokenDuration stringInt `json:"TOKEN_DURATION"`
+	TokenDuration StringInt `json:"TOKEN_DURATION"`
 
 	// Durata di un token di autenticazione in secondi
-	AuthTokenDuration stringInt `json:"AUTH_TOKEN_DURATION"`
+	AuthTokenDuration StringInt `json:"AUTH_TOKEN_DURATION"`
 
 	/*
 		Secret per fare firma di token di autenticazione.
@@ -50,7 +50,7 @@ type Config struct {
 	// Cloud DB =========================================================================
 
 	CloudDBHost     string    `json:"CLOUD_POSTGRES_HOST"`     // Host del Cloud DB
-	CloudDBPort     stringInt `json:"CLOUD_POSTGRES_PORT"`     // Porta del Cloud DB
+	CloudDBPort     StringInt `json:"CLOUD_POSTGRES_PORT"`     // Porta del Cloud DB
 	CloudDBUser     string    `json:"CLOUD_POSTGRES_USER"`     // Nome utente per accedere a Cloud DB
 	CloudDBPassword string    `json:"CLOUD_POSTGRES_PASSWORD"` // Password per accedere a Cloud DB
 	CloudDBName     string    `json:"CLOUD_POSTGRES_DB"`       // Nome del Cloud DB
@@ -59,7 +59,7 @@ type Config struct {
 	// Sensor DB =========================================================================
 
 	SensorDBHost     string    `json:"POSTGRES_HOST"`     // Host del Sensor DB
-	SensorDBPort     stringInt `json:"POSTGRES_PORT"`     // Porta del Sensor DB
+	SensorDBPort     StringInt `json:"POSTGRES_PORT"`     // Porta del Sensor DB
 	SensorDBUser     string    `json:"POSTGRES_USER"`     // Nome utente per accedere a Sensor DB
 	SensorDBPassword string    `json:"POSTGRES_PASSWORD"` // Password per accedere a Sensor DB
 	SensorDBName     string    `json:"POSTGRES_DB"`       // Nome del Sensor DB
@@ -68,31 +68,31 @@ type Config struct {
 	// SMTP =========================================================================
 
 	SMTPHost string    `json:"SMTP_HOST"` // Hostname dell'URL SMTP
-	SMTPPort stringInt `json:"SMTP_PORT"` // Numero porta URL SMTP
+	SMTPPort StringInt `json:"SMTP_PORT"` // Numero porta URL SMTP
 	SMTPUser string    `json:"SMTP_USER"` // Nome utente SMTP
 	SMTPPass string    `json:"SMTP_PASS"` // Password SMTP
 	SMTPFrom string    `json:"SMTP_FROM"` // Indirizzo email da cui inviare email tramite SMTP
 }
 
-type stringInt int
+type StringInt int
 
-func (st *stringInt) UnmarshalJSON(b []byte) error {
+func (st *StringInt) UnmarshalJSON(b []byte) error {
 	var item any
 	if err := json.Unmarshal(b, &item); err != nil {
 		return err
 	}
 	switch v := item.(type) {
 	case int:
-		*st = stringInt(v)
+		*st = StringInt(v)
 	case float64:
-		*st = stringInt(int(v))
+		*st = StringInt(int(v))
 	case string:
 		// here convert the string into an integer
 		i, err := strconv.Atoi(v)
 		if err != nil {
 			return err // caso in cui stringa non è intero
 		}
-		*st = stringInt(i)
+		*st = StringInt(i)
 	}
 	return nil
 }

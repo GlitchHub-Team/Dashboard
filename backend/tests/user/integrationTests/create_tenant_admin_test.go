@@ -73,6 +73,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckTenantMemberInserted(validEmail, tenantID.String()),
 				integration.CheckCountTenantConfirmAccountTokens(t, tenantID.String(), 1),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", true),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -99,6 +100,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckTenantMemberInserted(validEmail, tenantID.String()),
 				integration.CheckCountTenantConfirmAccountTokens(t, tenantID.String(), 1),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", true),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -120,6 +122,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenantMember("unauth@t.test", tenantID.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -141,6 +144,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenantMember("baduser@t.test", tenantID.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -162,6 +166,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: "error",
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenant("invalid-uuid"),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -183,6 +188,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: "error",
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenantMember("", tenantID.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -203,6 +209,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenantMember("nt@t.test", missingTenantId.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: nil,
@@ -222,6 +229,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenantMember("mismatch@t.test", tenantID.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -249,6 +257,7 @@ func TestCreateTenantAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(user.ErrUserAlreadyExists),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckTenantMemberInserted(existingEmail, tenantID.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{

@@ -2,6 +2,9 @@ package integration
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+	"time"
 	"net/http/httptest"
 
 	"backend/internal/user"
@@ -76,5 +79,39 @@ func CheckSuperAdminInserted(email string) helper.IntegrationTestCheck {
 			Model(&user.SuperAdminEntity{}).Where("email = ?", email).
 			Count(&count)
 		return count == 1
+	}
+}
+
+func CheckSMTPMessageForToken(t *testing.T, tokenType string, exists bool) helper.IntegrationTestCheck {
+	t.Helper()
+	return func(respRecorder *httptest.ResponseRecorder, deps helper.IntegrationTestDeps) bool {
+		messages, err := deps.MockSMTPServer.WaitForMessagesAndPurge(1, 50*time.Millisecond)
+		if err != nil {
+			if exists {
+				t.Errorf("error waiting for SMTP messages: %v", err)
+				return false
+			} else {
+				return true
+			}
+		}
+
+		lineEndingRe := regexp.MustCompile(`=\s*\n`)
+		contentEncodingRe := regexp.MustCompile(`Content-Transfer-Encoding: quoted-printable`)
+		tokenRe := regexp.MustCompile(
+			fmt.Sprintf(
+				`/%v/[\d\w-_]+(\?tid=[0-9a-fA-F-]+)?`, tokenType,
+			),
+		)
+
+		message := messages[0]
+		body := message.MsgRequest()
+
+		// Handle quoted-printable
+		if contentEncodingRe.MatchString(body) {
+			body = lineEndingRe.ReplaceAllString(body, "")
+		}
+
+		// Check token
+		return tokenRe.MatchString(body)
 	}
 }

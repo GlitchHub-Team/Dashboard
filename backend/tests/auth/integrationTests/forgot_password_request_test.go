@@ -164,6 +164,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: "",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckTenantForgotPasswordTokenExistsForUser(t, tenantIdStr, *tenantUserId),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", true),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
 			PostSetupDeleteTenantForgotPasswordTokensForUser(t, tenantIdStr, *tenantUserId),
@@ -185,6 +186,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: "",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckSuperAdminForgotPasswordTokenExistsForUser(t, tenantIdStr, *tenantUserId),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", true),
 		},
 		PostSetups: []helper.IntegrationTestPostSetup{
 			PostSetupDeleteSuperAdminForgotPasswordTokensForUser(t, tenantIdStr, *tenantUserId),
@@ -204,6 +206,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: "error",
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckNoTenantForgotPasswordTokenForUser(t, tenantIdStr, *tenantUserId),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", false),
 		},
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
@@ -222,6 +225,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckNoTenantForgotPasswordTokenForUser(t, tenantIdStr, *tenantUserId),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", false),
 		},
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
@@ -240,6 +244,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: helper.ErrJsonString(user.ErrUserNotFound),
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckNoSuperAdminForgotPasswordTokenForUser(t, *superAdminId),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", false),
 		},
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
@@ -258,6 +263,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: helper.ErrJsonString(auth.ErrAccountNotConfirmed),
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckNoTenantForgotPasswordTokenForUser(t, tenantIdStr, *tenantUserId_NotConfirmed),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", false),
 		},
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
@@ -276,6 +282,7 @@ func TestRequestForgotPasswordTokenIntegration(t *testing.T) {
 		WantResponseBody: helper.ErrJsonString(auth.ErrAccountNotConfirmed),
 		ResponseChecks: []helper.IntegrationTestCheck{
 			CheckNoSuperAdminForgotPasswordTokenForUser(t, *superAdminId_NotConfirmed),
+			integration.CheckSMTPMessageForToken(t, "forgot_password", false),
 		},
 
 		PostSetups: []helper.IntegrationTestPostSetup{},
