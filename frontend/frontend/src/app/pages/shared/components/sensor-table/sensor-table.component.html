@@ -55,7 +55,6 @@
         <button
           mat-icon-button
           matTooltip="Historic Chart"
-          [disabled]="gatewayStatus() === GatewayStatus.INACTIVE"
           (click)="onViewChart(sensor, ChartType.HISTORIC)"
         >
           <mat-icon>query_stats</mat-icon>
