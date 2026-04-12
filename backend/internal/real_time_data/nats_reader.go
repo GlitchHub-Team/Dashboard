@@ -1,6 +1,9 @@
 package real_time_data
 
 import (
+	"sync"
+	"time"
+
 	sensorProfile "backend/internal/sensor/profile"
 
 	"github.com/nats-io/nats.go"
@@ -27,12 +30,38 @@ func newConcreteRealTimeDataNATSReader(nc *nats.Conn) *concreteRealTimeDataNATSR
 	}
 }
 
+type lastTimestampContainer struct {
+	mu    sync.Mutex
+	value time.Time
+}
+
+/*
+Fa controllo thread-safe (usando mutex) su newTime rispetto a t.value: se newTime è più recente di t.value, allora
+imposta newTime a t.value e ritorna true, altrimenti ritorna false
+*/
+func (t *lastTimestampContainer) CompareAndSet(newTime time.Time) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	// t.value < newTime => non sono fuori ordine
+	if t.value.Before(newTime) {
+		t.value = newTime
+		return true
+	}
+
+	return false
+}
+
 func (reader *concreteRealTimeDataNATSReader) StartSubscriber(
 	subject string,
 	profile sensorProfile.SensorProfile,
 	receivingChannel chan RealTimeSample,
 	errorChannel chan RealTimeError,
 ) error {
+	lastTimestamp := lastTimestampContainer{
+		value: time.Now(),
+	}
+
 	sub, err := reader.nc.Subscribe(subject, func(msg *nats.Msg) {
 		sample, err := MapNATSRawToDomain(profile, msg.Data)
 		if err != nil {
@@ -40,7 +69,9 @@ func (reader *concreteRealTimeDataNATSReader) StartSubscriber(
 			return
 		}
 
-		receivingChannel <- sample
+		if lastTimestamp.CompareAndSet(sample.GetTimestamp()) {
+			receivingChannel <- sample
+		}
 	})
 	defer sub.Unsubscribe() //nolint:errcheck
 
