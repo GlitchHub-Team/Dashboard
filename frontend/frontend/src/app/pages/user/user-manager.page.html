@@ -32,7 +32,7 @@
           placeholder="Seleziona un Tenant"
         >
           @for (tenant of tenants(); track tenant.id) {
-            <mat-option [value]="tenant.id">{{ tenant.name }}</mat-option>
+            <mat-option [value]="tenant.id">{{ tenant.name }} ({{ tenant.id }})</mat-option>
           }
         </mat-select>
       </mat-form-field>

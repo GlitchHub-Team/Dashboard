@@ -112,12 +112,6 @@ function getTableRows(fixture: ComponentFixture<UserManagerPage>): HTMLElement[]
   return fixture.nativeElement.querySelectorAll('mat-row');
 }
 
-function getHeaderCells(fixture: ComponentFixture<UserManagerPage>): string[] {
-  return Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('mat-header-cell')).map(
-    (h) => h.textContent?.trim() ?? '',
-  );
-}
-
 function getDeleteButtons(fixture: ComponentFixture<UserManagerPage>): HTMLButtonElement[] {
   return Array.from(fixture.nativeElement.querySelectorAll('mat-cell button[color="warn"]'));
 }
@@ -148,7 +142,6 @@ describe('UserManagerPage (Integration)', () => {
       ).map((c) => c.textContent?.trim());
       expect(cellTexts).toContain('alice');
       expect(cellTexts).toContain('alice@test.com');
-      expect(cellTexts).toContain('tenant-1');
     });
 
     it('should show spinner when loading and empty state when idle with no users', () => {
@@ -170,30 +163,6 @@ describe('UserManagerPage (Integration)', () => {
       expect(emptyState).toBeTruthy();
       expect(emptyState.textContent).toContain('Nessun utente disponibile');
     });
-
-    it.each([
-      ['show', tenantAdminSession, tenantAdminContext, true],
-      [
-        'hide',
-        superAdminSession,
-        { title: 'Gestione Super Admin', role: UserRole.SUPER_ADMIN },
-        false,
-      ],
-    ] as const)(
-      'should %s tenantId column based on role',
-      (_label, session, routeContext, visible) => {
-        const { fixture, userServiceMock } = setupTestBed({ session, routeContext });
-        (userServiceMock.userList as WritableSignal<User[]>).set(mockUsers);
-        fixture.detectChanges();
-
-        const headers = getHeaderCells(fixture);
-        if (visible) {
-          expect(headers).toContain('Tenant ID');
-        } else {
-          expect(headers).not.toContain('Tenant ID');
-        }
-      },
-    );
 
     it('should pass pagination signals to table and render paginator', () => {
       const { fixture, userServiceMock } = setupTestBed({

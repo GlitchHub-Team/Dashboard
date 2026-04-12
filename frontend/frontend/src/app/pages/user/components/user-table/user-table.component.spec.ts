@@ -99,7 +99,6 @@ describe('UserTableComponent (Unit)', () => {
 
     it('should render user values in table cells', () => {
       setInput('loading', false);
-      setInput('targetRole', UserRole.TENANT_ADMIN);
 
       const cellTexts = fixture.debugElement
         .queryAll(By.css('mat-cell'))
@@ -107,7 +106,6 @@ describe('UserTableComponent (Unit)', () => {
 
       expect(cellTexts).toEqual(expect.arrayContaining(['alice', 'bob']));
       expect(cellTexts).toEqual(expect.arrayContaining(['alice@example.com', 'bob@example.com']));
-      expect(cellTexts).toEqual(expect.arrayContaining(['tenant-1', 'tenant-2']));
     });
   });
 

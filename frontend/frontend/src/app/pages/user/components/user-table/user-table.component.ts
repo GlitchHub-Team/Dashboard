@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,17 +34,7 @@ export class UserTableComponent {
   public readonly currentUserId = input<string>();
   public readonly currentUserRole = input<UserRole>();
 
-  protected readonly displayedColumns = computed(() => {
-    const cols: string[] = ['username', 'email'];
-
-    if (this.targetRole() !== UserRole.SUPER_ADMIN) {
-      cols.push('tenantId');
-    }
-
-    cols.push('actions');
-
-    return cols;
-  });
+  protected readonly displayedColumns = ['username', 'email', 'actions'];
 
   protected onDelete(user: User): void {
     this.deleteRequested.emit(user);
