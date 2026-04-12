@@ -31,7 +31,7 @@ func newConcreteRealTimeDataNATSReader(nc *nats.Conn) *concreteRealTimeDataNATSR
 }
 
 type lastTimestampContainer struct {
-	mu sync.Mutex
+	mu    sync.Mutex
 	value time.Time
 }
 
@@ -43,6 +43,7 @@ func (t *lastTimestampContainer) CompareAndSet(newTime time.Time) bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
+	// t.value < newTime => non sono fuori ordine
 	if t.value.Before(newTime) {
 		t.value = newTime
 		return true
