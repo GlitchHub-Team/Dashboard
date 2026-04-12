@@ -237,7 +237,7 @@ func TestGatewayController_GetAllGateways(t *testing.T) {
 			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetAllGatewaysUseCase]{
 				useCaseOk,
 			},
-			ExpectedStatus: http.StatusOK,
+			ExpectedStatus:   http.StatusOK,
 			ExpectedResponse: gateway.NewGatewayListResponseDTO(gateways, uint(7)),
 		},
 		{
@@ -254,6 +254,35 @@ func TestGatewayController_GetAllGateways(t *testing.T) {
 			ExpectedResponse: gin.H{
 				"error": transportHttp.ErrMissingIdentity.Error(),
 			},
+		},
+		{
+			Name:      "400 Bad Request: query validation error",
+			Method:    "GET",
+			Url:       "/gateway?page=0&limit=10",
+			InputDto:  struct{}{},
+			Requester: requester,
+			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetAllGatewaysUseCase]{
+				useCaseNeverCalled,
+			},
+			ExpectedStatus: http.StatusBadRequest,
+			ExpectedResponse: gin.H{
+				"error": "invalid format",
+				"fields": gin.H{
+					"page": "min",
+				},
+			},
+		},
+		{
+			Name:      "400 Bad Request: query parse error",
+			Method:    "GET",
+			Url:       "/gateway?page=abc&limit=10",
+			InputDto:  struct{}{},
+			Requester: requester,
+			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetAllGatewaysUseCase]{
+				useCaseNeverCalled,
+			},
+			ExpectedStatus:   http.StatusBadRequest,
+			ExpectedResponse: helper.HasError{},
 		},
 		{
 			Name:      "500 Server Error",
@@ -329,6 +358,9 @@ func TestGatewayController_GetGatewaysByTenant(t *testing.T) {
 	useCaseNotFound := func(mockUC *mocks.MockGetGatewaysByTenantUseCase) *gomock.Call {
 		return mockUC.EXPECT().GetGatewaysByTenant(gomock.Eq(expectedCommand)).Return(nil, uint(0), gateway.ErrGatewayNotFound).Times(1)
 	}
+	useCaseUnauthorized := func(mockUC *mocks.MockGetGatewaysByTenantUseCase) *gomock.Call {
+		return mockUC.EXPECT().GetGatewaysByTenant(gomock.Eq(expectedCommand)).Return(nil, uint(0), identity.ErrUnauthorizedAccess).Times(1)
+	}
 	errMock := errors.New("get gateways by tenant failed")
 	useCaseUnexpectedErr := func(mockUC *mocks.MockGetGatewaysByTenantUseCase) *gomock.Call {
 		return mockUC.EXPECT().GetGatewaysByTenant(gomock.Eq(expectedCommand)).Return(nil, uint(0), errMock).Times(1)
@@ -346,7 +378,7 @@ func TestGatewayController_GetGatewaysByTenant(t *testing.T) {
 			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetGatewaysByTenantUseCase]{
 				useCaseOk,
 			},
-			ExpectedStatus: http.StatusOK,
+			ExpectedStatus:   http.StatusOK,
 			ExpectedResponse: gateway.NewGatewayListResponseDTO(gateways, uint(1)),
 		},
 		{
@@ -379,6 +411,35 @@ func TestGatewayController_GetGatewaysByTenant(t *testing.T) {
 			},
 		},
 		{
+			Name:      "400 Bad Request: query validation error",
+			Method:    "GET",
+			Url:       "/tenant/" + tenantID.String() + "/gateway?page=0&limit=8",
+			InputDto:  struct{}{},
+			Requester: requester,
+			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetGatewaysByTenantUseCase]{
+				useCaseNeverCalled,
+			},
+			ExpectedStatus: http.StatusBadRequest,
+			ExpectedResponse: gin.H{
+				"error": "invalid format",
+				"fields": gin.H{
+					"page": "min",
+				},
+			},
+		},
+		{
+			Name:      "400 Bad Request: query parse error",
+			Method:    "GET",
+			Url:       "/tenant/" + tenantID.String() + "/gateway?page=abc&limit=8",
+			InputDto:  struct{}{},
+			Requester: requester,
+			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetGatewaysByTenantUseCase]{
+				useCaseNeverCalled,
+			},
+			ExpectedStatus:   http.StatusBadRequest,
+			ExpectedResponse: helper.HasError{},
+		},
+		{
 			Name:      "400 Bad Request: use case returns not found",
 			Method:    "GET",
 			Url:       "/tenant/" + tenantID.String() + "/gateway?page=3&limit=8",
@@ -390,6 +451,20 @@ func TestGatewayController_GetGatewaysByTenant(t *testing.T) {
 			ExpectedStatus: http.StatusBadRequest,
 			ExpectedResponse: gin.H{
 				"error": gateway.ErrGatewayNotFound.Error(),
+			},
+		},
+		{
+			Name:      "401 Unauthorized: use case reports unauthorized access",
+			Method:    "GET",
+			Url:       "/tenant/" + tenantID.String() + "/gateway?page=3&limit=8",
+			InputDto:  struct{}{},
+			Requester: requester,
+			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetGatewaysByTenantUseCase]{
+				useCaseUnauthorized,
+			},
+			ExpectedStatus: http.StatusUnauthorized,
+			ExpectedResponse: gin.H{
+				"error": identity.ErrUnauthorizedAccess.Error(),
 			},
 		},
 		{
@@ -462,6 +537,9 @@ func TestGatewayController_GetGatewayByTenantID(t *testing.T) {
 	}
 	useCaseNotFound := func(mockUC *mocks.MockGetGatewayByTenantIDUseCase) *gomock.Call {
 		return mockUC.EXPECT().GetGatewayByTenantID(gomock.Eq(expectedCommand)).Return(gateway.Gateway{}, gateway.ErrGatewayNotFound).Times(1)
+	}
+	useCaseUnauthorized := func(mockUC *mocks.MockGetGatewayByTenantIDUseCase) *gomock.Call {
+		return mockUC.EXPECT().GetGatewayByTenantID(gomock.Eq(expectedCommand)).Return(gateway.Gateway{}, identity.ErrUnauthorizedAccess).Times(1)
 	}
 	errMock := errors.New("get gateway by tenant failed")
 	useCaseUnexpectedErr := func(mockUC *mocks.MockGetGatewayByTenantIDUseCase) *gomock.Call {
@@ -546,6 +624,20 @@ func TestGatewayController_GetGatewayByTenantID(t *testing.T) {
 			ExpectedStatus: http.StatusBadRequest,
 			ExpectedResponse: gin.H{
 				"error": gateway.ErrGatewayNotFound.Error(),
+			},
+		},
+		{
+			Name:      "401 Unauthorized: use case reports unauthorized access",
+			Method:    "GET",
+			Url:       "/tenant/" + tenantID.String() + "/gateway/" + gatewayID.String(),
+			InputDto:  struct{}{},
+			Requester: requester,
+			SetupSteps: []helper.MockUseCaseSetupFunc[mocks.MockGetGatewayByTenantIDUseCase]{
+				useCaseUnauthorized,
+			},
+			ExpectedStatus: http.StatusUnauthorized,
+			ExpectedResponse: gin.H{
+				"error": identity.ErrUnauthorizedAccess.Error(),
 			},
 		},
 		{
