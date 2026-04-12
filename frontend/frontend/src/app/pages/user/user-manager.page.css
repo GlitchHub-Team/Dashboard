@@ -55,6 +55,16 @@
 
 .tenant-select-field {
   min-width: 280px;
+  margin-bottom: -1.25em;
+}
+
+.tenant-id-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 8px 16px;
+  border-radius: 16px;
 }
 
 .tab-switcher {
