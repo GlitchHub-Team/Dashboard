@@ -36,6 +36,11 @@
       <mat-cell *matCellDef="let sensor">{{ sensor.status | uppercase }}</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="dataInterval">
+      <mat-header-cell *matHeaderCellDef>Intervallo (ms)</mat-header-cell>
+      <mat-cell *matCellDef="let sensor">{{ sensor.dataInterval }}</mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="commands">
       <mat-header-cell *matHeaderCellDef>Comandi</mat-header-cell>
       <mat-cell *matCellDef="let sensor">

@@ -62,10 +62,10 @@ export class GatewayTableComponent {
   public readonly gatewayPageChange = output<PageEvent>();
   public readonly sensorPageChange = output<PageEvent>();
 
-  private readonly columns = ['id', 'tenantId', 'name', 'status', 'commands'];
+  private readonly columns = ['id', 'tenantId', 'name', 'status', 'interval', 'commands'];
   protected readonly displayedColumns = computed(() => {
     if (this.actionMode() === 'manage') {
-      return ['id', 'tenantId', 'name', 'status', 'publicKey', 'commands', 'delete'];
+      return ['id', 'tenantId', 'name', 'status', 'interval', 'publicKey', 'commands', 'delete'];
     }
     return this.columns;
   });
