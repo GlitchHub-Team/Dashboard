@@ -96,8 +96,8 @@ func (repo *TenantPostgreRepository) SaveTenant(entity *TenantEntity) error {
 		return err
 	}
 
-	// Crea schema in sensor db
-	err = repo.sensorDbMigrator.CreateTenantSchema(entity.ID)
+	// Migra sensor db
+	err = repo.sensorDbMigrator.MigrateTenantSchema(entity.ID)
 	if err != nil {
 		return err
 	}
