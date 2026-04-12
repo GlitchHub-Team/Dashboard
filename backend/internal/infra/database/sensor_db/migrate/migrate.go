@@ -1,10 +1,11 @@
 package migrate
 
 import (
+	"fmt"
+
 	"backend/internal/infra/database/schema"
 	"backend/internal/infra/database/sensor_db/connection"
 	"backend/internal/shared/config"
-	"fmt"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"

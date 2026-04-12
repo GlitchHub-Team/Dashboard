@@ -18,9 +18,11 @@ import (
 	sharedCrypto "backend/internal/shared/crypto"
 
 	"github.com/gin-gonic/gin"
+	smtpmock "github.com/mocktools/go-smtp-mock/v2"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 /*
@@ -32,7 +34,8 @@ NOTA: Ogni parametro che viene aggiunto deve essere puntatore a un tipo concreto
 type IntegrationTestDeps struct {
 	Ctx context.Context
 
-	Router *gin.Engine
+	Router         *gin.Engine
+	MockSMTPServer *smtpmock.Server
 
 	CloudDB  clouddb.CloudDBConnection
 	SensorDB sensordb.SensorDBConnection
@@ -89,6 +92,12 @@ type IntegrationTestCase struct {
 	PostSetups []IntegrationTestPostSetup
 }
 
+/*
+Imposta un test di integrazione generico.
+
+- Imposta le flag per CloudDBTest e SensorDBTest
+- Imposta un server SMTP mock
+*/
 func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	if testing.Short() {
 		t.Skip("integration test skipped in short mode")
@@ -103,6 +112,16 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	var jwtManager sharedCrypto.AuthTokenManager
 	var secretHasher sharedCrypto.SecretHasher
 	var securityTokenGenerator sharedCrypto.SecurityTokenGenerator
+
+	// Mock SMTP server
+	smtpServer := smtpmock.New(smtpmock.ConfigurationAttr{
+		LogToStdout:       true,
+		LogServerActivity: true,
+	})
+	err := smtpServer.Start()
+	if err != nil {
+		t.Fatalf("cannot start SMTP server: %v", err)
+	}
 
 	app := fx.New(
 		modules.AppModules(),
@@ -120,6 +139,15 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 		fx.Decorate(func(cfg *config.Config) *config.Config {
 			cfg.CloudDBTest = true
 			cfg.SensorDBTest = true
+			// NOTA: i campi rilevanti per cloud e sensor DB verranno impostati automaticamente
+
+			cfg.MailAdapter = "smtp"
+			cfg.SMTPHost = "127.0.0.1"
+			cfg.SMTPPort = config.StringInt(smtpServer.PortNumber())
+			cfg.SMTPUser = ""
+			cfg.SMTPPass = ""
+			cfg.SMTPFrom = "test@m31.com"
+
 			return cfg
 		}),
 
@@ -128,6 +156,21 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 			natsutils.NatsTestCredsPath("../../../"+os.Getenv("TEST_CREDS_PATH")),
 			natsutils.NatsCAPemPath("../../../"+os.Getenv("CA_PEM_PATH")),
 		),
+
+		// Lifecycle SMTP server
+		fx.Invoke(func(lc fx.Lifecycle, log *zap.Logger) error {
+			lc.Append(fx.Hook{
+				OnStart: func(ctx context.Context) (err error) {
+					log.Sugar().Infof("Start SMTP server")
+					return
+				},
+				OnStop: func(ctx context.Context) (err error) {
+					err = smtpServer.Stop()
+					return
+				},
+			})
+			return nil
+		}),
 
 		fx.NopLogger,
 	)
@@ -153,6 +196,7 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	return IntegrationTestDeps{
 		Ctx:                    ctx,
 		Router:                 router,
+		MockSMTPServer:         smtpServer,
 		CloudDB:                cloudDB,
 		SensorDB:               sensorDB,
 		NatsConn:               natsConn,

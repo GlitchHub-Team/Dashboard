@@ -63,6 +63,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckSuperAdminInserted(validEmail),
 				integration.CheckCountSuperAdminConfirmAccountTokens(t, 1),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", true),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -88,6 +89,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoTenantMember("impersonation@t.test", tenantID.String()),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -113,6 +115,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoSuperAdmin("unauthorized@t.test"),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -137,6 +140,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(tenant.ErrTenantNotFound),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoSuperAdmin("unauthorized@t.test"),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -161,6 +165,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(transportHttp.ErrMissingIdentity),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoSuperAdmin("baduser@t.test"),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
@@ -180,6 +185,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: "error",
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckNoSuperAdmin(""),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{},
@@ -205,6 +211,7 @@ func TestCreateSuperAdminIntegration(t *testing.T) {
 			WantResponseBody: helper.ErrJsonString(user.ErrUserAlreadyExists),
 			ResponseChecks: []helper.IntegrationTestCheck{
 				integration.CheckSuperAdminInserted(existingEmail),
+				integration.CheckSMTPMessageForToken(t, "confirm_account", false),
 			},
 
 			PostSetups: []helper.IntegrationTestPostSetup{
