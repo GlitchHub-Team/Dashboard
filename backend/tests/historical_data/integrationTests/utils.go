@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"backend/internal/infra/database/schema"
 	transportDto "backend/internal/infra/transport/http/dto"
 	sensorProfile "backend/internal/sensor/profile"
 	"backend/internal/tenant"
@@ -66,7 +67,7 @@ func preSetupInsertSensorDataRow(
 
 		query := fmt.Sprintf(
 			`INSERT INTO "%s".sensor_data (sensor_id, gateway_id, timestamp, tenant_id, profile, data) VALUES ($1,$2,$3,$4,$5,$6)`,
-			tenantID.String(),
+			schema.GetSchemaName(tenantID.String()),
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -89,7 +90,7 @@ func postSetupDeleteSensorDataRow(
 
 		query := fmt.Sprintf(
 			`DELETE FROM "%s".sensor_data WHERE sensor_id=$1 AND gateway_id=$2 AND timestamp=$3`,
-			tenantID.String(),
+			schema.GetSchemaName(tenantID.String()),
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -179,9 +180,13 @@ func setupHistoricalDataTenantTestContext(
 		return fmt.Errorf("failed to create tenant %v: %v", tenantID, err)
 	}
 
-	if err := sensorDB.Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS "%s"`, tenantID.String())).Error; err != nil {
+	schemaName := schema.GetSchemaName(tenantID.String())
+
+	if err := sensorDB.Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS "%s"`, schemaName)).Error; err != nil {
 		return fmt.Errorf("failed to create tenant schema %v: %v", tenantID, err)
 	}
+
+	
 
 	if err := sensorDB.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS "%s".sensor_data (
@@ -193,7 +198,7 @@ func setupHistoricalDataTenantTestContext(
 			data JSONB NOT NULL,
 			PRIMARY KEY (sensor_id, gateway_id, timestamp)
 		)
-	`, tenantID.String())).Error; err != nil {
+	`, schemaName)).Error; err != nil {
 		return fmt.Errorf("failed to create sensor_data for tenant %v: %v", tenantID, err)
 	}
 
@@ -205,6 +210,6 @@ func cleanupHistoricalDataTenantTestContext(
 	sensorDB *gorm.DB,
 	tenantID uuid.UUID,
 ) {
-	_ = sensorDB.Exec(fmt.Sprintf(`DROP SCHEMA IF EXISTS "%s" CASCADE`, tenantID.String())).Error
+	_ = sensorDB.Exec(fmt.Sprintf(`DROP SCHEMA IF EXISTS "%s" CASCADE`, schema.GetSchemaName(tenantID.String()))).Error
 	_ = cloudDB.Where("id = ?", tenantID.String()).Delete(&tenant.TenantEntity{}).Error
 }
