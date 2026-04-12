@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"backend/internal/infra/database/schema"
 	sensorDbConn "backend/internal/infra/database/sensor_db/connection"
 
 	"github.com/google/uuid"
@@ -85,7 +86,7 @@ func buildHistoricalDataQuery(
 	var query strings.Builder
 
 	query.WriteString(`SELECT sensor_id, gateway_id, tenant_id, profile, timestamp, data FROM "`)
-	query.WriteString(tenantId.String())
+	query.WriteString(schema.GetSchemaName(tenantId.String()))
 	query.WriteString(`".sensor_data WHERE tenant_id = $1 AND sensor_id = $2`)
 
 	args := []any{tenantId, sensorId}
