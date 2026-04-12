@@ -24,7 +24,6 @@ export class TokenStorageService {
     this._isValid.set(false);
   }
 
-  // TODO: Non so se come lo sto facendo ha actually senso
   public isTokenValid(): boolean {
     const token = this.getToken();
     if (!token) {
