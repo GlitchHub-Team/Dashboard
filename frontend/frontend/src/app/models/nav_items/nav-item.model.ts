@@ -6,4 +6,6 @@ export interface NavItem {
   icon: string;
   permission?: Permission | Permission[];
   separator?: boolean;
+  sectionTitle?: string;
+  tenantSectionTitle?: string;
 }

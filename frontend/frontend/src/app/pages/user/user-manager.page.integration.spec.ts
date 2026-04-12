@@ -400,7 +400,7 @@ describe('UserManagerPage (Integration)', () => {
 
       const banner = fixture.nativeElement.querySelector('.tenant-banner');
       expect(banner).toBeTruthy();
-      expect(banner.textContent).toContain('tenant-xyz');
+      expect(banner.textContent).toContain('Mock');
       expect(banner.querySelectorAll('button').length).toBe(2);
     });
 

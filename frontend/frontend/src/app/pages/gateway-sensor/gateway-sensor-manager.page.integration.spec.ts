@@ -215,7 +215,6 @@ describe('GatewaySensorManagerPage (Integration)', () => {
       const cellTexts = Array.from<Element>(
         fixture.nativeElement.querySelectorAll('mat-row:not(.detail-row) mat-cell'),
       ).map((c) => c.textContent?.trim());
-      expect(cellTexts).toContain('gw-1');
       expect(cellTexts).toContain('Gateway Alpha');
       expect(cellTexts).toContain('tenant-1');
       expect(cellTexts).toContain('ATTIVO');
@@ -275,7 +274,7 @@ describe('GatewaySensorManagerPage (Integration)', () => {
         expect(cellTexts).toContain('Humidity');
 
         expect(fixture.nativeElement.querySelector('.expanded-content h2').textContent).toContain(
-          'gw-1',
+          'Gateway Alpha',
         );
         expect(
           fixture.nativeElement.querySelector('.expanded-content .manager-header h3').textContent,

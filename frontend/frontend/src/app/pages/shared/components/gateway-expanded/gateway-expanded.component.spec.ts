@@ -160,12 +160,12 @@ describe('GatewayExpandedComponent (Unit)', () => {
   });
 
   describe('template', () => {
-    it('should render gateway id in heading, update on change, and render sensor table', () => {
-      expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('gw-1');
+    it('should render gateway name in heading, update on change, and render sensor table', () => {
+      expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('Gateway Alpha');
       expect(getTable()).toBeTruthy();
 
-      setInput('gateway', { ...mockGateway, id: 'gw-99' });
-      expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('gw-99');
+      setInput('gateway', { ...mockGateway, name: 'New Gateway' });
+      expect(fixture.debugElement.query(By.css('h2')).nativeElement.textContent).toContain('New Gateway');
     });
   });
 

@@ -4,6 +4,10 @@
     @if (item.separator) {
       <mat-divider></mat-divider>
     }
+
+    @if (item.sectionTitle) {
+      <span class="nav-section-title">{{ item.sectionTitle }}</span>
+    }
     
     <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
       <mat-icon>{{ item.icon }}</mat-icon>

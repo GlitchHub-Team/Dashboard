@@ -4,7 +4,7 @@
     @if (activeTenantId()) {
       <div class="info-banner tenant-banner">
         <span
-          >Stai visualizzando i dati del tenant: <strong>{{ activeTenantId() }}</strong></span
+          >Stai visualizzando i dati del tenant: <strong>{{ activeTenantName() }}</strong></span
         >
         <div class="banner-actions">
           <button mat-button color="accent" (click)="onGoToTenantUsers()">
