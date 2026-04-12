@@ -186,8 +186,6 @@ func setupHistoricalDataTenantTestContext(
 		return fmt.Errorf("failed to create tenant schema %v: %v", tenantID, err)
 	}
 
-	
-
 	if err := sensorDB.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS "%s".sensor_data (
 			sensor_id UUID NOT NULL,

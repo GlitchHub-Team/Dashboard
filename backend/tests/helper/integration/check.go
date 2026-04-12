@@ -2,10 +2,10 @@ package integration
 
 import (
 	"fmt"
+	"net/http/httptest"
 	"regexp"
 	"testing"
 	"time"
-	"net/http/httptest"
 
 	"backend/internal/user"
 	"backend/tests/helper"
