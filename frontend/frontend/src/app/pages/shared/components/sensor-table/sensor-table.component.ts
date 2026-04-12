@@ -46,7 +46,7 @@ export class SensorTableComponent {
   public readonly limit = input<number>(10);
 
   protected readonly displayedColumns = computed(() => {
-    const base = ['id', 'name', 'profile', 'status', 'commands'];
+    const base = ['id', 'name', 'profile', 'status', 'dataInterval', 'commands'];
     switch (this.actionMode()) {
       case 'manage':
         return [...base, 'delete'];

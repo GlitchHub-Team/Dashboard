@@ -187,10 +187,9 @@ describe('RealTimeChartComponent', () => {
     describe('scalar sensor', () => {
       beforeEach(() => setup(createReadings(3, 'bpm', 70), createSensor(), SINGLE_FIELD));
 
-      it('should show x-axis, enable tooltip, and disable animation', () => {
+      it('should show x-axis and disable animation', () => {
         const opts = component['chartOptions']();
         expect(opts.scales!['x']!['display']).toBe(true);
-        expect(opts.plugins!.tooltip!['enabled']).toBe(true);
         expect(opts.animation).toBe(false);
       });
 

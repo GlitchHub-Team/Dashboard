@@ -71,6 +71,10 @@ export class RealTimeChartComponent {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
       scales: {
         x: {
           display: true,
@@ -90,9 +94,6 @@ export class RealTimeChartComponent {
         legend: {
           display: true,
           position: 'top',
-        },
-        tooltip: {
-          enabled: !ecg,
         },
       },
     };

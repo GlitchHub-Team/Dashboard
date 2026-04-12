@@ -109,6 +109,10 @@ export class HistoricChartComponent {
       responsive: true,
       maintainAspectRatio: false,
       animation: ecg ? false : { duration: 300 },
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
       scales: {
         x: {
           display: true,
@@ -128,9 +132,6 @@ export class HistoricChartComponent {
         legend: {
           display: true,
           position: 'top',
-        },
-        tooltip: {
-          enabled: !ecg,
         },
       },
     };

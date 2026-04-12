@@ -38,6 +38,11 @@
       </mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="interval">
+      <mat-header-cell *matHeaderCellDef>Intervallo (ms)</mat-header-cell>
+      <mat-cell *matCellDef="let gateway">{{ gateway.interval }}</mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="publicKey">
       <mat-header-cell *matHeaderCellDef>Public Key</mat-header-cell>
       <mat-cell *matCellDef="let gateway">

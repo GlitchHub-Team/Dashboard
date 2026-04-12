@@ -65,7 +65,7 @@ describe('SensorTableComponent (Unit)', () => {
   describe('initial state', () => {
     it('should create with correct setup, defaults, and dashboard actionMode', () => {
       expect(component).toBeTruthy();
-      expect(component['displayedColumns']()).toEqual(['id', 'name', 'profile', 'status', 'commands', 'actions']);
+      expect(component['displayedColumns']()).toEqual(['id', 'name', 'profile', 'status', 'dataInterval', 'commands', 'actions']);
       expect(component['ChartType']).toBe(ChartType);
       expect(component.actionMode()).toBe('dashboard');
 
@@ -163,6 +163,7 @@ describe('SensorTableComponent (Unit)', () => {
       expect(cellTexts).toEqual(expect.arrayContaining(['1', '2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Temperature', 'Humidity']));
       expect(cellTexts).toEqual(expect.arrayContaining(['ATTIVO', 'INATTIVO']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['60', '120']));
     });
   });
 

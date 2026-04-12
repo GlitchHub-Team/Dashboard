@@ -154,6 +154,7 @@ describe('GatewayTableComponent (Unit)', () => {
       expect(cellTexts).toEqual(expect.arrayContaining(['gw-1', 'gw-2']));
       expect(cellTexts).toEqual(expect.arrayContaining(['Gateway Alpha', 'Gateway Beta']));
       expect(cellTexts).toEqual(expect.arrayContaining(['ATTIVO', 'INATTIVO']));
+      expect(cellTexts).toEqual(expect.arrayContaining(['60', '120']));
     });
   });
 
@@ -187,6 +188,7 @@ describe('GatewayTableComponent (Unit)', () => {
         'tenantId',
         'name',
         'status',
+        'interval',
         'commands',
       ]);
 
@@ -198,6 +200,7 @@ describe('GatewayTableComponent (Unit)', () => {
         'tenantId',
         'name',
         'status',
+        'interval',
         'publicKey',
         'commands',
         'delete',

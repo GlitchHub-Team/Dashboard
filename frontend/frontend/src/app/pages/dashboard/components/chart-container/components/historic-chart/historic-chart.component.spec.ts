@@ -307,11 +307,10 @@ describe('HistoricChartComponent', () => {
     describe('scalar sensor', () => {
       beforeEach(() => setup(createReadings(3, 'bpm', 70), createSensor(), SINGLE_FIELD));
 
-      it('should show x-axis, enable animation, and enable tooltip', () => {
+      it('should show x-axis and enable animation', () => {
         const opts = component['chartOptions']();
         expect(opts.scales!['x']!['display']).toBe(true);
         expect(opts.animation).toEqual({ duration: 300 });
-        expect(opts.plugins!.tooltip!['enabled']).toBe(true);
       });
 
       it('should set y-axis title from selected field', () => {
