@@ -18,7 +18,6 @@ import (
 	"backend/internal/tenant"
 	"backend/internal/user"
 
-	"backend/internal/infra/metrics"
 	natsutils "backend/internal/infra/nats"
 	httpMiddlewares "backend/internal/infra/transport/http/middlewares"
 
@@ -36,7 +35,6 @@ func AppModules() fx.Option {
 		httpMiddlewares.Module,
 		sensordb.Module,
 		natsutils.Module,
-		metrics.Module,
 
 		// Moduli funzionalità
 		alert.Module,   // NOTA: Desiderabile

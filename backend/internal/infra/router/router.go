@@ -7,6 +7,7 @@ import (
 	"backend/internal/auth"
 	"backend/internal/gateway"
 	"backend/internal/historical_data"
+	"backend/internal/infra/metrics"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
@@ -37,6 +38,7 @@ func NewGinEngine(
 	tenantController *tenant.Controller,
 ) *gin.Engine {
 	router := gin.Default()
+	metrics.RegisterPrometheus(router)
 
 	// https://blog.depa.do/post/gin-validation-errors-handling
 	if validator, ok := binding.Validator.Engine().(*validator.Validate); ok {
