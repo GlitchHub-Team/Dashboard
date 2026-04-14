@@ -73,7 +73,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 		RequesterRole:     identity.ROLE_TENANT_ADMIN,
 	}
 
-	expectedCmd := real_time_data.RetrieveRealTimeDataCommand{
+	expectedCmd := real_time_data.GetRealTimeDataCommand{
 		Requester: requester,
 		SensorId:  targetSensorId,
 		TenantId:  targetTenantId,
@@ -107,8 +107,8 @@ func TestController_GetRealTimeData(t *testing.T) {
 			name: "Success: Upgrades to WS, receives mapped data, and closes on error",
 			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call {
 				return mockUC.EXPECT().
-					RetrieveRealTimeData(gomock.Eq(expectedCmd)).
-					DoAndReturn(func(cmd real_time_data.RetrieveRealTimeDataCommand) (chan real_time_data.RealTimeSample, chan real_time_data.RealTimeError, error) {
+					GetRealTimeData(gomock.Eq(expectedCmd)).
+					DoAndReturn(func(cmd real_time_data.GetRealTimeDataCommand) (chan real_time_data.RealTimeSample, chan real_time_data.RealTimeError, error) {
 						dataChan := make(chan real_time_data.RealTimeSample, 1)
 						errChan := make(chan real_time_data.RealTimeError, 1)
 
@@ -150,7 +150,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 			name: "Fail: UseCase returns ErrSensorNotFound yields 404",
 			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call {
 				return mockUC.EXPECT().
-					RetrieveRealTimeData(gomock.Eq(expectedCmd)).
+					GetRealTimeData(gomock.Eq(expectedCmd)).
 					Return(nil, nil, sensor.ErrSensorNotFound).
 					Times(1)
 			},
@@ -164,7 +164,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 			name: "Fail: UseCase returns generic error yields 500",
 			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call {
 				return mockUC.EXPECT().
-					RetrieveRealTimeData(gomock.Eq(expectedCmd)).
+					GetRealTimeData(gomock.Eq(expectedCmd)).
 					Return(nil, nil, genericErr).
 					Times(1)
 			},
@@ -178,7 +178,7 @@ func TestController_GetRealTimeData(t *testing.T) {
 			name: "Fail: WS upgrade fails yields 400",
 			setupFunc: func(mockUC *mocks.MockGetRealTimeDataUseCase) *gomock.Call {
 				return mockUC.EXPECT().
-					RetrieveRealTimeData(gomock.Eq(expectedCmd)).
+					GetRealTimeData(gomock.Eq(expectedCmd)).
 					Return(make(chan real_time_data.RealTimeSample), make(chan real_time_data.RealTimeError), nil).
 					Times(1)
 			},

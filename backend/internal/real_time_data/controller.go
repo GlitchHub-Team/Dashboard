@@ -17,7 +17,7 @@ import (
 //go:generate mockgen -destination=../../tests/real_time_data/mocks/use_case.go -package=mocks . GetRealTimeDataUseCase
 
 type GetRealTimeDataUseCase interface {
-	RetrieveRealTimeData(cmd RetrieveRealTimeDataCommand) (
+	GetRealTimeData(cmd GetRealTimeDataCommand) (
 		dataChannel chan RealTimeSample, errorChannel chan RealTimeError, err error,
 	)
 }
@@ -59,14 +59,14 @@ func (c *Controller) GetRealTimeData(ctx *gin.Context) {
 	tenantId, _ := uuid.Parse(uriDto.TenantId)
 
 	// 3. Esegui comando
-	cmd := RetrieveRealTimeDataCommand{
+	cmd := GetRealTimeDataCommand{
 		Requester: requester,
 		SensorId:  sensorId,
 		TenantId:  tenantId,
 	}
 	// c.log.Sugar().Errorf("err: %v", err)
 
-	dataChannel, errChannel, err := c.getRealTimeDataUseCase.RetrieveRealTimeData(cmd)
+	dataChannel, errChannel, err := c.getRealTimeDataUseCase.GetRealTimeData(cmd)
 	if err != nil {
 		if errors.Is(err, sensor.ErrSensorNotFound) || errors.Is(err, sensor.ErrSensorNotActive) {
 			transportHttp.RequestNotFound(ctx, err)

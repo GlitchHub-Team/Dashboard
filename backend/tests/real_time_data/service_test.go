@@ -61,19 +61,19 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 
 	// Command
 
-	cmdSuperAdmin := real_time_data.RetrieveRealTimeDataCommand{
+	cmdSuperAdmin := real_time_data.GetRealTimeDataCommand{
 		Requester: requesterSuperAdmin,
 		SensorId:  targetSensorId,
 		TenantId:  targetTenantId,
 	}
 
-	cmdTenantMember_Authorized := real_time_data.RetrieveRealTimeDataCommand{
+	cmdTenantMember_Authorized := real_time_data.GetRealTimeDataCommand{
 		Requester: requesterTenantMember_Auth,
 		SensorId:  targetSensorId,
 		TenantId:  targetTenantId,
 	}
 
-	cmdTenantMember_Unauthorized := real_time_data.RetrieveRealTimeDataCommand{
+	cmdTenantMember_Unauthorized := real_time_data.GetRealTimeDataCommand{
 		Requester: requesterTenantMember_Unauth,
 		SensorId:  targetSensorId,
 		TenantId:  targetTenantId,
@@ -87,7 +87,7 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 
 	type testCase struct {
 		name          string
-		input         real_time_data.RetrieveRealTimeDataCommand
+		input         real_time_data.GetRealTimeDataCommand
 		setupSteps    []mockSetupFunc
 		expectedError error
 	}
@@ -274,7 +274,7 @@ func TestRealTimeDataService_RetrieveRealTimeData(t *testing.T) {
 				mockRealTimeData,
 			)
 
-			dataChan, errChan, err := service.RetrieveRealTimeData(tc.input)
+			dataChan, errChan, err := service.GetRealTimeData(tc.input)
 
 			if err != tc.expectedError {
 				t.Errorf("expected error %v, got %v", tc.expectedError, err)

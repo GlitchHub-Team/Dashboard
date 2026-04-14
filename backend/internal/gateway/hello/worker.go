@@ -11,9 +11,9 @@ import (
 )
 
 type NATSWorker struct {
-	consumer jetstream.Consumer
-	gatewayHelloUseCase  GatewayHelloUseCase
-	logger   *zap.Logger
+	consumer            jetstream.Consumer
+	gatewayHelloUseCase GatewayHelloUseCase
+	logger              *zap.Logger
 }
 
 func NewConsumer(js jetstream.JetStream) (jetstream.Consumer, error) {
@@ -53,7 +53,7 @@ func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 	}
 
 	cmd := GatewayHelloMessageCommand{
-		GatewayId: gatewayId,
+		GatewayId:        gatewayId,
 		PublicIdentifier: helloDto.PublicIdentifier,
 	}
 	if err := w.gatewayHelloUseCase.ProcessHello(cmd); err != nil {

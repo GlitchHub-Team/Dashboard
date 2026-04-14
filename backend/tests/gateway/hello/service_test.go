@@ -60,7 +60,6 @@ func (m *mockSaveGatewayPort) Save(g gateway.Gateway) (gateway.Gateway, error) {
 	return g, nil
 }
 
-
 func TestProcessHello_MissingPublicIdentifier_Nak(t *testing.T) {
 	logger := zap.NewNop()
 	get := &mockGetGatewayPort{}
@@ -70,7 +69,7 @@ func TestProcessHello_MissingPublicIdentifier_Nak(t *testing.T) {
 	gid := uuid.New()
 	pid := ""
 	err := svc.ProcessHello(hello.GatewayHelloMessageCommand{
-		GatewayId: gid,
+		GatewayId:        gid,
 		PublicIdentifier: pid,
 	})
 	if err == nil {

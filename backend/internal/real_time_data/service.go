@@ -24,6 +24,8 @@ type RealTimeDataService struct {
 	realTimeDataPort   RealTimeDataPort
 }
 
+var _ GetRealTimeDataUseCase = (*RealTimeDataService)(nil)
+
 func NewRealTimeDataService(
 	tenantPort tenant.GetTenantPort,
 	sensorByTenantPort sensor.GetSensorByTenantPort,
@@ -36,7 +38,7 @@ func NewRealTimeDataService(
 	}
 }
 
-func (s *RealTimeDataService) RetrieveRealTimeData(cmd RetrieveRealTimeDataCommand) (
+func (s *RealTimeDataService) GetRealTimeData(cmd GetRealTimeDataCommand) (
 	dataChannel chan RealTimeSample, errChannel chan RealTimeError, err error,
 ) {
 	// 1. Ottieni sensore

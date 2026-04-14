@@ -40,18 +40,18 @@ func (m *MockGetRealTimeDataUseCase) EXPECT() *MockGetRealTimeDataUseCaseMockRec
 	return m.recorder
 }
 
-// RetrieveRealTimeData mocks base method.
-func (m *MockGetRealTimeDataUseCase) RetrieveRealTimeData(cmd real_time_data.RetrieveRealTimeDataCommand) (chan real_time_data.RealTimeSample, chan real_time_data.RealTimeError, error) {
+// GetRealTimeData mocks base method.
+func (m *MockGetRealTimeDataUseCase) GetRealTimeData(cmd real_time_data.GetRealTimeDataCommand) (chan real_time_data.RealTimeSample, chan real_time_data.RealTimeError, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RetrieveRealTimeData", cmd)
+	ret := m.ctrl.Call(m, "GetRealTimeData", cmd)
 	ret0, _ := ret[0].(chan real_time_data.RealTimeSample)
 	ret1, _ := ret[1].(chan real_time_data.RealTimeError)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// RetrieveRealTimeData indicates an expected call of RetrieveRealTimeData.
-func (mr *MockGetRealTimeDataUseCaseMockRecorder) RetrieveRealTimeData(cmd any) *gomock.Call {
+// GetRealTimeData indicates an expected call of GetRealTimeData.
+func (mr *MockGetRealTimeDataUseCaseMockRecorder) GetRealTimeData(cmd any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetrieveRealTimeData", reflect.TypeOf((*MockGetRealTimeDataUseCase)(nil).RetrieveRealTimeData), cmd)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRealTimeData", reflect.TypeOf((*MockGetRealTimeDataUseCase)(nil).GetRealTimeData), cmd)
 }

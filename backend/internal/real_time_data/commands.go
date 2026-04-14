@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type RetrieveRealTimeDataCommand struct {
+type GetRealTimeDataCommand struct {
 	Requester identity.Requester
 	SensorId  uuid.UUID
 	TenantId  uuid.UUID
