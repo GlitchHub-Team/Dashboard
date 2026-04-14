@@ -1,4 +1,4 @@
-package gateway_connection
+package hello
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 
 type NATSWorker struct {
 	consumer jetstream.Consumer
-	service  GatewayHelloService
+	gatewayHelloUseCase  GatewayHelloUseCase
 	logger   *zap.Logger
 }
 
@@ -23,8 +23,8 @@ func NewConsumer(js jetstream.JetStream) (jetstream.Consumer, error) {
 	})
 }
 
-func NewNATSWorker(consumer jetstream.Consumer, service GatewayHelloService, logger *zap.Logger) *NATSWorker {
-	return &NATSWorker{consumer: consumer, service: service, logger: logger}
+func NewNATSWorker(consumer jetstream.Consumer, service GatewayHelloUseCase, logger *zap.Logger) *NATSWorker {
+	return &NATSWorker{consumer: consumer, gatewayHelloUseCase: service, logger: logger}
 }
 
 func (w *NATSWorker) Run(lc fx.Lifecycle) {
@@ -45,7 +45,7 @@ func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
 		return
 	}
 
-	if err := w.service.ProcessHello(helloMsg); err != nil {
+	if err := w.gatewayHelloUseCase.ProcessHello(helloMsg); err != nil {
 		if err := msg.Nak(); err != nil {
 			w.logger.Error("failed to Nak message", zap.Error(err))
 		}

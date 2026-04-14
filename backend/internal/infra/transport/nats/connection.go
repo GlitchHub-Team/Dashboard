@@ -1,10 +1,10 @@
-package nats_utils
+package nats
 
 import (
 	"log"
 	"strconv"
 
-	"github.com/nats-io/nats.go"
+	natsPkg "github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/nats-io/nkeys"
 )
@@ -17,17 +17,17 @@ type (
 	NatsCredsPath      string
 	NatsTestCredsPath  string
 	NatsCAPemPath      string
-	NatsTestConnection *nats.Conn
+	NatsTestConnection *natsPkg.Conn
 )
 
-func NewNATSConnection(address NatsAddress, port NatsPort, credsPath NatsCredsPath, caPemPath NatsCAPemPath) *nats.Conn {
-	options := make([]nats.Option, 0, 2)
+func NewNATSConnection(address NatsAddress, port NatsPort, credsPath NatsCredsPath, caPemPath NatsCAPemPath) *natsPkg.Conn {
+	options := make([]natsPkg.Option, 0, 2)
 	if string(credsPath) != "" {
 		options = append(options, CredsFileAuth(string(credsPath)))
 	}
 	options = append(options, CAPemAuth(string(caPemPath)))
 
-	nc, err := nats.Connect("nats://"+string(address)+":"+strconv.Itoa(int(port)), options...)
+	nc, err := natsPkg.Connect("nats://"+string(address)+":"+strconv.Itoa(int(port)), options...)
 	if err != nil {
 		log.Fatalf("Error while connecting to NATS server: %v", err)
 	}
@@ -36,13 +36,13 @@ func NewNATSConnection(address NatsAddress, port NatsPort, credsPath NatsCredsPa
 }
 
 func NewNATSTestConnection(address NatsAddress, port NatsPort, credsPath NatsTestCredsPath, caPemPath NatsCAPemPath) NatsTestConnection {
-	options := make([]nats.Option, 0, 2)
+	options := make([]natsPkg.Option, 0, 2)
 	if string(credsPath) != "" {
 		options = append(options, CredsFileAuth(string(credsPath)))
 	}
 	options = append(options, CAPemAuth(string(caPemPath)))
 
-	nc, err := nats.Connect("nats://"+string(address)+":"+strconv.Itoa(int(port)), options...)
+	nc, err := natsPkg.Connect("nats://"+string(address)+":"+strconv.Itoa(int(port)), options...)
 	if err != nil {
 		log.Fatalf("Error while connecting to NATS server: %v", err)
 	}
@@ -50,7 +50,7 @@ func NewNATSTestConnection(address NatsAddress, port NatsPort, credsPath NatsTes
 	return nc
 }
 
-func NewJetStreamContext(nc *nats.Conn) (jetstream.JetStream, error) {
+func NewJetStreamContext(nc *natsPkg.Conn) (jetstream.JetStream, error) {
 	js, err := jetstream.New(nc)
 	if err != nil {
 		return nil, err
@@ -58,8 +58,8 @@ func NewJetStreamContext(nc *nats.Conn) (jetstream.JetStream, error) {
 	return js, nil
 }
 
-func JWTAuth(token, seed string) nats.Option {
-	return nats.UserJWT(
+func JWTAuth(token, seed string) natsPkg.Option {
+	return natsPkg.UserJWT(
 		func() (string, error) { return token, nil },
 		func(nonce []byte) ([]byte, error) {
 			kp, err := nkeys.FromSeed([]byte(seed))
@@ -71,14 +71,14 @@ func JWTAuth(token, seed string) nats.Option {
 	)
 }
 
-func CredsFileAuth(credsPath string) nats.Option {
-	return nats.UserCredentials(credsPath)
+func CredsFileAuth(credsPath string) natsPkg.Option {
+	return natsPkg.UserCredentials(credsPath)
 }
 
-func CAPemAuth(caPemPath string) nats.Option {
+func CAPemAuth(caPemPath string) natsPkg.Option {
 	if caPemPath == "" {
-		return func(_ *nats.Options) error { return nil }
+		return func(_ *natsPkg.Options) error { return nil }
 	}
 
-	return nats.RootCAs(caPemPath)
+	return natsPkg.RootCAs(caPemPath)
 }

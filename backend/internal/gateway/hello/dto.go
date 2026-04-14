@@ -1,4 +1,4 @@
-package gateway_connection
+package hello
 
 type GatewayHelloMessage struct {
 	GatewayId        string `json:"gatewayId"`

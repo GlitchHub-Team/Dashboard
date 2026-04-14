@@ -1,4 +1,4 @@
-package nats_utils
+package nats
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 )
 
 var Module = fx.Module(
-	"nats_utils",
+	"nats",
 	fx.Supply(NatsAddress(os.Getenv("NATS_HOST"))),
 	fx.Supply(NatsPort(utils.EnvInt("NATS_PORT", 4222))),
 	fx.Supply(NatsCredsPath(os.Getenv("DASHBOARD_CREDS_PATH"))),

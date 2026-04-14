@@ -1,4 +1,4 @@
-package gateway_connection_test
+package hello_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"backend/internal/gateway_connection"
+	"backend/internal/gateway/hello"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -18,10 +18,10 @@ import (
 type mockService struct {
 	shouldErr bool
 	called    bool
-	received  gateway_connection.GatewayHelloMessage
+	received  hello.GatewayHelloMessage
 }
 
-func (m *mockService) ProcessHello(msg gateway_connection.GatewayHelloMessage) error {
+func (m *mockService) ProcessHello(msg hello.GatewayHelloMessage) error {
 	m.called = true
 	m.received = msg
 	if m.shouldErr {
@@ -77,7 +77,7 @@ func (t *testJetMsg) TermWithReason(reason string) error        { return nil }
 func TestProcessMsg_MalformedJSON_TermCalled(t *testing.T) {
 	logger := zap.NewNop()
 	svc := &mockService{shouldErr: false}
-	worker := gateway_connection.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
+	worker := hello.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
 
 	simple := &mockMsgSimple{data: []byte("not-json")}
 	msg := newTestJetMsgFromSimple(simple)
@@ -95,9 +95,9 @@ func TestProcessMsg_MalformedJSON_TermCalled(t *testing.T) {
 func TestProcessMsg_ServiceError_NakCalled(t *testing.T) {
 	logger := zap.NewNop()
 	svc := &mockService{shouldErr: true}
-	worker := gateway_connection.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
+	worker := hello.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
 
-	hello := gateway_connection.GatewayHelloMessage{
+	hello := hello.GatewayHelloMessage{
 		GatewayId:        "00000000-0000-0000-0000-000000000000",
 		PublicIdentifier: "pub",
 	}
@@ -122,9 +122,9 @@ func TestProcessMsg_ServiceError_NakCalled(t *testing.T) {
 func TestProcessMsg_Success_AckCalled(t *testing.T) {
 	logger := zap.NewNop()
 	svc := &mockService{shouldErr: false}
-	worker := gateway_connection.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
+	worker := hello.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
 
-	hello := gateway_connection.GatewayHelloMessage{
+	hello := hello.GatewayHelloMessage{
 		GatewayId:        "00000000-0000-0000-0000-000000000000",
 		PublicIdentifier: "pub",
 	}

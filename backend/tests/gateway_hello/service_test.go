@@ -1,11 +1,11 @@
-package gateway_connection_test
+package hello_test
 
 import (
 	"errors"
 	"testing"
 
 	"backend/internal/gateway"
-	"backend/internal/gateway_connection"
+	"backend/internal/gateway/hello"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -64,9 +64,9 @@ func TestProcessHello_InvalidUUID(t *testing.T) {
 	logger := zap.NewNop()
 	get := &mockGetGatewayPort{}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: "not-a-uuid", PublicIdentifier: "p"}
+	msg := hello.GatewayHelloMessage{GatewayId: "not-a-uuid", PublicIdentifier: "p"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error for invalid uuid, got nil")
@@ -77,14 +77,14 @@ func TestProcessHello_MissingPublicIdentifier_Nak(t *testing.T) {
 	logger := zap.NewNop()
 	get := &mockGetGatewayPort{}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: ""}
+	msg := hello.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: ""}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when public identifier is missing, got nil")
 	}
-	if !errors.Is(err, gateway_connection.ErrPublicIdentifierRequired) {
+	if !errors.Is(err, hello.ErrPublicIdentifierRequired) {
 		t.Fatalf("expected ErrPublicIdentifierRequired, got %v", err)
 	}
 	if get.calledGetBy {
@@ -100,9 +100,9 @@ func TestProcessHello_GatewayNotFound_Nak(t *testing.T) {
 	// adapter returns zero-value Gateway and nil error when not found
 	get := &mockGetGatewayPort{result: gateway.Gateway{}, err: nil}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
+	msg := hello.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when gateway not found, got nil")
@@ -122,9 +122,9 @@ func TestProcessHello_GetByIdError_Nak(t *testing.T) {
 	logger := zap.NewNop()
 	get := &mockGetGatewayPort{err: errors.New("db down")}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
+	msg := hello.GatewayHelloMessage{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when GetById fails, got nil")
@@ -142,9 +142,9 @@ func TestProcessHello_UpdatePublicIdentifier_SaveCalled(t *testing.T) {
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	msg := hello.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
 	err := svc.ProcessHello(msg)
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -171,9 +171,9 @@ func TestProcessHello_PublicIdentifierNil_SaveCalled(t *testing.T) {
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	msg := hello.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
 	err := svc.ProcessHello(msg)
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -197,9 +197,9 @@ func TestProcessHello_PublicIdentifierUnchanged_NoSave(t *testing.T) {
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "same-id"}
+	msg := hello.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "same-id"}
 	err := svc.ProcessHello(msg)
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -220,9 +220,9 @@ func TestProcessHello_SaveError_Nak(t *testing.T) {
 	}
 	get := &mockGetGatewayPort{result: existing, err: nil}
 	save := &mockSaveGatewayPort{err: errors.New("save failed")}
-	svc := gateway_connection.NewGatewayHelloService(get, save, logger)
+	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := gateway_connection.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	msg := hello.GatewayHelloMessage{GatewayId: id.String(), PublicIdentifier: "new-id"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when Save fails, got nil")
