@@ -5,14 +5,13 @@ import (
 
 	"backend/internal/gateway"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
 var ErrPublicIdentifierRequired = errors.New("publicIdentifier is required")
 
 type GatewayHelloUseCase interface {
-	ProcessHello(msg GatewayHelloMessageDTO) error
+	ProcessHello(msg GatewayHelloMessageCommand) error
 }
 
 type GatewayHelloService struct {
@@ -20,6 +19,8 @@ type GatewayHelloService struct {
 	saveGateway gateway.SaveGatewayPort
 	logger      *zap.Logger
 }
+
+var _ GatewayHelloUseCase = (*GatewayHelloService)(nil)
 
 func NewGatewayHelloService(
 	getGateway gateway.GetGatewayPort,
@@ -33,34 +34,28 @@ func NewGatewayHelloService(
 	}
 }
 
-func (s *GatewayHelloService) ProcessHello(msg GatewayHelloMessageDTO) error {
-	if msg.PublicIdentifier == "" {
+func (s *GatewayHelloService) ProcessHello(cmd GatewayHelloMessageCommand) error {
+	if cmd.PublicIdentifier == "" {
 		s.logger.Error("Missing public identifier in hello message")
 		return ErrPublicIdentifierRequired
 	}
 
-	gwID, err := uuid.Parse(msg.GatewayId)
-	if err != nil {
-		s.logger.Error("Invalid gateway ID format", zap.Error(err), zap.String("gatewayId", msg.GatewayId))
-		return err
-	}
-
-	gw, err := s.getGateway.GetById(gwID)
+	gw, err := s.getGateway.GetById(cmd.GatewayId)
 	if err != nil {
 		s.logger.Error("Error retrieving gateway from database", zap.Error(err))
 		return err
 	}
 
 	if gw.IsZero() {
-		s.logger.Error("Gateway not found in database", zap.String("gatewayId", msg.GatewayId))
+		s.logger.Error("Gateway not found in database", zap.String("gatewayId", cmd.GatewayId.String()))
 		return gateway.ErrGatewayNotFound
 	}
 
-	if gw.PublicIdentifier == nil || *gw.PublicIdentifier != msg.PublicIdentifier {
-		gw.PublicIdentifier = &msg.PublicIdentifier
+	if gw.PublicIdentifier == nil || *gw.PublicIdentifier != cmd.PublicIdentifier {
+		gw.PublicIdentifier = &cmd.PublicIdentifier
 
 		if _, err := s.saveGateway.Save(gw); err != nil {
-			s.logger.Error("Error saving gateway", zap.Error(err), zap.String("gatewayId", gw.Id.String()))
+			s.logger.Error("Error saving gateway", zap.Error(err), zap.String("gatewayId", cmd.GatewayId.String()))
 			return err
 		}
 	}

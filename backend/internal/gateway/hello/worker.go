@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -37,15 +38,25 @@ func (w *NATSWorker) Run(lc fx.Lifecycle) {
 }
 
 func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
-	var helloMsg GatewayHelloMessageDTO
-	if err := json.Unmarshal(msg.Data(), &helloMsg); err != nil {
+	var helloDto GatewayHelloMessageDTO
+	if err := json.Unmarshal(msg.Data(), &helloDto); err != nil {
 		if err := msg.Term(); err != nil {
 			w.logger.Error("failed to Term message", zap.Error(err))
 		}
 		return
 	}
 
-	if err := w.gatewayHelloUseCase.ProcessHello(helloMsg); err != nil {
+	gatewayId, err := uuid.Parse(helloDto.GatewayId)
+	if err != nil {
+		w.logger.Error("failed to parse UUID", zap.Error(err))
+		return
+	}
+
+	cmd := GatewayHelloMessageCommand{
+		GatewayId: gatewayId,
+		PublicIdentifier: helloDto.PublicIdentifier,
+	}
+	if err := w.gatewayHelloUseCase.ProcessHello(cmd); err != nil {
 		if err := msg.Nak(); err != nil {
 			w.logger.Error("failed to Nak message", zap.Error(err))
 		}

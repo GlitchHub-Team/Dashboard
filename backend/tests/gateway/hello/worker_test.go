@@ -18,10 +18,10 @@ import (
 type mockService struct {
 	shouldErr bool
 	called    bool
-	received  hello.GatewayHelloMessageDTO
+	received  hello.GatewayHelloMessageCommand
 }
 
-func (m *mockService) ProcessHello(msg hello.GatewayHelloMessageDTO) error {
+func (m *mockService) ProcessHello(msg hello.GatewayHelloMessageCommand) error {
 	m.called = true
 	m.received = msg
 	if m.shouldErr {

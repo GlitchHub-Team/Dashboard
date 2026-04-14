@@ -60,18 +60,6 @@ func (m *mockSaveGatewayPort) Save(g gateway.Gateway) (gateway.Gateway, error) {
 	return g, nil
 }
 
-func TestProcessHello_InvalidUUID(t *testing.T) {
-	logger := zap.NewNop()
-	get := &mockGetGatewayPort{}
-	save := &mockSaveGatewayPort{}
-	svc := hello.NewGatewayHelloService(get, save, logger)
-
-	msg := hello.GatewayHelloMessageDTO{GatewayId: "not-a-uuid", PublicIdentifier: "p"}
-	err := svc.ProcessHello(msg)
-	if err == nil {
-		t.Fatalf("expected error for invalid uuid, got nil")
-	}
-}
 
 func TestProcessHello_MissingPublicIdentifier_Nak(t *testing.T) {
 	logger := zap.NewNop()
@@ -79,8 +67,12 @@ func TestProcessHello_MissingPublicIdentifier_Nak(t *testing.T) {
 	save := &mockSaveGatewayPort{}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: uuid.New().String(), PublicIdentifier: ""}
-	err := svc.ProcessHello(msg)
+	gid := uuid.New()
+	pid := ""
+	err := svc.ProcessHello(hello.GatewayHelloMessageCommand{
+		GatewayId: gid,
+		PublicIdentifier: pid,
+	})
 	if err == nil {
 		t.Fatalf("expected error when public identifier is missing, got nil")
 	}
@@ -102,7 +94,7 @@ func TestProcessHello_GatewayNotFound_Nak(t *testing.T) {
 	save := &mockSaveGatewayPort{}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
+	msg := hello.GatewayHelloMessageCommand{GatewayId: uuid.New(), PublicIdentifier: "p"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when gateway not found, got nil")
@@ -124,7 +116,7 @@ func TestProcessHello_GetByIdError_Nak(t *testing.T) {
 	save := &mockSaveGatewayPort{}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: uuid.New().String(), PublicIdentifier: "p"}
+	msg := hello.GatewayHelloMessageCommand{GatewayId: uuid.New(), PublicIdentifier: "p"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when GetById fails, got nil")
@@ -144,7 +136,7 @@ func TestProcessHello_UpdatePublicIdentifier_SaveCalled(t *testing.T) {
 	save := &mockSaveGatewayPort{}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	msg := hello.GatewayHelloMessageCommand{GatewayId: id, PublicIdentifier: "new-id"}
 	err := svc.ProcessHello(msg)
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -173,7 +165,7 @@ func TestProcessHello_PublicIdentifierNil_SaveCalled(t *testing.T) {
 	save := &mockSaveGatewayPort{}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	msg := hello.GatewayHelloMessageCommand{GatewayId: id, PublicIdentifier: "new-id"}
 	err := svc.ProcessHello(msg)
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -199,7 +191,7 @@ func TestProcessHello_PublicIdentifierUnchanged_NoSave(t *testing.T) {
 	save := &mockSaveGatewayPort{}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: id.String(), PublicIdentifier: "same-id"}
+	msg := hello.GatewayHelloMessageCommand{GatewayId: id, PublicIdentifier: "same-id"}
 	err := svc.ProcessHello(msg)
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -222,7 +214,7 @@ func TestProcessHello_SaveError_Nak(t *testing.T) {
 	save := &mockSaveGatewayPort{err: errors.New("save failed")}
 	svc := hello.NewGatewayHelloService(get, save, logger)
 
-	msg := hello.GatewayHelloMessageDTO{GatewayId: id.String(), PublicIdentifier: "new-id"}
+	msg := hello.GatewayHelloMessageCommand{GatewayId: id, PublicIdentifier: "new-id"}
 	err := svc.ProcessHello(msg)
 	if err == nil {
 		t.Fatalf("expected error when Save fails, got nil")
