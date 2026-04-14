@@ -13,7 +13,7 @@ import (
 	clouddb "backend/internal/infra/database/cloud_db/connection"
 	sensordb "backend/internal/infra/database/sensor_db/connection"
 	"backend/internal/infra/modules"
-	natsutils "backend/internal/infra/nats"
+	natsUtils "backend/internal/infra/transport/nats"
 	"backend/internal/shared/config"
 	sharedCrypto "backend/internal/shared/crypto"
 
@@ -41,7 +41,7 @@ type IntegrationTestDeps struct {
 	SensorDB sensordb.SensorDBConnection
 
 	NatsConn     *nats.Conn
-	NatsTestConn natsutils.NatsTestConnection
+	NatsTestConn natsUtils.NatsTestConnection
 
 	JetStreamCtx     jetstream.JetStream
 	JetStreamTestCtx jetstream.JetStream
@@ -107,7 +107,7 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 	var cloudDB clouddb.CloudDBConnection
 	var sensorDB sensordb.SensorDBConnection
 	var natsConn *nats.Conn
-	var natsTestConn natsutils.NatsTestConnection
+	var natsTestConn natsUtils.NatsTestConnection
 	var jetstreamCtx jetstream.JetStream
 	var jwtManager sharedCrypto.AuthTokenManager
 	var secretHasher sharedCrypto.SecretHasher
@@ -152,9 +152,9 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 		}),
 
 		fx.Replace(
-			natsutils.NatsCredsPath("../../../"+os.Getenv("DASHBOARD_CREDS_PATH")),
-			natsutils.NatsTestCredsPath("../../../"+os.Getenv("TEST_CREDS_PATH")),
-			natsutils.NatsCAPemPath("../../../"+os.Getenv("CA_PEM_PATH")),
+			natsUtils.NatsCredsPath("../../../"+os.Getenv("DASHBOARD_CREDS_PATH")),
+			natsUtils.NatsTestCredsPath("../../../"+os.Getenv("TEST_CREDS_PATH")),
+			natsUtils.NatsCAPemPath("../../../"+os.Getenv("CA_PEM_PATH")),
 		),
 
 		// Lifecycle SMTP server
@@ -188,7 +188,7 @@ func SetupIntegrationTest(t *testing.T) IntegrationTestDeps {
 		}
 	})
 
-	jetstreamTestCtx, err := natsutils.NewJetStreamContext(natsTestConn)
+	jetstreamTestCtx, err := natsUtils.NewJetStreamContext(natsTestConn)
 	if err != nil {
 		t.Fatalf("Failed to create JetStream context for test connection: %v", err)
 	}

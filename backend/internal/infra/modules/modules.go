@@ -6,20 +6,20 @@ import (
 	"backend/internal/auth"
 	"backend/internal/email"
 	"backend/internal/gateway"
-	"backend/internal/gateway_connection"
+	gateway_connection "backend/internal/gateway/hello"
 	"backend/internal/historical_data"
 	"backend/internal/infra/crypto"
 	"backend/internal/infra/database/cloud_db"
 	sensordb "backend/internal/infra/database/sensor_db"
-	"backend/internal/infra/router"
+	"backend/internal/infra/transport/http/router"
 	"backend/internal/real_time_data"
 	"backend/internal/sensor"
 	"backend/internal/shared/config"
 	"backend/internal/tenant"
 	"backend/internal/user"
 
-	natsutils "backend/internal/infra/nats"
 	httpMiddlewares "backend/internal/infra/transport/http/middlewares"
+	transportNats "backend/internal/infra/transport/nats"
 
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -34,7 +34,7 @@ func AppModules() fx.Option {
 		email.Module,
 		httpMiddlewares.Module,
 		sensordb.Module,
-		natsutils.Module,
+		transportNats.Module,
 
 		// Moduli funzionalità
 		alert.Module,   // NOTA: Desiderabile

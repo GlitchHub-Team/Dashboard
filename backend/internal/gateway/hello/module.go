@@ -1,4 +1,4 @@
-package gateway_connection
+package hello
 
 import (
 	"go.uber.org/fx"
