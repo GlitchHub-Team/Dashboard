@@ -5,9 +5,12 @@ import (
 )
 
 var Module = fx.Module(
-	"gateway_connection",
+	"gateway_hello",
 	fx.Provide(
-		NewGatewayHelloService,
+		fx.Annotate(
+			NewGatewayHelloService,
+			fx.As(new(GatewayHelloUseCase)),
+		),
 		NewConsumer,
 		NewNATSWorker,
 	),

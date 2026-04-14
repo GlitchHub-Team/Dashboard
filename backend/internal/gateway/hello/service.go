@@ -11,11 +11,11 @@ import (
 
 var ErrPublicIdentifierRequired = errors.New("publicIdentifier is required")
 
-type GatewayHelloService interface {
+type GatewayHelloUseCase interface {
 	ProcessHello(msg GatewayHelloMessage) error
 }
 
-type gatewayHelloService struct {
+type GatewayHelloService struct {
 	getGateway  gateway.GetGatewayPort
 	saveGateway gateway.SaveGatewayPort
 	logger      *zap.Logger
@@ -25,15 +25,15 @@ func NewGatewayHelloService(
 	getGateway gateway.GetGatewayPort,
 	saveGateway gateway.SaveGatewayPort,
 	logger *zap.Logger,
-) GatewayHelloService {
-	return &gatewayHelloService{
+) *GatewayHelloService {
+	return &GatewayHelloService{
 		getGateway:  getGateway,
 		saveGateway: saveGateway,
 		logger:      logger,
 	}
 }
 
-func (s *gatewayHelloService) ProcessHello(msg GatewayHelloMessage) error {
+func (s *GatewayHelloService) ProcessHello(msg GatewayHelloMessage) error {
 	if msg.PublicIdentifier == "" {
 		s.logger.Error("Missing public identifier in hello message")
 		return ErrPublicIdentifierRequired
