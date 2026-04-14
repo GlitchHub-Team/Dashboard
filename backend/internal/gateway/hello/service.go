@@ -12,7 +12,7 @@ import (
 var ErrPublicIdentifierRequired = errors.New("publicIdentifier is required")
 
 type GatewayHelloUseCase interface {
-	ProcessHello(msg GatewayHelloMessage) error
+	ProcessHello(msg GatewayHelloMessageDTO) error
 }
 
 type GatewayHelloService struct {
@@ -33,7 +33,7 @@ func NewGatewayHelloService(
 	}
 }
 
-func (s *GatewayHelloService) ProcessHello(msg GatewayHelloMessage) error {
+func (s *GatewayHelloService) ProcessHello(msg GatewayHelloMessageDTO) error {
 	if msg.PublicIdentifier == "" {
 		s.logger.Error("Missing public identifier in hello message")
 		return ErrPublicIdentifierRequired

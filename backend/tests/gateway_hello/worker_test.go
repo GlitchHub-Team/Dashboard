@@ -18,10 +18,10 @@ import (
 type mockService struct {
 	shouldErr bool
 	called    bool
-	received  hello.GatewayHelloMessage
+	received  hello.GatewayHelloMessageDTO
 }
 
-func (m *mockService) ProcessHello(msg hello.GatewayHelloMessage) error {
+func (m *mockService) ProcessHello(msg hello.GatewayHelloMessageDTO) error {
 	m.called = true
 	m.received = msg
 	if m.shouldErr {
@@ -97,7 +97,7 @@ func TestProcessMsg_ServiceError_NakCalled(t *testing.T) {
 	svc := &mockService{shouldErr: true}
 	worker := hello.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
 
-	hello := hello.GatewayHelloMessage{
+	hello := hello.GatewayHelloMessageDTO{
 		GatewayId:        "00000000-0000-0000-0000-000000000000",
 		PublicIdentifier: "pub",
 	}
@@ -124,7 +124,7 @@ func TestProcessMsg_Success_AckCalled(t *testing.T) {
 	svc := &mockService{shouldErr: false}
 	worker := hello.NewNATSWorker(jetstream.Consumer(nil), svc, logger)
 
-	hello := hello.GatewayHelloMessage{
+	hello := hello.GatewayHelloMessageDTO{
 		GatewayId:        "00000000-0000-0000-0000-000000000000",
 		PublicIdentifier: "pub",
 	}

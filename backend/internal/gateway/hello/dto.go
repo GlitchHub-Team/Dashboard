@@ -1,6 +1,6 @@
 package hello
 
-type GatewayHelloMessage struct {
+type GatewayHelloMessageDTO struct {
 	GatewayId        string `json:"gatewayId"`
 	PublicIdentifier string `json:"publicIdentifier"`
 }

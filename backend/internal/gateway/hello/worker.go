@@ -37,7 +37,7 @@ func (w *NATSWorker) Run(lc fx.Lifecycle) {
 }
 
 func (w *NATSWorker) ProcessMsg(msg jetstream.Msg) {
-	var helloMsg GatewayHelloMessage
+	var helloMsg GatewayHelloMessageDTO
 	if err := json.Unmarshal(msg.Data(), &helloMsg); err != nil {
 		if err := msg.Term(); err != nil {
 			w.logger.Error("failed to Term message", zap.Error(err))
