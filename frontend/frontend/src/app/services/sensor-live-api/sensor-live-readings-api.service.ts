@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs/internal/Observable';
+import { Observable } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -8,11 +8,12 @@ import { environment } from '../../../environments/environment';
 import { RealTimeReading } from '../../models/sensor-data/real-time-reading.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
 import { TokenStorageService } from '../token-storage/token-storage.service';
+import { SensorLiveReadingsApiAdapter } from './sensor-live-readings-api-adapter.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SensorLiveReadingsApiService {
+export class SensorLiveReadingsApiService extends SensorLiveReadingsApiAdapter {
   private readonly tokenService = inject(TokenStorageService);
   private readonly apiUrl = `${environment.wsUrl}`;
   private socket$: WebSocketSubject<RealTimeReading> | null = null;

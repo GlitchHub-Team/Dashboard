@@ -2,14 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
 import { SensorService } from './sensor.service';
-import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
-import { SensorCommandApiClientService } from '../sensor-command-api-client/sensor-command-api-client.service';
-import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
+import { SensorApiClientAdapter } from '../sensor-api-client/sensor-api-client-adapter.service';
+import { SensorCommandApiClientAdapter } from '../sensor-command-api-client/sensor-command-api-client-adapter.service';
 import { Sensor } from '../../models/sensor/sensor.model';
-import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
-import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 import { ApiError } from '../../models/api-error.model';
 import { SensorStatus } from '../../models/sensor-status.enum';
 
@@ -35,45 +32,18 @@ describe('SensorService', () => {
     },
   ];
 
-  const mockBackendResponse: PaginatedSensorResponse<SensorBackend> = {
-    count: 2,
-    total: 10,
-    sensors: [
-      {
-        sensor_id: 's-1',
-        gateway_id: 'gw-1',
-        sensor_name: 'Temperature',
-        profile: 'health thermometer',
-        data_interval: 60,
-        status: SensorStatus.ACTIVE,
-      },
-      {
-        sensor_id: 's-2',
-        gateway_id: 'gw-1',
-        sensor_name: 'Humidity',
-        profile: 'environmental sensing',
-        data_interval: 60,
-        status: SensorStatus.INACTIVE,
-      },
-    ],
-  };
-
-  const mockAdaptedResponse: PaginatedSensorResponse<Sensor> = {
+  const mockPaginatedResponse = {
     count: 2,
     total: 10,
     sensors: mockSensors,
   };
-  const emptyBackend: PaginatedSensorResponse<SensorBackend> = { count: 0, total: 0, sensors: [] };
-  const emptyAdapted: PaginatedSensorResponse<Sensor> = { count: 0, total: 0, sensors: [] };
 
-  const mockNewBackend: SensorBackend = {
-    sensor_id: 's-3',
-    gateway_id: 'gw-1',
-    sensor_name: 'Pressure',
-    profile: 'environmental sensing',
-    data_interval: 60,
-    status: SensorStatus.ACTIVE,
+  const emptyPaginatedResponse = {
+    count: 0,
+    total: 0,
+    sensors: [],
   };
+
   const mockNewSensor: Sensor = {
     id: 's-3',
     gatewayId: 'gw-1',
@@ -82,6 +52,7 @@ describe('SensorService', () => {
     profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
     dataInterval: 60,
   };
+
   const mockConfig: SensorConfig = {
     gatewayId: 'gw-1',
     name: 'Pressure',
@@ -101,20 +72,10 @@ describe('SensorService', () => {
     resumeSensor: vi.fn(),
   };
 
-  const adapterMock = {
-    fromPaginatedDTO: vi.fn(),
-    fromDTO: vi.fn(),
-  };
-
   type ListApiKey = 'getSensorListByGateway' | 'getSensorListByTenant';
 
-  function mockListSuccess(
-    apiKey: ListApiKey,
-    backendRes = mockBackendResponse,
-    adaptedRes = mockAdaptedResponse,
-  ): void {
-    sensorApiMock[apiKey].mockReturnValue(of(backendRes));
-    adapterMock.fromPaginatedDTO.mockReturnValue(adaptedRes);
+  function mockListSuccess(apiKey: ListApiKey, response = mockPaginatedResponse): void {
+    sensorApiMock[apiKey].mockReturnValue(of(response));
   }
 
   beforeEach(() => {
@@ -123,9 +84,8 @@ describe('SensorService', () => {
     TestBed.configureTestingModule({
       providers: [
         SensorService,
-        { provide: SensorApiClientService, useValue: sensorApiMock },
-        { provide: SensorCommandApiClientService, useValue: sensorCommandApiMock },
-        { provide: SensorAdapter, useValue: adapterMock },
+        { provide: SensorApiClientAdapter, useValue: sensorApiMock },
+        { provide: SensorCommandApiClientAdapter, useValue: sensorCommandApiMock },
       ],
     });
 
@@ -158,12 +118,11 @@ describe('SensorService', () => {
         s.getSensorsByTenant('tenant-1', page, limit),
     },
   ])('$label', ({ id, apiKey, invoke }) => {
-    it('should call api, map through adapter, and populate state on success', () => {
+    it('should call api and populate state on success', () => {
       mockListSuccess(apiKey);
       invoke(service, 0, 10);
 
       expect(sensorApiMock[apiKey]).toHaveBeenCalledWith(id, 1, 10);
-      expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
       expect(service.sensorList()).toEqual(mockSensors);
       expect(service.total()).toBe(10);
       expect(service.loading()).toBe(false);
@@ -182,7 +141,7 @@ describe('SensorService', () => {
       mockListSuccess(apiKey);
       invoke(service, 0, 10);
 
-      mockListSuccess(apiKey, emptyBackend, emptyAdapted);
+      mockListSuccess(apiKey, emptyPaginatedResponse);
       invoke(service, 0, 10);
 
       expect(service.sensorList()).toEqual([]);
@@ -212,15 +171,13 @@ describe('SensorService', () => {
   });
 
   describe('addNewSensor', () => {
-    it('should call api, map through adapter, and return adapted sensor', () => {
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
+    it('should call api and return sensor directly', () => {
+      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
 
       let result: Sensor | undefined;
       service.addNewSensor(mockConfig).subscribe((s) => (result = s));
 
       expect(sensorApiMock.addNewSensor).toHaveBeenCalledWith(mockConfig);
-      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
       expect(result).toEqual(mockNewSensor);
     });
 
@@ -232,8 +189,7 @@ describe('SensorService', () => {
       setup();
       sensorApiMock[apiKey].mockClear();
 
-      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewSensor);
+      sensorApiMock.addNewSensor.mockReturnValue(of(mockNewSensor));
       service.addNewSensor(mockConfig).subscribe();
 
       expect(sensorApiMock[apiKey]).not.toHaveBeenCalled();

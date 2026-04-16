@@ -1,49 +1,51 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs/internal/Observable';
+import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { GatewayCommandApiClientAdapter } from './gateway-command-api-client-adapter.service';
+import { GatewayApiAdapter } from '../../adapters/gateway/gateway-api.adapter';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
+import { Gateway } from '../../models/gateway/gateway.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class GatewayCommandApiClientService {
+export class GatewayCommandApiClientService extends GatewayCommandApiClientAdapter {
   private readonly http = inject(HttpClient);
+  private readonly mapper = inject(GatewayApiAdapter);
   private readonly apiUrl = `${environment.apiUrl}`;
 
-  public commissionGateway(
+  commissionGateway(
     gatewayId: string,
     tenantId: string,
     token: string,
-  ): Observable<GatewayBackend> {
-    return this.http.post<GatewayBackend>(`${this.apiUrl}/gateway/${gatewayId}/commission`, {
-      tenant_id: tenantId,
-      commission_token: token,
-    });
+  ): Observable<Gateway> {
+    return this.http
+      .post<GatewayBackend>(`${this.apiUrl}/gateway/${gatewayId}/commission`, {
+        tenant_id: tenantId,
+        commission_token: token,
+      })
+      .pipe(map((dto) => this.mapper.fromDTO(dto)));
   }
 
-  public decommissionGateway(gatewayId: string): Observable<void> {
+  decommissionGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/decommission`, {});
   }
 
-  // RESET
-  public resetGateway(gatewayId: string): Observable<void> {
+  resetGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reset`, {});
   }
 
-  // RIAVVIO
-  public rebootGateway(gatewayId: string): Observable<void> {
+  rebootGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/reboot`, {});
   }
 
-  // STOP INVIO DATI
-  public interruptGateway(gatewayId: string): Observable<void> {
+  interruptGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/interrupt`, {});
   }
 
-  // RIPRESA INVIO DATI
-  public resumeGateway(gatewayId: string): Observable<void> {
+  resumeGateway(gatewayId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/gateway/${gatewayId}/resume`, {});
   }
 }

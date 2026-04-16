@@ -3,19 +3,19 @@ import { Observable, tap, catchError, finalize, EMPTY, switchMap } from 'rxjs';
 
 import { ApiError } from '../../models/api-error.model';
 import { PasswordChange } from '../../models/auth/password-change.model';
-import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
 import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
 import { UserSessionService } from '../user-session/user-session.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
+import { AuthApiClientAdapter } from '../auth-api-client/auth-api-client-adapter.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthActionsService {
-  private readonly authApiClient = inject(AuthApiClientService);
+  private readonly authApiClient = inject(AuthApiClientAdapter);
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly userSession = inject(UserSessionService);
 

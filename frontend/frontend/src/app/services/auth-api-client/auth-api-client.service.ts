@@ -9,11 +9,12 @@ import { environment } from '../../../environments/environment';
 import { ConfirmAccountResponse } from '../../models/auth/confirm-account.model';
 import { ForgotPasswordRequest } from '../../models/auth/forgot-password-request.model';
 import { ForgotPasswordResponse } from '../../models/auth/forgot-password.model';
+import { AuthApiClientAdapter } from './auth-api-client-adapter.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthApiClientService {
+export class AuthApiClientService extends AuthApiClientAdapter {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/auth`;
 

@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
 import { SensorChartService } from './sensor-chart.service';
-import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
-import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
+import { SensorHistoricApiAdapter } from '../sensor-historic-api/sensor-historic-api-adapter.service';
+import { SensorLiveReadingsApiAdapter } from '../sensor-live-api/sensor-live-readings-api-adapter.service';
 import { SensorAdapterFactory } from '../../adapters/sensor-adapter.factory';
 import { FieldDescriptor } from '../../models/sensor-data/field-descriptor.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
@@ -115,8 +115,8 @@ describe('SensorChartService', () => {
     TestBed.configureTestingModule({
       providers: [
         SensorChartService,
-        { provide: SensorHistoricApiService, useValue: historicApiMock },
-        { provide: SensorLiveReadingsApiService, useValue: liveReadingsApiMock },
+        { provide: SensorHistoricApiAdapter, useValue: historicApiMock },
+        { provide: SensorLiveReadingsApiAdapter, useValue: liveReadingsApiMock },
         { provide: SensorAdapterFactory, useValue: adapterFactoryMock },
       ],
     });

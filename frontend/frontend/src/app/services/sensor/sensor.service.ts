@@ -1,20 +1,19 @@
+// services/sensor/sensor.service.ts
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
+import { Observable, tap, catchError, EMPTY, finalize } from 'rxjs';
 
-import { SensorApiClientService } from '../sensor-api-client/sensor-api-client.service';
-import { SensorAdapter } from '../../adapters/sensor/sensor.adapter';
+import { SensorApiClientAdapter } from '../sensor-api-client/sensor-api-client-adapter.service';
+import { SensorCommandApiClientAdapter } from '../sensor-command-api-client/sensor-command-api-client-adapter.service';
 import { Sensor } from '../../models/sensor/sensor.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { ApiError } from '../../models/api-error.model';
-import { SensorCommandApiClientService } from '../sensor-command-api-client/sensor-command-api-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SensorService {
-  private readonly sensorApi = inject(SensorApiClientService);
-  private readonly sensorCommandApi = inject(SensorCommandApiClientService);
-  private readonly adapter = inject(SensorAdapter);
+  private readonly sensorApi = inject(SensorApiClientAdapter);
+  private readonly sensorCommandApi = inject(SensorCommandApiClientAdapter);
 
   private readonly _sensorList = signal<Sensor[]>([]);
   private readonly _total = signal(0);
@@ -43,8 +42,6 @@ export class SensorService {
     this.sensorApi
       .getSensorListByGateway(gatewayId, page + 1, limit)
       .pipe(
-        // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
-        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._sensorList.set(result.sensors);
           this._total.set(result.total);
@@ -68,8 +65,6 @@ export class SensorService {
     this.sensorApi
       .getSensorListByTenant(tenantId, page + 1, limit)
       .pipe(
-        // Adapting della response al formato usato dal frontend (quindi da SensorBackend a Sensor)
-        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._sensorList.set(result.sensors);
           this._total.set(result.total);
@@ -84,7 +79,7 @@ export class SensorService {
   }
 
   public addNewSensor(config: SensorConfig): Observable<Sensor> {
-    return this.sensorApi.addNewSensor(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
+    return this.sensorApi.addNewSensor(config);
   }
 
   public deleteSensor(id: string): Observable<void> {

@@ -3,8 +3,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { GatewayCommandApiClientService } from './gateway-command-api-client.service';
+import { GatewayApiAdapter } from '../../adapters/gateway/gateway-api.adapter';
 import { environment } from '../../../environments/environment';
 import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
+import { Gateway } from '../../models/gateway/gateway.model';
+import { GatewayStatus } from '../../models/gateway-status.enum';
 
 describe('GatewayCommandApiClientService', () => {
   let service: GatewayCommandApiClientService;
@@ -12,7 +15,7 @@ describe('GatewayCommandApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const mockGateway: GatewayBackend = {
+  const mockBackendGateway: GatewayBackend = {
     gateway_id: 'gw-1',
     name: 'Gateway 1',
     tenant_id: 'tenant-1',
@@ -20,11 +23,28 @@ describe('GatewayCommandApiClientService', () => {
     interval: 60,
   };
 
+  const mockMappedGateway: Gateway = {
+    id: 'gw-1',
+    name: 'Gateway 1',
+    tenantId: 'tenant-1',
+    status: GatewayStatus.ACTIVE,
+    interval: 60,
+  };
+
+  const mapperMock = {
+    fromDTO: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.resetAllMocks();
 
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        GatewayCommandApiClientService,
+        { provide: GatewayApiAdapter, useValue: mapperMock },
+      ],
     });
 
     service = TestBed.inject(GatewayCommandApiClientService);
@@ -40,12 +60,14 @@ describe('GatewayCommandApiClientService', () => {
   });
 
   describe('commissionGateway', () => {
-    it('should POST tenant_id and token in body and return GatewayBackend', () => {
+    it('should POST tenant_id and token in body, map through adapter, and return domain model', () => {
+      mapperMock.fromDTO.mockReturnValue(mockMappedGateway);
+
       service.commissionGateway('gw-1', 'tenant-1', 'commission-token').subscribe((gateway) => {
-        expect(gateway).toEqual(mockGateway);
-        expect(gateway.gateway_id).toBe('gw-1');
+        expect(gateway).toEqual(mockMappedGateway);
+        expect(gateway.id).toBe('gw-1');
         expect(gateway.name).toBe('Gateway 1');
-        expect(gateway.status).toBe('active');
+        expect(gateway.status).toBe(GatewayStatus.ACTIVE);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/gateway/gw-1/commission`);
@@ -54,7 +76,9 @@ describe('GatewayCommandApiClientService', () => {
         tenant_id: 'tenant-1',
         commission_token: 'commission-token',
       });
-      req.flush(mockGateway);
+      req.flush(mockBackendGateway);
+
+      expect(mapperMock.fromDTO).toHaveBeenCalledWith(mockBackendGateway);
     });
   });
 

@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { of, throwError, noop } from 'rxjs';
 
 import { AuthSessionService } from './auth-session.service';
-import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
+import { AuthApiClientAdapter } from '../auth-api-client/auth-api-client-adapter.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { UserSessionService } from '../user-session/user-session.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
@@ -25,7 +25,7 @@ describe('AuthSessionService', () => {
     TestBed.configureTestingModule({
       providers: [
         AuthSessionService,
-        { provide: AuthApiClientService, useValue: authApiClientMock },
+        { provide: AuthApiClientAdapter, useValue: authApiClientMock },
         { provide: TokenStorageService, useValue: tokenStorageMock },
         { provide: UserSessionService, useValue: userSessionMock },
         { provide: Router, useValue: routerMock },

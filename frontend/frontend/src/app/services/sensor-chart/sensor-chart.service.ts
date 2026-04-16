@@ -1,9 +1,8 @@
-// services/sensor-chart/sensor-chart.service.ts
 import { inject, Injectable, signal } from '@angular/core';
 import { retry, Subscription, timer } from 'rxjs';
 
-import { SensorLiveReadingsApiService } from '../sensor-live-api/sensor-live-readings-api.service';
-import { SensorHistoricApiService } from '../sensor-historic-api/sensor-historic-api.service';
+import { SensorLiveReadingsApiAdapter } from '../sensor-live-api/sensor-live-readings-api-adapter.service';
+import { SensorHistoricApiAdapter } from '../sensor-historic-api/sensor-historic-api-adapter.service';
 import { SensorAdapterFactory } from '../../adapters/sensor-adapter.factory';
 import { SensorHistoricAdapter } from '../../adapters/sensor-historic/sensor-historic.adapter';
 import { SensorLiveReadingAdapter } from '../../adapters/sensor-live/sensor-live-reading.adapter';
@@ -21,8 +20,8 @@ const ECG_LIVE_WINDOW_SECONDS = 2;
   providedIn: 'root',
 })
 export class SensorChartService {
-  private readonly historicService = inject(SensorHistoricApiService);
-  private readonly liveReadingsService = inject(SensorLiveReadingsApiService);
+  private readonly historicService = inject(SensorHistoricApiAdapter);
+  private readonly liveReadingsService = inject(SensorLiveReadingsApiAdapter);
   private readonly adapterFactory = inject(SensorAdapterFactory);
 
   private historicAdapter: SensorHistoricAdapter | null = null;

@@ -2,14 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
 import { GatewayService } from './gateway.service';
-import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { GatewayAdapter } from '../../adapters/gateway/gateway.adapter';
+import { GatewayApiClientAdapter } from '../gateway-api-client/gateway-api-client-adapter.service';
+import { GatewayCommandApiClientAdapter } from '../gateway-command-api-client/gateway-command-api-client-adapter.service';
 import { Gateway } from '../../models/gateway/gateway.model';
-import { GatewayBackend } from '../../models/gateway/gateway-backend.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
-import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
 import { GatewayStatus } from '../../models/gateway-status.enum';
-import { GatewayCommandApiClientService } from '../gateway-command-api-client/gateway-command-api-client.service';
 
 describe('GatewayService', () => {
   let service: GatewayService;
@@ -19,46 +16,18 @@ describe('GatewayService', () => {
     { id: 'gw-2', tenantId: 'tenant-1', name: 'Gateway 2', status: GatewayStatus.INACTIVE, interval: 60 },
   ];
 
-  const mockBackendResponse: PaginatedGatewayResponse<GatewayBackend> = {
+  const mockPaginatedResponse = {
+    gateways: mockGateways,
     count: 2,
     total: 10,
-    gateways: [
-      {
-        gateway_id: 'gw-1',
-        name: 'Gateway 1',
-        tenant_id: 'tenant-1',
-        status: 'attivo',
-        interval: 60,
-      },
-      {
-        gateway_id: 'gw-2',
-        name: 'Gateway 2',
-        tenant_id: 'tenant-1',
-        status: 'inattivo',
-        interval: 60,
-      },
-    ],
   };
 
-  const mockAdaptedResponse: PaginatedGatewayResponse<Gateway> = {
-    count: 2,
-    total: 10,
-    gateways: mockGateways,
-  };
-  const emptyBackend: PaginatedGatewayResponse<GatewayBackend> = {
+  const emptyPaginatedResponse = {
+    gateways: [],
     count: 0,
     total: 0,
-    gateways: [],
   };
-  const emptyAdapted: PaginatedGatewayResponse<Gateway> = { count: 0, total: 0, gateways: [] };
 
-  const mockNewBackend: GatewayBackend = {
-    gateway_id: 'gw-3',
-    name: 'New Gateway',
-    tenant_id: 'tenant-1',
-    status: 'active',
-    interval: 60,
-  };
   const mockNewGateway: Gateway = {
     id: 'gw-3',
     name: 'New Gateway',
@@ -66,7 +35,15 @@ describe('GatewayService', () => {
     status: GatewayStatus.ACTIVE,
     interval: 60,
   };
+
   const mockConfig: GatewayConfig = { name: 'New Gateway', interval: 60 };
+
+  const gatewayApiMock = {
+    getGatewayListByTenant: vi.fn(),
+    getGatewayList: vi.fn(),
+    addNewGateway: vi.fn(),
+    deleteGateway: vi.fn(),
+  };
 
   const gatewayCommandApiMock = {
     commissionGateway: vi.fn(),
@@ -77,32 +54,12 @@ describe('GatewayService', () => {
     resumeGateway: vi.fn(),
   };
 
-  const gatewayApiMock = {
-    getGatewayListByTenant: vi.fn(),
-    getGatewayList: vi.fn(),
-    addNewGateway: vi.fn(),
-    deleteGateway: vi.fn(),
-  };
-
-  const adapterMock = {
-    fromPaginatedDTO: vi.fn(),
-    fromDTO: vi.fn(),
-  };
-
-  function mockTenantSuccess(
-    backendRes = mockBackendResponse,
-    adaptedRes = mockAdaptedResponse,
-  ): void {
-    gatewayApiMock.getGatewayListByTenant.mockReturnValue(of(backendRes));
-    adapterMock.fromPaginatedDTO.mockReturnValue(adaptedRes);
+  function mockTenantSuccess(response = mockPaginatedResponse): void {
+    gatewayApiMock.getGatewayListByTenant.mockReturnValue(of(response));
   }
 
-  function mockListSuccess(
-    backendRes = mockBackendResponse,
-    adaptedRes = mockAdaptedResponse,
-  ): void {
-    gatewayApiMock.getGatewayList.mockReturnValue(of(backendRes));
-    adapterMock.fromPaginatedDTO.mockReturnValue(adaptedRes);
+  function mockListSuccess(response = mockPaginatedResponse): void {
+    gatewayApiMock.getGatewayList.mockReturnValue(of(response));
   }
 
   beforeEach(() => {
@@ -110,9 +67,8 @@ describe('GatewayService', () => {
     TestBed.configureTestingModule({
       providers: [
         GatewayService,
-        { provide: GatewayApiClientService, useValue: gatewayApiMock },
-        { provide: GatewayCommandApiClientService, useValue: gatewayCommandApiMock },
-        { provide: GatewayAdapter, useValue: adapterMock },
+        { provide: GatewayApiClientAdapter, useValue: gatewayApiMock },
+        { provide: GatewayCommandApiClientAdapter, useValue: gatewayCommandApiMock },
       ],
     });
     service = TestBed.inject(GatewayService);
@@ -129,11 +85,10 @@ describe('GatewayService', () => {
   });
 
   describe('getGatewaysByTenant', () => {
-    it('should call api and map through adapter with tenantId', () => {
+    it('should call api with tenantId', () => {
       mockTenantSuccess();
       service.getGatewaysByTenant('tenant-1', 0, 10);
       expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalledWith('tenant-1', 1, 10);
-      expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
     });
 
     it('should set success state, update pagination, clear previous error, and reset list on refetch', () => {
@@ -151,7 +106,7 @@ describe('GatewayService', () => {
       expect(service.pageIndex()).toBe(2);
       expect(service.limit()).toBe(25);
 
-      mockTenantSuccess(emptyBackend, emptyAdapted);
+      mockTenantSuccess(emptyPaginatedResponse);
       service.getGatewaysByTenant('tenant-2', 0, 10);
       expect(service.gatewayList()).toEqual([]);
     });
@@ -169,11 +124,10 @@ describe('GatewayService', () => {
   });
 
   describe('getGateways', () => {
-    it('should call api and map through adapter without tenantId', () => {
+    it('should call api without tenantId', () => {
       mockListSuccess();
       service.getGateways(0, 10);
       expect(gatewayApiMock.getGatewayList).toHaveBeenCalledWith(1, 10);
-      expect(adapterMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendResponse);
     });
 
     it('should set success state, update pagination, clear previous error, and reset list on refetch', () => {
@@ -191,7 +145,7 @@ describe('GatewayService', () => {
       expect(service.pageIndex()).toBe(3);
       expect(service.limit()).toBe(50);
 
-      mockListSuccess(emptyBackend, emptyAdapted);
+      mockListSuccess(emptyPaginatedResponse);
       service.getGateways(0, 10);
       expect(service.gatewayList()).toEqual([]);
     });
@@ -226,16 +180,14 @@ describe('GatewayService', () => {
   });
 
   describe('addNewGateway', () => {
-    it('should call api, map through adapter, and return adapted gateway', () => {
-      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
+    it('should call api and return gateway directly', () => {
+      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewGateway));
       mockListSuccess();
 
       let result: Gateway | undefined;
       service.addNewGateway(mockConfig).subscribe((gw) => (result = gw));
 
       expect(gatewayApiMock.addNewGateway).toHaveBeenCalledWith(mockConfig);
-      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
       expect(result).toEqual(mockNewGateway);
     });
 
@@ -244,9 +196,7 @@ describe('GatewayService', () => {
       service.getGatewaysByTenant('tenant-1', 0, 10);
       gatewayApiMock.getGatewayListByTenant.mockClear();
 
-      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
-
+      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewGateway));
       service.addNewGateway(mockConfig).subscribe();
 
       expect(gatewayApiMock.getGatewayListByTenant).not.toHaveBeenCalled();
@@ -258,9 +208,7 @@ describe('GatewayService', () => {
       service.getGateways(0, 10);
       gatewayApiMock.getGatewayList.mockClear();
 
-      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
-
+      gatewayApiMock.addNewGateway.mockReturnValue(of(mockNewGateway));
       service.addNewGateway(mockConfig).subscribe();
 
       expect(gatewayApiMock.getGatewayList).not.toHaveBeenCalled();
@@ -355,17 +303,15 @@ describe('GatewayService', () => {
       service.getGatewaysByTenant('tenant-1', 0, 10);
     });
 
-    it('should call command API, map through adapter, refetch, and return adapted gateway', () => {
+    it('should call command API, refetch, and return gateway directly', () => {
       gatewayApiMock.getGatewayListByTenant.mockClear();
-      gatewayCommandApiMock.commissionGateway.mockReturnValue(of(mockNewBackend));
-      adapterMock.fromDTO.mockReturnValue(mockNewGateway);
+      gatewayCommandApiMock.commissionGateway.mockReturnValue(of(mockNewGateway));
       mockTenantSuccess();
 
       let result: Gateway | undefined;
       service.commissionGateway('gw-3', 'tenant-1', 'token').subscribe((gw) => (result = gw));
 
       expect(gatewayCommandApiMock.commissionGateway).toHaveBeenCalledWith('gw-3', 'tenant-1', 'token');
-      expect(adapterMock.fromDTO).toHaveBeenCalledWith(mockNewBackend);
       expect(result).toEqual(mockNewGateway);
       expect(gatewayApiMock.getGatewayListByTenant).toHaveBeenCalled();
     });

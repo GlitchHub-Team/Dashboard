@@ -3,45 +3,33 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { TenantService } from './tenant.service';
-import { TenantApiAdapter } from '../../adapters/tenant/tenant-api.adapter';
-import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
-import { PaginatedTenantResponse } from '../../models/tenant/paginated-tenant-response.model';
+import { TenantApiClientAdapter } from '../tenant-api-client/tenant-api-client-adapter.service';
 import { ApiError } from '../../models/api-error.model';
-import { TenantBackend } from '../../models/tenant/tenant-backend.model';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';
 
 describe('TenantService', () => {
   let service: TenantService;
 
-  const tenantBackendList: TenantBackend[] = [
-    { tenant_id: 'tenant-01', tenant_name: 'Tenant 1', can_impersonate: false },
-    { tenant_id: 'tenant-02', tenant_name: 'Tenant 2', can_impersonate: true },
-  ];
-
-  const paginatedBackendResponse: PaginatedTenantResponse<TenantBackend> = {
-    count: 2,
-    total: 2,
-    tenants: tenantBackendList,
-  };
-
   const mappedTenants: Tenant[] = [
     { id: 'tenant-01', name: 'Tenant 1', canImpersonate: false },
     { id: 'tenant-02', name: 'Tenant 2', canImpersonate: true },
   ];
 
-  const mappedPaginatedResponse = {
+  const mockPaginatedResponse = {
     count: 2,
     total: 2,
     tenants: mappedTenants,
   };
 
-  const mockConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
-  const createdTenantBackend: TenantBackend = {
-    tenant_id: 'tenant-03',
-    tenant_name: 'Tenant 3',
-    can_impersonate: false,
+  const emptyPaginatedResponse = {
+    count: 0,
+    total: 0,
+    tenants: [],
   };
+
+  const mockConfig: TenantConfig = { name: 'Tenant 3', canImpersonate: false };
+
   const createdTenant: Tenant = {
     id: 'tenant-03',
     name: 'Tenant 3',
@@ -56,18 +44,12 @@ describe('TenantService', () => {
     deleteTenant: vi.fn(),
   };
 
-  const tenantAdapterMock = {
-    fromPaginatedDTO: vi.fn(),
-    fromDTO: vi.fn(),
-  };
-
   beforeEach(() => {
     vi.resetAllMocks();
     TestBed.configureTestingModule({
       providers: [
         TenantService,
-        { provide: TenantApiClientService, useValue: tenantApiMock },
-        { provide: TenantApiAdapter, useValue: tenantAdapterMock },
+        { provide: TenantApiClientAdapter, useValue: tenantApiMock },
       ],
     });
     service = TestBed.inject(TenantService);
@@ -84,12 +66,8 @@ describe('TenantService', () => {
   });
 
   describe('getTenant', () => {
-    const rawDto: TenantBackend = tenantBackendList[0];
-    const adaptedTenant: Tenant = mappedTenants[0];
-
-    it('should call API with correct id, adapt the DTO and return the tenant', () => {
-      tenantApiMock.getTenant.mockReturnValue(of(rawDto));
-      tenantAdapterMock.fromDTO.mockReturnValue(adaptedTenant);
+    it('should call API with correct id and return the tenant', () => {
+      tenantApiMock.getTenant.mockReturnValue(of(mappedTenants[0]));
 
       let result: Tenant | undefined;
       service.getTenant('tenant-01').subscribe((tenant) => {
@@ -97,8 +75,7 @@ describe('TenantService', () => {
       });
 
       expect(tenantApiMock.getTenant).toHaveBeenCalledWith('tenant-01');
-      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(rawDto);
-      expect(result).toEqual(adaptedTenant);
+      expect(result).toEqual(mappedTenants[0]);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
@@ -120,13 +97,11 @@ describe('TenantService', () => {
 
   describe('retrieveTenants', () => {
     it('should retrieve tenants and update state', () => {
-      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
-      tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
+      tenantApiMock.getTenants.mockReturnValue(of(mockPaginatedResponse));
 
       service.retrieveTenants();
 
       expect(tenantApiMock.getTenants).toHaveBeenCalledWith(1, 10);
-      expect(tenantAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(paginatedBackendResponse);
       expect(service.loading()).toBe(false);
       expect(service.tenantList()).toEqual(mappedTenants);
       expect(service.total()).toBe(2);
@@ -153,8 +128,7 @@ describe('TenantService', () => {
 
   describe('changePage', () => {
     it('should update pagination state and retrieve tenants', () => {
-      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
-      tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
+      tenantApiMock.getTenants.mockReturnValue(of(mockPaginatedResponse));
 
       service.changePage(2, 25);
 
@@ -165,9 +139,8 @@ describe('TenantService', () => {
   });
 
   describe('addNewTenant', () => {
-    it('should create a tenant and emit adapted tenant', () => {
-      tenantApiMock.createTenant.mockReturnValue(of(createdTenantBackend));
-      tenantAdapterMock.fromDTO.mockReturnValue(createdTenant);
+    it('should create a tenant and return it directly', () => {
+      tenantApiMock.createTenant.mockReturnValue(of(createdTenant));
 
       let result: Tenant | undefined;
       service.addNewTenant(mockConfig).subscribe((tenant) => {
@@ -175,7 +148,6 @@ describe('TenantService', () => {
       });
 
       expect(tenantApiMock.createTenant).toHaveBeenCalledWith(mockConfig);
-      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(createdTenantBackend);
       expect(result).toEqual(createdTenant);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
@@ -185,8 +157,7 @@ describe('TenantService', () => {
   describe('removeTenant', () => {
     it('should delete a tenant and refetch current page', () => {
       tenantApiMock.deleteTenant.mockReturnValue(of(void 0));
-      tenantApiMock.getTenants.mockReturnValue(of(paginatedBackendResponse));
-      tenantAdapterMock.fromPaginatedDTO.mockReturnValue(mappedPaginatedResponse);
+      tenantApiMock.getTenants.mockReturnValue(of(mockPaginatedResponse));
 
       let completed = false;
       service.removeTenant('tenant-03').subscribe({
@@ -222,11 +193,8 @@ describe('TenantService', () => {
   });
 
   describe('getAllTenants', () => {
-    it('should call API, adapt each DTO and return mapped tenants', () => {
-      tenantApiMock.getAllTenants.mockReturnValue(of(tenantBackendList));
-      tenantAdapterMock.fromDTO
-        .mockReturnValueOnce(mappedTenants[0])
-        .mockReturnValueOnce(mappedTenants[1]);
+    it('should call API and return tenants directly', () => {
+      tenantApiMock.getAllTenants.mockReturnValue(of(mappedTenants));
 
       let result: Tenant[] | undefined;
       service.getAllTenants().subscribe((tenants) => {
@@ -234,9 +202,6 @@ describe('TenantService', () => {
       });
 
       expect(tenantApiMock.getAllTenants).toHaveBeenCalled();
-      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledTimes(2);
-      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(tenantBackendList[0]);
-      expect(tenantAdapterMock.fromDTO).toHaveBeenCalledWith(tenantBackendList[1]);
       expect(result).toEqual(mappedTenants);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();

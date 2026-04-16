@@ -3,11 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { UserService } from './user.service';
-import { UserApiClientService } from '../user-api-client/user-api-client.service';
+import { UserApiClientAdapter } from '../user-api-client/user-api-client-adapter.service';
 import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
 import { UserConfig } from '../../models/user/user-config.model';
-import { UserAdapter } from '../../adapters/user/user.adapter';
 import { ApiError } from '../../models/api-error.model';
 
 describe('UserService', () => {
@@ -29,6 +28,7 @@ describe('UserService', () => {
       tenantId: 'tenant-1',
     },
   ];
+
   const newUser: User = {
     id: '3',
     username: 'newuser',
@@ -36,9 +36,16 @@ describe('UserService', () => {
     role: UserRole.TENANT_USER,
     tenantId: 'tenant-1',
   };
+
   const newUserConfig: UserConfig = {
     email: 'new@test.com',
     username: 'newuser',
+  };
+
+  const mockPaginatedResponse = {
+    count: 2,
+    total: 2,
+    users: mockUsers,
   };
 
   const userApiMock = {
@@ -48,24 +55,12 @@ describe('UserService', () => {
     deleteUser: vi.fn(),
   };
 
-  const userAdapterMock = {
-    fromDTO: vi.fn(),
-    fromPaginatedDTO: vi.fn(),
-  };
-
-  const rawPaginatedResponse = {
-    count: 2,
-    total: 2,
-    users: mockUsers,
-  };
-
   beforeEach(() => {
     vi.resetAllMocks();
     TestBed.configureTestingModule({
       providers: [
         UserService,
-        { provide: UserApiClientService, useValue: userApiMock },
-        { provide: UserAdapter, useValue: userAdapterMock },
+        { provide: UserApiClientAdapter, useValue: userApiMock },
       ],
     });
     service = TestBed.inject(UserService);
@@ -82,19 +77,11 @@ describe('UserService', () => {
   });
 
   describe('getUser', () => {
-    const rawDto = { id: '1', username: 'admin', email: 'admin@test.com' };
-    const adaptedUser: User = mockUsers[0];
-
-    beforeEach(() => {
-      userApiMock.getUser = vi.fn();
-    });
-
     it.each([
       ['with tenantId', 'tenant-1' as string | undefined],
       ['without tenantId', undefined as string | undefined],
-    ])('should call API, adapt DTO, and return user (%s)', (_label, tenantId) => {
-      userApiMock.getUser.mockReturnValue(of(rawDto));
-      userAdapterMock.fromDTO.mockReturnValue(adaptedUser);
+    ])('should call API and return user directly (%s)', (_label, tenantId) => {
+      userApiMock.getUser.mockReturnValue(of(mockUsers[0]));
 
       let result: User | undefined;
       service.getUser('1', UserRole.TENANT_ADMIN, tenantId).subscribe((user) => {
@@ -102,8 +89,7 @@ describe('UserService', () => {
       });
 
       expect(userApiMock.getUser).toHaveBeenCalledWith('1', UserRole.TENANT_ADMIN, tenantId);
-      expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(rawDto);
-      expect(result).toEqual(adaptedUser);
+      expect(result).toEqual(mockUsers[0]);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
     });
@@ -130,13 +116,11 @@ describe('UserService', () => {
       ['without tenantId', undefined as string | undefined, UserRole.TENANT_ADMIN],
       ['with tenantId', 'tenant-1' as string | undefined, UserRole.TENANT_USER],
     ])('should retrieve users and update state (%s)', (_label, tenantId, role) => {
-      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
-      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
+      userApiMock.getUsers.mockReturnValue(of(mockPaginatedResponse));
 
       service.retrieveUsers(role, tenantId);
 
       expect(userApiMock.getUsers).toHaveBeenCalledWith(role, 1, 10, tenantId);
-      expect(userAdapterMock.fromPaginatedDTO).toHaveBeenCalledWith(rawPaginatedResponse);
       expect(service.loading()).toBe(false);
       expect(service.userList()).toEqual(mockUsers);
       expect(service.total()).toBe(2);
@@ -159,8 +143,7 @@ describe('UserService', () => {
 
   describe('changePage', () => {
     it('should update pagination and retrieve users with new page values', () => {
-      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
-      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
+      userApiMock.getUsers.mockReturnValue(of(mockPaginatedResponse));
 
       service.changePage(2, 25, UserRole.TENANT_USER, 'tenant-1');
 
@@ -171,9 +154,8 @@ describe('UserService', () => {
   });
 
   describe('addNewUser', () => {
-    it('should create a user and emit adapted user', () => {
+    it('should create a user and return it directly', () => {
       userApiMock.createUser.mockReturnValue(of(newUser));
-      userAdapterMock.fromDTO.mockReturnValue(newUser);
 
       let result: User | undefined;
       service.addNewUser(newUserConfig, UserRole.TENANT_ADMIN, 'tenant-1').subscribe((user) => {
@@ -185,7 +167,6 @@ describe('UserService', () => {
         UserRole.TENANT_ADMIN,
         'tenant-1',
       );
-      expect(userAdapterMock.fromDTO).toHaveBeenCalledWith(newUser);
       expect(result).toEqual(newUser);
       expect(service.loading()).toBe(false);
       expect(service.error()).toBeNull();
@@ -203,8 +184,7 @@ describe('UserService', () => {
 
     it('should delete a user and refetch current page', () => {
       userApiMock.deleteUser.mockReturnValue(of(void 0));
-      userApiMock.getUsers.mockReturnValue(of(rawPaginatedResponse));
-      userAdapterMock.fromPaginatedDTO.mockReturnValue(rawPaginatedResponse);
+      userApiMock.getUsers.mockReturnValue(of(mockPaginatedResponse));
 
       let completed = false;
       service.removeUser(user).subscribe({

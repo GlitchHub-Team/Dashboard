@@ -6,7 +6,7 @@ import { sensorStatusMapper } from '../../utils/sensor-status.utils';
 import { sensorProfilesMapper } from '../../utils/sensor-profile.utils';
 import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SensorApiAdapter extends SensorAdapter {
   fromDTO(dto: SensorBackend): Sensor {
     return {

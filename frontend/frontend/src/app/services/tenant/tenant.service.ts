@@ -1,18 +1,16 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
+import { Observable, tap, catchError, EMPTY, finalize } from 'rxjs';
 
-import { TenantApiAdapter } from '../../adapters/tenant/tenant-api.adapter';
+import { TenantApiClientAdapter } from '../tenant-api-client/tenant-api-client-adapter.service';
 import { ApiError } from '../../models/api-error.model';
 import { Tenant } from '../../models/tenant/tenant.model';
 import { TenantConfig } from '../../models/tenant/tenant-config.model';
-import { TenantApiClientService } from '../tenant-api-client/tenant-api-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TenantService {
-  private readonly tenantApi = inject(TenantApiClientService);
-  private readonly adapter = inject(TenantApiAdapter);
+  private readonly tenantApi = inject(TenantApiClientAdapter);
 
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -32,7 +30,6 @@ export class TenantService {
     this.setLoadingState();
 
     return this.tenantApi.getTenant(id).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
       tap({
         error: (err: ApiError) => {
           this._error.set(err.message ?? 'Failed to fetch tenant');
@@ -47,7 +44,6 @@ export class TenantService {
     this.setLoadingState();
 
     return this.tenantApi.getAllTenants().pipe(
-      map((dtos) => dtos.map((dto) => this.adapter.fromDTO(dto))),
       finalize(() => this._loading.set(false)),
     );
   }
@@ -58,8 +54,6 @@ export class TenantService {
     this.tenantApi
       .getTenants(this.pageIndex() + 1, this.limit())
       .pipe(
-        // Adapting della response al formato usato dal frontend (quindi da TenantBackend a Tenant)
-        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._tenantList.set(result.tenants);
           this._total.set(result.total);
@@ -79,9 +73,8 @@ export class TenantService {
     this.retrieveTenants();
   }
 
-  // Il dialog si occupa del loading/errors
   public addNewTenant(config: TenantConfig): Observable<Tenant> {
-    return this.tenantApi.createTenant(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
+    return this.tenantApi.createTenant(config);
   }
 
   public removeTenant(id: string): Observable<void> {

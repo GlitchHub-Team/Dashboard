@@ -4,16 +4,16 @@ import { Observable, tap, catchError, finalize, EMPTY } from 'rxjs';
 
 import { UserSessionService } from '../user-session/user-session.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
-import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
 import { LoginRequest } from '../../models/auth/login-request.model';
 import { AuthResponse } from '../../models/auth/auth-response.model';
 import { ApiError } from '../../models/api-error.model';
+import { AuthApiClientAdapter } from '../auth-api-client/auth-api-client-adapter.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthSessionService {
-  private readonly authApiClient = inject(AuthApiClientService);
+  private readonly authApiClient = inject(AuthApiClientAdapter);
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly userSession = inject(UserSessionService);
   private readonly router = inject(Router);

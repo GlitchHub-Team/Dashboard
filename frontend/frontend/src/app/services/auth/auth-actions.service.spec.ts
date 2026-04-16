@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError, noop } from 'rxjs';
 
 import { AuthActionsService } from './auth-actions.service';
-import { AuthApiClientService } from '../auth-api-client/auth-api-client.service';
+import { AuthApiClientAdapter } from '../auth-api-client/auth-api-client-adapter.service';
 import { TokenStorageService } from '../token-storage/token-storage.service';
 import { UserSessionService } from '../user-session/user-session.service';
 import { ApiError } from '../../models/api-error.model';
@@ -38,7 +38,7 @@ describe('AuthActionsService', () => {
     TestBed.configureTestingModule({
       providers: [
         AuthActionsService,
-        { provide: AuthApiClientService, useValue: authApiClientMock },
+        { provide: AuthApiClientAdapter, useValue: authApiClientMock },
         { provide: TokenStorageService, useValue: tokenStorageMock },
         { provide: UserSessionService, useValue: userSessionMock },
       ],

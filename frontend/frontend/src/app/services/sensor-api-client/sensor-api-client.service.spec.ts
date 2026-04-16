@@ -3,11 +3,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 
 import { SensorApiClientService } from './sensor-api-client.service';
+import { SensorApiAdapter } from '../../adapters/sensor/sensor-api.adapter';
 import { environment } from '../../../environments/environment';
 import { SensorBackend } from '../../models/sensor/sensor-backend.model';
 import { SensorConfig } from '../../models/sensor/sensor-config.model';
 import { SensorProfiles } from '../../models/sensor/sensor-profiles.enum';
 import { PaginatedSensorResponse } from '../../models/sensor/paginated-sensor-response.model';
+import { Sensor } from '../../models/sensor/sensor.model';
+import { SensorStatus } from '../../models/sensor-status.enum';
 
 describe('SensorApiClientService', () => {
   let service: SensorApiClientService;
@@ -15,7 +18,7 @@ describe('SensorApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const mockSensors: SensorBackend[] = [
+  const mockBackendSensors: SensorBackend[] = [
     {
       sensor_id: 's-1',
       gateway_id: 'gw-1',
@@ -34,17 +37,52 @@ describe('SensorApiClientService', () => {
     },
   ];
 
-  const mockPaginatedResponse: PaginatedSensorResponse<SensorBackend> = {
+  const mockBackendPaginatedResponse: PaginatedSensorResponse<SensorBackend> = {
     count: 2,
     total: 10,
-    sensors: mockSensors,
+    sensors: mockBackendSensors,
+  };
+
+  const mockMappedSensors: Sensor[] = [
+    {
+      id: 's-1',
+      gatewayId: 'gw-1',
+      name: 'Temperature',
+      profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+      dataInterval: 60,
+      status: SensorStatus.ACTIVE,
+    },
+    {
+      id: 's-2',
+      gatewayId: 'gw-1',
+      name: 'Humidity',
+      profile: SensorProfiles.ENVIRONMENTAL_SENSING_SERVICE,
+      dataInterval: 60,
+      status: SensorStatus.INACTIVE,
+    },
+  ];
+
+  const mockMappedPaginatedResponse: PaginatedSensorResponse<Sensor> = {
+    count: 2,
+    total: 10,
+    sensors: mockMappedSensors,
+  };
+
+  const mapperMock = {
+    fromPaginatedDTO: vi.fn(),
+    fromDTO: vi.fn(),
   };
 
   beforeEach(() => {
     vi.resetAllMocks();
 
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        SensorApiClientService,
+        { provide: SensorApiAdapter, useValue: mapperMock },
+      ],
     });
 
     service = TestBed.inject(SensorApiClientService);
@@ -75,20 +113,24 @@ describe('SensorApiClientService', () => {
       limit: '10',
     },
   ])('$label', ({ invoke, url, page, limit }) => {
-    it('should send GET with correct URL, params, and return a PaginatedResponse', () => {
+    it('should send GET with correct URL and params, map through adapter, and return mapped response', () => {
+      mapperMock.fromPaginatedDTO.mockReturnValue(mockMappedPaginatedResponse);
+
       invoke(service).subscribe((response) => {
-        expect(response).toEqual(mockPaginatedResponse);
+        expect(response).toEqual(mockMappedPaginatedResponse);
         expect(response.count).toBe(2);
         expect(response.total).toBe(10);
-        expect(response.sensors[0].sensor_id).toBe('s-1');
-        expect(response.sensors[1].sensor_id).toBe('s-2');
+        expect(response.sensors[0].id).toBe('s-1');
+        expect(response.sensors[1].id).toBe('s-2');
       });
 
       const req = httpMock.expectOne(url);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('page')).toBe(page);
       expect(req.request.params.get('limit')).toBe(limit);
-      req.flush(mockPaginatedResponse);
+      req.flush(mockBackendPaginatedResponse);
+
+      expect(mapperMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendPaginatedResponse);
     });
   });
 
@@ -100,7 +142,7 @@ describe('SensorApiClientService', () => {
       dataInterval: 60,
     };
 
-    const mockResponse: SensorBackend = {
+    const mockBackendResponse: SensorBackend = {
       sensor_id: 's-3',
       gateway_id: 'gw-1',
       sensor_name: 'New Sensor',
@@ -109,12 +151,23 @@ describe('SensorApiClientService', () => {
       status: 'active',
     };
 
-    it('should send POST with sensor config body and return a SensorBackend', () => {
+    const mockMappedSensor: Sensor = {
+      id: 's-3',
+      gatewayId: 'gw-1',
+      name: 'New Sensor',
+      profile: SensorProfiles.HEALTH_THERMOMETER_SERVICE,
+      dataInterval: 60,
+      status: SensorStatus.ACTIVE,
+    };
+
+    it('should send POST with mapped body, map response through adapter, and return domain model', () => {
+      mapperMock.fromDTO.mockReturnValue(mockMappedSensor);
+
       service.addNewSensor(mockConfig).subscribe((sensor) => {
-        expect(sensor).toEqual(mockResponse);
-        expect(sensor.sensor_id).toBe('s-3');
-        expect(sensor.sensor_name).toBe('New Sensor');
-        expect(sensor.data_interval).toBe(60);
+        expect(sensor).toEqual(mockMappedSensor);
+        expect(sensor.id).toBe('s-3');
+        expect(sensor.name).toBe('New Sensor');
+        expect(sensor.dataInterval).toBe(60);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/sensor`);
@@ -122,10 +175,12 @@ describe('SensorApiClientService', () => {
       expect(req.request.body).toEqual({
         gateway_id: mockConfig.gatewayId,
         sensor_name: mockConfig.name,
-        profile: 'health thermometer',
+        profile: mockConfig.profile,
         data_interval: mockConfig.dataInterval,
       });
-      req.flush(mockResponse);
+      req.flush(mockBackendResponse);
+
+      expect(mapperMock.fromDTO).toHaveBeenCalledWith(mockBackendResponse);
     });
   });
 

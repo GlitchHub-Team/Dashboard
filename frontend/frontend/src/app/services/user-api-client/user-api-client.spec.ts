@@ -3,11 +3,13 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { UserApiClientService } from './user-api-client.service';
+import { UserApiAdapter } from '../../adapters/user/user-api.adapter';
 import { environment } from '../../../environments/environment';
 import { UserBackend } from '../../models/user/user-backend.model';
 import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { PaginatedUserResponse } from '../../models/user/paginated-user-response.model';
+import { User } from '../../models/user/user.model';
 
 const GET_USERS_CASES = [
   {
@@ -50,25 +52,50 @@ describe('UserApiClientService', () => {
 
   const apiUrl = `${environment.apiUrl}`;
 
-  const paginatedUserResponse: PaginatedUserResponse<UserBackend> = {
+  const mockBackendUsers: UserBackend[] = [
+    {
+      user_id: 1,
+      username: 'admin',
+      email: 'admin@test.com',
+      user_role: UserRole.TENANT_ADMIN,
+      tenant_id: 'tenant-1',
+    },
+    {
+      user_id: 2,
+      username: 'user',
+      email: 'user@test.com',
+      user_role: UserRole.TENANT_USER,
+      tenant_id: 'tenant-1',
+    },
+  ];
+
+  const mockBackendPaginatedResponse: PaginatedUserResponse<UserBackend> = {
     count: 2,
     total: 2,
-    users: [
-      {
-        user_id: 1,
-        username: 'admin',
-        email: 'admin@test.com',
-        user_role: UserRole.TENANT_ADMIN,
-        tenant_id: 'tenant-1',
-      },
-      {
-        user_id: 2,
-        username: 'user',
-        email: 'user@test.com',
-        user_role: UserRole.TENANT_USER,
-        tenant_id: 'tenant-1',
-      },
-    ],
+    users: mockBackendUsers,
+  };
+
+  const mockMappedUsers: User[] = [
+    {
+      id: '1',
+      username: 'admin',
+      email: 'admin@test.com',
+      role: UserRole.TENANT_ADMIN,
+      tenantId: 'tenant-1',
+    },
+    {
+      id: '2',
+      username: 'user',
+      email: 'user@test.com',
+      role: UserRole.TENANT_USER,
+      tenantId: 'tenant-1',
+    },
+  ];
+
+  const mockMappedPaginatedResponse: PaginatedUserResponse<User> = {
+    count: 2,
+    total: 2,
+    users: mockMappedUsers,
   };
 
   const userBackend: UserBackend = {
@@ -79,6 +106,19 @@ describe('UserApiClientService', () => {
     tenant_id: 'tenant-1',
   };
 
+  const mappedUser: User = {
+    id: '3',
+    username: 'newuser',
+    email: 'new@test.com',
+    role: UserRole.TENANT_USER,
+    tenantId: 'tenant-1',
+  };
+
+  const mapperMock = {
+    fromPaginatedDTO: vi.fn(),
+    fromDTO: vi.fn(),
+  };
+
   const expectRequest = (method: string, url: string) => {
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe(method);
@@ -86,8 +126,15 @@ describe('UserApiClientService', () => {
   };
 
   beforeEach(() => {
+    vi.resetAllMocks();
+
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        UserApiClientService,
+        { provide: UserApiAdapter, useValue: mapperMock },
+      ],
     });
 
     service = TestBed.inject(UserApiClientService);
@@ -104,10 +151,14 @@ describe('UserApiClientService', () => {
 
   describe('getUsers', () => {
     it.each(GET_USERS_CASES)(
-      'should send GET request for $role to $url',
+      'should send GET request for $role to $url, map through adapter, and return mapped response',
       ({ role, tenantId, page, limit, url }) => {
+        mapperMock.fromPaginatedDTO.mockReturnValue(mockMappedPaginatedResponse);
+
         service.getUsers(role, page, limit, tenantId).subscribe((response) => {
-          expect(response).toEqual(paginatedUserResponse);
+          expect(response).toEqual(mockMappedPaginatedResponse);
+          expect(response.users[0].id).toBe('1');
+          expect(response.users[1].id).toBe('2');
         });
 
         const req = httpMock.expectOne(
@@ -117,7 +168,9 @@ describe('UserApiClientService', () => {
             request.params.get('limit') === `${limit}`,
         );
         expect(req.request.method).toBe('GET');
-        req.flush(paginatedUserResponse);
+        req.flush(mockBackendPaginatedResponse);
+
+        expect(mapperMock.fromPaginatedDTO).toHaveBeenCalledWith(mockBackendPaginatedResponse);
       },
     );
 
@@ -136,31 +189,42 @@ describe('UserApiClientService', () => {
         role: UserRole.SUPER_ADMIN,
         tenant_id: undefined,
         url: 'super_admin/1',
-        response: {
+        backendResponse: {
           user_id: 1,
           email: 'super@test.com',
           username: 'super',
           user_role: UserRole.SUPER_ADMIN,
           tenant_id: '',
         } satisfies UserBackend,
+        mappedResponse: {
+          id: '1',
+          email: 'super@test.com',
+          username: 'super',
+          role: UserRole.SUPER_ADMIN,
+          tenantId: '',
+        } satisfies User,
       },
       {
         id: '3',
         role: UserRole.TENANT_USER,
         tenant_id: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user/3',
-        response: userBackend,
+        backendResponse: userBackend,
+        mappedResponse: mappedUser,
       },
-    ])('should GET $url and return dto response', ({ id, role, tenant_id, url, response }) => {
-      let result: UserBackend | undefined;
+    ])('should GET $url, map through adapter, and return domain model', ({ id, role, tenant_id, url, backendResponse, mappedResponse }) => {
+      mapperMock.fromDTO.mockReturnValue(mappedResponse);
+
+      let result: User | undefined;
       service.getUser(id, role, tenant_id).subscribe((user) => {
         result = user;
       });
 
       const req = expectRequest('GET', `${apiUrl}/${url}`);
-      req.flush(response);
+      req.flush(backendResponse);
 
-      expect(result).toEqual(response);
+      expect(mapperMock.fromDTO).toHaveBeenCalledWith(backendResponse);
+      expect(result).toEqual(mappedResponse);
     });
   });
 
@@ -174,13 +238,20 @@ describe('UserApiClientService', () => {
         role: UserRole.SUPER_ADMIN,
         tenantId: undefined,
         url: 'super_admin',
-        response: {
+        backendResponse: {
           user_id: 10,
           email: 'super@test.com',
           username: 'super',
           user_role: UserRole.SUPER_ADMIN,
           tenant_id: '',
         } satisfies UserBackend,
+        mappedResponse: {
+          id: '10',
+          email: 'super@test.com',
+          username: 'super',
+          role: UserRole.SUPER_ADMIN,
+          tenantId: '',
+        } satisfies User,
       },
       {
         config: {
@@ -190,21 +261,25 @@ describe('UserApiClientService', () => {
         role: UserRole.TENANT_USER,
         tenantId: 'tenant-1',
         url: 'tenant/tenant-1/tenant_user',
-        response: userBackend,
+        backendResponse: userBackend,
+        mappedResponse: mappedUser,
       },
     ])(
-      'should POST to $url and return dto response',
-      ({ config, role, tenantId, url, response }) => {
-        let result: UserBackend | undefined;
+      'should POST to $url, map through adapter, and return domain model',
+      ({ config, role, tenantId, url, backendResponse, mappedResponse }) => {
+        mapperMock.fromDTO.mockReturnValue(mappedResponse);
+
+        let result: User | undefined;
         service.createUser(config, role, tenantId).subscribe((user) => {
           result = user;
         });
 
         const req = expectRequest('POST', `${apiUrl}/${url}`);
         expect(req.request.body).toEqual(config);
-        req.flush(response);
+        req.flush(backendResponse);
 
-        expect(result).toEqual(response);
+        expect(mapperMock.fromDTO).toHaveBeenCalledWith(backendResponse);
+        expect(result).toEqual(mappedResponse);
       },
     );
 

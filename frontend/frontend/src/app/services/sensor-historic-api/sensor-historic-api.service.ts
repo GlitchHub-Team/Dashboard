@@ -5,11 +5,12 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { HistoricResponse } from '../../models/sensor-data/historic-response.model';
 import { ChartRequest } from '../../models/chart/chart-request.model';
+import { SensorHistoricApiAdapter } from './sensor-historic-api-adapter.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SensorHistoricApiService {
+export class SensorHistoricApiService extends SensorHistoricApiAdapter {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}`;
 

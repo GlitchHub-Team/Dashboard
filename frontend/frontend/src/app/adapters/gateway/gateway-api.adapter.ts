@@ -6,7 +6,7 @@ import { Gateway } from '../../models/gateway/gateway.model';
 import { PaginatedGatewayResponse } from '../../models/gateway/paginated-gateway-response.model';
 import { gatewayStatusMapper } from '../../utils/gateway-status.utils';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class GatewayApiAdapter extends GatewayAdapter {
   fromDTO(dto: GatewayBackend): Gateway {
     return {

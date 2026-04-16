@@ -1,17 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+
 import { UserRole } from '../../models/user/user-role.enum';
 import { environment } from '../../../environments/environment';
 import { PaginatedUserResponse } from '../../models/user/paginated-user-response.model';
 import { UserBackend } from '../../models/user/user-backend.model';
 import { UserConfig } from '../../models/user/user-config.model';
+import { User } from '../../models/user/user.model';
+import { UserApiAdapter } from '../../adapters/user/user-api.adapter';
+import { UserApiClientAdapter } from './user-api-client-adapter.service';
 
 @Injectable({ providedIn: 'root' })
-export class UserApiClientService {
+export class UserApiClientService extends UserApiClientAdapter {
   private readonly http = inject(HttpClient);
+  private readonly mapper = inject(UserApiAdapter);
 
-  // Costruire l'URL in base al ruolo passato come context, e differenzia tra recuperare multipli utenti o un singolo utente
   private getBaseUrl(role: UserRole, tenantId?: string, isPlural = false): string {
     const baseUrl = environment.apiUrl;
     switch (role) {
@@ -28,35 +32,41 @@ export class UserApiClientService {
     }
   }
 
+  public getUser(id: string, role: UserRole, tenantId?: string): Observable<User> {
+    const url = `${this.getBaseUrl(role, tenantId, false)}/${id}`;
+
+    return this.http
+      .get<UserBackend>(url)
+      .pipe(map((dto) => this.mapper.fromDTO(dto)));
+  }
+
   public getUsers(
     role: UserRole,
     page: number,
     limit: number,
     tenantId?: string,
-  ): Observable<PaginatedUserResponse<UserBackend>> {
+  ): Observable<PaginatedUserResponse<User>> {
     const params = new HttpParams().set('page', page).set('limit', limit);
-
     const url = this.getBaseUrl(role, tenantId, true);
 
-    return this.http.get<PaginatedUserResponse<UserBackend>>(url, { params });
-  }
-
-  public getUser(id: string, role: UserRole, tenantId?: string): Observable<UserBackend> {
-    const url = `${this.getBaseUrl(role, tenantId, false)}/${id}`;
-    return this.http.get<UserBackend>(url);
+    return this.http
+      .get<PaginatedUserResponse<UserBackend>>(url, { params })
+      .pipe(map((response) => this.mapper.fromPaginatedDTO(response)));
   }
 
   public createUser(
     config: UserConfig,
     role: UserRole,
     tenantId?: string,
-  ): Observable<UserBackend> {
+  ): Observable<User> {
     const url = this.getBaseUrl(role, tenantId, false);
-    // Mapping del body rispetto a quando documentato su APIDOG
-    return this.http.post<UserBackend>(url, {
-      email: config.email,
-      username: config.username,
-    });
+
+    return this.http
+      .post<UserBackend>(url, {
+        email: config.email,
+        username: config.username,
+      })
+      .pipe(map((dto) => this.mapper.fromDTO(dto)));
   }
 
   public deleteUser(id: string, role: UserRole, tenantId?: string): Observable<void> {

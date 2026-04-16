@@ -1,21 +1,18 @@
-// services/gateway/gateway.service.ts
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
+import { Observable, tap, catchError, EMPTY, finalize } from 'rxjs';
 
-import { GatewayApiClientService } from '../gateway-api-client/gateway-api-client.service';
-import { GatewayAdapter } from '../../adapters/gateway/gateway.adapter';
+import { GatewayApiClientAdapter } from '../gateway-api-client/gateway-api-client-adapter.service';
+import { GatewayCommandApiClientAdapter } from '../gateway-command-api-client/gateway-command-api-client-adapter.service';
 import { Gateway } from '../../models/gateway/gateway.model';
 import { GatewayConfig } from '../../models/gateway/gateway-config.model';
 import { ApiError } from '../../models/api-error.model';
-import { GatewayCommandApiClientService } from '../gateway-command-api-client/gateway-command-api-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GatewayService {
-  private readonly gatewayApi = inject(GatewayApiClientService);
-  private readonly gatewayCommandApi = inject(GatewayCommandApiClientService);
-  private readonly adapter = inject(GatewayAdapter);
+  private readonly gatewayApi = inject(GatewayApiClientAdapter);
+  private readonly gatewayCommandApi = inject(GatewayCommandApiClientAdapter);
 
   private readonly _gatewayList = signal<Gateway[]>([]);
   private readonly _total = signal(0);
@@ -41,8 +38,6 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayListByTenant(tenantId, page + 1, limit)
       .pipe(
-        // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
-        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._gatewayList.set(result.gateways);
           this._total.set(result.total);
@@ -65,8 +60,6 @@ export class GatewayService {
     this.gatewayApi
       .getGatewayList(page + 1, limit)
       .pipe(
-        // Adapting della response al formato usato dal frontend (quindi da GatewayBackend a Gateway)
-        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._gatewayList.set(result.gateways);
           this._total.set(result.total);
@@ -81,7 +74,7 @@ export class GatewayService {
   }
 
   public addNewGateway(config: GatewayConfig): Observable<Gateway> {
-    return this.gatewayApi.addNewGateway(config).pipe(map((dto) => this.adapter.fromDTO(dto)));
+    return this.gatewayApi.addNewGateway(config);
   }
 
   public deleteGateway(id: string): Observable<void> {
@@ -99,37 +92,34 @@ export class GatewayService {
 
   public commissionGateway(id: string, tenantId: string, token: string): Observable<Gateway> {
     return this.gatewayCommandApi.commissionGateway(id, tenantId, token).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
       tap(() => this.refetchCurrentPage()),
     );
   }
 
   public decommissionGateway(id: string): Observable<void> {
-    return this.gatewayCommandApi
-      .decommissionGateway(id)
-      .pipe(tap(() => this.refetchCurrentPage()));
+    return this.gatewayCommandApi.decommissionGateway(id).pipe(
+      tap(() => this.refetchCurrentPage()),
+    );
   }
 
-  // Comando di reset completo del gateway allo stato iniziale
   public resetGateway(id: string): Observable<void> {
     return this.gatewayCommandApi.resetGateway(id);
   }
 
-  // Comando di riavvio del gateway
   public rebootGateway(id: string): Observable<void> {
     return this.gatewayCommandApi.rebootGateway(id);
   }
 
   public interruptGateway(id: string): Observable<void> {
-    return this.gatewayCommandApi
-    .interruptGateway(id)
-    .pipe(tap(() => this.refetchCurrentPage()));
+    return this.gatewayCommandApi.interruptGateway(id).pipe(
+      tap(() => this.refetchCurrentPage()),
+    );
   }
 
   public resumeGateway(id: string): Observable<void> {
-    return this.gatewayCommandApi
-    .resumeGateway(id)
-    .pipe(tap(() => this.refetchCurrentPage()));
+    return this.gatewayCommandApi.resumeGateway(id).pipe(
+      tap(() => this.refetchCurrentPage()),
+    );
   }
 
   public changePage(page: number, limit: number): void {

@@ -1,16 +1,15 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Observable, tap, catchError, EMPTY, finalize, map } from 'rxjs';
-import { UserApiClientService } from '../user-api-client/user-api-client.service';
+import { Observable, tap, catchError, EMPTY, finalize } from 'rxjs';
+
+import { UserApiClientAdapter } from '../user-api-client/user-api-client-adapter.service';
 import { UserConfig } from '../../models/user/user-config.model';
 import { UserRole } from '../../models/user/user-role.enum';
 import { User } from '../../models/user/user.model';
 import { ApiError } from '../../models/api-error.model';
-import { UserAdapter } from '../../adapters/user/user.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private readonly userApi = inject(UserApiClientService);
-  private readonly adapter = inject(UserAdapter);
+  private readonly userApi = inject(UserApiClientAdapter);
 
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -30,7 +29,6 @@ export class UserService {
     this._loading.set(true);
 
     return this.userApi.getUser(userId, role, tenantId).pipe(
-      map((dto) => this.adapter.fromDTO(dto)),
       tap({
         error: (err: ApiError) => {
           this._error.set(err.message ?? 'Failed to load user');
@@ -46,8 +44,6 @@ export class UserService {
     this.userApi
       .getUsers(role, this._pageIndex() + 1, this._limit(), tenantId)
       .pipe(
-        // Adapting della response al formato usato dal frontend (quindi da UserBackend a User)
-        map((response) => this.adapter.fromPaginatedDTO(response)),
         tap((result) => {
           this._userList.set(result.users);
           this._total.set(result.total);
@@ -68,9 +64,7 @@ export class UserService {
   }
 
   public addNewUser(config: UserConfig, role: UserRole, tenantId?: string): Observable<User> {
-    return this.userApi
-      .createUser(config, role, tenantId)
-      .pipe(map((dto) => this.adapter.fromDTO(dto)));
+    return this.userApi.createUser(config, role, tenantId);
   }
 
   public removeUser(user: User): Observable<void> {
