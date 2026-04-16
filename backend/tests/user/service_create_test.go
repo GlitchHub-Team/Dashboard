@@ -397,12 +397,12 @@ func TestService_CreateTenantUser(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			createTenantUserUseCase, _, _ := user.NewCreateUserService(
+			service := user.NewCreateUserService(
 				mockCreatePort, mockDeletePort, mockGetPort, mockTenantPort, mockConfirmTokenPort, mockSendEmailPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := createTenantUserUseCase.CreateTenantUser(tc.input)
+			createdUser, err := service.CreateTenantUser(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -755,12 +755,12 @@ func TestService_CreateTenantAdmin(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, createTenantAdminUseCase, _ := user.NewCreateUserService(
+			service := user.NewCreateUserService(
 				mockCreatePort, mockDeletePort, mockGetPort, mockTenantPort, mockConfirmTokenPort, mockSendEmailPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := createTenantAdminUseCase.CreateTenantAdmin(tc.input)
+			createdUser, err := service.CreateTenantAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -1039,12 +1039,12 @@ func TestService_CreateSuperAdmin(t *testing.T) {
 				gomock.InOrder(expectedCalls...)
 			}
 			// Crea servizio con porte mock
-			_, _, createSuperAdminUseCase := user.NewCreateUserService(
+			service := user.NewCreateUserService(
 				mockCreatePort, mockDeletePort, mockGetPort, mockTenantPort, mockConfirmTokenPort, mockSendEmailPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := createSuperAdminUseCase.CreateSuperAdmin(tc.input)
+			createdUser, err := service.CreateSuperAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {

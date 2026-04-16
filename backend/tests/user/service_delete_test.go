@@ -320,12 +320,12 @@ func TestService_DeleteTenantUser(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			deleteTenantUserUseCase, _, _ := user.NewDeleteUserService(
+			service := user.NewDeleteUserService(
 				mockDeletePort, mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := deleteTenantUserUseCase.DeleteTenantUser(tc.input)
+			createdUser, err := service.DeleteTenantUser(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -662,12 +662,12 @@ func TestService_DeleteTenantAdmin(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, deleteTenantAdminUseCase, _ := user.NewDeleteUserService(
+			service := user.NewDeleteUserService(
 				mockDeletePort, mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := deleteTenantAdminUseCase.DeleteTenantAdmin(tc.input)
+			createdUser, err := service.DeleteTenantAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -938,12 +938,12 @@ func TestService_DeleteSuperAdmin(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, _, deleteSuperAdminUseCase := user.NewDeleteUserService(
+			service := user.NewDeleteUserService(
 				mockDeletePort, mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := deleteSuperAdminUseCase.DeleteSuperAdmin(tc.input)
+			createdUser, err := service.DeleteSuperAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {

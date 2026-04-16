@@ -19,13 +19,13 @@ func NewDeleteUserService(
 	deleteUserPort DeleteUserPort,
 	getUserPort GetUserPort,
 	getTenantPort tenant.GetTenantPort,
-) (DeleteTenantUserUseCase, DeleteTenantAdminUseCase, DeleteSuperAdminUseCase) {
+) *DeleteUserService {
 	service := &DeleteUserService{
 		deleteUserPort: deleteUserPort,
 		getUserPort:    getUserPort,
 		getTenantPort:  getTenantPort,
 	}
-	return service, service, service
+	return service
 }
 
 func (service *DeleteUserService) DeleteTenantUser(cmd DeleteTenantUserCommand) (User, error) {

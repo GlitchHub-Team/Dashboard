@@ -13,20 +13,12 @@ type GetUserService struct {
 	getTenantPort tenant.GetTenantPort
 }
 
-func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPort) (
-	GetTenantUserUseCase,
-	GetTenantAdminUseCase,
-	GetSuperAdminUseCase,
-
-	GetTenantUsersByTenantUseCase,
-	GetTenantAdminsByTenantUseCase,
-	GetSuperAdminListUseCase,
-) {
+func NewGetUserService(getUserPort GetUserPort, getTenantPort tenant.GetTenantPort) *GetUserService {
 	service := &GetUserService{
 		getUserPort:   getUserPort,
 		getTenantPort: getTenantPort,
 	}
-	return service, service, service, service, service, service
+	return service
 }
 
 // Get single -----------------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ func NewCreateUserService(
 	getTenantPort tenant.GetTenantPort,
 	confirmAccountTokenPort GenerateTokenPort,
 	sendEmailPort SendConfirmAccountEmailPort,
-) (CreateTenantUserUseCase, CreateTenantAdminUseCase, CreateSuperAdminUseCase) {
+) *CreateUserService {
 	service := &CreateUserService{
 		createUserPort:          createUserPort,
 		deleteUserPort:          deleteUserPort,
@@ -47,7 +47,7 @@ func NewCreateUserService(
 		confirmAccountTokenPort: confirmAccountTokenPort,
 		sendEmailPort:           sendEmailPort,
 	}
-	return service, service, service
+	return service
 }
 
 func (service *CreateUserService) CreateTenantUser(cmd CreateTenantUserCommand) (User, error) {

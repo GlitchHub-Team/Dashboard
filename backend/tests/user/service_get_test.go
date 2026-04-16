@@ -326,12 +326,12 @@ func TestService_GetTenantUser(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			getTenantUserUseCase, _, _, _, _, _ := user.NewGetUserService(
+			service := user.NewGetUserService(
 				mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := getTenantUserUseCase.GetTenantUser(tc.input)
+			createdUser, err := service.GetTenantUser(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -562,12 +562,12 @@ func TestService_GetTenantAdmin(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, getTenantAdminUseCase, _, _, _, _ := user.NewGetUserService(
+			service:= user.NewGetUserService(
 				mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := getTenantAdminUseCase.GetTenantAdmin(tc.input)
+			createdUser, err := service.GetTenantAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -748,12 +748,12 @@ func TestService_GetSuperAdmin(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, _, getSuperAdminUseCase_, _, _, _ := user.NewGetUserService(
+			service := user.NewGetUserService(
 				mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			createdUser, err := getSuperAdminUseCase_.GetSuperAdmin(tc.input)
+			createdUser, err := service.GetSuperAdmin(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -1046,12 +1046,12 @@ func TestService_GetTenantUsersByTenant(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, _, _, getTenantUsersByTenantUseCase, _, _ := user.NewGetUserService(
+			service := user.NewGetUserService(
 				mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			obtainedUsers, total, err := getTenantUsersByTenantUseCase.GetTenantUsersByTenant(tc.input)
+			obtainedUsers, total, err := service.GetTenantUsersByTenant(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -1347,12 +1347,12 @@ func TestService_GetTenantAdminsByTenant(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, _, _, _, getTenantAdminsByTenantUseCase, _ := user.NewGetUserService(
+			service := user.NewGetUserService(
 				mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			obtainedUsers, total, err := getTenantAdminsByTenantUseCase.GetTenantAdminsByTenant(tc.input)
+			obtainedUsers, total, err := service.GetTenantAdminsByTenant(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
@@ -1568,12 +1568,12 @@ func TestService_GetSuperAdminList(t *testing.T) {
 			}
 
 			// Crea servizio con porte mock
-			_, _, _, _, _, getSuperAdminListUseCase := user.NewGetUserService(
+			service := user.NewGetUserService(
 				mockGetUserPort, mockGetTenantPort,
 			)
 
 			// Esegui funzione in oggetto
-			obtainedUsers, total, err := getSuperAdminListUseCase.GetSuperAdminList(tc.input)
+			obtainedUsers, total, err := service.GetSuperAdminList(tc.input)
 
 			// Assertions
 			if err != tc.expectedError {
