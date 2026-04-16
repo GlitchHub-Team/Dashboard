@@ -420,7 +420,7 @@ func TestController_CreateTenantUser(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 			)
 
 			executeControllerTest(
@@ -678,7 +678,7 @@ func TestController_CreateTenantAdmin(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 			)
 
 			executeControllerTest(
@@ -919,7 +919,7 @@ func TestController_CreateSuperAdmin(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 			)
 
 			executeControllerTest(
@@ -1152,7 +1152,7 @@ func TestController_DeleteTenantUser(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil, nil,
 			)
 
 			executeControllerTest(
@@ -1384,7 +1384,7 @@ func TestController_DeleteTenantAdmin(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil, nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, mockUseCase, nil, nil, nil, nil, nil, nil, nil,
 			)
 
 			executeControllerTest(
@@ -1580,7 +1580,6 @@ func TestController_DeleteSuperAdmin(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, mockUseCase,
 				nil, nil, nil,
@@ -1815,7 +1814,6 @@ func TestController_GetTenantUser(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, nil,
 				mockUseCase, nil, nil,
@@ -2049,7 +2047,6 @@ func TestController_GetTenantAdmin(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, mockUseCase, nil,
@@ -2246,7 +2243,6 @@ func TestController_GetSuperAdmin(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, nil, mockUseCase,
@@ -2494,7 +2490,6 @@ func TestController_GetTenantUsers(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, nil, nil,
@@ -2740,7 +2735,6 @@ func TestController_GetTenantAdmins(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, nil, nil,
@@ -2948,7 +2942,6 @@ func TestController_GetSuperAdmins(t *testing.T) {
 				tc.setupSteps, t,
 			)
 			userController := user.NewUserController(
-				nil,
 				nil, nil, nil,
 				nil, nil, nil,
 				nil, nil, nil,

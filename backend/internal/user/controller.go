@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 //go:generate mockgen -destination=../../tests/user/mocks/use_cases_create.go -package=mocks . CreateTenantUserUseCase,CreateTenantAdminUseCase,CreateSuperAdminUseCase
@@ -76,8 +75,6 @@ type GetSuperAdminListUseCase interface {
 Controller per il CRUD sugli utenti
 */
 type Controller struct {
-	log *zap.Logger
-
 	createTenantUserUseCase  CreateTenantUserUseCase
 	createTenantAdminUseCase CreateTenantAdminUseCase
 	createSuperAdminUseCase  CreateSuperAdminUseCase
@@ -93,11 +90,9 @@ type Controller struct {
 	getTenantUsersByTenantUseCase  GetTenantUsersByTenantUseCase
 	getTenantAdminsByTenantUseCase GetTenantAdminsByTenantUseCase
 	getSuperAdminListUseCase       GetSuperAdminListUseCase
-	// getUsersUseCase           GetUsersUseCase
 }
 
 func NewUserController(
-	log *zap.Logger,
 	createTenantUserUseCase CreateTenantUserUseCase,
 	createTenantAdminUseCase CreateTenantAdminUseCase,
 	createSuperAdminUseCase CreateSuperAdminUseCase,
@@ -116,8 +111,6 @@ func NewUserController(
 	// getUsersUseCase GetUsersUseCase,
 ) *Controller {
 	return &Controller{
-		log: log,
-
 		createTenantUserUseCase:  createTenantUserUseCase,
 		createTenantAdminUseCase: createTenantAdminUseCase,
 		createSuperAdminUseCase:  createSuperAdminUseCase,
