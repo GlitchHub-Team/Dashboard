@@ -66,10 +66,18 @@ export class GatewayCommandsDialog implements OnInit {
   // TENANT ADMIN NON FA NIENTE
   protected get commands(): { value: string; label: string }[] {
     if (this.isDashboardMode) {
-      return [
+      const baseCommands = [
         { value: 'reset', label: 'Reset' },
         { value: 'reboot', label: 'Riavvio' },
       ];
+
+      if (this.gateway.status === GatewayStatus.ACTIVE) {
+        return [...baseCommands, { value: 'interrupt', label: 'Interrompi' }];
+      } else if (this.gateway.status === GatewayStatus.INACTIVE) {
+        return [...baseCommands, { value: 'resume', label: 'Riprendi' }];
+      } else {
+        return baseCommands;
+      }
     }
 
     switch (this.gateway.status) {

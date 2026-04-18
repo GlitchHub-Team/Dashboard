@@ -158,9 +158,19 @@ describe('GatewayCommandsDialog (Unit)', () => {
       expect(component['commands'].map((c) => c.value)).toEqual(['decommission', 'reset', 'reboot', 'resume']);
     });
 
-    it('should return reset/reboot in dashboard mode regardless of status', () => {
-      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], mode: 'dashboard' };
+    it('should return reset/reboot for DECOMMISSIONED gateway in dashboard mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], gateway: { ...mockGateway, status: GatewayStatus.DECOMMISSIONED }, mode: 'dashboard' };
       expect(component['commands'].map((c) => c.value)).toEqual(['reset', 'reboot']);
+    });
+
+    it('should return reset/reboot/interrupt for ACTIVE gateway in dashboard mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], mode: 'dashboard' };
+      expect(component['commands'].map((c) => c.value)).toEqual(['reset', 'reboot', 'interrupt']);
+    });
+
+    it('should return reset/reboot/resume for INACTIVE gateway in dashboard mode', () => {
+      (component as unknown as Record<string, unknown>)['data'] = { ...component['data'], gateway: { ...mockGateway, status: GatewayStatus.INACTIVE }, mode: 'dashboard' };
+      expect(component['commands'].map((c) => c.value)).toEqual(['reset', 'reboot', 'resume']);
     });
   });
 
